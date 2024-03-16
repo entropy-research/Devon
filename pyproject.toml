@@ -11,6 +11,13 @@ python = "^3.12"
 openai = "^1.14.1"
 anthropic = "^0.20.0"
 python-dotenv = "^1.0.1"
+pydantic = "^2.6.4"
+instructor = "^0.6.4"
+xmltodict = "^0.13.0"
+astroid = "^3.1.0"
+autopep8 = "^2.0.4"
+black = "^24.3.0"
+ruff = "^0.3.3"
 
 
 [build-system]
