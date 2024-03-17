@@ -2,6 +2,12 @@ import docker
 from pydantic import BaseModel, validator
 from typing import Optional
 
+"""
+This module contains the PythonContainer class, which represents a Docker container running Python.
+
+The primary method of interacting with the container is the `execute` method, which runs a command inside the container and returns the output.
+"""
+
 class PythonContainer(BaseModel):
     image: str = "python:latest"
     client: docker.DockerClient = None
