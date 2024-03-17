@@ -18,6 +18,7 @@ astroid = "^3.1.0"
 autopep8 = "^2.0.4"
 black = "^24.3.0"
 ruff = "^0.3.3"
+docker = "^7.0.0"
 
 
 [build-system]
