@@ -10,6 +10,7 @@ The primary method of interacting with the container is the `execute` method, wh
 class PythonContainer:
     image: str = "python:latest"
     client: docker.DockerClient
+    cwd: str = "/"
 
     def __init__(self):
         self.client = docker.from_env()
@@ -49,7 +50,7 @@ class PythonContainer:
     def execute(self, command: list[str]) -> str:
         if self.container:
             try:
-                exit_code, output = self.container.exec_run(command)
+                exit_code, output = self.container.exec_run(command, workdir=self.cwd)
                 return output.decode("utf-8")
             except docker.errors.APIError as e:
                 print(f"Error executing command: {e}")

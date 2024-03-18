@@ -15,19 +15,25 @@ class UnifiedDiff(BaseModel):
     tgt_file: str
     hunks: List[Hunk]
 
-def apply_diff(original_lines: str, diff: UnifiedDiff) -> List[str]:
-    result_lines = original_lines.splitlines()[:]
+def apply_diff(file_code_mapping: dict, diff: UnifiedDiff) -> (dict, list):
+    updated_files = {}
+    touched_files = []
+    for file_path, original_code in file_code_mapping.items():
+        if file_path == diff.src_file or file_path == diff.tgt_file:
+            result_lines = original_code.splitlines()[:]
+            for hunk in diff.hunks:
+                src_start = hunk.src_start - 1
+                src_end = src_start + hunk.src_lines
+                tgt_start = hunk.tgt_start - 1
+                tgt_end = tgt_start + hunk.tgt_lines
 
-    for hunk in diff.hunks:
-        src_start = hunk.src_start - 1
-        src_end = src_start + hunk.src_lines
-        tgt_start = hunk.tgt_start - 1
-        tgt_end = tgt_start + hunk.tgt_lines
-
-        # Replace the original lines with the modified lines from the hunk
-        result_lines[src_start:src_end] = hunk.lines.splitlines()
-
-    return "".join(result_lines)
+                # Replace the original lines with the modified lines from the hunk
+                result_lines[src_start:src_end] = hunk.lines.splitlines()
+            updated_files[file_path] = "\n".join(result_lines)
+            touched_files.append(file_path)
+        else:
+            updated_files[file_path] = original_code
+    return updated_files, touched_files
 
 def xml_to_unified_diff(xml_data):
     # Parse the XML data into a dictionary
