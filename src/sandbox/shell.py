@@ -26,7 +26,7 @@ class Shell:
 
     def clone_repo(self):
         if self.container:
-            self.container.execute(["git", "clone", self.repo_url])
+            self.container.execute(["bash", "-c", f"git clone {self.repo_url} && echo 'Cloning completed'"])
             print(f"Repository {self.repo_url} cloned inside the container.")
         else:
             print("No container found. Please create a container first.")
