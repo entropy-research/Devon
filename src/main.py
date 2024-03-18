@@ -3,28 +3,17 @@ import os
 import dotenv
 from anthropic import Anthropic
 
+from thread import Thread
+
 dotenv.load_dotenv()
 
-def fix_code(broken_code):
+def main():
+    repo_url = input("Please enter the GitHub repository URL: ")
+    file_path = input("Please enter the file path: ")
+    goal = input("Please describe your goal: ")
 
-    client = Anthropic(
-        # This is the default and can be omitted
-        api_key = os.environ.get("ANTHROPIC_API_KEY"),
-    )
-
-    message = client.messages.create(
-        max_tokens=1024,
-        system="It's your job to solve bugs for people, people will present you with code and you should do your best to help them, its ok if you dont know, just say that",
-        messages=[
-            {
-                "role": "user",
-                "content": "```python print('hi) ```",
-            }
-        ],
-        model="claude-3-opus-20240229",
-    )
-
-    os.system("ls .")
+    agent = Thread(repo_url=repo_url, task=goal, file_path=file_path)
+    agent.run()
 
 if __name__ == "__main__":
-    fix_code("bad_code")
+    main()

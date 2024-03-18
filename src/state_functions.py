@@ -115,37 +115,3 @@ def evaluate(client, goal, requrements, old_code, new_code):
         model="claude-3-opus-20240229",
     )
     return message.content[0].text
-
-
-def main():
-    client = Anthropic(
-        api_key = os.environ.get("ANTHROPIC_API_KEY"),
-    )
-
-    repo_url = ask("Please enter your repository git url: ")
-    path = ask("Please enter your file path: ")
-    goal = ask("Please enter your goal: ")
-
-    with Shell(repo_url=repo_url) as shell:
-      code, code_w_line_numbers = get_code_from_file(shell, path)
-      a = parse_ast(str(code))
-      ast_string = serialize_ast(a)
-
-      print("Reasoning")
-      r2 = reason(client=client, input=ast_string, goal=goal)
-
-      print("Fixing code")
-      out = fix2(client=client, original_code=code_w_line_numbers, input=r2)
-
-      print("Applying diffs")
-      new = apply_diff(original_lines=code, diff=out)
-      formatted_new = reformat_code(new)
-
-      print(formatted_new)
-
-      print("Evaluating code")
-      eval = evaluate(client=client, goal=goal, requrements=r2, old_code=code, new_code=formatted_new)
-      print(eval)
-
-if __name__ == "__main__":
-    main()
