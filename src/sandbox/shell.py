@@ -1,4 +1,4 @@
-import docker
+import os
 import uuid
 from pydantic import BaseModel, validator
 from typing import Optional
@@ -12,6 +12,7 @@ This module contains the Shell class, which grants some high-level operations on
 class Shell:
     def __init__(self, repo_url: str):
         self.repo_url = repo_url
+        self.repo_name = repo_url.split("/")[-1].split(".")[0]
         self.container = None
 
     def __enter__(self):
@@ -26,7 +27,11 @@ class Shell:
 
     def clone_repo(self):
         if self.container:
+            # Pull code & cd into directory
             self.container.execute(["bash", "-c", f"git clone {self.repo_url} && echo 'Cloning completed'"])
+            self.change_directory(self.repo_name)
+            pwd = self.container.execute(["bash", "-c", "pwd"])
+            print(f"pwd: {pwd}")
             print(f"Repository {self.repo_url} cloned inside the container.")
         else:
             print("No container found. Please create a container first.")
@@ -70,4 +75,31 @@ class Shell:
             print(f"File moved from {source_path} to {destination_path} inside the container.")
         else:
             print("No container found. Please create a container first.")
+
+    def change_directory(self, path: str):
+        if self.container:
+            self.container.cwd = os.path.join(self.container.cwd, path)  # Update current working directory correctly relative to cwd
+            print(f"Changed directory to {self.container.cwd} inside the container.")
+        else:
+            print("No container found. Please create a container first.")
+
+    def list_directory_contents(self, path: str = "."):
+        if self.container:
+            # List contents of the directory inside the container
+            output = self.container.execute(["ls", "-l", path])
+            # Splitting the output to process each line
+            lines = output.split('\n')
+            directories = []
+            files = []
+            for line in lines:
+                if line.startswith('d'):
+                    directories.append(line.split()[-1])
+                elif line.startswith('-'):
+                    files.append(line.split()[-1])
+            print(f"Directories: {directories}")
+            print(f"Files: {files}")
+            return directories, files
+        else:
+            print("No container found. Please create a container first.")
+            return [], []
 

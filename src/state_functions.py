@@ -2,10 +2,10 @@ import ast
 import os
 import json
 import xmltodict
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union, Any
 
 from anthropic import Anthropic
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from parsing import parse_code, end_json_symbol, begin_xml
 from diff import UnifiedDiff, xml_to_unified_diff, apply_diff
 import dotenv
@@ -13,7 +13,34 @@ import dotenv
 from format import reformat_code
 from sandbox.shell import Shell
 
+class CodeFile(BaseModel):
+    filepath: str
+    code: str
+    code_with_lines: str
+    ast: Optional[Any] = Field(default=None, description="An abstract syntax tree represented as a generic Python object.")
+    serialized_ast: Optional[str] = None
+
+
 dotenv.load_dotenv()
+
+def glob_repo_code(shell: Shell):
+    files = {}
+    def extract_code_recursive(shell: Shell, path: str):
+        dirs, file_paths = shell.list_directory_contents(path)
+        for file_path in file_paths:
+            if not file_path.startswith('.') and file_path.endswith(".py"):  # Avoid hidden directories and files
+                full_path = os.path.join(path, file_path)
+                code, code_with_lines = get_code_from_file(shell, full_path)
+                if code is not None and code != "":
+                    parsed_ast = parse_ast(code)
+                    serialized_ast = serialize_ast(parsed_ast)
+                    files[full_path] = CodeFile(filepath=full_path, code=code, code_with_lines=code_with_lines, ast=parsed_ast, serialized_ast=serialized_ast)
+        for directory in dirs:
+            if not directory.startswith('.'):  # Avoid hidden directories
+                extract_code_recursive(shell, os.path.join(path, directory))
+
+    extract_code_recursive(shell, ".")
+    return files
 
 def get_code_from_file(shell: Shell, file_path):
     try:
@@ -21,7 +48,7 @@ def get_code_from_file(shell: Shell, file_path):
         numbered_lines = []
         for i, line in enumerate(code_lines, start=1):
             numbered_lines.append(f"{i}: {line}")
-        return "".join(code_lines), "".join(numbered_lines)
+        return "\n".join(code_lines), "\n".join(numbered_lines)
     except FileNotFoundError:
         print(f"File not found: {file_path}")
         return None
@@ -115,37 +142,3 @@ def evaluate(client, goal, requrements, old_code, new_code):
         model="claude-3-opus-20240229",
     )
     return message.content[0].text
-
-
-def main():
-    client = Anthropic(
-        api_key = os.environ.get("ANTHROPIC_API_KEY"),
-    )
-
-    repo_url = ask("Please enter your repository git url: ")
-    path = ask("Please enter your file path: ")
-    goal = ask("Please enter your goal: ")
-
-    with Shell(repo_url=repo_url) as shell:
-      code, code_w_line_numbers = get_code_from_file(shell, path)
-      a = parse_ast(str(code))
-      ast_string = serialize_ast(a)
-
-      print("Reasoning")
-      r2 = reason(client=client, input=ast_string, goal=goal)
-
-      print("Fixing code")
-      out = fix2(client=client, original_code=code_w_line_numbers, input=r2)
-
-      print("Applying diffs")
-      new = apply_diff(original_lines=code, diff=out)
-      formatted_new = reformat_code(new)
-
-      print(formatted_new)
-
-      print("Evaluating code")
-      eval = evaluate(client=client, goal=goal, requrements=r2, old_code=code, new_code=formatted_new)
-      print(eval)
-
-if __name__ == "__main__":
-    main()
