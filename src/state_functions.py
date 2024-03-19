@@ -11,17 +11,17 @@ from diff import UnifiedDiff, xml_to_unified_diff, apply_diff
 import dotenv
 
 from format import reformat_code
+from sandbox.shell import Shell
 
 dotenv.load_dotenv()
 
-def get_code_from_file(file_path):
+def get_code_from_file(shell: Shell, file_path):
     try:
-        with open(file_path, 'r') as file:
-            code_lines = file.readlines()
-            numbered_lines = []
-            for i, line in enumerate(code_lines, start=1):
-                numbered_lines.append(f"{i}: {line}")
-            return "".join(code_lines), "".join(numbered_lines)
+        code_lines = shell.read_file(file_path).split('\n')
+        numbered_lines = []
+        for i, line in enumerate(code_lines, start=1):
+            numbered_lines.append(f"{i}: {line}")
+        return "".join(code_lines), "".join(numbered_lines)
     except FileNotFoundError:
         print(f"File not found: {file_path}")
         return None
@@ -122,27 +122,30 @@ def main():
         api_key = os.environ.get("ANTHROPIC_API_KEY"),
     )
 
+    repo_url = ask("Please enter your repository git url: ")
     path = ask("Please enter your file path: ")
     goal = ask("Please enter your goal: ")
-    code, code_w_line_numbers = get_code_from_file(path)
-    a = parse_ast(str(code))
-    ast_string = serialize_ast(a)
 
-    print("Reasoning")
-    r2 = reason(client=client, input=ast_string, goal=goal)
+    with Shell(repo_url=repo_url) as shell:
+      code, code_w_line_numbers = get_code_from_file(shell, path)
+      a = parse_ast(str(code))
+      ast_string = serialize_ast(a)
 
-    print("Fixing code")
-    out = fix2(client=client, original_code=code_w_line_numbers, input=r2)
+      print("Reasoning")
+      r2 = reason(client=client, input=ast_string, goal=goal)
 
-    print("Applying diffs")
-    new = apply_diff(original_lines=code, diff=out)
-    formatted_new = reformat_code(new)
+      print("Fixing code")
+      out = fix2(client=client, original_code=code_w_line_numbers, input=r2)
 
-    print(formatted_new)
+      print("Applying diffs")
+      new = apply_diff(original_lines=code, diff=out)
+      formatted_new = reformat_code(new)
 
-    print("Evaluating code")
-    eval = evaluate(client=client, goal=goal, requrements=r2, old_code=code, new_code=formatted_new)
-    print(eval)
+      print(formatted_new)
+
+      print("Evaluating code")
+      eval = evaluate(client=client, goal=goal, requrements=r2, old_code=code, new_code=formatted_new)
+      print(eval)
 
 if __name__ == "__main__":
     main()
