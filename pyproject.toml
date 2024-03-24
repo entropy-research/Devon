@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "agent"
+name = "gilfoyle"
 version = "0.1.0"
 description = ""
 authors = ["killind-dev <61808204+killind-dev@users.noreply.github.com>"]
 readme = "README.md"
-package-mode = false
+package-mode = true
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -19,6 +19,7 @@ autopep8 = "^2.0.4"
 black = "^24.3.0"
 ruff = "^0.3.3"
 docker = "^7.0.0"
+pytest = "^8.1.1"
 
 
 [build-system]

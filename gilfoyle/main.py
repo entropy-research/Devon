@@ -3,7 +3,7 @@ import os
 import dotenv
 from anthropic import Anthropic
 
-from thread import Thread
+from gilfoyle.agent.kernel.thread import Thread
 
 dotenv.load_dotenv()
 

@@ -6,8 +6,8 @@ from typing import List, Literal, Optional, Union, Any
 
 from anthropic import Anthropic
 from pydantic import BaseModel, Field
-from parsing import parse_code, end_json_symbol, begin_xml
-from diff import UnifiedDiff, xml_to_unified_diff, apply_diff
+from gilfoyle.parsing import parse_code, end_json_symbol, begin_xml
+from gilfoyle.agents.coder.diff_utils import UnifiedDiff, xml_to_unified_diff, apply_diff
 import dotenv
 
 from format import reformat_code
@@ -19,7 +19,6 @@ class CodeFile(BaseModel):
     code_with_lines: str
     ast: Optional[Any] = Field(default=None, description="An abstract syntax tree represented as a generic Python object.")
     serialized_ast: Optional[str] = None
-
 
 dotenv.load_dotenv()
 
@@ -85,7 +84,7 @@ def reason(client, input, goal):
     )
     return message.content[0].text
 
-def fix2(client, original_code, input):
+def fix2(client, original_code, input, failure_context):
 
     model = UnifiedDiff.model_json_schema()
     data_model = str(xmltodict.unparse({"root": UnifiedDiff.model_json_schema()}, pretty=True))
@@ -109,6 +108,9 @@ If you need to add information, add it as comments in the code itself. use the {
 
 DO NOT make syntax errors.
 
+Here are the results of previous attempts to either parse your output or execute the resulting code:
+{"\n".join(failure_context)}
+
 """,
         messages=[
             {
@@ -123,7 +125,6 @@ DO NOT make syntax errors.
         model="claude-3-opus-20240229",
     )
     content = begin_xml + "\n" + message.content[0].text.split(end_json_symbol)[0]
-    # print(content)
     out = xml_to_unified_diff(content)
 
     return out
@@ -142,38 +143,3 @@ def evaluate(client, goal, requrements, old_code, new_code):
         model="claude-3-opus-20240229",
     )
     return message.content[0].text
-<<<<<<< HEAD
-=======
-
-
-
-def main():
-    client = Anthropic(
-        api_key = os.environ.get("ANTHROPIC_API_KEY"),
-    )
-
-    path = ask("Please enter your file path: ")
-    goal = ask("Please enter your goal: ")
-    code, code_w_line_numbers = get_code_from_file(path)
-    a = parse_ast(str(code))
-    ast_string = serialize_ast(a)
-
-    print("Reasoning")
-    r2 = reason(client=client, input=ast_string, goal=goal)
-
-    print("Fixing code")
-    out = fix2(client=client, original_code=code_w_line_numbers, input=r2)
-
-    print("Applying diffs")
-    new = apply_diff(original_lines=code, diff=out)
-    formatted_new = reformat_code(new)
-
-    print(formatted_new)
-
-    print("Evaluating code")
-    eval = evaluate(client=client, goal=goal, requrements=r2, old_code=code, new_code=formatted_new)
-    print(eval)
-
-if __name__ == "__main__":
-    main()
->>>>>>> 39eb8ac (diff module)
