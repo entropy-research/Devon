@@ -1,3 +1,9 @@
+import json
+from pydantic import BaseModel
+
+class SuccessOutput(BaseModel):
+    success: bool
+
 class EvaluatePrompts:
     system="""Act as an expert senior software engineer.
 You are diligent and tireless!
@@ -10,6 +16,12 @@ This is what makes you such a good engineer. You can find every single detail wi
 
 You will be provided a goal and a set of requirements for the task, and then the original code and the new modified code from one of your junior developers
 """
+
+    success="""Please execute in JSON mode. The "success" field indicates whether or not the requirements were followed. Please extract the "success" field.
+Please use the following pydantic schema: """+ json.dumps(SuccessOutput.model_json_schema()) +"""
+
+{"""
+
     def user_msg(goal, requirements, old_code, new_code):
 
         return f"""

@@ -7,7 +7,7 @@ from typing import List, Literal, Optional, Union, Any
 from anthropic import Anthropic
 from pydantic import BaseModel, Field
 from gilfoyle.parsing import parse_code, end_json_symbol, begin_xml
-from gilfoyle.agents.coder.diff_utils import UnifiedDiff, xml_to_unified_diff, apply_diff
+from gilfoyle.agent.tools.unified_diff.utils import UnifiedDiff, xml_to_unified_diff, apply_diff
 import dotenv
 
 from format import reformat_code

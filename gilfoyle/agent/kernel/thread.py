@@ -21,7 +21,7 @@ class Thread:
         api_key=os.environ.get("ANTHROPIC_API_KEY")
 
         self.reasoning_model = ClaudeOpus(api_key=api_key, system_message=ReasoningPrompts.system, max_tokens=1024)
-        self.diff_model = ClaudeOpus(api_key=api_key, system_message=UnifiedDiffPrompts.main_system + UnifiedDiffPrompts.system_reminder, max_tokens=4096)
+        self.diff_model = ClaudeOpus(api_key=api_key, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
         self.critic = ClaudeOpus(api_key=api_key, system_message=EvaluatePrompts.system, max_tokens=1024)
 
     def run(self):
@@ -66,5 +66,19 @@ class Thread:
                         content=EvaluatePrompts.user_msg(goal=self.task, requirements=r2, old_code=json.dumps(file_code_mapping), new_code=json.dumps(formatted_new))
                     )
                 ])
-                print(eval)
-                success = True
+
+                success_status = self.critic.chat(messages=[
+                    Message(
+                        role="user",
+                        content=eval
+                    ),
+                    Message(
+                        role="assistant",
+                        content=EvaluatePrompts.success
+                    )
+                ])
+
+                print(success_status)
+
+                result = json.loads("{\n" + success_status)
+                success = result["success"]

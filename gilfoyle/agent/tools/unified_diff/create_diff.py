@@ -4,6 +4,8 @@ from gilfoyle.agent.tools.unified_diff.diff_types import FileDiff, Hunk, HunkLin
 import dotenv
 import re
 
+from gilfoyle.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
+
 dotenv.load_dotenv()
 
 def parse_multi_file_diff(diff: str) -> MultiFileDiff:
@@ -52,7 +54,7 @@ def generate_unified_diff(client, original_code, input, failure_context):
     res = client.chat([
         Message(
             role="user",
-            content=input + "\n####CODE" + original_code + "\n####END_CODE"
+            content=input + "\n####CODE" + original_code + "\n####END_CODE"  + UnifiedDiffPrompts.system_reminder
         )
     ])
 
