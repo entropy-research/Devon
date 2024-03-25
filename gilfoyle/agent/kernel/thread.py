@@ -1,6 +1,7 @@
 import os
 
 from gilfoyle.agent.evaluate import evaluate
+from gilfoyle.agent.kernel.state_machine.state_types import State
 from gilfoyle.agent.tools.unified_diff.create_diff import generate_unified_diff
 from gilfoyle.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 from gilfoyle.agent.tools.unified_diff.utils import apply_diff_to_file_map
@@ -28,57 +29,73 @@ class Thread:
         with Shell(repo_url=self.repo_url) as shell:
             success = False
             failure_context = []
-            while not success:
-                repo_data = glob_repo_code(shell)
+            state_manager: State = State(state="reason")
+            while not state_manager.state == "success":
 
+                #Define run context
+                repo_data = glob_repo_code(shell)
                 ast_data = {path: data.code for path, data in repo_data.items()}
 
-                print("Reasoning")
-                r2 = self.reasoning_model.chat([
-                    Message(role="user", content=ReasoningPrompts.user_msg(goal=self.task, code=json.dumps(ast_data)))
-                ])
+                match state_manager.state:
+                    case "reason":
+                        print("Reasoning")
+                        r2 = self.reasoning_model.chat([
+                            Message(role="user", content=ReasoningPrompts.user_msg(goal=self.task, code=json.dumps(ast_data)))
+                        ])
 
-                code_w_line_numbers = {path: data.code_with_lines for path, data in repo_data.items()}
-                print("Fixing code")
+                        state_manager.state = "write"
 
-                try:
-                    out = generate_unified_diff(client=self.diff_model, original_code=json.dumps(code_w_line_numbers), input=r2, failure_context=failure_context)
-                except Exception as e:
-                    error = traceback.format_exc()
-                    print(error)
-                    failure_context.append(error)
-                    continue
+                    case "write":
+                        print("Fixing code")
+                        code_w_line_numbers = {path: data.code_with_lines for path, data in repo_data.items()}
 
-                file_code_mapping = {path: data.code for path, data in repo_data.items()}
+                        try:
+                            out = generate_unified_diff(client=self.diff_model, original_code=json.dumps(code_w_line_numbers), input=r2, failure_context=failure_context)
+                        except Exception as e:
+                            error = traceback.format_exc()
+                            print(error)
+                            failure_context.append(error)
+                            continue
 
-                print("Applying diffs")
-                new, touched_files = apply_diff_to_file_map(file_code_mapping=file_code_mapping, diff=out)
-                formatted_new = {path: reformat_code(code) for path, code in new.items()}
-                print(formatted_new)
+                        file_code_mapping = {path: data.code for path, data in repo_data.items()}
 
-                for file in touched_files:
-                    print(f"{file}:\n\n {json.dumps(formatted_new[file])}\n\n")
+                        state_manager.state = "execute"
 
-                print("Evaluating code")
-                eval = self.critic.chat(messages=[
-                    Message(
-                        role="user",
-                        content=EvaluatePrompts.user_msg(goal=self.task, requirements=r2, old_code=json.dumps(file_code_mapping), new_code=json.dumps(formatted_new))
-                    )
-                ])
+                    case "execute":
 
-                success_status = self.critic.chat(messages=[
-                    Message(
-                        role="user",
-                        content=eval
-                    ),
-                    Message(
-                        role="assistant",
-                        content=EvaluatePrompts.success
-                    )
-                ])
+                        print("Applying diffs")
+                        new, touched_files = apply_diff_to_file_map(file_code_mapping=file_code_mapping, diff=out)
+                        formatted_new = {path: reformat_code(code) for path, code in new.items()}
 
-                print(success_status)
+                        state_manager.state = "evaluate"
+                    
+                    case "evaluate":
 
-                result = json.loads("{\n" + success_status)
-                success = result["success"]
+                        print("Evaluating code")
+                        eval = self.critic.chat(messages=[
+                            Message(
+                                role="user",
+                                content=EvaluatePrompts.user_msg(goal=self.task, requirements=r2, old_code=json.dumps(file_code_mapping), new_code=json.dumps(formatted_new))
+                            )
+                        ])
+
+                        success_status = self.critic.chat(messages=[
+                            Message(
+                                role="user",
+                                content=eval
+                            ),
+                            Message(
+                                role="assistant",
+                                content=EvaluatePrompts.success
+                            )
+                        ])
+
+                        # print(success_status)
+
+                        result = json.loads("{\n" + success_status)
+                        success = result["success"]
+
+                        if success:
+                            state_manager.state = "success"
+                        else:
+                            state_manager.state = "reason"

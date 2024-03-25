@@ -39,3 +39,35 @@ class ClaudeOpus(LanguageModel):
             model="claude-3-opus-20240229",
         )
         return message.content[0].text
+
+class ClaudeSonnet(LanguageModel):
+
+    def __init__(self, api_key, system_message, max_tokens) -> None:
+        self.client = Anthropic(api_key=api_key)
+        self.system_message = system_message
+        self.max_tokens = max_tokens
+    
+    def chat(self, messages: List[Message]):
+        message = self.client.messages.create(
+            max_tokens=self.max_tokens,
+            system=self.system_message,
+            messages=[{"role": m.role, "content": m.content} for m in messages],
+            model="claude-3-opus-20240229",
+        )
+        return message.content[0].text
+    
+class ClaudeHaiku(LanguageModel):
+
+    def __init__(self, api_key, system_message, max_tokens) -> None:
+        self.client = Anthropic(api_key=api_key)
+        self.system_message = system_message
+        self.max_tokens = max_tokens
+    
+    def chat(self, messages: List[Message]):
+        message = self.client.messages.create(
+            max_tokens=self.max_tokens,
+            system=self.system_message,
+            messages=[{"role": m.role, "content": m.content} for m in messages],
+            model="claude-3-opus-20240229",
+        )
+        return message.content[0].text
