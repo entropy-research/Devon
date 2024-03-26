@@ -47,7 +47,7 @@ def parse_multi_file_diff(diff: str) -> MultiFileDiff:
     return MultiFileDiff(files=file_diffs)
 
 def extract_diff(diff_text):
-    return diff_text.split("```diff")[1].split("```")[0]
+    return diff_text.split("<DIFF>")[1].split("</DIFF>")[0]
 
 def generate_unified_diff(client, original_code, input, failure_context):
 

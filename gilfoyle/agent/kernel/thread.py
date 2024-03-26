@@ -1,10 +1,14 @@
 import os
+from pathlib import Path
+from typing import Literal
 
 from gilfoyle.agent.evaluate import evaluate
 from gilfoyle.agent.kernel.state_machine.state_types import State
 from gilfoyle.agent.tools.unified_diff.create_diff import generate_unified_diff
 from gilfoyle.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
+from gilfoyle.agent.tools.unified_diff.unified_diff import apply_patch_set_to_directory
 from gilfoyle.agent.tools.unified_diff.utils import apply_diff_to_file_map
+from gilfoyle.sandbox.environments import LocalEnvironment, PythonContainer
 from sandbox.shell import Shell
 from gilfoyle.sandbox.traverse import glob_repo_code
 from gilfoyle.format import reformat_code
@@ -16,17 +20,26 @@ import json
 import traceback
 
 class Thread:
-    def __init__(self, repo_url: str, task: str):
+    def __init__(self, repo_url: str, task: str, shell_environment : Shell, mode : Literal["Container"] | Literal["Local"] = Literal["Local"] ):
         self.repo_url = repo_url
         self.task = task
         api_key=os.environ.get("ANTHROPIC_API_KEY")
+        self.shell_environment = shell_environment
 
         self.reasoning_model = ClaudeOpus(api_key=api_key, system_message=ReasoningPrompts.system, max_tokens=1024)
         self.diff_model = ClaudeOpus(api_key=api_key, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
         self.critic = ClaudeOpus(api_key=api_key, system_message=EvaluatePrompts.system, max_tokens=1024)
+        self.mode = mode
 
     def run(self):
-        with Shell(repo_url=self.repo_url) as shell:
+        if self.mode == "Local":
+            env = LocalEnvironment
+        elif self.mode == "Container":
+            env = PythonContainer
+        else:
+            env = LocalEnvironment
+
+        with self.shell_environment(repo_url=self.repo_url, environment=env) as shell:
             success = False
             failure_context = []
             state_manager: State = State(state="reason")
@@ -90,7 +103,7 @@ class Thread:
                             )
                         ])
 
-                        # print(success_status)
+                        print(success_status)
 
                         result = json.loads("{\n" + success_status)
                         success = result["success"]
@@ -99,3 +112,8 @@ class Thread:
                             state_manager.state = "success"
                         else:
                             state_manager.state = "reason"
+
+
+            for path, code in file_code_mapping.items():
+                with open(path, "w") as f:
+                    f.write(code)

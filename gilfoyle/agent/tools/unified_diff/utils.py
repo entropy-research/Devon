@@ -56,7 +56,8 @@ def apply_diff_to_file_map(file_code_mapping: dict, diff: MultiFileDiff) -> (dic
             updated_files[file_path] = result_lines
             touched_files.append(file_path)
         else:
-            print(f"Warning: File '{file_path}' not found in the file code mapping.")
+            file_code_mapping[file_path] = apply_diff_to_file("", file_diff)
+            # print(f"Warning: File '{file_path}' not found in the file code mapping.")
 
     # Add untouched files to the updated_files dictionary
     for file_path, original_code in file_code_mapping.items():

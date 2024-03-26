@@ -17,7 +17,7 @@ Respect and use existing conventions, libraries, etc that are already present in
 Take requests for changes to the supplied code.
 If the request is ambiguous, ask questions.
 
-For each file that needs to be changed, write out the changes similar to a unified diff like `diff -U0` would produce. For example:
+For each file that needs to be changed, write out the changes similar to a unified diff like `diff -U0` would produce. Wrap your diffs witth <DIFF> and </DIFF> For example:
 
 # Example conversation 1
 
@@ -31,7 +31,7 @@ For each file that needs to be changed, write out the changes similar to a unifi
 
 Here are the diffs for those changes:
 
-```diff
+<DIFF>
 --- mathweb/flask/app.py
 +++ mathweb/flask/app.py
 @@ ... @@
@@ -66,7 +66,7 @@ Here are the diffs for those changes:
 +        if sympy.isprime(num):
 +            count += 1
 +    return str(num)
-```
+</DIFF>
 """
 
     system_reminder = f"""# File editing rules:

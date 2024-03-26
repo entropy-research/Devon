@@ -3,20 +3,21 @@ import uuid
 from pydantic import BaseModel, validator
 from typing import Optional
 
-from .container import PythonContainer
+from .environments import EnvironmentProtocol, PythonContainer
 
 """
 This module contains the Shell class, which grants some high-level operations on a PythonContainer.
 """
 
 class Shell:
-    def __init__(self, repo_url: str):
+    def __init__(self, repo_url: str, environment: EnvironmentProtocol):
         self.repo_url = repo_url
         self.repo_name = repo_url.split("/")[-1].split(".")[0]
+        self.environment = environment
         self.container = None
 
     def __enter__(self):
-        self.container = PythonContainer()
+        self.container = self.environment()
         self.container.create()
         self.clone_repo()
         return self

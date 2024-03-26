@@ -162,3 +162,8 @@ cython_debug/
 #.idea/
 
 .python-version
+
+
+.github
+.autopr
+.vscode

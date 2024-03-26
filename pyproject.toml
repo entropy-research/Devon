@@ -7,7 +7,7 @@ readme = "README.md"
 package-mode = true
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.10,<4.0"
 openai = "^1.14.1"
 anthropic = "^0.20.0"
 python-dotenv = "^1.0.1"
@@ -20,6 +20,7 @@ black = "^24.3.0"
 ruff = "^0.3.3"
 docker = "^7.0.0"
 pytest = "^8.1.1"
+unidiff = "^0.7.5"
 
 
 [build-system]
