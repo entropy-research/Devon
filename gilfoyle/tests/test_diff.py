@@ -1,10 +1,10 @@
 import os
 from anthropic import Anthropic
 
-from gilfoyle.agents.clients.client import ClaudeOpus
-from gilfoyle.agents.tools.unified_diff.create_diff import generate_unified_diff
-from gilfoyle.agents.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
-from gilfoyle.agents.tools.unified_diff.utils import apply_diff_to_file
+from gilfoyle.agent.clients.client import ClaudeOpus
+from gilfoyle.agent.tools.unified_diff.create_diff import generate_unified_diff
+from gilfoyle.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
+from gilfoyle.agent.tools.unified_diff.utils import apply_diff_to_file
 
 import ast
 

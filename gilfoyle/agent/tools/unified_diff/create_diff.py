@@ -58,6 +58,8 @@ def generate_unified_diff(client, original_code, input, failure_context):
         )
     ])
 
+    print(res)
+
     diff = extract_diff(res)
 
     print(diff)

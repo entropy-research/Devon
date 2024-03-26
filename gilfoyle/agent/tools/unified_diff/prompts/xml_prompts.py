@@ -1,5 +1,5 @@
 import xmltodict
-from gilfoyle.agents.tools.unified_diff.utils import UnifiedDiff
+from gilfoyle.agent.tools.unified_diff.utils import UnifiedDiff
 
 end_json_symbol = "<END>"
 

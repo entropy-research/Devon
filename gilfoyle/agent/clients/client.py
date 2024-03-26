@@ -1,73 +1,112 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional, Any, Union
 
 from anthropic import Anthropic
+from openai import OpenAI
+
+from gilfoyle.agent.clients.tool_utils.tools import Toolbox
 
 @dataclass
 class Message:
     role: str
     content: str
 
+@dataclass
 class LanguageModel(ABC):
+    client: Union[OpenAI, Anthropic]
+    system_message: str
+    max_tokens: int
+    tools_enabled: bool = False
+
     @abstractmethod
-    def chat(self, messages: List[Dict]) -> str:
+    def chat(self, messages: List[Union[Message, Dict[str, Any]]], tools: Optional[Toolbox]) -> str:
         pass
 
-class LanguageModelWrapper:
-    def __init__(self, language_model: LanguageModel):
-        self.language_model = language_model
-
-    def chat(self, messages: List[Message]) -> str:
-        return self.language_model.chat(messages)
+@dataclass
+class GPT4(LanguageModel):
+    model="gpt-4-0125-preview"
     
+    def __post_init__(self):
+        if not isinstance(self.client, OpenAI):
+            raise Exception("Passed incorrect client type")
+    
+    def chat(self, messages: List[Message], tools: Toolbox = None, tool_choice="auto"):
+
+        if not self.tools_enabled and tools is not None:
+            raise Exception("Passed tools to a model that does not support tools")
+
+        response = self.client.chat.completions.create(
+            max_tokens=self.max_tokens,
+            messages=[{"role":"system", "content":self.system_message}] + [{"role": m.role, "content": m.content} if isinstance(m, Message) else m for m in messages],
+            model=self.model,
+            tools=[tool for tool in tools.get_all_tools()] if tools else [],
+            tool_choice=tool_choice
+        )
+
+        message = response.choices[0].message
+        if "tool_calls" in message.__dict__:
+            return message, message.tool_calls
+        
+        return message
+
 class ClaudeOpus(LanguageModel):
+    model="claude-3-opus-20240229"
 
-    #os.environ.get("ANTHROPIC_API_KEY")
-
-    def __init__(self, api_key, system_message, max_tokens) -> None:
-        self.client = Anthropic(api_key=api_key)
-        self.system_message = system_message
-        self.max_tokens = max_tokens
+    def __post_init__(self):
+        if not isinstance(self.client, Anthropic):
+            raise Exception("Passed incorrect client type")
     
-    def chat(self, messages: List[Message]):
+    def chat(self, messages: List[Message], tools: Toolbox = None, tool_choice="auto"):
+
+        if not self.tools_enabled and tools is not None:
+            raise Exception("Passed tools to a model that does not support tools")
+        
         message = self.client.messages.create(
             max_tokens=self.max_tokens,
             system=self.system_message,
             messages=[{"role": m.role, "content": m.content} for m in messages],
-            model="claude-3-opus-20240229",
+            model=self.model,
         )
         return message.content[0].text
 
 class ClaudeSonnet(LanguageModel):
+    model="claude-3-sonnet-20240229"
 
-    def __init__(self, api_key, system_message, max_tokens) -> None:
-        self.client = Anthropic(api_key=api_key)
-        self.system_message = system_message
-        self.max_tokens = max_tokens
+    def __post_init__(self):
+        if not isinstance(self.client, Anthropic):
+            raise Exception("Passed incorrect client type")
     
-    def chat(self, messages: List[Message]):
+    def chat(self, messages: List[Message], tools: Toolbox = None, tool_choice="auto"):
+
+        if not self.tools_enabled and tools is not None:
+            raise Exception("Passed tools to a model that does not support tools")
+        
         message = self.client.messages.create(
             max_tokens=self.max_tokens,
             system=self.system_message,
             messages=[{"role": m.role, "content": m.content} for m in messages],
-            model="claude-3-opus-20240229",
+            model=self.model,
         )
         return message.content[0].text
     
 class ClaudeHaiku(LanguageModel):
+    model="claude-3-haiku-20240307"
 
-    def __init__(self, api_key, system_message, max_tokens) -> None:
-        self.client = Anthropic(api_key=api_key)
-        self.system_message = system_message
-        self.max_tokens = max_tokens
+    def __post_init__(self):
+        if not isinstance(self.client, Anthropic):
+            raise Exception("Passed incorrect client type")
     
-    def chat(self, messages: List[Message]):
+    def chat(self, messages: List[Message], tools: Toolbox = None, tool_choice="auto"):
+
+        if not self.tools_enabled and tools is not None:
+            raise Exception("Passed tools to a model that does not support tools")
+        
         message = self.client.messages.create(
             max_tokens=self.max_tokens,
             system=self.system_message,
             messages=[{"role": m.role, "content": m.content} for m in messages],
-            model="claude-3-opus-20240229",
+            model=self.model,
         )
         return message.content[0].text
