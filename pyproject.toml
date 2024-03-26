@@ -20,12 +20,8 @@ black = "^24.3.0"
 ruff = "^0.3.3"
 docker = "^7.0.0"
 pytest = "^8.1.1"
-<<<<<<< HEAD
 unidiff = "^0.7.5"
-=======
 gitpython = "^3.1.42"
->>>>>>> cf6185f (Can use git)
-
 
 [build-system]
 requires = ["poetry-core"]

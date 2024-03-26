@@ -2,6 +2,7 @@ import os
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
+import xml.etree.ElementTree as ET
 from typing import Callable, Dict, Any, List, get_type_hints
 import json
 import inspect
@@ -57,8 +58,50 @@ class Tool(BaseModel):
                 "name": self.name,
                 "description": self.description,
                 "parameters": self.parameters,
-            }
+            },
         }
+
+#     def to_xml(self):
+#         parameters_xml = ""
+#         for param_name, param_info in self.parameters["properties"].items():
+#             parameter_xml = f"""
+#         <parameter>
+#             <name>{param_name}</name>
+#             <type>{param_info["type"]}</type>
+#             <description>{param_info["description"]}</description>
+#         </parameter>"""
+#             parameters_xml += parameter_xml
+
+#         return f"""
+# <tool_description>
+#     <tool_name>{self.name}</tool_name>
+#     <description>{self.description}</description>
+#     <parameters>{parameters_xml}
+#     </parameters>
+# </tool_description>"""
+
+# def parse_function_calls(xml_string: str) -> List[Dict[str, Any]]:
+#     root = ET.fromstring(xml_string)
+#     function_calls = []
+
+#     for invoke_element in root.findall(".//invoke"):
+#         tool_name = invoke_element.find("tool_name").text
+#         parameters = {}
+
+#         params_element = invoke_element.find("parameters")
+#         if params_element is not None:
+#             for param_element in params_element:
+#                 param_name = param_element.tag
+#                 param_value = param_element.text
+#                 parameters[param_name] = param_value
+
+#         function_call = {
+#             "tool_name": tool_name,
+#             "parameters": parameters
+#         }
+#         function_calls.append(function_call)
+
+#     return function_calls
 
 class Toolbox:
     def __init__(self):

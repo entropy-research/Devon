@@ -1,4 +1,3 @@
-from gilfoyle.agent.clients.tool_utils.tools import Tool, Toolbox
 from git import Repo
 
 from pydantic import Field
@@ -13,6 +12,8 @@ class GitManager:
             url: str = Field(..., description="The URL of the Git repository to clone"),
             path: str = Field(..., description="The path where the cloned repository will be stored")
         ):
+
+        print("pulling: ", url)
 
         self.repo = Repo.clone_from(url, path)
         return self.repo
