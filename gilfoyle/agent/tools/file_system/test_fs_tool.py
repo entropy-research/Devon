@@ -11,15 +11,6 @@ from gilfoyle.agent.tools.git_tool.git_tool import GitManager
 from gilfoyle.agent.tools.github.github_tool import GitHubTool
 from gilfoyle.agent.tools.directory.directory import DirectoryObserverTool
 
-def get_n_day_weather_forecast(
-    location: str = Field(..., description="The city and state, e.g. San Francisco, CA"),
-    format: str = Field("celsius", description="The temperature unit to use. Infer this from the user's location."),
-    num_days: int = Field(..., description="The number of days to forecast")
-) -> str:
-    """Get an N-day weather forecast"""
-    # Placeholder implementation
-    return json.dumps({"location": location, "format": format, "num_days": num_days, "forecast": "Sunny"})
-
 if __name__ == "__main__":
     tool_bank = Toolbox()
     g = GitManager()
@@ -39,10 +30,8 @@ if __name__ == "__main__":
 
     messages = [
         Message(role="user", content="""
-                the entropy-research github org has a repo called 'agent' on github.
-                clone it locally to a new folder of your choice.
-                to do this youll need to search github and list the local file structure
-                then clone the repo after you know what path you want to put it under
+                somewhere nested under the current directory there is a file called test_github_tool.py
+                find it and copy it to the file_system folder under tools
                 """)
     ]
 

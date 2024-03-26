@@ -9,6 +9,13 @@ import inspect
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+def tool(name: str, description: str):
+    def decorator(func):
+        func.tool_name = name
+        func.tool_description = description
+        return func
+    return decorator
+
 class Tool(BaseModel):
     name: str
     description: str
@@ -109,6 +116,13 @@ class Toolbox:
 
     def add_tool(self, tool: Tool):
         self.tools.append(tool)
+
+    def add_tools_from_class(self, tool_class: BaseModel):
+        for method_name, method in inspect.getmembers(tool_class, predicate=inspect.ismethod):
+            if hasattr(method, "tool_name") and hasattr(method, "tool_description"):
+                tool_name = f"{tool_class.__class__.__name__}_{method.tool_name}"
+                tool_description = method.tool_description
+                self.add_tool(Tool.from_function(method, tool_name, tool_description))
 
     def get_tool(self, name: str) -> Tool:
         for tool in self.tools:
