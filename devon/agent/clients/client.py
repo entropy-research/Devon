@@ -8,6 +8,25 @@ from openai import OpenAI
 
 from devon.agent.clients.tool_utils.tools import Toolbox
 
+import logging
+
+# Create a logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)  # Set the log level
+
+# Create a file handler and set the level to debug
+fh = logging.FileHandler('PROMPT')
+fh.setLevel(logging.INFO)
+
+# Create a formatter and add it to the handler
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(fh)
+
+
+
 @dataclass
 class Message:
     role: str
@@ -61,6 +80,9 @@ class ClaudeOpus(LanguageModel):
     
     def chat(self, messages: List[Message], tools: Toolbox = None, tool_choice="auto",stop_sequences=[]):
 
+        # logger.info("SYSTEM",str(self.system_message))
+        # logger.info("PROMPT",str([{"role": m.role, "content": m.content} for m in messages]))
+
         if not self.tools_enabled and tools is not None:
             raise Exception("Passed tools to a model that does not support tools")
         # print("SYSTEM",self.system_message)
@@ -73,7 +95,7 @@ class ClaudeOpus(LanguageModel):
             stop_sequences=stop_sequences,
             temperature=self.temperature
         )
-
+        # logger.info("REPONSE", message.content[0].text)
         print("REPONSE", message.content[0].text)
     
         return message.content[0].text
@@ -87,6 +109,9 @@ class ClaudeSonnet(LanguageModel):
     
     def chat(self, messages: List[Message], tools: Toolbox = None, tool_choice="auto"):
 
+        # logger.info("SYSTEM",self.system_message)
+        # logger.info("PROMPT",[{"role": m.role, "content": m.content} for m in messages])
+
         if not self.tools_enabled and tools is not None:
             raise Exception("Passed tools to a model that does not support tools")
         
@@ -97,6 +122,9 @@ class ClaudeSonnet(LanguageModel):
             model=self.model,
             temperature=self.temperature
         )
+
+        # logger.info("REPONSE", message.content[0].text)
+
         return message.content[0].text
     
 class ClaudeHaiku(LanguageModel):
@@ -108,6 +136,9 @@ class ClaudeHaiku(LanguageModel):
     
     def chat(self, messages: List[Message], tools: Toolbox = None, tool_choice="auto"):
 
+        # logger.info("SYSTEM",self.system_message)
+        # logger.info("PROMPT",[{"role": m.role, "content": m.content} for m in messages])
+
         if not self.tools_enabled and tools is not None:
             raise Exception("Passed tools to a model that does not support tools")
         
@@ -118,4 +149,8 @@ class ClaudeHaiku(LanguageModel):
             model=self.model,
             temperature=self.temperature
         )
+
+
+        # logger.info("REPONSE", message.content[0].text)
+
         return message.content[0].text

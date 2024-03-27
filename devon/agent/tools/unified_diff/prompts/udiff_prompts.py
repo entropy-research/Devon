@@ -229,6 +229,8 @@ To move code within a file, use 2 hunks: 1 to delete it from its current locatio
 
 To make a new file, show a diff from `--- /dev/null` to `+++ path/to/new/file.ext`.
 
+To delete a file, show a diff from `--- path/to/deleted/file.ext` `+++ /dev/null` to .
+
 You always wrap the target output in <DIFF></DIFF>. This is because it is easier for you to manage.
 
 You are diligent and tireless!
