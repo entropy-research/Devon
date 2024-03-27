@@ -8,22 +8,27 @@ class DirectoryObserverTool(BaseModel):
     base_path: str = Field(..., description="The base path of the directory to observe")
 
     @tool("list_directory_recursive", "List the contents of a directory recursively")
-    def list_directory_recursive(self, path: str = Field("", description="The relative path from the base path")) -> List[Dict[str, Any]]:
+    def list_directory_recursive(self, path: str = Field("", description="The relative path from the base path")) -> Dict[str, Any]:
         full_path = os.path.join(self.base_path, path)
         if not os.path.exists(full_path):
             raise ValueError(f"Path does not exist: {full_path}")
 
-        entries = []
-        for root, dirs, files in os.walk(full_path):
-            for entry in dirs + files:
-                entry_path = os.path.join(root, entry)
+        def build_tree(current_path):
+            entries = {}
+            for entry in os.listdir(current_path):
+                entry_path = os.path.join(current_path, entry)
                 relative_path = os.path.relpath(entry_path, self.base_path)
-                entry_type = "file" if os.path.isfile(entry_path) else "directory"
-                entry_info = {
-                    "name": entry,
-                    "path": relative_path,
-                    "type": entry_type
-                }
-                entries.append(entry_info)
+                if os.path.isfile(entry_path):
+                    entries[entry] = {
+                        "type": "file",
+                        "path": relative_path
+                    }
+                else:
+                    entries[entry] = {
+                        "type": "directory",
+                        "path": relative_path,
+                        "children": build_tree(entry_path)
+                    }
+            return entries
 
-        return entries
+        return build_tree(full_path)
