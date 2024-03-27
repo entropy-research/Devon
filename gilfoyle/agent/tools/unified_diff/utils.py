@@ -37,9 +37,9 @@ def apply_diff_to_file(original_code: str, diff: FileDiff) -> str:
         
         # Replace the original lines with the modified lines
                 
-        print(src_start, src_end)
-        print(result_lines[src_start:src_end])
-        print(modified_lines)
+        # print(src_start, src_end)
+        # print(result_lines[src_start:src_end])
+        # print(modified_lines)
         result_lines[src_start:src_end] = modified_lines
     
     return "\n".join(result_lines)
@@ -49,7 +49,7 @@ def apply_diff_to_file_map(file_code_mapping: dict, diff: MultiFileDiff) -> (dic
     touched_files = []
 
     for file_diff in diff.files:
-        file_path = file_diff.src_file
+        file_path = file_diff.tgt_file
         if file_path in file_code_mapping:
             original_code = file_code_mapping[file_path]
             result_lines = apply_diff_to_file(original_code, file_diff)

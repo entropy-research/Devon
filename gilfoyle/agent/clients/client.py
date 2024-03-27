@@ -19,6 +19,7 @@ class LanguageModel(ABC):
     system_message: str
     max_tokens: int
     tools_enabled: bool = False
+    temperature: float = 0.5
 
     @abstractmethod
     def chat(self, messages: List[Union[Message, Dict[str, Any]]], tools: Optional[Toolbox]) -> str:
@@ -58,17 +59,23 @@ class ClaudeOpus(LanguageModel):
         if not isinstance(self.client, Anthropic):
             raise Exception("Passed incorrect client type")
     
-    def chat(self, messages: List[Message], tools: Toolbox = None, tool_choice="auto"):
+    def chat(self, messages: List[Message], tools: Toolbox = None, tool_choice="auto",stop_sequences=[]):
 
         if not self.tools_enabled and tools is not None:
             raise Exception("Passed tools to a model that does not support tools")
-        
+        # print("SYSTEM",self.system_message)
+        # print("PROMPT",[{"role": m.role, "content": m.content} for m in messages])
         message = self.client.messages.create(
             max_tokens=self.max_tokens,
             system=self.system_message,
             messages=[{"role": m.role, "content": m.content} for m in messages],
             model=self.model,
+            stop_sequences=stop_sequences,
+            temperature=self.temperature
         )
+
+        print("REPONSE", message.content[0].text)
+    
         return message.content[0].text
 
 class ClaudeSonnet(LanguageModel):
@@ -88,6 +95,7 @@ class ClaudeSonnet(LanguageModel):
             system=self.system_message,
             messages=[{"role": m.role, "content": m.content} for m in messages],
             model=self.model,
+            temperature=self.temperature
         )
         return message.content[0].text
     
@@ -108,5 +116,6 @@ class ClaudeHaiku(LanguageModel):
             system=self.system_message,
             messages=[{"role": m.role, "content": m.content} for m in messages],
             model=self.model,
+            temperature=self.temperature
         )
         return message.content[0].text

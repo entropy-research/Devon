@@ -167,3 +167,5 @@ cython_debug/
 .github
 .autopr
 .vscode
+
+.devant

@@ -54,15 +54,11 @@ def generate_unified_diff(client, original_code, input, failure_context):
     res = client.chat([
         Message(
             role="user",
-            content=input + "\n####CODE" + original_code + "\n####END_CODE"  + UnifiedDiffPrompts.system_reminder
+            content=input + "\n<CODE>" + original_code + "\n</CODE>"
         )
     ])
 
-    print(res)
-
     diff = extract_diff(res)
-
-    print(diff)
 
     content = parse_multi_file_diff(diff)
 

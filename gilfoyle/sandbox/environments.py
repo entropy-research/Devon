@@ -16,6 +16,12 @@ class EnvironmentProtocol(Protocol):
     methods for creation, destruction, and command execution within the environment.
     """
 
+    def __enter__(self):
+        ...
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        ...
+
     def create(self) -> None:
         """
         Prepares the environment for use.

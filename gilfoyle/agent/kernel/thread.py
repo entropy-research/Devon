@@ -6,7 +6,6 @@ from gilfoyle.agent.evaluate import evaluate
 from gilfoyle.agent.kernel.state_machine.state_types import State
 from gilfoyle.agent.tools.unified_diff.create_diff import generate_unified_diff
 from gilfoyle.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
-from gilfoyle.agent.tools.unified_diff.unified_diff import apply_patch_set_to_directory
 from gilfoyle.agent.tools.unified_diff.utils import apply_diff_to_file_map
 from gilfoyle.sandbox.environments import LocalEnvironment, PythonContainer
 from sandbox.shell import Shell
@@ -15,10 +14,10 @@ from gilfoyle.format import reformat_code
 from gilfoyle.agent.reasoning.reason import ReasoningPrompts
 from agent.evaluate.evaluate import EvaluatePrompts
 from anthropic import Anthropic
-from gilfoyle.agent.clients.client import ClaudeOpus, Message
+from gilfoyle.agent.clients.client import ClaudeHaiku, ClaudeOpus, ClaudeSonnet, Message
 import json
 import traceback
-
+import xmltodict
 class Thread:
     def __init__(self, repo_url: str, task: str, shell_environment : Shell, mode : Literal["Container"] | Literal["Local"] = Literal["Local"] ):
         self.repo_url = repo_url
@@ -26,9 +25,11 @@ class Thread:
         api_key=os.environ.get("ANTHROPIC_API_KEY")
         self.shell_environment = shell_environment
 
-        self.reasoning_model = ClaudeOpus(api_key=api_key, system_message=ReasoningPrompts.system, max_tokens=1024)
-        self.diff_model = ClaudeOpus(api_key=api_key, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
-        self.critic = ClaudeOpus(api_key=api_key, system_message=EvaluatePrompts.system, max_tokens=1024)
+        anthrpoic_client = Anthropic(api_key=api_key)
+
+        self.reasoning_model = ClaudeOpus(client=anthrpoic_client, system_message=ReasoningPrompts.system, max_tokens=1024,temperature=0.5)
+        self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
+        self.critic = ClaudeOpus(client=anthrpoic_client, system_message=EvaluatePrompts.system, max_tokens=1024)
         self.mode = mode
 
     def run(self):
@@ -64,6 +65,7 @@ class Thread:
 
                         try:
                             out = generate_unified_diff(client=self.diff_model, original_code=json.dumps(code_w_line_numbers), input=r2, failure_context=failure_context)
+                            print(out)
                         except Exception as e:
                             error = traceback.format_exc()
                             print(error)
@@ -95,25 +97,36 @@ class Thread:
                         success_status = self.critic.chat(messages=[
                             Message(
                                 role="user",
-                                content=eval
+                                content=eval + "\n" + """If you think the requirements have been met reply with
+    <SUCCESS>
+    True
+    </SUCCESS>
+    If you think the requirements have not been met reply with
+    <SUCCESS>
+    False
+    </SUCCESS>.
+    Do not reply with anything else. Your response will be parsed as is. Thank you."""
                             ),
                             Message(
                                 role="assistant",
                                 content=EvaluatePrompts.success
                             )
-                        ])
+                        ],stop_sequences=["</SUCCESS>"])
 
-                        print(success_status)
 
-                        result = json.loads("{\n" + success_status)
-                        success = result["success"]
+                        result = xmltodict.parse("<SUCCESS>" + success_status + "</SUCCESS>")
 
-                        if success:
+                        # result = json.loads("{\n" + success_status)
+                        success = result["SUCCESS"]
+
+                        if success == "True":
                             state_manager.state = "success"
                         else:
                             state_manager.state = "reason"
 
 
             for path, code in file_code_mapping.items():
+                path = shell.container.cwd + "/" + path
+                os.makedirs(os.path.dirname(path), exist_ok=True)
                 with open(path, "w") as f:
                     f.write(code)
