@@ -7,9 +7,7 @@ from gilfoyle.agent.kernel.state_machine.state_types import State
 from gilfoyle.agent.tools.unified_diff.create_diff import generate_unified_diff
 from gilfoyle.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 from gilfoyle.agent.tools.unified_diff.utils import apply_diff_to_file_map
-from gilfoyle.sandbox.environments import LocalEnvironment, PythonContainer
-from sandbox.shell import Shell
-from gilfoyle.sandbox.traverse import glob_repo_code
+from gilfoyle.sandbox.environments import EnvironmentProtocol
 from gilfoyle.format import reformat_code
 from gilfoyle.agent.reasoning.reason import ReasoningPrompts
 from agent.evaluate.evaluate import EvaluatePrompts
@@ -18,12 +16,16 @@ from gilfoyle.agent.clients.client import ClaudeHaiku, ClaudeOpus, ClaudeSonnet,
 import json
 import traceback
 import xmltodict
+
 class Thread:
-    def __init__(self, repo_url: str, task: str, shell_environment : Shell, mode : Literal["Container"] | Literal["Local"] = Literal["Local"] ):
-        self.repo_url = repo_url
+    def __init__(self,
+        task: str,
+        environment : EnvironmentProtocol,
+        mode : Literal["Container"] | Literal["Local"] = Literal["Local"]
+    ):
         self.task = task
         api_key=os.environ.get("ANTHROPIC_API_KEY")
-        self.shell_environment = shell_environment
+        self.env: EnvironmentProtocol = environment
 
         anthrpoic_client = Anthropic(api_key=api_key)
 
@@ -33,21 +35,16 @@ class Thread:
         self.mode = mode
 
     def run(self):
-        if self.mode == "Local":
-            env = LocalEnvironment
-        elif self.mode == "Container":
-            env = PythonContainer
-        else:
-            env = LocalEnvironment
 
-        with self.shell_environment(repo_url=self.repo_url, environment=env) as shell:
+        with self.env as env:
             success = False
             failure_context = []
             state_manager: State = State(state="reason")
+            file_system = env.tools.file_system(path=os.getcwd())
             while not state_manager.state == "success":
 
                 #Define run context
-                repo_data = glob_repo_code(shell)
+                repo_data = file_system.glob_repo_code(os.getcwd())
                 ast_data = {path: data.code for path, data in repo_data.items()}
 
                 match state_manager.state:
@@ -77,7 +74,6 @@ class Thread:
                         state_manager.state = "execute"
 
                     case "execute":
-
                         print("Applying diffs")
                         new, touched_files = apply_diff_to_file_map(file_code_mapping=file_code_mapping, diff=out)
                         formatted_new = {path: reformat_code(code) for path, code in new.items()}
@@ -113,7 +109,6 @@ class Thread:
                             )
                         ],stop_sequences=["</SUCCESS>"])
 
-
                         result = xmltodict.parse("<SUCCESS>" + success_status + "</SUCCESS>")
 
                         # result = json.loads("{\n" + success_status)
@@ -125,8 +120,8 @@ class Thread:
                             state_manager.state = "reason"
 
 
-            for path, code in file_code_mapping.items():
-                path = shell.container.cwd + "/" + path
-                os.makedirs(os.path.dirname(path), exist_ok=True)
-                with open(path, "w") as f:
-                    f.write(code)
+            # for path, code in file_code_mapping.items():
+            #     path = shell.container.cwd + "/" + path
+            #     os.makedirs(os.path.dirname(path), exist_ok=True)
+            #     with open(path, "w") as f:
+            #         f.write(code)

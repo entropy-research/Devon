@@ -4,7 +4,7 @@ from typing import List
 from pydantic import Field
 from gilfoyle.agent.clients.tool_utils.tools import tool
 
-class GitManager:
+class GitTool:
 
     def __init__(self, path="."):
         self.repo = Repo(path=path)
