@@ -110,11 +110,13 @@ class FileSystemTool(BaseModel):
         files = []
 
         for entry in os.listdir(path):
+            print(entry)
+            entry = os.path.join(path, entry)
             if os.path.isfile(entry):
                 files.append(entry)
             elif os.path.isdir(entry):
                 dirs.append(entry)
-            
+        
         return dirs, files
 
     def get_code_from_file(self, file_path):

@@ -44,25 +44,54 @@ def parse_multi_file_diff(diff: str) -> MultiFileDiff:
         else:
             i += 1
     
-    return MultiFileDiff(files=file_diffs)
+    return file_diffs
 
-def extract_diff(diff_text):
-    return diff_text.split("<DIFF>")[1].split("</DIFF>")[0]
+def extract_diffs(diff_text):
+    return [diff.replace("<DIFF>", "").strip() for diff in diff_text.split("</DIFF>")[:-1] if "<DIFF>" in diff]
 
-def generate_unified_diff(client, original_code, input, failure_context):
+def format_diff_input(goal, code, plan, create, modify, delete, failure_context):
+    return f"""
+<GOAL>
+{goal}
+</GOAL>
+<CODE>
+{code}
+</CODE>
+<PLAN>
+{plan}
+</PLAN>
+<CREATE>
+{create}
+</CREATE>
+<MODIFY>
+{modify}
+</MODIFY>
+<DELETE>
+{delete}
+</DELETE>
+"""
+
+def generate_unified_diff(client, goal, original_code, plan, create, modify, delete, failure_context):
 
     res = client.chat([
         Message(
             role="user",
-            content=input + "\n<CODE>" + original_code + "\n</CODE>"
+            content=format_diff_input(goal, original_code, plan, create, modify, delete, failure_context)
         )
     ])
 
-    diff = extract_diff(res)
+    print(res)
 
-    content = parse_multi_file_diff(diff)
+    diffs = extract_diffs(res)
 
-    return content
+    all_diffs = []
+    for diff in diffs:
+        file_diffs = parse_multi_file_diff(diff)
+        all_diffs.extend(file_diffs)
+
+    changes = MultiFileDiff(files=all_diffs)
+
+    return changes
 
 if __name__ == "__main__":
     example = """--- /Users/blackout/workspace/agent/devon/tests/state_functions.py

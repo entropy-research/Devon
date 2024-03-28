@@ -5,9 +5,8 @@ from pydantic import Field
 from openai import OpenAI
 import json
 
-from devon.agent.tools.directory.directory import DirectoryObserverTool
 from devon.agent.tools.file_system.fs import FileSystemTool
-from devon.agent.tools.git_tool.git_tool import GitManager
+from devon.agent.tools.git_tool.git_tool import GitTool
 
 def get_n_day_weather_forecast(
     location: str = Field(..., description="The city and state, e.g. San Francisco, CA"),
@@ -21,12 +20,10 @@ def get_n_day_weather_forecast(
 if __name__ == "__main__":
     git_tools = Toolbox()
 
-    g = GitManager(path="..")
-    directory_tool = DirectoryObserverTool(base_path=".")
+    g = GitTool(path="..")
     file_system_tool = FileSystemTool(base_path=".")
 
     git_tools.add_tools_from_class(g)
-    git_tools.add_tools_from_class(directory_tool)
     git_tools.add_tools_from_class(file_system_tool)
 
     client = OpenAI()
@@ -35,11 +32,12 @@ if __name__ == "__main__":
 
     messages = [
             Message(role="user", content="""
-                    somewhere nested in the current director is a file called test_github_tool.py
-                    first create a new branch and switch to it,
-                    then on the new branch, copy test_github_tool.py it to the file_system folder,
-                    after you copy the file, make sure to commit the file to git
-                    """)
+                somewhere nested in the current director is a file called test_github_tool.py
+                first create a new branch and switch to it,
+                then on the new branch, copy test_github_tool.py it to the file_system folder,
+                after you copy the file, make sure to commit the file to git
+                """
+            )
         ]
 
     while True:

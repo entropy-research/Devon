@@ -10,7 +10,8 @@ class State(ABC):
 
 class StateMachine:
 
-    def __init__(self):
+    def __init__(self, state: State):
+        self.state = state
         self.state_dict = {}
 
     def add_state(self, name: State, function):
