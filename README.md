@@ -1,4 +1,4 @@
-# Entropy-Agent
+# Devon!
 
 Current agent strategy:
 
