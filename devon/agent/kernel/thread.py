@@ -3,11 +3,9 @@ from pathlib import Path
 from typing import Literal
 
 from devon.agent.evaluate import evaluate
-from devon.agent.kernel.state_machine.state_machine import StateMachine
-from devon.agent.kernel.state_machine.state_types import State
-from devon.agent.tools.unified_diff.create_diff import generate_unified_diff, generate_unified_diff2
+from devon.agent.tools.unified_diff.create_diff import generate_unified_diff2
 from devon.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
-from devon.agent.tools.unified_diff.utils import apply_diff, apply_diff2, apply_diff_to_file_map
+from devon.agent.tools.unified_diff.utils import apply_diff2
 from devon.sandbox.environments import EnvironmentProtocol
 from devon.format import reformat_code
 from devon.agent.reasoning.reason import ReasoningPrompts
@@ -40,7 +38,6 @@ class Thread:
         with self.env as env:
             success = False
             failure_context = []
-            state_manager = StateMachine(state="reason")
             file_system = env.tools.file_system(path=os.getcwd())
 
             plan = None
