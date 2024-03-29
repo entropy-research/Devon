@@ -175,7 +175,6 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
                 for hunk in reversed(file_diff.hunks):
                     # Copy unchanged lines until the hunk start
 
-
                     old_lines, new_lines  = construct_versions_from_diff_hunk(hunk)
 
                     start, end = match_stripped_lines(src_lines, old_lines)
