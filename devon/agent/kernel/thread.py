@@ -3,6 +3,12 @@ from pathlib import Path
 from typing import Literal
 
 from devon.agent.evaluate import evaluate
+from devon.agent.kernel.state_machine.states.evaluate import EvaluateState
+from devon.agent.kernel.state_machine.states.execute import ExecuteState
+from devon.agent.kernel.state_machine.states.reason import ReasonState
+from devon.agent.kernel.state_machine.states.terminate import TerminateState
+from devon.agent.kernel.state_machine.states.write import WriteState
+from devon.agent.kernel.state_machine.states.evaluate import EvaluateState
 from devon.agent.tools.unified_diff.create_diff import generate_unified_diff2
 from devon.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 from devon.agent.tools.unified_diff.utils import apply_diff2
@@ -15,6 +21,8 @@ from devon.agent.clients.client import ClaudeHaiku, ClaudeOpus, ClaudeSonnet, Me
 import json
 import traceback
 import xmltodict
+from .state_machine.state_machine import StateMachine
+from .state_machine.state_types import StateType
 
 class Thread:
     def __init__(self,
@@ -32,6 +40,14 @@ class Thread:
         self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
         self.critic = ClaudeOpus(client=anthrpoic_client, system_message=EvaluatePrompts.system, max_tokens=1024)
         self.mode = mode
+        
+        self.state_machine = StateMachine(initial_state="reason")
+        self.state_machine.add_state("reason", ReasonState())
+        self.state_machine.add_state("write", WriteState())
+        self.state_machine.add_state("execute", ExecuteState())
+        self.state_machine.add_state("evaluate", EvaluateState())
+        self.state_machine.add_state("terminate", TerminateState())
+        self.context = {}
 
     def run(self):
 
@@ -45,9 +61,6 @@ class Thread:
             modify = None
             delete = None
 
-            # while not state_manager.state == "success":
-
-                #Define run context
             repo_data = file_system.glob_repo_code(os.getcwd())
             file_tree = file_system.list_directory_recursive(path=os.getcwd())
 
@@ -58,127 +71,59 @@ class Thread:
                 Message(role="user", content=ReasoningPrompts.user_msg(goal=self.task, file_tree=str(file_tree), code=json.dumps(ast_data)))
             ])
 
-            plan, create, modify, delete, files_to_change = ReasoningPrompts.parse_msg(r2)
+            plan, create, modify, delete, files_to_change, read_only = ReasoningPrompts.parse_msg(r2)
 
             modify += [p for p in create if os.path.exists(p)]
             files_to_change = [os.path.join(os.getcwd(), path.strip()) for path in files_to_change if path != '']
 
-            code_w_line_numbers = {path: data.code for path, data in repo_data.items() if path in files_to_change}
+            print("Read Only: ", read_only)
+            print("To Change: ", files_to_change)
 
-            print(code_w_line_numbers.keys())
-            try:
-                out = generate_unified_diff2(
-                        client=self.diff_model,
-                        goal=self.task,
-                        original_code=json.dumps(code_w_line_numbers), 
-                        plan=plan,
-                        create=create,
-                        modify=modify,
-                        delete=delete,
-                        failure_context=failure_context,
-                        file_tree=file_tree
-                    )
+            read_code_w_line_numbers = {path: data.code for path, data in repo_data.items() if path in read_only}
+            edit_code_w_line_numbers = {path: data.code for path, data in repo_data.items() if path in files_to_change}
 
-                print(out)
-            except Exception as e:
-                error = traceback.format_exc()
-                print(error)
-                failure_context.append(error)
-                # continue
+            # print(code_w_line_numbers.keys())
+            # try:
+            #     out = generate_unified_diff2(
+            #             client=self.diff_model,
+            #             goal=self.task,
+            #             original_code=json.dumps(code_w_line_numbers), 
+            #             plan=plan,
+            #             create=create,
+            #             modify=modify,
+            #             delete=delete,
+            #             failure_context=failure_context,
+            #             file_tree=file_tree
+            #         )
 
-            file_code_mapping = {path: data.code for path, data in repo_data.items()}
-
-            # print("Applying diffs")
-            # new, touched_files = apply_diff_to_file_map(file_code_mapping=file_code_mapping, diff=out)
-            apply_diff2(out)
-
-            # print(new, touched_files)
-
+            #     print(out)
+            # except Exception as e:
+            #     error = traceback.format_exc()
+            #     print(error)
+            #     failure_context.append(error)
+            
             # file_code_mapping = {path: data.code for path, data in repo_data.items()}
 
-    #         match state_manager.state:
-    #             case "reason":
-    #                 print("Reasoning")
-    #                 r2 = self.reasoning_model.chat([
-    #                     Message(role="user", content=ReasoningPrompts.user_msg(goal=self.task, file_tree=str(file_tree), code=json.dumps(ast_data)))
-    #                 ])
 
-    #                 plan, create, modify, delete = ReasoningPrompts.parse_msg(r2)
+            # apply_diff2(out)
 
-    #                 state_manager.state = "write"
+            # # Evaluate the changes
+            # print("Evaluating code")
+            # eval_result = self.critic.chat(messages=[
+            #     Message(
+            #         role="user",
+            #         content=EvaluatePrompts.user_msg(
+            #             goal=self.task,
+            #             requirements=r2,
+            #             old_code=json.dumps(repo_data),
+            #             new_code=json.dumps(file_system.glob_repo_code(os.getcwd()))
+            #         )
+            #     )
+            # ])
 
-    #             case "write":
-    #                 print("Fixing code")
-    #                 code_w_line_numbers = {path: data.code_with_lines for path, data in repo_data.items() if path in create + modify + delete}
+            # success = EvaluatePrompts.parse_success(eval_result)
 
-    #                 try:
-    #                     out = generate_unified_diff(
-    #                             client=self.diff_model,
-    #                             original_code=json.dumps(code_w_line_numbers), 
-    #                             input=plan,
-    #                             failure_context=failure_context
-    #                         )
-                        
-    #                     print(out)
-    #                 except Exception as e:
-    #                     error = traceback.format_exc()
-    #                     print(error)
-    #                     failure_context.append(error)
-    #                     # continue
-
-    #                 file_code_mapping = {path: data.code for path, data in repo_data.items()}
-
-    #                 state_manager.state = "execute"
-
-    #             case "execute":
-    #                 print("Applying diffs")
-    #                 new, touched_files = apply_diff_to_file_map(file_code_mapping=file_code_mapping, diff=out)
-    #                 formatted_new = {path: reformat_code(code) for path, code in new.items()}
-
-    #                 state_manager.state = "evaluate"
-                
-    #             case "evaluate":
-
-    #                 print("Evaluating code")
-    #                 eval = self.critic.chat(messages=[
-    #                     Message(
-    #                         role="user",
-    #                         content=EvaluatePrompts.user_msg(goal=self.task, requirements=r2, old_code=json.dumps(file_code_mapping), new_code=json.dumps(formatted_new))
-    #                     )
-    #                 ])
-
-    #                 success_status = self.critic.chat(messages=[
-    #                     Message(
-    #                         role="user",
-    #                         content=eval + "\n" + """If you think the requirements have been met reply with
-    # <SUCCESS>
-    # True
-    # </SUCCESS>
-    # If you think the requirements have not been met reply with
-    # <SUCCESS>
-    # False
-    # </SUCCESS>.
-    # Do not reply with anything else. Your response will be parsed as is. Thank you."""
-    #                     ),
-    #                     Message(
-    #                         role="assistant",
-    #                         content=EvaluatePrompts.success
-    #                     )
-    #                 ],stop_sequences=["</SUCCESS>"])
-
-    #                 result = xmltodict.parse("<SUCCESS>" + success_status + "</SUCCESS>")
-
-    #                 # result = json.loads("{\n" + success_status)
-    #                 success = result["SUCCESS"]
-
-    #                 if success == "True":
-    #                     state_manager.state = "success"
-    #                 else:
-    #                     state_manager.state = "reason"
-
-
-            # for path, code in file_code_mapping.items():
-            #     path = shell.container.cwd + "/" + path
-            #     os.makedirs(os.path.dirname(path), exist_ok=True)
-            #     with open(path, "w") as f:
-            #         f.write(code)
+            # if success:
+            #     print("Requirements met successfully!")
+            # else:
+            #     print("Requirements not met, trying again...")

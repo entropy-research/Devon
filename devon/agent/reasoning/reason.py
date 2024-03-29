@@ -26,6 +26,9 @@ If a file already exists you do not need to create it.
 Your plan
 </PLAN>
 <FILES>
+<READONLY>
+files that are needed but unchanged...
+</READONLY>
 <CREATE>
 files to create... (Do not create files that already exist in the code base)
 </CREATE>
@@ -50,7 +53,11 @@ files to delete...
         delete = None
 
         files_to_edit = []
+        read_only = []
 
+        if "<READONLY>" in output:
+            read = output.split("<READONLY>")[1].split("</READONLY>")[0].splitlines()
+            read_only += read
         if "<CREATE>" in output:
             create = output.split("<CREATE>")[1].split("</CREATE>")[0].splitlines()
             files_to_edit += create
@@ -61,4 +68,4 @@ files to delete...
             delete = output.split("<DELETE>")[1].split("</DELETE>")[0].splitlines()
             files_to_edit += delete
 
-        return plan, create, modify, delete, files_to_edit
+        return plan, create, modify, delete, files_to_edit, read_only
