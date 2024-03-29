@@ -51,34 +51,6 @@ def parse_multi_file_diff(diff: str) -> MultiFileDiff:
     
     return file_diffs
 
-<<<<<<< HEAD
-def extract_diffs(diff_text):
-    return [diff.replace("<DIFF>", "").strip() for diff in diff_text.split("</DIFF>")[:-1] if "<DIFF>" in diff]
-
-def format_diff_input(goal, code, plan, create, modify, delete, failure_context):
-    return f"""
-<GOAL>
-{goal}
-</GOAL>
-<CODE>
-{code}
-</CODE>
-<PLAN>
-{plan}
-</PLAN>
-<CREATE>
-{create}
-</CREATE>
-<MODIFY>
-{modify}
-</MODIFY>
-<DELETE>
-{delete}
-</DELETE>
-"""
-
-def generate_unified_diff(client, goal, original_code, plan, create, modify, delete, failure_context):
-=======
 def parse_multi_file_diff2(diff: str) -> MultiFileDiff:
     file_diffs = []
     lines = diff.strip().split("\n")
@@ -169,16 +141,11 @@ def match_stripped_lines(file_code, old_block):
     return None, None
 
 def generate_unified_diff2(client, goal, original_code, plan, create, modify, delete, failure_context, file_tree):
->>>>>>> 0f6851b (new coding)
 
     res = client.chat([
         Message(
             role="user",
-<<<<<<< HEAD
-            content=format_diff_input(goal, original_code, plan, create, modify, delete, failure_context)
-=======
             content=format_diff_input(goal, original_code, plan, create, modify, delete, failure_context, file_tree)
->>>>>>> 0f6851b (new coding)
         )
     ])
 
@@ -188,8 +155,6 @@ def generate_unified_diff2(client, goal, original_code, plan, create, modify, de
 
     all_diffs = []
     for diff in diffs:
-<<<<<<< HEAD
-=======
         file_diffs = parse_multi_file_diff2(diff)
         all_diffs.extend(file_diffs)
 
@@ -245,7 +210,6 @@ def generate_unified_diff(client, goal, original_code, plan, create, modify, del
 
     all_diffs = []
     for diff in diffs:
->>>>>>> 0f6851b (new coding)
         file_diffs = parse_multi_file_diff(diff)
         all_diffs.extend(file_diffs)
 

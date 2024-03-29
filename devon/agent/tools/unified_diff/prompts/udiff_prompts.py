@@ -36,12 +36,9 @@ Replace is_prime with a call to sympy.
 <CODE>
 ... original code goes here
 </CODE>
-<<<<<<< HEAD
-=======
 <FILE_TREE>
 ... the file tree will be here ...
 </FILE_TREE>
->>>>>>> 0f6851b (new coding)
 <PLAN>
 1. Make sure to import sympy
 2. Replace the existing call to is_prime with a call to sympy.is_prime()
@@ -163,13 +160,8 @@ Corrent:
 2. Make sure you include the first 2 lines with the file paths. Make sure `@@ ... @@` and code are always on different lines
 3. Don\'t include timestamps with the file paths.
 4. Start each hunk of changes with just `@@ ... @@` line including the line numbers. WRONG: +@@ ... @@, -@@ ... @@ CORRECT: @@ ... @@
-<<<<<<< HEAD
-5. Line numbers matter in the diff! You are given line numbers in the code, pay special attention to them.
-6. Don't have a hunk without line numbers
-=======
 5. Line numbers are provided to help you. You are given line numbers in the code, pay special attention to them. Do not put them in the code!
 6. Don't have `@@ ... @@` sections without line numbers, all hunks MUST include ALL four numbers.
->>>>>>> 0f6851b (new coding)
 7. This will make your job easier otherwise you may need to redo your work.
 8. Before writing the diff make sure to write out the line numbers that need changed and what about them needs changed.
 9. The user\'s patch tool needs CORRECT patches that apply cleanly against the current contents of the file!

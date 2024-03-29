@@ -1,15 +1,9 @@
-<<<<<<< HEAD
-from devon.agent.tools.unified_diff.create_diff import FileDiff, MultiFileDiff
-import os
-
-=======
 import difflib
 from devon.agent.tools.unified_diff.create_diff import FileDiff, MultiFileDiff, construct_versions_from_diff_hunk
 import os
 
 from devon.agent.tools.unified_diff.diff_types import MultiFileDiff2
 
->>>>>>> 0f6851b (new coding)
 def apply_diff_to_file(original_code: str, diff: FileDiff) -> str:
     result_lines = original_code.splitlines()
     hunks = reversed(diff.hunks)
@@ -109,14 +103,8 @@ def apply_diff(multi_file_diff: MultiFileDiff):
             # Creating a new file
             with open(tgt_file, "w") as f:
                 for hunk in file_diff.hunks:
-<<<<<<< HEAD
-                    for line in hunk.lines:
-                        if line.type != "removed":
-                            f.write(line.content)
-=======
                     to_write = [line.content for line in hunk.lines if line.type != "removed"]
                     f.write("\n".join(to_write))
->>>>>>> 0f6851b (new coding)
         elif tgt_file == "/dev/null":
             # Deleting a file
             os.remove(src_file)
@@ -125,18 +113,6 @@ def apply_diff(multi_file_diff: MultiFileDiff):
             with open(src_file, "r") as src, open(tgt_file, "w") as tgt:
                 src_lines = src.readlines()
                 tgt_lines = []
-<<<<<<< HEAD
-
-                for hunk in file_diff.hunks:
-                    src_idx = hunk.src_start - 1
-                    tgt_idx = hunk.tgt_start - 1
-
-                    # Copy unchanged lines until the hunk start
-                    while src_idx < hunk.src_start - 1:
-                        tgt_lines.append(src_lines[src_idx])
-                        src_idx += 1
-                        tgt_idx += 1
-=======
                 src_idx = 0
 
                 for hunk in file_diff.hunks:
@@ -148,34 +124,18 @@ def apply_diff(multi_file_diff: MultiFileDiff):
                         print(hunk.src_start)
                         tgt_lines.append(src_lines[src_idx])
                         src_idx += 1
->>>>>>> 0f6851b (new coding)
 
                     # Process hunk lines
                     for line in hunk.lines:
                         if line.type == "added":
                             tgt_lines.append(line.content)
-<<<<<<< HEAD
-                            tgt_idx += 1
-=======
->>>>>>> 0f6851b (new coding)
                         elif line.type == "removed":
                             src_idx += 1
                         else:
                             tgt_lines.append(line.content)
                             src_idx += 1
-<<<<<<< HEAD
-                            tgt_idx += 1
-=======
->>>>>>> 0f6851b (new coding)
-
-                # Copy remaining unchanged lines after the last hunk
-                while src_idx < len(src_lines):
-                    tgt_lines.append(src_lines[src_idx])
                     src_idx += 1
 
-<<<<<<< HEAD
-                tgt.writelines(tgt_lines)
-=======
                 tgt.write("\n".join(tgt_lines))
 
 def apply_diff2(multi_file_diff: MultiFileDiff2):
@@ -190,11 +150,11 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
             with open(tgt_file, "w") as f:
                 for hunk in file_diff.hunks:
                     to_write = [line.content for line in hunk.lines if line.type != "removed"]
-                    # f.write("\n".join(to_write))
+                    f.write("\n".join(to_write))
         elif tgt_file == "/dev/null":
             # Deleting a file
-            # os.remove(src_file)
-            pass
+            os.remove(src_file)
+            # pass
         else:
             # Modifying an existing file
             with open(src_file, "r") as src:
@@ -212,7 +172,7 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
                     
                     print(start, end)
                     if start and end:
-                        tgt_lines[start:end] = new.splitlines()
+                        tgt_lines[start:end] = new.split("\n")
 
                     # while src_idx < hunk.src_start - 1 and src_idx < len(src_lines):
                     #     print(src_idx)
@@ -238,6 +198,5 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
                 
 
                 # print("\n".join(tgt_lines))
-                # with open(tgt_file, "w") as tgt:
-                    # tgt.write("\n".join(tgt_lines))
->>>>>>> 0f6851b (new coding)
+                with open(tgt_file, "w") as tgt:
+                    tgt.write("".join(tgt_lines))
