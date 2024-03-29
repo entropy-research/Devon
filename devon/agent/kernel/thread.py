@@ -80,32 +80,30 @@ class Thread:
             print("To Change: ", files_to_change)
 
             read_code_w_line_numbers = {path: data.code for path, data in repo_data.items() if path in read_only}
-            edit_code_w_line_numbers = {path: data.code for path, data in repo_data.items() if path in files_to_change}
+            edit_code_w_line_numbers = {path: data.code for path, data in repo_data.items() if path in files_to_change + read_only}
 
-            # print(code_w_line_numbers.keys())
-            # try:
-            #     out = generate_unified_diff2(
-            #             client=self.diff_model,
-            #             goal=self.task,
-            #             original_code=json.dumps(code_w_line_numbers), 
-            #             plan=plan,
-            #             create=create,
-            #             modify=modify,
-            #             delete=delete,
-            #             failure_context=failure_context,
-            #             file_tree=file_tree
-            #         )
+            try:
+                out = generate_unified_diff2(
+                        client=self.diff_model,
+                        goal=self.task,
+                        original_code=json.dumps(edit_code_w_line_numbers), 
+                        plan=plan,
+                        create=create,
+                        modify=modify,
+                        delete=delete,
+                        failure_context=failure_context,
+                        file_tree=file_tree
+                    )
 
-            #     print(out)
-            # except Exception as e:
-            #     error = traceback.format_exc()
-            #     print(error)
-            #     failure_context.append(error)
+            except Exception as e:
+                error = traceback.format_exc()
+                print(error)
+                failure_context.append(error)
             
-            # file_code_mapping = {path: data.code for path, data in repo_data.items()}
+            file_code_mapping = {path: data.code for path, data in repo_data.items()}
 
 
-            # apply_diff2(out)
+            apply_diff2(out)
 
             # # Evaluate the changes
             # print("Evaluating code")

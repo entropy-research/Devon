@@ -110,7 +110,7 @@ class FileSystemTool(BaseModel):
         files = []
 
         for entry in os.listdir(path):
-            print(entry)
+            # print(entry)
             entry = os.path.join(path, entry)
             if os.path.isfile(entry):
                 files.append(entry)
