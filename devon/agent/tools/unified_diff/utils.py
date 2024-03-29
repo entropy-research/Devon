@@ -36,7 +36,7 @@ def first_and_last_content_lines(lines):
     end = 0
     for i, line in enumerate(reversed(lines)):
         if line != '':
-            end = i
+            end = i + 1
             break
     
     return start, end
@@ -50,6 +50,7 @@ def match_stripped_lines(file_lines, old_lines):
     start, end  = first_and_last_content_lines(old_lines)
 
     print(old_lines)
+    print(start, end)
     
     i = 0
     while i < len(stripped_file_lines):
