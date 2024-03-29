@@ -42,14 +42,13 @@ def first_and_last_content_lines(lines):
     return start, end
 
 
-def match_stripped_lines(file_lines, old_block):
+def match_stripped_lines(file_lines, old_lines):
 
     stripped_file_lines = [line.strip() for line in file_lines]
-    old_lines = [line.strip() for line in old_block.splitlines()]
+    old_lines = [line.strip() for line in old_lines]
 
     start, end  = first_and_last_content_lines(old_lines)
 
-    print(old_block)
     print(old_lines)
     
     i = 0
@@ -57,7 +56,7 @@ def match_stripped_lines(file_lines, old_block):
         if len(old_lines) > 0 and stripped_file_lines[i] == old_lines[start]:
             print("matched")
             j = 1
-            while i + j < len(stripped_file_lines) and stripped_file_lines[i + j] == old_lines[-end]:
+            while i + j < len(stripped_file_lines) and stripped_file_lines[i + j] != old_lines[-end]:
                 j += 1
 
             if len(old_lines) <= i + j:
@@ -150,11 +149,11 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
             with open(tgt_file, "w") as f:
                 for hunk in file_diff.hunks:
                     to_write = [line.content for line in hunk.lines if line.type != "removed"]
-                    f.write("\n".join(to_write))
+                    # f.write("\n".join(to_write))
         elif tgt_file == "/dev/null":
             # Deleting a file
-            os.remove(src_file)
-            # pass
+            # os.remove(src_file)
+            pass
         else:
             # Modifying an existing file
             with open(src_file, "r") as src:
@@ -166,13 +165,13 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
                     # Copy unchanged lines until the hunk start
 
 
-                    old, new  = construct_versions_from_diff_hunk(hunk)
+                    old_lines, new_lines  = construct_versions_from_diff_hunk(hunk)
 
-                    start, end = match_stripped_lines(src_lines, old)
-                    
+                    start, end = match_stripped_lines(src_lines, old_lines)
+
                     print(start, end)
                     if start and end:
-                        tgt_lines[start:end] = new.split("\n")
+                        tgt_lines[start:end] = ["\n" + line for line in new_lines]
 
                     # while src_idx < hunk.src_start - 1 and src_idx < len(src_lines):
                     #     print(src_idx)
@@ -196,7 +195,7 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
                 #     tgt_lines.append(src_lines[src_idx])
                 #     src_idx += 1
                 
-
+                
                 # print("\n".join(tgt_lines))
-                with open(tgt_file, "w") as tgt:
-                    tgt.write("".join(tgt_lines))
+                # with open(tgt_file, "w") as tgt:
+                #     tgt.write("".join(tgt_lines))

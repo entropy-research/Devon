@@ -119,26 +119,8 @@ def construct_versions_from_diff_hunk(hunk: Hunk2):
         else:
             old_lines.append(line.content)
             new_lines.append(line.content)
-    
-    old_block = '\n'.join(old_lines)
-    new_block = '\n'.join(new_lines)
 
-    return old_block, new_block
-
-def match_stripped_lines(file_code, old_block):
-
-    file_lines = [line.strip() for line in file_code.splitlines()]
-    old_lines = [line.strip() for line in old_block.splitlines()]
-    
-    matcher = difflib.SequenceMatcher(None, file_lines, old_lines)
-    
-    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == 'equal':
-            start_line = i1  # Add 1 to convert from 0-based index to 1-based line number
-            end_line = i2
-            return start_line, end_line
-    
-    return None, None
+    return old_lines, new_lines
 
 def generate_unified_diff2(client, goal, original_code, plan, create, modify, delete, failure_context, file_tree):
 
