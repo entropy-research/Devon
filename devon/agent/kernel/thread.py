@@ -5,9 +5,13 @@ from typing import Literal
 from devon.agent.evaluate import evaluate
 from devon.agent.kernel.state_machine.state_machine import StateMachine
 from devon.agent.kernel.state_machine.state_types import State
-from devon.agent.tools.unified_diff.create_diff import generate_unified_diff
+from devon.agent.tools.unified_diff.create_diff import generate_unified_diff, generate_unified_diff2
 from devon.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
+<<<<<<< HEAD
 from devon.agent.tools.unified_diff.utils import apply_diff, apply_diff_to_file_map
+=======
+from devon.agent.tools.unified_diff.utils import apply_diff, apply_diff2, apply_diff_to_file_map
+>>>>>>> 0f6851b (new coding)
 from devon.sandbox.environments import EnvironmentProtocol
 from devon.format import reformat_code
 from devon.agent.reasoning.reason import ReasoningPrompts
@@ -66,11 +70,19 @@ class Thread:
             modify += [p for p in create if os.path.exists(p)]
             files_to_change = [os.path.join(os.getcwd(), path.strip()) for path in files_to_change if path != '']
 
+<<<<<<< HEAD
             code_w_line_numbers = {path: data.code_with_lines for path, data in repo_data.items() if path in files_to_change}
 
             print(code_w_line_numbers.keys())
             try:
                 out = generate_unified_diff(
+=======
+            code_w_line_numbers = {path: data.code for path, data in repo_data.items() if path in files_to_change}
+
+            print(code_w_line_numbers.keys())
+            try:
+                out = generate_unified_diff2(
+>>>>>>> 0f6851b (new coding)
                         client=self.diff_model,
                         goal=self.task,
                         original_code=json.dumps(code_w_line_numbers), 
@@ -78,7 +90,12 @@ class Thread:
                         create=create,
                         modify=modify,
                         delete=delete,
+<<<<<<< HEAD
                         failure_context=failure_context
+=======
+                        failure_context=failure_context,
+                        file_tree=file_tree
+>>>>>>> 0f6851b (new coding)
                     )
 
                 print(out)
@@ -92,7 +109,11 @@ class Thread:
 
             # print("Applying diffs")
             # new, touched_files = apply_diff_to_file_map(file_code_mapping=file_code_mapping, diff=out)
+<<<<<<< HEAD
             apply_diff(out)
+=======
+            apply_diff2(out)
+>>>>>>> 0f6851b (new coding)
 
             # print(new, touched_files)
 

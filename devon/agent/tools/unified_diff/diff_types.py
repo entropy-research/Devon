@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class HunkLine(BaseModel):
@@ -18,5 +18,19 @@ class FileDiff(BaseModel):
     tgt_file: str
     hunks: List[Hunk]
 
+
 class MultiFileDiff(BaseModel):
     files: List[FileDiff]
+
+class Hunk2(BaseModel):
+    lines: List[HunkLine]
+    start_lines: Optional[List[HunkLine]] = None
+    end_lines: Optional[List[HunkLine]] = None
+
+class FileDiff2(BaseModel):
+    src_file: str
+    tgt_file: str
+    hunks: List[Hunk2]
+
+class MultiFileDiff2(BaseModel):
+    files: List[FileDiff2]

@@ -36,6 +36,12 @@ Replace is_prime with a call to sympy.
 <CODE>
 ... original code goes here
 </CODE>
+<<<<<<< HEAD
+=======
+<FILE_TREE>
+... the file tree will be here ...
+</FILE_TREE>
+>>>>>>> 0f6851b (new coding)
 <PLAN>
 1. Make sure to import sympy
 2. Replace the existing call to is_prime with a call to sympy.is_prime()
@@ -106,17 +112,64 @@ In mathweb/flask/app.py I need to add an import to sympy, then I need to remove 
 
 File editing rules:
 
-WRONG @@ -10,7 +10,7 @@ client_ip = "192.168.23.104"
-CORRECT 
-@@ -10,7 +10,7 @@ 
+
+WRONG:
+@@ -10,1 +10 @@ client_ip = "192.168.23.104"
+
+CORRECT:
+--- mathweb/flask/app.py
++++ mathweb/flask/app.py
+@@ -10,1 +10,1 @@ 
 client_ip = "192.168.23.104"
 
+
+WRONG:
+@@ -0,0 +1,7 @@
++1: from agent.kernel.state_machine.state_machine import State
++2: 
++3: 
++4: class TerminateState(State):
++5:     def execute(self, context):
++6:         # Implement termination logic here
++7:         pass
+
+CORRECT:
+--- agent/kernel/thread.py
++++ agent/kernel/thread.py
+@@ -0,0 +1,7 @@
+ from agent.kernel.state_machine.state_machine import StateMachine
+ from agent.kernel.state_machine.state_types import types
++from agent.kernel.state_machine.state_machine import State
++
++
++class TerminateState(State):
++    def execute(self, context):
++        # Implement termination logic here
++        pass
+
+
+WRONG:
+@@ -0,0 +1 @@
++from .state_machine import *
+
+Corrent:
+--- agent/kernel/state_machine/__init__.py
++++ agent/kernel/state_machine/__init__.py
+@@ -0,0 +1,1 @@
++from .state_machine import *
+
+0. When editing, always provide at least two unchanged lines before and two unchanged lines after
 1. Return edits similar to unified diffs that `diff -U0` would produce.
 2. Make sure you include the first 2 lines with the file paths. Make sure `@@ ... @@` and code are always on different lines
 3. Don\'t include timestamps with the file paths.
 4. Start each hunk of changes with just `@@ ... @@` line including the line numbers. WRONG: +@@ ... @@, -@@ ... @@ CORRECT: @@ ... @@
+<<<<<<< HEAD
 5. Line numbers matter in the diff! You are given line numbers in the code, pay special attention to them.
 6. Don't have a hunk without line numbers
+=======
+5. Line numbers are provided to help you. You are given line numbers in the code, pay special attention to them. Do not put them in the code!
+6. Don't have `@@ ... @@` sections without line numbers, all hunks MUST include ALL four numbers.
+>>>>>>> 0f6851b (new coding)
 7. This will make your job easier otherwise you may need to redo your work.
 8. Before writing the diff make sure to write out the line numbers that need changed and what about them needs changed.
 9. The user\'s patch tool needs CORRECT patches that apply cleanly against the current contents of the file!
