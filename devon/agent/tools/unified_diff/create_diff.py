@@ -198,37 +198,3 @@ def generate_unified_diff(client, goal, original_code, plan, create, modify, del
     changes = MultiFileDiff(files=all_diffs)
 
     return changes
-
-if __name__ == "__main__":
-    example = """--- /Users/blackout/workspace/agent/devon/tests/state_functions.py
-+++ /Users/blackout/workspace/agent/devon/tests/state_functions.py
-@@ -31,8 +31,6 @@
-                 full_path = os.path.join(path, file_path)
-                 code, code_with_lines = get_code_from_file(shell, full_path)
-                 if code is not None and code != "":
--                    parsed_ast = parse_ast(code)
--                    serialized_ast = serialize_ast(parsed_ast)
-                     files[full_path] = CodeFile(filepath=full_path, code=code, code_with_lines=code_with_lines, ast=parsed_ast, serialized_ast=serialized_ast)
-         for directory in dirs:
-             if not directory.startswith('.'):  # Avoid hidden directories
-@@ -58,19 +56,6 @@
- def ask(prompt):
-     return input(prompt)
- 
--def parse_ast(code):
--    try:
--        return ast.parse(code)
--    except SyntaxError as e:
--        print(f"SyntaxError: {e}")
--        return None
--
--def serialize_ast(tree):
--    if tree is None:
--        return ""
--    return ast.unparse(tree)
--
- def reason(client, input, goal):
-     message = client.messages.create(
-         max_tokens=1024,"""
-    
-    print(parse_multi_file_diff(example))
