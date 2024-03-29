@@ -4,28 +4,6 @@ import os
 
 from devon.agent.tools.unified_diff.diff_types import MultiFileDiff2
 
-def apply_diff_to_file(original_code: str, diff: FileDiff) -> str:
-    result_lines = original_code.splitlines()
-    hunks = reversed(diff.hunks)
-    
-    for hunk in hunks:
-        src_start = hunk.src_start - 1
-        src_end = src_start + hunk.src_lines
-        
-        # Create a new list to store the modified lines
-        modified_lines = []
-        
-        # Iterate over the lines in the hunk
-        for line in hunk.lines:
-            if line.type == "added" or line.type == "unchanged":
-                # Add the line to the modified lines list
-                modified_lines.append(line.content)
-        
-        # Replace the original lines with the modified lines
-        result_lines[src_start:src_end] = modified_lines
-    
-    return "\n".join(result_lines)
-
 def first_and_last_content_lines(lines):
     start = 0
     for i, line in enumerate(lines):
@@ -43,23 +21,15 @@ def first_and_last_content_lines(lines):
 
 
 def match_stripped_lines(file_lines, old_lines):
-
-    stripped_file_lines = [(i, line.strip()) for i, line in enumerate(file_lines)]
-
-    assert len(stripped_file_lines) == len(file_lines)
-
+    stripped_file_lines = [(i, line.strip()) for i, line in file_lines]
     old_lines = [line.strip() for line in old_lines]
 
     start, end  = first_and_last_content_lines(old_lines)
-
-    print(old_lines)
-    # print(start, end)
     
     i = 0
     while i < len(stripped_file_lines):
         if len(old_lines) > 0 and stripped_file_lines[i][1] == old_lines[start]:
-            print("matched", i, stripped_file_lines[i][1], old_lines[start] )
-            print("\n".join([ " ".join([str(entry[0]), entry[1]]) for entry in list(stripped_file_lines)]))
+            
             j = 1
             while i + j < len(stripped_file_lines) and stripped_file_lines[i + j][1] != old_lines[-end]:
                 j += 1
@@ -67,86 +37,11 @@ def match_stripped_lines(file_lines, old_lines):
             start_line = stripped_file_lines[i][0]  # Add 1 to convert from 0-based index to 1-based line number
             end_line = stripped_file_lines[i + j][0]
 
-            print(start_line, end_line)
-            print(stripped_file_lines[i])
-            print(stripped_file_lines[i + j])
-
-            if len(old_lines) <= i + j:
-                return start_line, end_line
-            else:
-                print("skipped match")
-                i += 1
+            return start_line, end_line
         else:
             i += 1
     
     return None, None
-
-
-def apply_diff_to_file_map(file_code_mapping: dict, diff: MultiFileDiff) -> (dict, list):
-    updated_files = {}
-    touched_files = []
-
-    for file_diff in diff.files:
-        file_path = file_diff.tgt_file
-        if file_path in file_code_mapping:
-            original_code = file_code_mapping[file_path]
-            result_lines = apply_diff_to_file(original_code, file_diff)
-            updated_files[file_path] = result_lines
-            touched_files.append(file_path)
-        else:
-            file_code_mapping[file_path] = apply_diff_to_file("", file_diff)
-            # print(f"Warning: File '{file_path}' not found in the file code mapping.")
-
-    # Add untouched files to the updated_files dictionary
-    for file_path, original_code in file_code_mapping.items():
-        if file_path not in touched_files:
-            updated_files[file_path] = original_code
-
-    return updated_files, touched_files
-
-def apply_diff(multi_file_diff: MultiFileDiff):
-    for file_diff in multi_file_diff.files:
-        src_file = file_diff.src_file
-        tgt_file = file_diff.tgt_file
-
-        if src_file == "/dev/null":
-            # Creating a new file
-            with open(tgt_file, "w") as f:
-                for hunk in file_diff.hunks:
-                    to_write = [line.content for line in hunk.lines if line.type != "removed"]
-                    f.write("\n".join(to_write))
-        elif tgt_file == "/dev/null":
-            # Deleting a file
-            os.remove(src_file)
-        else:
-            # Modifying an existing file
-            with open(src_file, "r") as src, open(tgt_file, "w") as tgt:
-                src_lines = src.readlines()
-                tgt_lines = []
-                src_idx = 0
-
-                for hunk in file_diff.hunks:
-                    # Copy unchanged lines until the hunk start
-
-                    while src_idx < hunk.src_start - 1 and src_idx < len(src_lines):
-                        print(src_idx)
-                        print(len(src_lines))
-                        print(hunk.src_start)
-                        tgt_lines.append(src_lines[src_idx])
-                        src_idx += 1
-
-                    # Process hunk lines
-                    for line in hunk.lines:
-                        if line.type == "added":
-                            tgt_lines.append(line.content)
-                        elif line.type == "removed":
-                            src_idx += 1
-                        else:
-                            tgt_lines.append(line.content)
-                            src_idx += 1
-                    src_idx += 1
-
-                tgt.write("\n".join(tgt_lines))
 
 def apply_diff2(multi_file_diff: MultiFileDiff2):
     for file_diff in multi_file_diff.files:
@@ -160,56 +55,43 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
             with open(tgt_file, "w") as f:
                 for hunk in file_diff.hunks:
                     to_write = [line.content for line in hunk.lines if line.type != "removed"]
-                    # f.write("\n".join(to_write))
+                    f.write("\n".join(to_write))
         elif tgt_file == "/dev/null":
             # Deleting a file
-            # os.remove(src_file)
-            pass
+            os.remove(src_file)
+            # pass
         else:
             # Modifying an existing file
             with open(src_file, "r") as src:
-                src_lines = src.readlines()
-                tgt_lines = src_lines
+                src_lines = src.read().splitlines()
+                src_lines = [(i, line) for i, line in enumerate(src_lines)]
+
+                tgt_lines = list(src_lines)
                 src_idx = 0
 
-                for hunk in reversed(file_diff.hunks):
+                for hunk in file_diff.hunks:
                     # Copy unchanged lines until the hunk start
 
                     old_lines, new_lines  = construct_versions_from_diff_hunk(hunk)
+                    src_start, src_end = match_stripped_lines(src_lines, old_lines)
 
-                    start, end = match_stripped_lines(src_lines, old_lines)
-
-                    print(start, end)
-                    if start and end:
-                        tgt_lines[start:end] = ["\n" + line for line in new_lines]
-
-                    # while src_idx < hunk.src_start - 1 and src_idx < len(src_lines):
-                    #     print(src_idx)
-                    #     print(len(src_lines))
-                    #     print(hunk.src_start)
-                    #     tgt_lines.append(src_lines[src_idx])
-                    #     src_idx += 1
-
-                    # # Process hunk lines
-                    # for line in hunk.lines:
-                    #     if line.type == "added":
-                    #         tgt_lines.append(line.content)
-                    #     elif line.type == "removed":
-                    #         src_idx += 1
-                    #     else:
-                    #         tgt_lines.append(line.content)
-                    #         src_idx += 1
-
-                # Copy remaining unchanged lines after the last hunk
-                # while src_idx < len(src_lines):
-                #     tgt_lines.append(src_lines[src_idx])
-                #     src_idx += 1
+                    i = 0
+                    while i < len(tgt_lines):
+                        if tgt_lines[i][0] == src_start:
+                            j = 0
+                            while i + j < len(tgt_lines) and tgt_lines[i+j][0] != src_end:
+                                j += 1
+                            
+                            tgt_lines[i:i+j+1] = [(-1, line) for line in new_lines]
+                            break
+                            
+                        i += 1 
                 
+                # print("\n".join([ " ".join([str(entry[0]), entry[1]]) for entry in list(tgt_lines)]))
+                new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
                 
-                # print("\n".join(tgt_lines))
-                # with open(tgt_file, "w") as tgt:
-                #     tgt.write("".join(tgt_lines))
-
+                with open(tgt_file, "w") as tgt:
+                    tgt.write(new_code)
 
 
 if __name__ == "__main__":
