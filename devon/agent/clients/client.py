@@ -124,7 +124,7 @@ class ClaudeSonnet(LanguageModel):
         )
 
         # logger.info("REPONSE", message.content[0].text)
-
+        print("REPONSE", message.content[0].text)
         return message.content[0].text
     
 class ClaudeHaiku(LanguageModel):
