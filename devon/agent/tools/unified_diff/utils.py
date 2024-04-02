@@ -43,15 +43,22 @@ def match_stripped_lines(file_lines, old_lines):
     
     return None, None
 
-def apply_diff2(multi_file_diff: MultiFileDiff2):
+def apply_diff2(multi_file_diff: MultiFileDiff2, file_tree_root: str):
     for file_diff in multi_file_diff.files:
         src_file = file_diff.src_file
         tgt_file = file_diff.tgt_file
 
+        # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
+        if not os.path.isabs(src_file) or not os.path.exists(src_file):
+            src_file = os.path.join(file_tree_root, src_file.lstrip("/"))
+        if not os.path.isabs(tgt_file) or not os.path.exists(tgt_file):
+            tgt_file = os.path.join(file_tree_root, tgt_file.lstrip("/"))
+
         print(src_file, tgt_file)
 
-        if src_file == "/dev/null":
+        if src_file == "/dev/null" or not os.path.exists(src_file):
             # Creating a new file
+            os.makedirs(os.path.dirname(tgt_file), exist_ok=True)  # Ensure the directory exists
             with open(tgt_file, "w") as f:
                 for hunk in file_diff.hunks:
                     to_write = [line.content for line in hunk.lines if line.type != "removed"]
@@ -67,12 +74,9 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
                 src_lines = [(i, line) for i, line in enumerate(src_lines)]
 
                 tgt_lines = list(src_lines)
-                src_idx = 0
 
                 for hunk in file_diff.hunks:
-                    # Copy unchanged lines until the hunk start
-
-                    old_lines, new_lines  = construct_versions_from_diff_hunk(hunk)
+                    old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
                     src_start, src_end = match_stripped_lines(src_lines, old_lines)
 
                     i = 0
@@ -85,7 +89,7 @@ def apply_diff2(multi_file_diff: MultiFileDiff2):
                             tgt_lines[i:i+j+1] = [(-1, line) for line in new_lines]
                             break
                             
-                        i += 1 
+                        i += 1
                 
                 # print("\n".join([ " ".join([str(entry[0]), entry[1]]) for entry in list(tgt_lines)]))
                 new_code = "\n".join([entry[1] for entry in list(tgt_lines)])

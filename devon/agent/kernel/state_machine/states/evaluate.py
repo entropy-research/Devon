@@ -1,24 +1,58 @@
+from typing import Any
 import json
 
-from devon.agent.clients.client import Message
-from ..state import State
-from agent.evaluate.evaluate import EvaluatePrompts
+from devon.agent.clients.client import LanguageModel, Message
+from devon.agent.evaluate.evaluate import EvaluatePrompts
+from agent.kernel.state_machine.state import State
+from agent.kernel.context import BaseStateContext
+
+from dataclasses import dataclass
+from devon.agent.kernel.context import BaseStateContext
+from devon.agent.kernel.state_machine.states.reason import ReasoningResult
+
+@dataclass
+class EvaluateParameters:
+    model: LanguageModel
+
+@dataclass
+class EvaluateContext:
+    task: str
+    global_context: BaseStateContext
+    reasoning_result: ReasoningResult
+    old_code: dict
 
 class EvaluateState(State):
-    def execute(self, context):
-        # Evaluate the code changes
-        critic = context["critic"]
-        task = context["task"]
-        reasoning_result = context["reasoning_result"]
-        old_code = context["old_code"]
-        new_code = context["new_code"]
 
-        eval_result = critic.chat(messages=[
+    def __init__(self, parameters: EvaluateParameters):
+        self.parameters = parameters
+
+    def execute(self, context: EvaluateContext) -> Any:
+        reasoning_result = context.reasoning_result
+        fs_context = context.global_context.load_file_context(context.global_context.fs_root)
+
+        eval_result = self.parameters.model.chat(messages=[
             Message(
                 role="user",
-                content=EvaluatePrompts.user_msg(goal=task, requirements=reasoning_result, old_code=json.dumps(old_code), new_code=json.dumps(new_code))
+                content=EvaluatePrompts.user_msg(
+                    goal=context.task,
+                    requirements=reasoning_result.plan,
+                    old_code=context.old_code,
+                    new_code=json.dumps(fs_context.file_code_mapping)
+                )
+            ),
+            Message(
+                role="assistant",
+                content=EvaluatePrompts.success
             )
         ])
 
-        context["success"] = EvaluatePrompts.parse_success(eval_result)
-        pass
+        print(eval_result)
+
+        success = EvaluatePrompts.parse_msg(eval_result)
+
+        if success:
+            print("Requirements met successfully!")
+        else:
+            print("Requirements not met, trying again...")
+
+        return success

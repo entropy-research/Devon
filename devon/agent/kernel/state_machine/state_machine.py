@@ -12,7 +12,7 @@ class StateMachine:
 
     def transition(self, state_type: StateType, context):
         self.state = state_type
-        self.states[state_type].execute(context)
+        return self.states[state_type].execute(context)
 
     def run(self, context):
         while self.state != "terminate":

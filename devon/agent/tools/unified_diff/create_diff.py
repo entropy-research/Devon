@@ -122,12 +122,12 @@ def construct_versions_from_diff_hunk(hunk: Hunk2):
 
     return old_lines, new_lines
 
-def generate_unified_diff2(client, goal, original_code, plan, create, modify, delete, failure_context, file_tree):
+def generate_unified_diff2(client, goal, read_only_code, original_code, plan, create, modify, delete, failure_context, file_tree):
 
     res = client.chat([
         Message(
             role="user",
-            content=format_diff_input(goal, original_code, plan, create, modify, delete, failure_context, file_tree)
+            content=format_diff_input(goal, read_only_code, original_code, plan, create, modify, delete, failure_context, file_tree)
         )
     ])
 
@@ -154,7 +154,7 @@ def generate_unified_diff2(client, goal, original_code, plan, create, modify, de
 def extract_diffs(diff_text):
     return [diff.replace("<DIFF>", "").strip() for diff in diff_text.split("</DIFF>")[:-1] if "<DIFF>" in diff]
 
-def format_diff_input(goal, code, plan, create, modify, delete, failure_context, file_tree):
+def format_diff_input(goal, read_only_code, code, plan, create, modify, delete, failure_context, file_tree):
     return f"""
 <GOAL>
 {goal}
@@ -165,6 +165,9 @@ def format_diff_input(goal, code, plan, create, modify, delete, failure_context,
 <FILE_TREE>
 {file_tree}
 </FILE_TREE>
+<READ_ONLY>
+{read_only_code}
+</READ_ONLY>
 <PLAN>
 {plan}
 </PLAN>

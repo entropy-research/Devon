@@ -43,6 +43,8 @@ class FileSystemTool(BaseModel):
             for entry in os.listdir(current_path):
                 entry_path = os.path.join(current_path, entry)
                 relative_path = os.path.relpath(entry_path, self.base_path)
+                if os.path.basename(relative_path)[0] == ".":
+                    continue
                 if os.path.isfile(entry_path):
                     entries[entry] = {
                         "type": "file",
@@ -147,5 +149,7 @@ class FileSystemTool(BaseModel):
                 if not directory.startswith('.'):  # Avoid hidden directories
                     extract_code_recursive(os.path.join(path, directory))
 
+        # print(path)
         extract_code_recursive(path)
+        # print(files.keys())
         return files

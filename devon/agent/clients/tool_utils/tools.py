@@ -7,8 +7,6 @@ from typing import Callable, Dict, Any, List, get_type_hints
 import json
 import inspect
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 def tool(name: str, description: str):
     def decorator(func):
         func.tool_name = name
