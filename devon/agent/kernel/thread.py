@@ -7,7 +7,6 @@ from openai import OpenAI
 from devon.agent.evaluate.evaluate import EvaluatePrompts
 from devon.agent.kernel.context import BaseStateContext
 from devon.agent.kernel.state_machine.states.evaluate import EvaluateContext, EvaluateParameters, EvaluateState
-from devon.agent.kernel.state_machine.states.execute import ExecuteState
 from devon.agent.kernel.state_machine.states.reason import ReasonState, ReasoningContext, ReasoningParameters
 from devon.agent.kernel.state_machine.states.terminate import TerminateState
 from devon.agent.kernel.state_machine.states.tool import ToolContext, ToolParameters, ToolState
@@ -106,28 +105,5 @@ class Thread:
 
         while not success:
             reasoning_result, old_code = self.state_machine.transition("reason", ReasoningContext(task=self.task, global_context=self.state_context))
-            self.state_machine.transition("tools", ToolContext(task=self.task, global_context=self.state_context, plan=reasoning_result.plan))
             write_result = self.state_machine.transition("write", WriteContext(task=self.task, global_context=self.state_context, reasoning_result=reasoning_result))
-            self.state_machine.transition("tools", ToolContext(task=self.task, global_context=self.state_context, plan=reasoning_result.plan))
             success = self.state_machine.transition("evaluate", context=EvaluateContext(task=self.task, global_context=self.state_context, reasoning_result=reasoning_result, old_code=old_code))
-
-        # # Evaluate the changes
-        # print("Evaluating code")
-        # eval_result = self.critic.chat(messages=[
-        #     Message(
-        #         role="user",
-        #         content=EvaluatePrompts.user_msg(
-        #             goal=self.task,
-        #             requirements=r2,
-        #             old_code=json.dumps(repo_data),
-        #             new_code=json.dumps(file_system.glob_repo_code(os.getcwd()))
-        #         )
-        #     )
-        # ])
-
-        # success = EvaluatePrompts.parse_success(eval_result)
-
-        # if success:
-        #     print("Requirements met successfully!")
-        # else:
-        #     print("Requirements not met, trying again...")
