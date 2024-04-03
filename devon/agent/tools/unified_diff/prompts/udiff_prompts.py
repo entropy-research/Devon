@@ -157,7 +157,7 @@ Corrent:
 
 0. When editing, always provide at least two unchanged lines before and two unchanged lines after
 1. Return edits similar to unified diffs that `diff -U0` would produce.
-2. Make sure you include the first 2 lines with the file paths. Make sure `@@ ... @@` and code are always on different lines
+2. Make sure you include the first 2 lines with the file paths. ALWAYS Make sure `@@ ... @@` and code are always on different lines.
 3. Don\'t include timestamps with the file paths.
 4. Start each hunk of changes with just `@@ ... @@` line including the line numbers. WRONG: +@@ ... @@, -@@ ... @@ CORRECT: @@ ... @@
 5. Line numbers are provided to help you. You are given line numbers in the code, pay special attention to them. Do not put them in the code!
