@@ -53,6 +53,8 @@ class ReasonState(State):
             )
         ]))
 
+        print(plan)
+
         reasoning_result_obj = ReasoningResult(
             plan=plan,
             create=create,

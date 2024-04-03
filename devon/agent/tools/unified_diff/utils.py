@@ -59,6 +59,8 @@ def apply_diff2(multi_file_diff: MultiFileDiff2, file_tree_root: str):
         if src_file == "/dev/null" or not os.path.exists(src_file):
             # Creating a new file
             os.makedirs(os.path.dirname(tgt_file), exist_ok=True)  # Ensure the directory exists
+            if os.path.isdir(tgt_file):
+                continue
             with open(tgt_file, "w") as f:
                 for hunk in file_diff.hunks:
                     to_write = [line.content for line in hunk.lines if line.type != "removed"]

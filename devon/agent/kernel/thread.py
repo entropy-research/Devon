@@ -2,16 +2,20 @@ import os
 from pathlib import Path
 from typing import Literal
 
+from openai import OpenAI
+
 from devon.agent.evaluate.evaluate import EvaluatePrompts
 from devon.agent.kernel.context import BaseStateContext
 from devon.agent.kernel.state_machine.states.evaluate import EvaluateContext, EvaluateParameters, EvaluateState
 from devon.agent.kernel.state_machine.states.execute import ExecuteState
 from devon.agent.kernel.state_machine.states.reason import ReasonState, ReasoningContext, ReasoningParameters
 from devon.agent.kernel.state_machine.states.terminate import TerminateState
+from devon.agent.kernel.state_machine.states.tool import ToolContext, ToolParameters, ToolState
 from devon.agent.kernel.state_machine.states.write import WriteContext, WriteParameters, WriteState
 from devon.agent.tools.git_tool.git_tool import GitTool
 from devon.agent.tools.github.github_tool import GitHubTool
 from devon.agent.tools.file_system.fs import FileSystemTool
+from devon.agent.tools.tool_prompts import ToolPrompts
 from devon.agent.tools.unified_diff.create_diff import generate_unified_diff2
 from devon.agent.tools.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 from devon.agent.tools.unified_diff.utils import apply_diff2
@@ -41,21 +45,25 @@ class Thread:
 
         anthrpoic_client = Anthropic(api_key=api_key)
 
+        oai_api_key=os.environ.get("OPENAI_API_KEY")
+        openai_client = OpenAI(api_key=oai_api_key)
+
         self.reasoning_model = ClaudeSonnet(client=anthrpoic_client, system_message=ReasoningPrompts.system, max_tokens=1024,temperature=0.5)
         self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
         self.critic = ClaudeOpus(client=anthrpoic_client, system_message=EvaluatePrompts.system, max_tokens=1024)
-        # self.tool_user = GPT4()
+        self.tool_model = GPT4(client=openai_client, system_message=ToolPrompts.system, max_tokens=1000, tools_enabled=True)
         self.mode = mode
         
         self.state_machine = StateMachine(initial_state="reason")
         self.state_machine.add_state("reason", ReasonState(parameters=ReasoningParameters(model=self.reasoning_model)))
         self.state_machine.add_state("write", WriteState(parameters=WriteParameters(diff_model=self.diff_model)))
+        self.state_machine.add_state("tools", ToolState(parameters=ToolParameters(model=self.tool_model)))
         self.state_machine.add_state("terminate", TerminateState())
         self.state_machine.add_state("evaluate", EvaluateState(parameters=EvaluateParameters(model=self.critic)))
 
         self.state_context = BaseStateContext(
             github_tool=GitHubTool(token=os.getenv("AGENT_GITHUB_TOKEN")),
-            git_tool=GitTool(path=target_path),
+            git_tool=GitTool(),
             file_system=self.env.tools.file_system(path=target_path),
             fs_root=target_path
         )
@@ -94,12 +102,15 @@ class Thread:
             # Evaluate the changes as to whether or not they are complete in context
                 # Good eval is all you need
 
-        reasoning_result, old_code = self.state_machine.transition("reason", ReasoningContext(task=self.task, global_context=self.state_context))
-        write_result = self.state_machine.transition("write", WriteContext(task=self.task, global_context=self.state_context, reasoning_result=reasoning_result))
-        eval_result = self.state_machine.transition("evaluate", context=EvaluateContext(task=self.task, global_context=self.state_context, reasoning_result=reasoning_result, old_code=old_code))
+        success = False
 
-        print(eval_result)
-    
+        while not success:
+            reasoning_result, old_code = self.state_machine.transition("reason", ReasoningContext(task=self.task, global_context=self.state_context))
+            self.state_machine.transition("tools", ToolContext(task=self.task, global_context=self.state_context, plan=reasoning_result.plan))
+            write_result = self.state_machine.transition("write", WriteContext(task=self.task, global_context=self.state_context, reasoning_result=reasoning_result))
+            self.state_machine.transition("tools", ToolContext(task=self.task, global_context=self.state_context, plan=reasoning_result.plan))
+            success = self.state_machine.transition("evaluate", context=EvaluateContext(task=self.task, global_context=self.state_context, reasoning_result=reasoning_result, old_code=old_code))
+
         # # Evaluate the changes
         # print("Evaluating code")
         # eval_result = self.critic.chat(messages=[

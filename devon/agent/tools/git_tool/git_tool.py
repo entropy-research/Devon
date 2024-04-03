@@ -6,12 +6,9 @@ from devon.agent.clients.tool_utils.tools import tool
 
 class GitTool:
 
-    def __init__(self, path="."):
-        self.repo = Repo(path=path)
-
     @tool(name="git_create_repo", description="Clone a Git repository")
     def init_new_repo(self, path: str = Field(..., description="The path to the Git repository")):
-        self.repo = Repo(path)
+        self.repo = Repo.init(path)
         return {"result": f"Git repo at {path}"}
 
     @tool(name="git_clone", description="Clone a Git repository")
@@ -66,3 +63,37 @@ class GitTool:
         commit = self.repo.index.commit(message)
 
         return {"result": f"Successfully created commit '{commit.hexsha}' with message '{message}'"}
+
+    @tool(name="git_add_remote", description="Add a remote to a Git repository")
+    def add_remote(self, name: str = Field(..., description="The name of the remote"),
+                   url: str = Field(..., description="The URL of the remote")):
+        self.repo.create_remote(name, url)
+        return {"result": f"Successfully added remote '{name}' with URL '{url}'"}
+
+    @tool(name="git_remove_remote", description="Remove a remote from a Git repository")
+    def remove_remote(self, name: str = Field(..., description="The name of the remote to remove")):
+        remote = self.repo.remote(name)
+        remote.remove(self.repo, name)
+        return {"result": f"Successfully removed remote '{name}'"}
+
+    @tool(name="git_list_remotes", description="List the remotes of a Git repository")
+    def list_remotes(self):
+        remotes = []
+        for remote in self.repo.remotes:
+            remotes.append({"name": remote.name, "url": remote.url})
+        return remotes
+
+    @tool(name="git_push", description="Push changes to a remote repository")
+    def push(
+            self,
+            remote: str = Field(..., description="The name of the remote"),
+            branch: str = Field(..., description="The branch to push")
+        ):
+        self.repo.remote(remote).push(branch)
+        return {"result": f"Successfully pushed branch '{branch}' to remote '{remote}'"}
+
+    @tool(name="git_pull", description="Pull changes from a remote repository")
+    def pull(self, remote: str = Field(..., description="The name of the remote"),
+             branch: str = Field(..., description="The branch to pull")):
+        self.repo.remote(remote).pull(branch)
+        return {"result": f"Successfully pulled changes from branch '{branch}' of remote '{remote}'"}

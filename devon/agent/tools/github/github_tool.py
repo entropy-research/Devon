@@ -48,3 +48,55 @@ class GitHubTool(BaseModel):
         response = requests.post(f"https://api.github.com/repos/{repo}/pulls", json=data, headers=headers)
         response.raise_for_status()
         return response.json()["html_url"]
+    
+    @tool(
+        name="create_repository",
+        description="Create a new repository",
+    )
+    def create_repository(
+        self,
+        name: str = Field(..., description="The name of the repository"),
+        description: str = Field(None, description="The description of the repository")
+    ) -> str:
+        headers = {"Authorization": f"token {self.token}"}
+        data = {
+            "name": name,
+            "description": description
+        }
+        try:
+            response = requests.post("https://api.github.com/user/repos", json=data, headers=headers)
+            response.raise_for_status()
+            return response.json()["html_url"]
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 403:
+                raise ValueError("Insufficient permissions to create a repository. Please check your access token.")
+            else:
+                raise e
+    
+    @tool(
+        name="enable_github_pages",
+        description="Enable GitHub Pages for a repository",
+    )
+    def enable_github_pages(
+        self,
+        owner: str = Field(..., description="The user/owner name"),
+        repo: str = Field(..., description="The repository name"),
+        branch: str = Field("main", description="The branch to use for GitHub Pages"),
+        path: str = Field("/", description="The path to the GitHub Pages files")
+    ) -> None:
+        headers = {"Authorization": f"token {self.token}"}
+        data = {
+            "source": {
+                "branch": branch,
+                "path": path
+            }
+        }
+        try:
+            response = requests.post(f"https://api.github.com/repos/{owner}/{repo}/pages", json=data, headers=headers)
+            response.raise_for_status()
+            print(f"GitHub Pages enabled for repository: {repo}")
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 403:
+                raise ValueError("Insufficient permissions to enable GitHub Pages. Please check your access token.")
+            else:
+                return {"result": e.response.reason}

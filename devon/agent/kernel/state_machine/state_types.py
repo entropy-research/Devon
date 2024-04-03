@@ -1,3 +1,3 @@
 from typing import Literal
 
-StateType = Literal["reason", "write", "execute", "terminate"]
+StateType = Literal["reason", "write", "execute", "terminate", "tools"]

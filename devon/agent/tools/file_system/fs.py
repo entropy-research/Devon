@@ -95,7 +95,8 @@ class FileSystemTool(BaseModel):
     @tool("mkdir", "Create a new directory")
     def mkdir(self, path: str = Field(..., description="The directory path")):
         full_path = os.path.join(self.base_path, path)
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        os.makedirs(full_path, exist_ok=True)
+        print(full_path)
         return f"Directory created: {full_path}"
 
     def read_file(self, path):
