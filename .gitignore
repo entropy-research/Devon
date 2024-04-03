@@ -169,3 +169,8 @@ cython_debug/
 .vscode
 
 .devant
+
+.DS_Store
+
+SCRATCHPAD
+

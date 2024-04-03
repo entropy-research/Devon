@@ -1,0 +1,454 @@
+{
+    "created": 1711757532.084918,
+    "duration": 0.2510390281677246,
+    "exitcode": 1,
+    "root": "/Users/mihirchintawar/agent",
+    "environment": {},
+    "summary": {
+        "failed": 6,
+        "passed": 4,
+        "total": 10,
+        "collected": 10
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "evals/cli",
+                    "type": "Dir"
+                }
+            ]
+        },
+        {
+            "nodeid": "evals/cli/test_cli_app.py",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "evals/cli/test_cli_app.py::test_add_numbers",
+                    "type": "Function",
+                    "lineno": 3
+                },
+                {
+                    "nodeid": "evals/cli/test_cli_app.py::test_multiply_numbers",
+                    "type": "Function",
+                    "lineno": 12
+                },
+                {
+                    "nodeid": "evals/cli/test_cli_app.py::test_invalid_operation",
+                    "type": "Function",
+                    "lineno": 21
+                }
+            ]
+        },
+        {
+            "nodeid": "evals/cli/test_llm_test.py",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "evals/cli/test_llm_test.py::test_valid_addition",
+                    "type": "Function",
+                    "lineno": 3
+                },
+                {
+                    "nodeid": "evals/cli/test_llm_test.py::test_valid_multiplication",
+                    "type": "Function",
+                    "lineno": 9
+                },
+                {
+                    "nodeid": "evals/cli/test_llm_test.py::test_invalid_operation",
+                    "type": "Function",
+                    "lineno": 15
+                },
+                {
+                    "nodeid": "evals/cli/test_llm_test.py::test_missing_arguments",
+                    "type": "Function",
+                    "lineno": 20
+                },
+                {
+                    "nodeid": "evals/cli/test_llm_test.py::test_non_integer_arguments",
+                    "type": "Function",
+                    "lineno": 25
+                },
+                {
+                    "nodeid": "evals/cli/test_llm_test.py::test_zero_argument",
+                    "type": "Function",
+                    "lineno": 30
+                },
+                {
+                    "nodeid": "evals/cli/test_llm_test.py::test_large_numbers",
+                    "type": "Function",
+                    "lineno": 36
+                }
+            ]
+        },
+        {
+            "nodeid": "evals/cli",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "evals/cli/test_cli_app.py",
+                    "type": "Module"
+                },
+                {
+                    "nodeid": "evals/cli/test_llm_test.py",
+                    "type": "Module"
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "evals/cli/test_cli_app.py::test_add_numbers",
+            "lineno": 3,
+            "outcome": "failed",
+            "keywords": [
+                "test_add_numbers",
+                "test_cli_app.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00013704097364097834,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.0172172500169836,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py",
+                    "lineno": 526,
+                    "message": "subprocess.CalledProcessError: Command '['python', 'fixed_cli_app.py', 'add', '5', '3']' returned non-zero exit status 2."
+                },
+                "traceback": [
+                    {
+                        "path": "test_cli_app.py",
+                        "lineno": 6,
+                        "message": ""
+                    },
+                    {
+                        "path": "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py",
+                        "lineno": 421,
+                        "message": "in check_output"
+                    },
+                    {
+                        "path": "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py",
+                        "lineno": 526,
+                        "message": "CalledProcessError"
+                    }
+                ],
+                "stderr": "/Users/mihirchintawar/agent/.venv/bin/python: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\n",
+                "longrepr": "def test_add_numbers():\n        # Test case 1: Adding two positive numbers\n>       output = subprocess.check_output([\"python\", \"fixed_cli_app.py\", \"add\", \"5\", \"3\"], universal_newlines=True)\n\ntest_cli_app.py:6: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py:421: in check_output\n    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ninput = None, capture_output = False, timeout = None, check = True\npopenargs = (['python', 'fixed_cli_app.py', 'add', '5', '3'],)\nkwargs = {'stdout': -1, 'universal_newlines': True}\nprocess = <Popen: returncode: 2 args: ['python', 'fixed_cli_app.py', 'add', '5', '3']>\nstdout = '', stderr = None, retcode = 2\n\n    def run(*popenargs,\n            input=None, capture_output=False, timeout=None, check=False, **kwargs):\n        \"\"\"Run command with arguments and return a CompletedProcess instance.\n    \n        The returned instance will have attributes args, returncode, stdout and\n        stderr. By default, stdout and stderr are not captured, and those attributes\n        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,\n        or pass capture_output=True to capture both.\n    \n        If check is True and the exit code was non-zero, it raises a\n        CalledProcessError. The CalledProcessError object will have the return code\n        in the returncode attribute, and output & stderr attributes if those streams\n        were captured.\n    \n        If timeout is given, and the process takes too long, a TimeoutExpired\n        exception will be raised.\n    \n        There is an optional argument \"input\", allowing you to\n        pass bytes or a string to the subprocess's stdin.  If you use this argument\n        you may not also use the Popen constructor's \"stdin\" argument, as\n        it will be used internally.\n    \n        By default, all communication is in bytes, and therefore any \"input\" should\n        be bytes, and the stdout and stderr will be bytes. If in text mode, any\n        \"input\" should be a string, and stdout and stderr will be strings decoded\n        according to locale encoding, or by \"encoding\" if set. Text mode is\n        triggered by setting any of text, encoding, errors or universal_newlines.\n    \n        The other arguments are the same as for the Popen constructor.\n        \"\"\"\n        if input is not None:\n            if kwargs.get('stdin') is not None:\n                raise ValueError('stdin and input arguments may not both be used.')\n            kwargs['stdin'] = PIPE\n    \n        if capture_output:\n            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:\n                raise ValueError('stdout and stderr arguments may not be used '\n                                 'with capture_output.')\n            kwargs['stdout'] = PIPE\n            kwargs['stderr'] = PIPE\n    \n        with Popen(*popenargs, **kwargs) as process:\n            try:\n                stdout, stderr = process.communicate(input, timeout=timeout)\n            except TimeoutExpired as exc:\n                process.kill()\n                if _mswindows:\n                    # Windows accumulates the output in a single blocking\n                    # read() call run on child threads, with the timeout\n                    # being done in a join() on those threads.  communicate()\n                    # _after_ kill() is required to collect that and add it\n                    # to the exception.\n                    exc.stdout, exc.stderr = process.communicate()\n                else:\n                    # POSIX _communicate already populated the output so\n                    # far into the TimeoutExpired exception.\n                    process.wait()\n                raise\n            except:  # Including KeyboardInterrupt, communicate handled that.\n                process.kill()\n                # We don't call process.wait() as .__exit__ does that for us.\n                raise\n            retcode = process.poll()\n            if check and retcode:\n>               raise CalledProcessError(retcode, process.args,\n                                         output=stdout, stderr=stderr)\nE               subprocess.CalledProcessError: Command '['python', 'fixed_cli_app.py', 'add', '5', '3']' returned non-zero exit status 2.\n\n/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py:526: CalledProcessError"
+            },
+            "teardown": {
+                "duration": 0.00018591596744954586,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "evals/cli/test_cli_app.py::test_multiply_numbers",
+            "lineno": 12,
+            "outcome": "failed",
+            "keywords": [
+                "test_multiply_numbers",
+                "test_cli_app.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 9.895797120407224e-05,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.022613750013988465,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py",
+                    "lineno": 526,
+                    "message": "subprocess.CalledProcessError: Command '['python', 'fixed_cli_app.py', 'multiply', '4', '6']' returned non-zero exit status 2."
+                },
+                "traceback": [
+                    {
+                        "path": "test_cli_app.py",
+                        "lineno": 15,
+                        "message": ""
+                    },
+                    {
+                        "path": "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py",
+                        "lineno": 421,
+                        "message": "in check_output"
+                    },
+                    {
+                        "path": "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py",
+                        "lineno": 526,
+                        "message": "CalledProcessError"
+                    }
+                ],
+                "stderr": "/Users/mihirchintawar/agent/.venv/bin/python: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\n",
+                "longrepr": "def test_multiply_numbers():\n        # Test case 3: Multiplying two positive numbers\n>       output = subprocess.check_output([\"python\", \"fixed_cli_app.py\", \"multiply\", \"4\", \"6\"], universal_newlines=True)\n\ntest_cli_app.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py:421: in check_output\n    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ninput = None, capture_output = False, timeout = None, check = True\npopenargs = (['python', 'fixed_cli_app.py', 'multiply', '4', '6'],)\nkwargs = {'stdout': -1, 'universal_newlines': True}\nprocess = <Popen: returncode: 2 args: ['python', 'fixed_cli_app.py', 'multiply', '4', ...>\nstdout = '', stderr = None, retcode = 2\n\n    def run(*popenargs,\n            input=None, capture_output=False, timeout=None, check=False, **kwargs):\n        \"\"\"Run command with arguments and return a CompletedProcess instance.\n    \n        The returned instance will have attributes args, returncode, stdout and\n        stderr. By default, stdout and stderr are not captured, and those attributes\n        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,\n        or pass capture_output=True to capture both.\n    \n        If check is True and the exit code was non-zero, it raises a\n        CalledProcessError. The CalledProcessError object will have the return code\n        in the returncode attribute, and output & stderr attributes if those streams\n        were captured.\n    \n        If timeout is given, and the process takes too long, a TimeoutExpired\n        exception will be raised.\n    \n        There is an optional argument \"input\", allowing you to\n        pass bytes or a string to the subprocess's stdin.  If you use this argument\n        you may not also use the Popen constructor's \"stdin\" argument, as\n        it will be used internally.\n    \n        By default, all communication is in bytes, and therefore any \"input\" should\n        be bytes, and the stdout and stderr will be bytes. If in text mode, any\n        \"input\" should be a string, and stdout and stderr will be strings decoded\n        according to locale encoding, or by \"encoding\" if set. Text mode is\n        triggered by setting any of text, encoding, errors or universal_newlines.\n    \n        The other arguments are the same as for the Popen constructor.\n        \"\"\"\n        if input is not None:\n            if kwargs.get('stdin') is not None:\n                raise ValueError('stdin and input arguments may not both be used.')\n            kwargs['stdin'] = PIPE\n    \n        if capture_output:\n            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:\n                raise ValueError('stdout and stderr arguments may not be used '\n                                 'with capture_output.')\n            kwargs['stdout'] = PIPE\n            kwargs['stderr'] = PIPE\n    \n        with Popen(*popenargs, **kwargs) as process:\n            try:\n                stdout, stderr = process.communicate(input, timeout=timeout)\n            except TimeoutExpired as exc:\n                process.kill()\n                if _mswindows:\n                    # Windows accumulates the output in a single blocking\n                    # read() call run on child threads, with the timeout\n                    # being done in a join() on those threads.  communicate()\n                    # _after_ kill() is required to collect that and add it\n                    # to the exception.\n                    exc.stdout, exc.stderr = process.communicate()\n                else:\n                    # POSIX _communicate already populated the output so\n                    # far into the TimeoutExpired exception.\n                    process.wait()\n                raise\n            except:  # Including KeyboardInterrupt, communicate handled that.\n                process.kill()\n                # We don't call process.wait() as .__exit__ does that for us.\n                raise\n            retcode = process.poll()\n            if check and retcode:\n>               raise CalledProcessError(retcode, process.args,\n                                         output=stdout, stderr=stderr)\nE               subprocess.CalledProcessError: Command '['python', 'fixed_cli_app.py', 'multiply', '4', '6']' returned non-zero exit status 2.\n\n/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py:526: CalledProcessError"
+            },
+            "teardown": {
+                "duration": 0.00017133395886048675,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "evals/cli/test_cli_app.py::test_invalid_operation",
+            "lineno": 21,
+            "outcome": "passed",
+            "keywords": [
+                "test_invalid_operation",
+                "test_cli_app.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 7.112498860806227e-05,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.0167117080418393,
+                "outcome": "passed",
+                "stderr": "/Users/mihirchintawar/agent/.venv/bin/python: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\n"
+            },
+            "teardown": {
+                "duration": 0.00012933398829773068,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "evals/cli/test_llm_test.py::test_valid_addition",
+            "lineno": 3,
+            "outcome": "failed",
+            "keywords": [
+                "test_valid_addition",
+                "test_llm_test.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 7.712497608736157e-05,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.015733874985016882,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/Users/mihirchintawar/agent/evals/cli/test_llm_test.py",
+                    "lineno": 7,
+                    "message": "assert 2 == 0\n +  where 2 = CompletedProcess(args=['python', 'fixed_cli_app.py', 'add', '5', '3'], returncode=2, stdout='', stderr=\"/Users/mihirch...thon: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\\n\").returncode"
+                },
+                "traceback": [
+                    {
+                        "path": "test_llm_test.py",
+                        "lineno": 7,
+                        "message": "AssertionError"
+                    }
+                ],
+                "longrepr": "def test_valid_addition():\n        # Test valid addition operation\n        result = run([\"python\", \"fixed_cli_app.py\", \"add\", \"5\", \"3\"], stdout=PIPE, stderr=PIPE, text=True)\n>       assert result.returncode == 0\nE       assert 2 == 0\nE        +  where 2 = CompletedProcess(args=['python', 'fixed_cli_app.py', 'add', '5', '3'], returncode=2, stdout='', stderr=\"/Users/mihirch...thon: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\\n\").returncode\n\ntest_llm_test.py:7: AssertionError"
+            },
+            "teardown": {
+                "duration": 0.00014108303003013134,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "evals/cli/test_llm_test.py::test_valid_multiplication",
+            "lineno": 9,
+            "outcome": "failed",
+            "keywords": [
+                "test_valid_multiplication",
+                "test_llm_test.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 7.25829740986228e-05,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.020087084034457803,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/Users/mihirchintawar/agent/evals/cli/test_llm_test.py",
+                    "lineno": 13,
+                    "message": "assert 2 == 0\n +  where 2 = CompletedProcess(args=['python', 'fixed_cli_app.py', 'multiply', '4', '6'], returncode=2, stdout='', stderr=\"/Users/mi...thon: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\\n\").returncode"
+                },
+                "traceback": [
+                    {
+                        "path": "test_llm_test.py",
+                        "lineno": 13,
+                        "message": "AssertionError"
+                    }
+                ],
+                "longrepr": "def test_valid_multiplication():\n        # Test valid multiplication operation\n        result = run([\"python\", \"fixed_cli_app.py\", \"multiply\", \"4\", \"6\"], stdout=PIPE, stderr=PIPE, text=True)\n>       assert result.returncode == 0\nE       assert 2 == 0\nE        +  where 2 = CompletedProcess(args=['python', 'fixed_cli_app.py', 'multiply', '4', '6'], returncode=2, stdout='', stderr=\"/Users/mi...thon: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\\n\").returncode\n\ntest_llm_test.py:13: AssertionError"
+            },
+            "teardown": {
+                "duration": 0.00018112501129508018,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "evals/cli/test_llm_test.py::test_invalid_operation",
+            "lineno": 15,
+            "outcome": "passed",
+            "keywords": [
+                "test_invalid_operation",
+                "test_llm_test.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 0.0002881669788621366,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.016139458981342614,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.00017195800319314003,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "evals/cli/test_llm_test.py::test_missing_arguments",
+            "lineno": 20,
+            "outcome": "passed",
+            "keywords": [
+                "test_missing_arguments",
+                "test_llm_test.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 7.445801747962832e-05,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.015075541974510998,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.00012920796871185303,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "evals/cli/test_llm_test.py::test_non_integer_arguments",
+            "lineno": 25,
+            "outcome": "passed",
+            "keywords": [
+                "test_non_integer_arguments",
+                "test_llm_test.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 6.908300565555692e-05,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.014163208019454032,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.0001562499674037099,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "evals/cli/test_llm_test.py::test_zero_argument",
+            "lineno": 30,
+            "outcome": "failed",
+            "keywords": [
+                "test_zero_argument",
+                "test_llm_test.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 8.037500083446503e-05,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.014605417032726109,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/Users/mihirchintawar/agent/evals/cli/test_llm_test.py",
+                    "lineno": 34,
+                    "message": "assert 2 == 0\n +  where 2 = CompletedProcess(args=['python', 'fixed_cli_app.py', 'multiply', '0', '5'], returncode=2, stdout='', stderr=\"/Users/mi...thon: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\\n\").returncode"
+                },
+                "traceback": [
+                    {
+                        "path": "test_llm_test.py",
+                        "lineno": 34,
+                        "message": "AssertionError"
+                    }
+                ],
+                "longrepr": "def test_zero_argument():\n        # Test zero as an argument\n        result = run([\"python\", \"fixed_cli_app.py\", \"multiply\", \"0\", \"5\"], stdout=PIPE, stderr=PIPE, text=True)\n>       assert result.returncode == 0\nE       assert 2 == 0\nE        +  where 2 = CompletedProcess(args=['python', 'fixed_cli_app.py', 'multiply', '0', '5'], returncode=2, stdout='', stderr=\"/Users/mi...thon: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\\n\").returncode\n\ntest_llm_test.py:34: AssertionError"
+            },
+            "teardown": {
+                "duration": 0.00011708296369761229,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "evals/cli/test_llm_test.py::test_large_numbers",
+            "lineno": 36,
+            "outcome": "failed",
+            "keywords": [
+                "test_large_numbers",
+                "test_llm_test.py",
+                "cli",
+                "evals",
+                "agent",
+                ""
+            ],
+            "setup": {
+                "duration": 6.408302579075098e-05,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.01525883300928399,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/Users/mihirchintawar/agent/evals/cli/test_llm_test.py",
+                    "lineno": 40,
+                    "message": "assert 2 == 0\n +  where 2 = CompletedProcess(args=['python', 'fixed_cli_app.py', 'add', '999999999', '1'], returncode=2, stdout='', stderr=\"/Users...thon: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\\n\").returncode"
+                },
+                "traceback": [
+                    {
+                        "path": "test_llm_test.py",
+                        "lineno": 40,
+                        "message": "AssertionError"
+                    }
+                ],
+                "longrepr": "def test_large_numbers():\n        # Test large numbers\n        result = run([\"python\", \"fixed_cli_app.py\", \"add\", \"999999999\", \"1\"], stdout=PIPE, stderr=PIPE, text=True)\n>       assert result.returncode == 0\nE       assert 2 == 0\nE        +  where 2 = CompletedProcess(args=['python', 'fixed_cli_app.py', 'add', '999999999', '1'], returncode=2, stdout='', stderr=\"/Users...thon: can't open file '/Users/mihirchintawar/agent/evals/cli/fixed_cli_app.py': [Errno 2] No such file or directory\\n\").returncode\n\ntest_llm_test.py:40: AssertionError"
+            },
+            "teardown": {
+                "duration": 0.000259124964941293,
+                "outcome": "passed"
+            }
+        }
+    ]
+}
