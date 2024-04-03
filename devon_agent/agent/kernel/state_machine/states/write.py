@@ -43,8 +43,8 @@ class WriteState(State):
 
         files_to_change = [os.path.join(context.global_context.fs_root, path.strip()) for path in context.reasoning_result.files_to_change if path != '']
 
-        print("Read Only: ", context.reasoning_result.read_only)
-        print("To Change: ", files_to_change)
+        print("Read Only: ", [os.path.basename(f) for f in context.reasoning_result.read_only])
+        print("To Change: ", [os.path.basename(f) for f in files_to_change])
 
         read_code_w_line_numbers = {path: data.code for path, data in file_context.file_glob.items() if path in context.reasoning_result.read_only}
         edit_code_w_line_numbers = {path: data.code for path, data in file_context.file_glob.items() if path in files_to_change}
