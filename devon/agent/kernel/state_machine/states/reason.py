@@ -42,7 +42,7 @@ class ReasonState(State):
         # print(file_context.file_tree)
         # print(file_context.file_code_mapping.keys())
 
-        print("Reasoning")
+        print("Planning")
         plan, create, modify, delete, files_to_edit, read_only = ReasoningPrompts.parse_msg(reasoning_model.chat([
             Message(role="user", 
                 content=ReasoningPrompts.user_msg(
@@ -55,6 +55,7 @@ class ReasonState(State):
 
         print(plan)
 
+        print("Reasoning")
         reasoning_result_obj = ReasoningResult(
             plan=plan,
             create=create,
