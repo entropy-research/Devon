@@ -16,7 +16,7 @@ export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 Then you can use the agent to modify your code
 
 ```bash
-devon_agent --goal "print hello world when the application starts" --path agent/src/main.py
+devon --goal "print hello world when the application starts" --path agent/src/main.py
 ```
 
 # Features

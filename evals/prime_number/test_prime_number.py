@@ -2,7 +2,7 @@
 
 
 
-from agent.prime_number import is_prime
+
 
 def test_is_prime():
     assert is_prime(2) == True
