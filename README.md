@@ -13,6 +13,11 @@ Set the Anthropic API key as an environment variable
 export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
+Set the OpenAI API key
+```bash
+export OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
 Then you can use the agent to modify your code
 
 ```bash
