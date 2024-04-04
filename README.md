@@ -25,21 +25,21 @@ devon --goal "print hello world when the application starts" --path agent/src/ma
 ```
 
 # Features
-- Reliable Multi File editing
+- Reliable Multi File Editing
 - use tools such as git
 
 # Coming soon
 - UI for interacting with the agent
-- Aplication generation from requirements 
+- Application generation from requirements 
 - Find bugs in existing code
 - SWE tasks such as architecture design, code review, and more
 - Custom model for large context window and code ability
 
 # About
-Devin is an open source SWE agent that aims to help software engineers with development and maintinace of software. 
+Devin is an open-source SWE agent that aims to help software engineers with the development and maintenance of software. 
 
 # Mission
-Coding agents are extremely powerful and we beleive that the core of this technology should be open source. 
+Coding agents are powerful and we believe that the core of this technology should be open source. 
 We are excited to be a part of the open source community and we are looking forward to collaborating with other developers to build a better future for software engineering.
 
 # Contributing
@@ -52,5 +52,5 @@ If you would like to contribute to the project, please fill out this form:
 # Community
 
 Join our discord server and say hi!
-[discord](https://discord.gg/BSzs4x8CgC)
+[discord](https://discord.gg/p5YpZ5vjd9)
 
