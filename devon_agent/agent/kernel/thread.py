@@ -61,7 +61,7 @@ class Thread:
         self.state_machine.add_state("evaluate", EvaluateState(parameters=EvaluateParameters(model=self.critic)))
 
         self.state_context = BaseStateContext(
-            github_tool=GitHubTool(token=os.getenv("AGENT_GITHUB_TOKEN")),
+            github_tool=GitHubTool(token=os.getenv("AGENT_GITHUB_TOKEN","test")),
             git_tool=GitTool(),
             file_system=self.env.tools.file_system(path=target_path),
             fs_root=target_path
