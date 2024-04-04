@@ -32,12 +32,12 @@ def main():
 
     if repo_url:
         env.tools.git(path=path).clone(repo_url=repo_url, path=path)
-    
+
     if args.question:
         qa = True
         goal = args.question
 
-    agent = Thread(task=goal, qa=qa, environment=env)
+    agent = Thread(task=goal, qa=qa, environment=env, target_path=path)
 
     agent.run()
 
