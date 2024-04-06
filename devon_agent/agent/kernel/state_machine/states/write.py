@@ -37,7 +37,10 @@ class WriteState(State):
         diff_model = self.parameters.diff_model
         failure_context = []
 
-        modify = context.reasoning_result.modify + [p for p in context.reasoning_result.create if os.path.exists(p)]
+        modify = context.reasoning_result.modify
+        if context.reasoning_result.create is not None:
+            modify += [p for p in context.reasoning_result.create if os.path.exists(p)]
+
         files_to_change = [os.path.join(context.global_context.fs_root, path.strip()) for path in context.reasoning_result.files_to_change if path != '']
 
         print("Read Only: ", context.reasoning_result.read_only)
@@ -51,7 +54,7 @@ class WriteState(State):
                     client=diff_model,
                     goal=task,
                     read_only_code=json.dumps(read_code_w_line_numbers),
-                    original_code=json.dumps(edit_code_w_line_numbers), 
+                    original_code=json.dumps(edit_code_w_line_numbers),
                     plan=context.reasoning_result.plan,
                     create=context.reasoning_result.create,
                     modify=modify,
