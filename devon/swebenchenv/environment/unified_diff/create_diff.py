@@ -78,12 +78,12 @@ def construct_versions_from_diff_hunk(hunk: Hunk2):
 
     return old_lines, new_lines
 
-def generate_unified_diff2(client, goal, read_only_code, original_code, plan, create, modify, delete, failure_context, file_tree):
+def generate_unified_diff2(client, thought, input_diff, file_tree, code, files):
 
     res = client.chat([
         Message(
             role="user",
-            content=format_diff_input(goal, read_only_code, original_code, plan, create, modify, delete, failure_context, file_tree)
+            content=format_diff_input(thought, input_diff, file_tree, code, files)
         )
     ])
 
@@ -103,30 +103,21 @@ def generate_unified_diff2(client, goal, read_only_code, original_code, plan, cr
 def extract_diffs(diff_text):
     return [diff.replace("<DIFF>", "").strip() for diff in diff_text.split("</DIFF>")[:-1] if "<DIFF>" in diff]
 
-def format_diff_input(goal, read_only_code, code, plan, create, modify, delete, failure_context, file_tree):
+def format_diff_input(thought, input_diff, file_tree, code, files):
     return f"""
 <GOAL>
-{goal}
+{thought}
 </GOAL>
+<ORIGINAL>
+{input_diff}
+</ORIGINAL>
 <CODE>
 {code}
 </CODE>
 <FILE_TREE>
 {file_tree}
 </FILE_TREE>
-<READ_ONLY>
-{read_only_code}
-</READ_ONLY>
-<PLAN>
-{plan}
-</PLAN>
-<CREATE>
-{create}
-</CREATE>
-<MODIFY>
-{modify}
-</MODIFY>
-<DELETE>
-{delete}
-</DELETE>
+<FILES>
+{files}
+</FILES>
 """

@@ -21,36 +21,28 @@ If the request is ambiguous, ask questions.
 
 For each file that needs to be changed, write out the changes similar to a unified diff like `diff -U0` would produce. Wrap your diffs witth <DIFF> and </DIFF>.
 
-You will be given a <PLAN> containing high level description of changes required and <FILES> containing :
-<CREATE> : will have files that are to be created
-<MODIFY> : files that need to be modified
-<DELETE> : files that need to be deleted
-
+You will be given a <PLAN> containing high level description of changes required and <FILES> that are available for editing
 You will be given <CODE> containing all the relevant code
+You will be given <ORIGINAL> containing an attempt at manually writing a diff for the target goal
 
 For example:
 
 <EXAMPLE>
 <USER>
+<GOAL>
 Replace is_prime with a call to sympy.
+</GOAL>
+<ORIGINAL>
+... original diff attempt here ...
+</ORIGINAL>
 <CODE>
 ... original code goes here
 </CODE>
 <FILE_TREE>
 ... the file tree will be here ...
 </FILE_TREE>
-<PLAN>
-1. Make sure to import sympy
-2. Replace the existing call to is_prime with a call to sympy.is_prime()
-</PLAN>
 <FILES>
-<CREATE>
-</CREATE>
-<MODIFY>
-mathweb/flask/app.py
-</MODIFY>
-<DELETE>
-</DELETE>
+... the list of available files will be here ...
 </FILES>
 </USER>
 <ASSISTANT>

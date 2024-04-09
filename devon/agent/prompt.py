@@ -167,6 +167,8 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
 
   7. Always think step by step. Write pseudocode in case you're not sure how to do something.
 
+  8. Sometimes you may not be able to find the answer! This is ok! Try 5 times and then exit the problem.
+
   <HISTORY>
   {history}
   </HISTORY>
@@ -245,7 +247,7 @@ def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
     action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
     return thought, action
-    
+
 
 if __name__ == "__main__":
    

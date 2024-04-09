@@ -116,54 +116,6 @@ def match_stripped_lines(file_lines, old_lines):
     
     return None, None
 
-def apply_diff2(container, multi_file_diff: MultiFileDiff2, file_tree_root: str):
-    for file_diff in multi_file_diff.files:
-        src_file = file_diff.src_file
-        tgt_file = file_diff.tgt_file
-
-        # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
-        src_file_abs = os.path.join(file_tree_root, src_file.lstrip("/")) if not os.path.isabs(src_file) else src_file
-        tgt_file_abs = os.path.join(file_tree_root, tgt_file.lstrip("/")) if not os.path.isabs(tgt_file) else tgt_file
-
-        src_file_exists = container.exec_run(f"test -e {src_file_abs} && echo 'exists'").output.decode().strip() == 'exists'
-        tgt_file_exists = container.exec_run(f"test -e {tgt_file_abs} && echo 'exists'").output.decode().strip() == 'exists'
-
-        if src_file == "/dev/null" or not src_file_exists:
-            # Creating a new file
-            container.exec_run(f"mkdir -p {os.path.dirname(tgt_file_abs)}")  # Ensure the directory exists
-            is_dir = container.exec_run(f"test -d {tgt_file_abs} && echo 'dir'").output.decode().strip() == 'dir'
-            if is_dir:
-                continue
-            content_to_write = "\n".join([line.content for file_diff in multi_file_diff.files for line in file_diff.hunks if line.type != "removed"])
-            container.exec_run(f"echo `{content_to_write}` > {tgt_file_abs}")
-        elif tgt_file == "/dev/null":
-            # Deleting a file
-            container.exec_run(f"rm -f {src_file_abs}")
-        else:
-            # Modifying an existing file
-            src_content = container.exec_run(f"cat {src_file_abs}").output.decode()
-            src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
-
-            tgt_lines = list(src_lines)
-
-            for hunk in file_diff.hunks:
-                old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
-                src_start, src_end = match_stripped_lines(src_lines, old_lines)
-
-                i = 0
-                while i < len(tgt_lines):
-                    if tgt_lines[i][0] == src_start:
-                        j = 0
-                        while i + j < len(tgt_lines) and tgt_lines[i+j][0] != src_end:
-                            j += 1
-                        
-                        tgt_lines[i:i+j+1] = [(-1, line) for line in new_lines]
-                        break
-                        
-                    i += 1
-            
-            new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
-            container.exec_run(f"echo '{new_code}' > {tgt_file_abs}")
 
 if __name__ == "__main__":
     res = """<DIFF>

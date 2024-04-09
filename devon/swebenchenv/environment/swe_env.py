@@ -1,6 +1,7 @@
 import datetime
 import inspect
 import json
+from anthropic import Anthropic
 import docker
 import gymnasium as gym
 import hashlib
@@ -15,6 +16,10 @@ from dataclasses import dataclass
 from git import Repo
 from rich.logging import RichHandler
 from simple_parsing.helpers import FrozenSerializable
+from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, generate_unified_diff2
+from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
+from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
+from devon.swebenchenv.environment.unified_diff.utils import match_stripped_lines
 from devon.swebenchenv.environment.utils import (
     copy_file_to_container,
     extract_signature_and_docstring,
@@ -30,6 +35,8 @@ from swebench import (
     MAP_VERSION_TO_INSTALL
 )
 from typing import Optional, Tuple
+
+from devon_agent.agent.clients.client import ClaudeSonnet
 
 LONG_TIMEOUT = 500
 PATH_TO_REQS = "/root/requirements.txt"
@@ -74,6 +81,11 @@ class SWEEnv(gym.Env):
         self.returncode = None
         self.is_from_github_url = is_from_github_url(args.data_path)
         self.virtual_filesystem = {}
+
+        api_key=os.environ.get("ANTHROPIC_API_KEY")
+        anthrpoic_client = Anthropic(api_key=api_key)
+        self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
+
         if not self.args.verbose:
             self.logger.disabled = True
 
@@ -142,7 +154,6 @@ class SWEEnv(gym.Env):
 
         # Clone repository if not already cloned
         self.communicate(input="cd /")
-        self.communicate(input="mkdir /hello && cd /hello")
 
         # self.create_file("something.py", "#hello")
         # r = self.communicate(input="python something.py")
@@ -150,6 +161,7 @@ class SWEEnv(gym.Env):
         # exit()
         folders = self.communicate(input="ls").split("\n")
         repo_name = self.record["repo"].replace("/", "__")
+        self.file_root = "/" + repo_name
         if repo_name not in folders:
             if not self.args.no_mirror and not self.is_from_github_url:
                 self.logger.info(f"{repo_name} not found in container, cloning...")
@@ -290,9 +302,8 @@ class SWEEnv(gym.Env):
         observation = ""
         try:
             # observation = self.communicate(input=action, timeout_duration=25)
-            print(f"EXECUTING COMMAND: {action}")
             observation = self.parse_command_to_function(command_string=action, thought=thought)
-            print(f"COMMAND EXECUTED")
+            print("RESULT: ", observation)
         except TimeoutError:
             try:
                 self.interrupt()
@@ -563,7 +574,6 @@ class SWEEnv(gym.Env):
             self.logger.error(f"{error_msg}: {logs}")
             self.close()
             raise RuntimeError(f"{error_msg}: {logs}")
-
     
     def list_files_recursive(self, files: list[str]) -> dict:
         """
@@ -630,6 +640,8 @@ class SWEEnv(gym.Env):
         try:
             file_contents = self.communicate(f"cat '{file_path}'")
             self.virtual_filesystem[file_path] = file_contents
+            if self.returncode == 1:
+                raise Exception(f"Could not open file, file does not exist: {file_path}")
             return "File Opened"
         except Exception as e:
             self.logger.error(f"Failed to open file: {file_path}. Error: {str(e)}")
@@ -651,6 +663,45 @@ class SWEEnv(gym.Env):
 
         return "False"
     
+    def write_file(self, file_path: str, content: str = "") -> bool:
+        
+        try:
+            # Check if file already exists to avoid overwriting
+            result = self.communicate(input=f"test -f {file_path}")
+            if self.returncode == 1:
+                raise Exception(f"Could not write to file, file does not exist: {file_path}")
+
+            # Creating the file with initial content
+
+            create_command = f"cat << DELIM > '{file_path}' \n" + content + "\nDELIM"
+            result = self.communicate(input=create_command)
+
+            self.virtual_filesystem[file_path] = content
+            return True
+        
+        except Exception as e:
+            print(f"Failed to write to file: {file_path}. Error: {str(e)}")
+            return False
+    
+    def delete_file(self, file_path: str) -> bool:
+        
+        try:
+            # Check if file already exists to avoid overwriting
+            result = self.communicate(input=f"test -f {file_path}")
+            if self.returncode == 1:
+                raise Exception(f"Could not delete file, file does not exist: {file_path}")
+
+            # Creating the file with initial content
+            result = self.communicate(f"rm -f {file_path}")
+
+            if file_path in self.virtual_filesystem:
+                del self.virtual_filesystem[file_path]
+            return True
+        
+        except Exception as e:
+            print(f"Failed to write to file: {file_path}. Error: {str(e)}")
+            return False
+
     def create_file(self, file_path: str, content: str = "") -> bool:
         """
         Creates a new file at the target path with optional initial content.
@@ -687,9 +738,9 @@ class SWEEnv(gym.Env):
                 raise Exception(f"Failed to create file: {file_path}")
 
             self.virtual_filesystem[file_path] = content
-            print("VIRTUAL FS ###")
-            print(self.virtual_filesystem)
-            print("VIRTUAL FS ###")
+            # print("VIRTUAL FS ###")
+            # print(self.virtual_filesystem)
+            # print("VIRTUAL FS ###")
             return "True"
         
         except Exception as e:
@@ -705,7 +756,9 @@ class SWEEnv(gym.Env):
         """
         return json.dumps(self.virtual_filesystem)
 
-    def write_diff(self, diff: str) -> dict:
+    #DIFF CODE
+
+    def edit_file(self, diff: str) -> dict:
         """
         This command takes a target diff and applies it to files that are open in the file system. Someone will edit and double check your work.
 
@@ -718,9 +771,74 @@ class SWEEnv(gym.Env):
 
         pass
 
-    def real_write_diff(self, diff: str, thought) -> dict:
-        print(diff, thought)
-        pass
+    def apply_diff2(self, multi_file_diff: MultiFileDiff2, file_tree_root: str):
+        for file_diff in multi_file_diff.files:
+            src_file = file_diff.src_file
+            tgt_file = file_diff.tgt_file
+
+            # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
+            src_file_abs = os.path.join(file_tree_root, src_file.lstrip("/")) if not os.path.isabs(src_file) else src_file
+            tgt_file_abs = os.path.join(file_tree_root, tgt_file.lstrip("/")) if not os.path.isabs(tgt_file) else tgt_file
+
+            # src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
+            # tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
+            src_file_exists = src_file_abs in self.virtual_filesystem
+
+            if src_file == "/dev/null" or not src_file_exists:
+                # Creating a new file
+                self.communicate(f"mkdir -p {os.path.dirname(tgt_file_abs)}")  # Ensure the directory exists
+                is_dir = self.communicate(f"test -d {tgt_file_abs} && echo 'dir'").strip() == 'dir'
+                if is_dir:
+                    continue
+                content_to_write = "\n".join([line.content for file_diff in multi_file_diff.files for line in file_diff.hunks if line.type != "removed"])
+                self.write_file(file_path=tgt_file_abs, content=content_to_write)
+
+            elif tgt_file == "/dev/null":
+                # Deleting a file
+                self.delete_file(file_path=src_file_abs)
+            else:
+
+                if not src_file_exists:
+                    raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
+
+                # Modifying an existing file
+                src_content = self.virtual_filesystem[src_file_abs]
+                src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
+
+                tgt_lines = list(src_lines)
+
+                for hunk in file_diff.hunks:
+                    old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
+                    src_start, src_end = match_stripped_lines(src_lines, old_lines)
+
+                    i = 0
+                    while i < len(tgt_lines):
+                        if tgt_lines[i][0] == src_start:
+                            j = 0
+                            while i + j < len(tgt_lines) and tgt_lines[i+j][0] != src_end:
+                                j += 1
+                            
+                            tgt_lines[i:i+j+1] = [(-1, line) for line in new_lines]
+                            break
+                            
+                        i += 1
+                
+                new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
+                self.write_file(file_path=tgt_file_abs, content=new_code)
+
+    def real_write_diff(self, diff, thought):
+
+        file_context = self.list_files_recursive(files=[self.file_root])
+        
+        diff = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.virtual_filesystem, files=list(self.virtual_filesystem.keys()))
+
+        print("WRITING DIFF: ", diff)
+
+        self.apply_diff2(multi_file_diff=diff, file_tree_root=self.file_root)
+
+        return "True"
+
+    ## END DIFF CODE
 
     def search_dir(self, search_term: str, dir: str = "./"):
         """
@@ -848,7 +966,9 @@ class SWEEnv(gym.Env):
             self.search_dir,
             self.search_file,
             self.search_files,
-            self.get_cwd
+            self.get_cwd,
+            self.delete_file,
+            self.edit_file
         ]
 
         docs = {}
@@ -888,7 +1008,7 @@ class SWEEnv(gym.Env):
 
         fn_name, args = self.parse_command(command_string)
 
-        print(f"EXECUTING: {fn_name}")
+        print(f"EXECUTING COMMAND: {fn_name}")
 
         funcs = [
             # self.list_files,
@@ -904,7 +1024,7 @@ class SWEEnv(gym.Env):
 
         fn_names = [fn.__name__ for fn in funcs]
 
-        if fn_name == "write_diff":
+        if fn_name == "edit_file":
             return self.real_write_diff(*args, thought)
         elif fn_name in fn_names:
             return self.__getattribute__(fn_name)(*args)

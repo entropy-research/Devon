@@ -155,7 +155,6 @@ class AgentArguments(FlattenedAccess, FrozenSerializable):
         assert self.config is not None
 
 
-
 class Agent:
 
     def __init__(self, name="Devon",args=None):
@@ -165,6 +164,7 @@ class Agent:
         ))
         self.name = name
         self.history = []
+        self.max_steps = 15
 
     def forward_with_error_check(self, observation: str, state: str, avaliable_actions: list[str], commanddoc: dict) -> Tuple[str, str, str]:
         try:
@@ -186,7 +186,7 @@ class Agent:
                 f"exit due to retry error: {e}",
             )
         
-        print(output)
+        # print(output)
         
         thought, action = parse_response(output)
         return thought, action, output
@@ -200,10 +200,6 @@ class Agent:
 
         issue,filetree,editor,working_dir = state["issue"],object_to_xml(state["file_tree"]),object_to_xml(state["editor"]),state["cwd"]
 
-
-
-
-
         self.history.append({"role": "user", "content": observation, "agent": self.name})
 
         commands = "Avaliable Custom Commands:\n" + "\n".join([f"{command}" for command in available_actions]) + "\n"
@@ -214,7 +210,7 @@ class Agent:
         last_user_prompt = last_user_prompt_template(issue,history_to_bash_history(self.history),filetree,editor,working_dir)
 
         messages = [{"role": "user", "content": last_user_prompt}]
-        print(f"MODEL INPUT\n{messages}")
+
         return self.model.query(messages, system_message=system_prompt)
 
     def forward(self, observation: str, available_actions: list[str], state: dict,commanddoc: dict) -> Tuple[str, str, str]:
@@ -238,6 +234,7 @@ class Agent:
 
         print(f"THOUGHT ({self.name})\n{thought}")
         print(f"ACTION ({self.name})\n{action}")
+        print(f"RESULT ({self.name})\n{output}")
 
         return thought, action, output
 
@@ -268,7 +265,11 @@ class Agent:
         trajectory = []
         info = {}
         done = False
-        while not done:
+        for i in range(self.max_steps):
+
+            if done:
+                break
+
             #state = Get state
             state = env.get_state()
             state["issue"] = setup_args["issue"]
@@ -286,7 +287,7 @@ class Agent:
             observations.append(env_output)
 
             observation = '\n'.join([json.dumps(obs[0]) for obs in observations if obs is not None])
-            
+
             print("EDITOR",env.virtual_filesystem)
             trajectory.append(
                 {
@@ -298,6 +299,7 @@ class Agent:
                 }
             )
 
+        self.history = []
         return info
 
 if __name__ == "__main__":
