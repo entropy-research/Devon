@@ -158,17 +158,17 @@ class AgentArguments(FlattenedAccess, FrozenSerializable):
 class Agent:
 
     def __init__(self, name="Devon",args=None):
-        # self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
-        #     model_name="claude-opus",
-        #     temperature=0.5
-        # ))
-        self.model = HumanModel(args=ModelArguments(
-            model_name="gpt-4-0314",
-            # total_cost_limit=0.0,
-            # per_instance_cost_limit=2.0,
-            temperature=0.5,
-            top_p=0.95
+        self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
+            model_name="claude-opus",
+            temperature=0.5
         ))
+        # self.model = HumanModel(args=ModelArguments(
+        #     model_name="gpt-4-0314",
+        #     # total_cost_limit=0.0,
+        #     # per_instance_cost_limit=2.0,
+        #     temperature=0.5,
+        #     top_p=0.95
+        # ))
         self.name = name
         self.history = []
         self.max_steps = 15
@@ -222,7 +222,7 @@ class Agent:
 
         system_prompt = system_prompt_template(commands + command_docs)
 
-        print(editor)
+        # print(editor)
 
         last_user_prompt = last_user_prompt_template(issue,history_to_bash_history(self.history),filetree,editor,working_dir)
 
@@ -300,14 +300,15 @@ class Agent:
             observations = list()
             if action == "exit":
                 done = True
-            env_output = env.step(action, thought)
-            observations.append(env_output)
+            obs, _, done, info = env.step(action, thought)
+            print(info)
+            observations.append(obs)
 
             print(action.strip())
             if action.strip() == "submit":
                 done = True
 
-            observation = '\n'.join([json.dumps(obs[0]) for obs in observations if obs is not None])
+            observation = '\n'.join([json.dumps(obs) for obs in observations if obs is not None])
 
             # print("EDITOR",env.virtual_filesystem)
             trajectory.append(
@@ -321,6 +322,7 @@ class Agent:
             )
 
         self.history = []
+        print(info)
         return info
 
 if __name__ == "__main__":

@@ -182,6 +182,8 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
 
   10. Avoid searching. Open files in editor and use the content in editor to understand the file.
 
+  11. Before trying to make a fix, try to identify the root cause. Explore the codebase and pinpoint the source of the problem. Then fix it.
+
   <WORKSPACE>
   <FOLDERTREE>
   {filetree}

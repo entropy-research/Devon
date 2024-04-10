@@ -1265,6 +1265,7 @@ EXAMPLES
         """
 
         assert isinstance(output, str), "Output must be a string"
+        print(output)
         pattern = r"\<\<SUBMISSION\|\|(.*)\|\|SUBMISSION\>\>"
         match = re.search(pattern, output, re.DOTALL)
         if match is None:
