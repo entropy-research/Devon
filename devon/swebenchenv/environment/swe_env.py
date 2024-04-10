@@ -1136,7 +1136,7 @@ EXAMPLES
             self.view_open_files,
             self.search_dir,
             # self.search_file,
-            self.search_files,
+            # self.search_files,
             self.get_cwd,
             self.delete_file,
             self.edit_file,

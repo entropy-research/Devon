@@ -159,7 +159,7 @@ class Agent:
 
     def __init__(self, name="Devon",args=None):
         self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
-            model_name="claude-3-sonnet-20240229",
+            model_name="claude-opus",
             temperature=0.5
         ))
         self.name = name
@@ -214,6 +214,8 @@ class Agent:
         command_docs = "Custom Commands Documentation:\n" + commands_to_command_docs(list(commanddoc.values())) + "\n"
 
         system_prompt = system_prompt_template(commands + command_docs)
+
+        print(editor)
 
         last_user_prompt = last_user_prompt_template(issue,history_to_bash_history(self.history),filetree,editor,working_dir)
 

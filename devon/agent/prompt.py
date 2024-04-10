@@ -65,19 +65,7 @@ def system_prompt_template(command_docs : str):
   </COMMAND>
   </EXAMPLE>
 
-  <EXAMPLE>
-  <THOUGHT>
-  Let me write a script to reproduce the issue. First I need to think through what the changes should cover:
-  First, For every item in the list of items, I need to do a specifc transform.
-  Then, I need to take that list and concatenate it with the input.
-  Then, I need to return the new concatenated list the way the code currently does it.
-  </THOUGHT>
-  <COMMAND>
-  write_diff <<<
-  ...some code...
-  >>>
-  </COMMAND>
-  </EXAMPLE>
+  You will be given a <EDITOR> containing all the files that you have opened. Close all the files that you are not using. Use the open files to understand the content of those files.
 
   COMMAND OUTPUT SYNTAX:
 
@@ -88,7 +76,7 @@ def system_prompt_template(command_docs : str):
   CORRECT:
   command1 arg1
   
-  You should only include a *SINGLE* command in the command section and then wait for a response from the shell before continuing with more discussion and commands. Everything you include in the DISCUSSION section will be saved for future reference.
+  You should only include a *SINGLE* command in the command section and then wait for a response from the shell before continuing with more discussion and commands. Everything you include in the THOUGHT section will be saved for future reference.
   If you'd like to issue two commands at once, PLEASE DO NOT DO THAT! Please instead first submit just the first command, and then after receiving a response you'll be able to issue the second command.
   You're free to use any other bash commands you want (e.g. find, grep, cat, ls, cd) in addition to the special commands listed above.
   However, the environment does NOT support interactive session commands (e.g. python, vim), so please do not invoke them.
@@ -192,6 +180,8 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
 
   9. Once you're done use the submit command to submit your solution.
 
+  10. Avoid searching. Open files in editor and use the content in editor to understand the file.
+
   <WORKSPACE>
   <FOLDERTREE>
   {filetree}
@@ -206,8 +196,7 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
 
   ONLY GENERATE ONE COMMAND AT A TIME. DO NOT USE MULTIPLE COMMANDS AT THE SAME TIME. ONLY THE FIRST COMMAND WILL BE EXECUTED. 
   Make sure to not repeat the same command more than once.
-  (Current directory: {working_dir})
-  bash-$"""
+"""
 
 """
   <WORKSPACE>
