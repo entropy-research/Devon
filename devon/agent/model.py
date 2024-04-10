@@ -16,7 +16,7 @@ class AnthropicModel:
         "claude-3-sonnet-20240229": {
             "max_tokens": 4096,
         },
-        "claude-3-haiku-20240229": {
+        "claude-3-haiku-20240307": {
             "max_tokens": 4096,
         },
     }
@@ -24,7 +24,7 @@ class AnthropicModel:
     SHORTCUTS = {
         "claude-opus": "claude-3-opus-20240229",
         "claude-sonnet": "claude-3-sonnet-20240229",
-        "claude-haiku": "claude-3-haiku-20240229",
+        "claude-haiku": "claude-3-haiku-20240307",
     }
 
     def __init__(self, args: ModelArguments):

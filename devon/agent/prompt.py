@@ -8,6 +8,7 @@
 # Action
 
 
+import os
 from typing import Dict, List, Union
 
 
@@ -66,22 +67,35 @@ def system_prompt_template(command_docs : str):
 
   <EXAMPLE>
   <THOUGHT>
-  Let me write a script to reproduce the issue.
+  Let me write a script to reproduce the issue. First I need to think through what the changes should cover:
+  First, For every item in the list of items, I need to do a specifc transform.
+  Then, I need to take that list and concatenate it with the input.
+  Then, I need to return the new concatenated list the way the code currently does it.
   </THOUGHT>
   <COMMAND>
-  write_diff
+  write_diff <<<
+  ...some code...
+  >>>
   </COMMAND>
   </EXAMPLE>
 
+  COMMAND OUTPUT SYNTAX:
+
+  WRONG: 
+  command1 arg1 arg2 arg3
+  command2 arg1 arg2
+
+  CORRECT:
+  command1 arg1
+  
   You should only include a *SINGLE* command in the command section and then wait for a response from the shell before continuing with more discussion and commands. Everything you include in the DISCUSSION section will be saved for future reference.
-  If you'd like to issue two commands at once, PLEASE DO NOT DO THAT! Please instead first submit just the first command, and then after receiving a response you'll be able to issue the second command. 
+  If you'd like to issue two commands at once, PLEASE DO NOT DO THAT! Please instead first submit just the first command, and then after receiving a response you'll be able to issue the second command.
   You're free to use any other bash commands you want (e.g. find, grep, cat, ls, cd) in addition to the special commands listed above.
   However, the environment does NOT support interactive session commands (e.g. python, vim), so please do not invoke them.
 </REPONSE FORMAT>
 """
 
 # TODO: More description for the workspace
-
 
 def history_to_bash_history(history):
     
@@ -124,9 +138,16 @@ def object_to_xml(data: Union[dict, bool], root='object'):
     xml += f'</{root}>'
     return xml
 
-        
-        
-
+def print_tree(directory, level=0, indent=''):
+    string =""
+    for name, content in directory.items():
+        if isinstance(content, dict):
+            string += f"\n{indent}├── {name}/"
+            string += print_tree(content, level + 1, indent + '│   ')
+        else:
+            string += f"\n{indent}├── {name}"
+            
+    return string
 
 def last_user_prompt_template(issue,history,filetree,editor,working_dir):
    return f"""
@@ -167,11 +188,10 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
 
   7. Always think step by step. Write pseudocode in case you're not sure how to do something.
 
-  8. Sometimes you may not be able to find the answer! This is ok! Try 5 times and then exit the problem.
+  8. If you are not sure how to do something, try to find a similar command in the documentation. If you are still not sure exit
 
-  <HISTORY>
-  {history}
-  </HISTORY>
+  9. Once you're done use the submit command to submit your solution.
+
   <WORKSPACE>
   <FOLDERTREE>
   {filetree}
@@ -180,9 +200,12 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
   {editor}
   </EDITOR> 
   </WORKSPACE>
+  <HISTORY>
+  {history}
+  </HISTORY>
 
-  ONLY GENERATE ONE COMMAND AT A TIME. DO NOT USE MULTIPLE COMMANDS AT THE SAME TIME. ONLY THE FIRST COMMAND WILL BE EXECUTED.
-
+  ONLY GENERATE ONE COMMAND AT A TIME. DO NOT USE MULTIPLE COMMANDS AT THE SAME TIME. ONLY THE FIRST COMMAND WILL BE EXECUTED. 
+  Make sure to not repeat the same command more than once.
   (Current directory: {working_dir})
   bash-$"""
 
@@ -234,6 +257,7 @@ user_prompt_template = lambda FS, editor, observation: f"""
 <FS>
 {FS}
 </FS>
+Here is the current editor. Conatins files you have opened.
 <editor>
 {editor}
 </editor>
@@ -241,11 +265,18 @@ user_prompt_template = lambda FS, editor, observation: f"""
 <observation>
 {observation}
 </observation>
+
 """
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
     action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
+    try:
+      assert response.count("<COMMAND>") == 1
+      assert response.count("<THOUGHT>") == 1
+    except AssertionError as e:
+       print(response)
+       raise e
     return thought, action
 
 

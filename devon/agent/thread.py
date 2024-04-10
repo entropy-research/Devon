@@ -6,7 +6,7 @@ from devon.agent.model import AnthropicModel, ModelArguments
 from devon.agent.history_processors import HistoryProcessor, DefaultHistoryProcessor
 from devon.environment.environment import Environment
 from tenacity import RetryError
-from devon.agent.prompt import commands_to_command_docs, history_to_bash_history, last_user_prompt_template, object_to_xml, system_prompt_template, user_prompt_template, system_prompt
+from devon.agent.prompt import commands_to_command_docs, history_to_bash_history, last_user_prompt_template, object_to_xml, print_tree, system_prompt_template, user_prompt_template, system_prompt
 from devon.agent.prompt import parse_response
 from simple_parsing.helpers import field, FrozenSerializable, FlattenedAccess
 
@@ -160,7 +160,7 @@ class Agent:
     def __init__(self, name="Devon",args=None):
         self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
             model_name="claude-3-sonnet-20240229",
-            temperature=0
+            temperature=0.5
         ))
         self.name = name
         self.history = []
@@ -168,6 +168,8 @@ class Agent:
 
     def forward_with_error_check(self, observation: str, state: str, avaliable_actions: list[str], commanddoc: dict) -> Tuple[str, str, str]:
         try:
+
+
             output = self.forward_model(observation, state,avaliable_actions, commanddoc)
         except KeyboardInterrupt:
             raise
@@ -185,10 +187,13 @@ class Agent:
                 "exit_api",
                 f"exit due to retry error: {e}",
             )
-        
+
         # print(output)
-        
-        thought, action = parse_response(output)
+        try:
+            thought, action = parse_response(output)
+        except Exception as e:
+            raise ValueError(f"Multiple actions found in response: {output}")
+
         return thought, action, output
     
     def forward_model(self, observation: str, state: Dict[str,str],available_actions,commanddoc: dict) -> str:
@@ -197,8 +202,11 @@ class Agent:
         Returns the model output."""
 
         # REPLACE WITH OUR PROMPT TEMPLATES
+        f_tree = state["file_tree"]
 
-        issue,filetree,editor,working_dir = state["issue"],object_to_xml(state["file_tree"]),object_to_xml(state["editor"]),state["cwd"]
+        issue,filetree,editor,working_dir = state["issue"],json.dumps(f_tree),object_to_xml(state["editor"]),state["cwd"]
+
+        # print("FILE TREE",f_tree)
 
         self.history.append({"role": "user", "content": observation, "agent": self.name})
 
@@ -210,7 +218,7 @@ class Agent:
         last_user_prompt = last_user_prompt_template(issue,history_to_bash_history(self.history),filetree,editor,working_dir)
 
         messages = [{"role": "user", "content": last_user_prompt}]
-
+        # print("OBSERVATION",observation)
         return self.model.query(messages, system_message=system_prompt)
 
     def forward(self, observation: str, available_actions: list[str], state: dict,commanddoc: dict) -> Tuple[str, str, str]:
@@ -231,10 +239,10 @@ class Agent:
                 "state": state,
             }
         )
-
+        print(f"OBSERVATION ({self.name})\n{observation}")
         print(f"THOUGHT ({self.name})\n{thought}")
         print(f"ACTION ({self.name})\n{action}")
-        print(f"RESULT ({self.name})\n{output}")
+        # print(f"RESULT ({self.name})\n{output}")
 
         return thought, action, output
 
@@ -288,7 +296,7 @@ class Agent:
 
             observation = '\n'.join([json.dumps(obs[0]) for obs in observations if obs is not None])
 
-            print("EDITOR",env.virtual_filesystem)
+            # print("EDITOR",env.virtual_filesystem)
             trajectory.append(
                 {
                     "action": action,

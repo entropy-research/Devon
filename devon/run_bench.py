@@ -191,7 +191,7 @@ if __name__ == "__main__":
         environment=EnvironmentArguments(
             image_name="swe-agent",
             data_path="princeton-nlp/SWE-bench_Lite",
-            split="dev",
+            split="test",
             verbose=True,
             install_environment=True,
         ),

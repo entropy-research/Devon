@@ -209,7 +209,7 @@ class SWEEnv(gym.Env):
                 error_msg="Failed to reset environment variables",
             )
 
-        # Set up environment (They use CONDA??????? WHY?)
+        # Set up ironment (They use CONDA??????? WHY?)
         self.communicate_with_handling(
             "source /root/miniconda3/etc/profile.d/conda.sh",
             error_msg="Failed to source conda",
@@ -303,7 +303,7 @@ class SWEEnv(gym.Env):
         try:
             # observation = self.communicate(input=action, timeout_duration=25)
             observation = self.parse_command_to_function(command_string=action, thought=thought)
-            print("RESULT: ", observation)
+            # print("RESULT: ", observation)
         except TimeoutError:
             try:
                 self.interrupt()
@@ -575,17 +575,7 @@ class SWEEnv(gym.Env):
             self.close()
             raise RuntimeError(f"{error_msg}: {logs}")
     
-    def list_files_recursive(self, files: list[str]) -> dict:
-        """
-        Returns the entire file tree and specified files in their entirety from the file system.
-
-        Args:
-            files (`list[str]`): List of file paths within the container to return in their entirety.
-
-        Returns:
-            dict: A dictionary with two keys: 'file_tree' containing a list of all files in the tree,
-                and 'files_content' containing a dictionary of specified files and their content.
-        """
+    def _list_files_recursive(self, files: list[str]) -> dict:
         file_tree = []
         files_content = {}
 
@@ -610,7 +600,21 @@ class SWEEnv(gym.Env):
 
         file_tree = file_tree_dict
 
-        return json.dumps({"file_tree": file_tree, "files_content": files_content})
+        return {"file_tree": file_tree, "files_content": files_content}
+
+    def list_files_recursive(self, files: list[str]) -> dict:
+        """
+        Returns the entire file tree and specified files in their entirety from the file system.
+
+        Args:
+            files (`list[str]`): List of file paths within the container to return in their entirety.
+
+        Returns:
+            dict: A dictionary with two keys: 'file_tree' containing a list of all files in the tree,
+                and 'files_content' containing a dictionary of specified files and their content.
+        """
+
+        return self._list_files_recursive(files)
 
     #TOOL FUNCTIONS
 
@@ -629,13 +633,10 @@ class SWEEnv(gym.Env):
 
     def open_file(self, file_path: str):
         """
-        Opens a file, and updates the instance's filesystem.
+        Opens a file, and displays it in the editor..
 
         Args:
             file_path (str): The path of the file to open.
-
-        Returns:
-            json: A json object with the file path as the key and its contents as the value.
         """
         try:
             file_contents = self.communicate(f"cat '{file_path}'")
@@ -649,10 +650,10 @@ class SWEEnv(gym.Env):
 
     def close_file(self, file_path: str) -> bool:
         """
-        Deletes the target path from the virtual filesystem.
+        Removes the target file from the editor.
 
         Args:
-            file_path (str): The path of the file to delete from the virtual filesystem.
+            file_path (str): The path of the file to delete from the editor.
 
         Returns:
             bool: True if the file was successfully deleted, False otherwise.
@@ -704,20 +705,56 @@ class SWEEnv(gym.Env):
 
     def create_file(self, file_path: str, content: str = "") -> bool:
         """
-        Creates a new file at the target path with optional initial content.
+CREATE_FILE(1)                   General Commands Manual                  CREATE_FILE(1)
 
-        Args:
-            file_path (str): The path of the file to create within the system.
-            content (str, optional): Initial content to write to the file. Defaults to an empty string. ex:
-            <<<
-            import os
-            import asyncio
-            >>>
+NAME
+       create_file - create a new file at the target path with optional initial content
 
-            make sure to write it between <<< and >>>
+SYNOPSIS
+       create_file FILE_PATH [CONTENT]
 
-        Returns:
-            bool: True if the file was successfully created, False otherwise.
+DESCRIPTION
+       The create_file command creates a new file at the specified FILE_PATH within the
+       file system, optionally with the provided initial CONTENT.
+
+OPTIONS
+       FILE_PATH
+              The path of the file to create within the system.
+
+       CONTENT
+              Optional initial content to write to the file. If not provided, the file
+              will be created empty. The content should be enclosed between "<<<" and
+              ">>>" delimiters, with each line of content on a separate line. For
+              example:
+
+                     create_file "/path/to/file.txt" <<<
+                     import os
+                     import asyncio
+                     >>>
+
+RETURN VALUE
+       The create_file command returns a boolean value:
+
+       True  If the file was successfully created.
+
+       False If the file creation failed.
+
+EXAMPLES
+       To create an empty file at "/path/to/file.txt":
+
+              create_file "/path/to/file.txt"
+
+       To create a file at "/path/to/script.py" with initial content:
+
+              create_file "/path/to/script.py" <<<
+              import os
+              import asyncio
+              >>>
+
+SEE ALSO
+       touch(1), echo(1)
+
+CREATE_FILE(1)                        April 2024                         CREATE_FILE(1)
         """
         try:
             # Check if file already exists to avoid overwriting
@@ -759,14 +796,37 @@ class SWEEnv(gym.Env):
     #DIFF CODE
 
     def edit_file(self, diff: str) -> dict:
-        """
-        This command takes a target diff and applies it to files that are open in the file system. Someone will edit and double check your work.
+        """NAME
+      edit_file - apply a diff to files in the file system
 
-        Args:
-            diff (str): a diff to be applied to specific files. similar to calling `diff --git "diff string"` where "diff string" is the arg you'd pass here.
+SYNOPSIS
+      edit_file [DIFF]
 
-        Returns:
-            dict: a dictionary of all the files that got changed
+DESCRIPTION
+      The edit_file command takes a target DIFF and applies it to files that are open
+      in the file system. Someone will edit and double check your work.
+
+      The DIFF argument is a diff string to be applied to specific files. It is similar
+      to calling `diff --git "diff string"` where "diff string" is the argument you
+      would pass to the edit_file command.
+
+RETURN VALUE
+      The edit_file command returns a dictionary of all the files that were changed.
+
+EXAMPLES
+      To apply a diff string to open files in the file system:
+
+             edit_file <<<a/file1.txt b/file1.txt
+             index 1234567..8901234 100644
+             --- a/file1.txt
+             +++ b/file1.txt
+             @@ -1,5 +1,5 @@
+              Line 1
+             -Line 2
+             +Line Two
+              Line 3
+              Line 4
+              Line 5>>>
         """
 
         pass
@@ -790,7 +850,7 @@ class SWEEnv(gym.Env):
                 is_dir = self.communicate(f"test -d {tgt_file_abs} && echo 'dir'").strip() == 'dir'
                 if is_dir:
                     continue
-                content_to_write = "\n".join([line.content for file_diff in multi_file_diff.files for line in file_diff.hunks if line.type != "removed"])
+                content_to_write = "\n".join([line.content for hunk in file_diff.hunks for line in hunk.lines if line.type != "removed"])
                 self.write_file(file_path=tgt_file_abs, content=content_to_write)
 
             elif tgt_file == "/dev/null":
@@ -828,28 +888,81 @@ class SWEEnv(gym.Env):
 
     def real_write_diff(self, diff, thought):
 
-        file_context = self.list_files_recursive(files=[self.file_root])
+        if isinstance(diff, list):
+            diff= "".join(diff)
+
+        file_context = self._list_files_recursive(files=[self.file_root])
         
         diff = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.virtual_filesystem, files=list(self.virtual_filesystem.keys()))
 
+        # print(json.dumps(self.virtual_filesystem))
         print("WRITING DIFF: ", diff)
+        # print(json.dumps(self.virtual_filesystem))
 
         self.apply_diff2(multi_file_diff=diff, file_tree_root=self.file_root)
 
-        return "True"
+        return "EDITED"
 
     ## END DIFF CODE
 
-    def search_dir(self, search_term: str, dir: str = "./"):
+    def submit(self):
+        """NAME
+      submit - submit your solution once you think you have resolved the issue
+
+SYNOPSIS
+      submit
+
+DESCRIPTION
+      The submit command submits your solution. It is used to indicate that you have resolved the issue and are ready to submit your
+      solution.    
         """
-        Searches for search_term in all files in dir. If dir is not provided, searches in the current directory.
+        command = """submit() {
+    cd $ROOT
 
-        Args:
-            search_term (str): The term to search for.
-            dir (str, optional): The directory to search in. Defaults to "./".
+    # Check if the patch file exists and is non-empty
+    if [ -s "/root/test.patch" ]; then
+        # Apply the patch in reverse
+        git apply -R < "/root/test.patch"
+    fi
 
-        Returns:
-            str: A summary of the search results.
+    git add -A
+    git diff --cached > model.patch
+    echo "<<SUBMISSION||"
+    cat model.patch
+    echo "||SUBMISSION>>"
+}"""
+        return self.communicate(command)
+
+
+    def search_dir(self, search_term: str, dir: str = "./"):
+        """NAME
+      search_dir - search for a term in all files in a directory
+
+SYNOPSIS
+      search_dir [SEARCH_TERM] [DIR]
+
+DESCRIPTION
+      The search_dir command searches for SEARCH_TERM in all files in the specified DIR.
+      If DIR is not provided, it searches in the current directory.
+
+OPTIONS
+      SEARCH_TERM
+             The term to search for in the files.
+
+      DIR   The directory to search in. If not provided, the command searches in the
+             current directory ("./").
+
+RETURN VALUE
+      The search_dir command returns a summary of the search results as a string.
+
+EXAMPLES
+      To search for the term "hello" in all files in the current directory:
+
+             search_dir "hello"
+
+      To search for the term "world" in all files in the "/path/to/directory" directory:
+
+             search_dir "world" "/path/to/directory"
         """
 
         command = f"find {dir} -type f ! -path '*/.*' -exec grep -nIH '{search_term}' {{}} + | cut -d: -f1 | sort | uniq -c"
@@ -868,47 +981,87 @@ class SWEEnv(gym.Env):
         result = f"Found {num_matches} matches for \"{search_term}\" in {dir}:\n{matches}"
         return result.replace('\n', '\n    ')
 
-    def search_file(self, search_term: str, file: str = None):
-        """
-        Searches for search_term in file. If file is not provided, searches in the current open file.
+#     def search_file(self, search_term: str, file: str = None):
+#         """
+#         NAME
+#       search_file - search for a term in a specific file
 
-        Args:
-            search_term (str): The term to search for.
-            file (str, optional): The file to search in. If not provided, searches in the current open file.
+# SYNOPSIS
+#       search_file [SEARCH_TERM] [FILE]
 
-        Returns:
-            str: A summary of the search results.
-        """
+# DESCRIPTION
+#       The search_file command searches for SEARCH_TERM in the specified FILE. If FILE is
+#       not provided, it searches in the current open file.
 
-        if file is None:
-            file = list(self.virtual_filesystem.keys())[0]
+# OPTIONS
+#       SEARCH_TERM
+#              The term to search for in the file.
 
-        command = f"grep -nH '{search_term}' {file}"
-        result = self.communicate(command)
+#       FILE  The file to search in. If not provided, the command searches in the current
+#              open file.
 
-        matches = result.strip()
-        if not matches:
-            return f"No matches found for \"{search_term}\" in {file}"
+# RETURN VALUE
+#       The search_file command returns a summary of the search results as a string.
 
-        num_matches = matches.count('\n') + 1
-        num_lines = len(set(match.split(':')[0] for match in matches.split('\n')))
+# EXAMPLES
+#       To search for the term "hello" in the current open file:
 
-        if num_lines > 100:
-            return f"More than {num_lines} lines matched for \"{search_term}\" in {file}. Please narrow your search."
+#              search_file "hello"
 
-        result = f"Found {num_matches} matches for \"{search_term}\" in {file}:\n{matches}"
-        return result.replace('\n', '\n    ')
+#       To search for the term "world" in the file "/path/to/file.txt":
+
+#              search_file "world" "/path/to/file.txt"
+#         """
+
+#         if file is None:
+#             file = list(self.virtual_filesystem.keys())[0]
+
+#         command = f"grep -nH '{search_term}' {file}"
+#         result = self.communicate(command)
+
+#         matches = result.strip()
+#         if not matches:
+#             return f"No matches found for \"{search_term}\" in {file}"
+
+#         num_matches = matches.count('\n') + 1
+#         num_lines = len(set(match.split(':')[0] for match in matches.split('\n')))
+
+#         if num_lines > 100:
+#             return f"More than {num_lines} lines matched for \"{search_term}\" in {file}. Please narrow your search."
+
+#         result = f"Found {num_matches} matches for \"{search_term}\" in {file}:\n{matches}"
+#         return result.replace('\n', '\n    ')
 
     def search_files(self, file_name: str, dir: str = "./"):
         """
-        Finds all files with the given name in dir. If dir is not provided, searches in the current directory.
+        NAME
+      search_files - find all files with a given name in a directory
 
-        Args:
-            file_name (str): The name of the file to search for.
-            dir (str, optional): The directory to search in. Defaults to "./".
+SYNOPSIS
+      search_files [FILE_NAME] [DIR]
 
-        Returns:
-            str: A summary of the search results.
+DESCRIPTION
+      The search_files command finds all files with the given FILE_NAME in the specified
+      DIR. If DIR is not provided, it searches in the current directory.
+
+OPTIONS
+      FILE_NAME
+             The name of the file to search for.
+
+      DIR   The directory to search in. If not provided, the command searches in the
+             current directory ("./").
+
+RETURN VALUE
+      The search_files command returns a summary of the search results as a string.
+
+EXAMPLES
+      To find all files named "example.txt" in the current directory:
+
+             search_files "example.txt"
+
+      To find all files named "data.csv" in the "/path/to/directory" directory:
+
+             search_files "data.csv" "/path/to/directory"
         """
 
         command = f"grep -rl '{file_name}' {dir}"
@@ -923,14 +1076,32 @@ class SWEEnv(gym.Env):
         return result.replace('\n', '\n    ')
 
     def list_files(self, folder_path: str = ".") -> list:
-        """
-        Lists all files in a specific folder.
+        """NAME
+      list_files - list all files in a specific folder
 
-        Args:
-            folder_path (str): The path of the folder to list files from.
+SYNOPSIS
+      list_files [FOLDER_PATH]
 
-        Returns:
-            list: A list of file paths within the specified folder.
+DESCRIPTION
+      The list_files command lists all files in the specified FOLDER_PATH. If no
+      FOLDER_PATH is provided, it lists files in the current directory.
+
+OPTIONS
+      FOLDER_PATH
+             The path of the folder to list files from. If not specified, the command
+             lists files in the current directory (".").
+
+RETURN VALUE
+      The list_files command returns a list of file paths within the specified folder.
+
+EXAMPLES
+      To list all files in the current directory:
+
+             list_files
+
+      To list all files in the "/path/to/directory" directory:
+
+             list_files "/path/to/directory"
         """
         
         command = f"grep -rl '' {folder_path}"
@@ -964,11 +1135,12 @@ class SWEEnv(gym.Env):
             self.open_file,
             self.view_open_files,
             self.search_dir,
-            self.search_file,
+            # self.search_file,
             self.search_files,
             self.get_cwd,
             self.delete_file,
-            self.edit_file
+            self.edit_file,
+            self.submit
         ]
 
         docs = {}
@@ -1008,7 +1180,7 @@ class SWEEnv(gym.Env):
 
         fn_name, args = self.parse_command(command_string)
 
-        print(f"EXECUTING COMMAND: {fn_name}")
+        # print(f"EXECUTING COMMAND: {fn_name}")
 
         funcs = [
             # self.list_files,
@@ -1018,22 +1190,28 @@ class SWEEnv(gym.Env):
             self.create_file,
             self.view_open_files,
             self.search_dir,
-            self.search_file,
-            self.get_cwd
+            # self.search_file,
+            self.get_cwd,
+            self.submit
         ]
 
         fn_names = [fn.__name__ for fn in funcs]
 
-        if fn_name == "edit_file":
-            return self.real_write_diff(*args, thought)
-        elif fn_name in fn_names:
-            return self.__getattribute__(fn_name)(*args)
-        else:
-            try:
-                return self.communicate(fn_name + " " + " ".join(args))
-            except Exception as e:
-                logger.error(f"Failed to execute bash command '{fn_name}': {str(e)}")
-                return None
+        try:
+            if fn_name == "edit_file":
+                print(args)
+                return self.real_write_diff(args, thought)
+            elif fn_name in fn_names:
+                return self.__getattribute__(fn_name)(*args)
+            else:
+                try:
+                    return self.communicate(fn_name + " " + " ".join(args))
+                except Exception as e:
+                    logger.error(f"Failed to execute bash command '{fn_name}': {str(e)}")
+                    return None
+        except Exception as e:
+            traceback.print_exc()
+            raise e
 
     def get_available_actions(self) -> list[str]:
         """
@@ -1065,6 +1243,8 @@ class SWEEnv(gym.Env):
         Returns:
             submission (`str`) - diff patch submission
         """
+
+        assert isinstance(output, str), "Output must be a string"
         pattern = r"\<\<SUBMISSION\|\|(.*)\|\|SUBMISSION\>\>"
         match = re.search(pattern, output, re.DOTALL)
         if match is None:
