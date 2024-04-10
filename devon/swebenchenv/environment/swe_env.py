@@ -170,6 +170,7 @@ class SWEEnv(gym.Env):
                     error_msg="Failed to clone repository from mirror",
                     timeout_duration=LONG_TIMEOUT,
                 )
+                self.logger.info(f"{repo_name} not found in container, cloning...")
             else:
                 logger.info(f"Trying to clone from non-mirror...")
                 self.communicate_with_handling(
@@ -614,7 +615,7 @@ class SWEEnv(gym.Env):
                 and 'files_content' containing a dictionary of specified files and their content.
         """
 
-        return self._list_files_recursive(files)
+        return json.dumps(self._list_files_recursive(files))
 
     #TOOL FUNCTIONS
 
@@ -663,9 +664,9 @@ class SWEEnv(gym.Env):
             return "True"
 
         return "False"
-    
+
     def write_file(self, file_path: str, content: str = "") -> bool:
-        
+
         try:
             # Check if file already exists to avoid overwriting
             result = self.communicate(input=f"test -f {file_path}")
@@ -673,9 +674,13 @@ class SWEEnv(gym.Env):
                 raise Exception(f"Could not write to file, file does not exist: {file_path}")
 
             # Creating the file with initial content
+            # print("READING BEFORE WRITE")
+            # print("OLD CONTENT: ", self.read_file(file_path=file_path))
 
             create_command = f"cat << DELIM > '{file_path}' \n" + content + "\nDELIM"
             result = self.communicate(input=create_command)
+
+            # print("NEW CONTENT: ", self.read_file(file_path=file_path))
 
             self.virtual_filesystem[file_path] = content
             return True
@@ -840,9 +845,9 @@ EXAMPLES
             src_file_abs = os.path.join(file_tree_root, src_file.lstrip("/")) if not os.path.isabs(src_file) else src_file
             tgt_file_abs = os.path.join(file_tree_root, tgt_file.lstrip("/")) if not os.path.isabs(tgt_file) else tgt_file
 
-            # src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
-            # tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
-            src_file_exists = src_file_abs in self.virtual_filesystem
+            src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
+            tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
+            # src_file_exists = src_file_abs in self.virtual_filesystem
 
             if src_file == "/dev/null" or not src_file_exists:
                 # Creating a new file
@@ -862,7 +867,8 @@ EXAMPLES
                     raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
 
                 # Modifying an existing file
-                src_content = self.virtual_filesystem[src_file_abs]
+                src_content = self.read_file(file_path=src_file_abs)
+                print("OLD_CODE: ", src_file_abs, src_content)
                 src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
 
                 tgt_lines = list(src_lines)
@@ -884,6 +890,8 @@ EXAMPLES
                         i += 1
                 
                 new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
+                
+                print("NEW_CODE: ", tgt_file_abs, new_code)
                 self.write_file(file_path=tgt_file_abs, content=new_code)
 
     def real_write_diff(self, diff, thought):
@@ -896,10 +904,21 @@ EXAMPLES
         diff = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.virtual_filesystem, files=list(self.virtual_filesystem.keys()))
 
         # print(json.dumps(self.virtual_filesystem))
-        print("WRITING DIFF: ", diff)
+        # print("WRITING DIFF: ", diff)
         # print(json.dumps(self.virtual_filesystem))
+        src_files = [file.src_file for file in diff.files]
+        tgt_files = [file.tgt_file for file in diff.files]
+        # print(src_files)
+        # old = self.virtual_filesystem
+        # print([old[fname] for fname in src_files])
+
+        # print(diff)
 
         self.apply_diff2(multi_file_diff=diff, file_tree_root=self.file_root)
+
+        # print(tgt_files)  
+        # new = old = self.virtual_filesystem
+        # print([new[fname] for fname in tgt_files])
 
         return "EDITED"
 
