@@ -303,6 +303,10 @@ class Agent:
             env_output = env.step(action, thought)
             observations.append(env_output)
 
+            print(action.strip())
+            if action.strip() == "submit":
+                done = True
+
             observation = '\n'.join([json.dumps(obs[0]) for obs in observations if obs is not None])
 
             # print("EDITOR",env.virtual_filesystem)

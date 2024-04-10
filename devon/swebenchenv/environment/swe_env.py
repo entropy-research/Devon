@@ -949,7 +949,8 @@ DESCRIPTION
     echo "<<SUBMISSION||"
     cat model.patch
     echo "||SUBMISSION>>"
-}"""
+}
+submit"""
         return self.communicate(command)
 
 
