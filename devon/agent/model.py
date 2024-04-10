@@ -8,6 +8,19 @@ class ModelArguments:
     temperature: float = 1.0
     top_p: float = 1.0
 
+
+class HumanModel:
+    def __init__(self, args: ModelArguments):
+        self.args = args
+        self.api_key=os.environ.get("ANTHROPIC_API_KEY")
+        self.model = Anthropic(api_key=self.api_key)
+    
+    def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
+        thought = ""
+        command = input(f"enter your command here")
+
+        return f"<THOUGHT>\n{thought}\n</THOUGHT>\n<COMMAND>\n{command}\n</COMMAND>"
+
 class AnthropicModel:
     MODELS = {
         "claude-3-opus-20240229": {

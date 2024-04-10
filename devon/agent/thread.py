@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import json
 from pathlib import Path
 from typing import Any, List, Optional, Tuple, Dict
-from devon.agent.model import AnthropicModel, ModelArguments
+from devon.agent.model import AnthropicModel, HumanModel, ModelArguments
 from devon.agent.history_processors import HistoryProcessor, DefaultHistoryProcessor
 from devon.environment.environment import Environment
 from tenacity import RetryError
@@ -158,9 +158,16 @@ class AgentArguments(FlattenedAccess, FrozenSerializable):
 class Agent:
 
     def __init__(self, name="Devon",args=None):
-        self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
-            model_name="claude-opus",
-            temperature=0.5
+        # self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
+        #     model_name="claude-opus",
+        #     temperature=0.5
+        # ))
+        self.model = HumanModel(args=ModelArguments(
+            model_name="gpt-4-0314",
+            # total_cost_limit=0.0,
+            # per_instance_cost_limit=2.0,
+            temperature=0.5,
+            top_p=0.95
         ))
         self.name = name
         self.history = []
