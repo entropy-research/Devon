@@ -1144,6 +1144,15 @@ EXAMPLES
         print(f"CWD {result}")
         
         return result
+    
+    def no_op(self) -> str:
+        """
+        Lets you think! This allows you to take a brief moment to think and synthesize what you know about the current state of the system.
+
+        Make sure you think step by step!
+        """
+        
+        return "No Action Taken"
 
     def generate_command_docs(self):
 
@@ -1160,7 +1169,8 @@ EXAMPLES
             self.get_cwd,
             self.delete_file,
             self.edit_file,
-            self.submit
+            self.submit,
+            self.no_op
         ]
 
         docs = {}
@@ -1212,7 +1222,8 @@ EXAMPLES
             self.search_dir,
             # self.search_file,
             self.get_cwd,
-            self.submit
+            self.submit,
+            self.no_op
         ]
 
         fn_names = [fn.__name__ for fn in funcs]

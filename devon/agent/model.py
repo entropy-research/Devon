@@ -17,6 +17,7 @@ class HumanModel:
     
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         thought = ""
+        print(messages[-1])
         command = input(f"enter your command here")
 
         return f"<THOUGHT>\n{thought}\n</THOUGHT>\n<COMMAND>\n{command}\n</COMMAND>"

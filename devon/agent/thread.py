@@ -159,7 +159,7 @@ class Agent:
 
     def __init__(self, name="Devon",args=None):
         self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
-            model_name="claude-opus",
+            model_name="claude-sonnet",
             temperature=0.5
         ))
         # self.model = HumanModel(args=ModelArguments(
@@ -195,7 +195,6 @@ class Agent:
                 f"exit due to retry error: {e}",
             )
 
-        # print(output)
         try:
             thought, action = parse_response(output)
         except Exception as e:
@@ -211,7 +210,7 @@ class Agent:
         # REPLACE WITH OUR PROMPT TEMPLATES
         f_tree = state["file_tree"]
 
-        issue,filetree,editor,working_dir = state["issue"],json.dumps(f_tree),editor_repr(state["editor"]),state["cwd"]
+        issue,filetree,editor,working_dir = state["issue"],json.dumps(f_tree),json.dumps(state["editor"]),state["cwd"]
 
         # print("FILE TREE",f_tree)
 
@@ -224,7 +223,9 @@ class Agent:
 
         # print(editor)
 
-        last_user_prompt = last_user_prompt_template(issue,history_to_bash_history(self.history),filetree,editor,working_dir)
+        history = history_to_bash_history(self.history)
+
+        last_user_prompt = last_user_prompt_template(issue,history,filetree,editor,working_dir)
 
         messages = [{"role": "user", "content": last_user_prompt}]
         # print("OBSERVATION",observation)
