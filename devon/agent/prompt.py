@@ -38,6 +38,13 @@ def commands_to_command_docs(commands : List[Dict]):
    return doc
 
 
+def editor_repr(editor):
+
+  editorstring = ""
+  for file in editor:
+    editorstring += f"{file}:\n{editor[file]}\n\n"
+  return editor
+
 def system_prompt_template(command_docs : str):
    return f"""
 <SETTING>
@@ -164,6 +171,10 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
      If the bug reproduction script does not print anything when it succesfully runs, we recommend adding a print("Script completed successfully, no errors.") command at the end of the file,
      so that you can be sure that the script indeed ran fine all the way through. 
 
+     If the issue is related to errors, avoid using try catch. Make sure your reproduction script prints traceback.
+
+     Run your reproduction script in the environment and see if you can reproduce the bug.
+
   2. If you run a command and it doesn't work, try running a different command. A command that did not work once will not work the second time unless you modify it!
 
   3. If you have files open in your editor, make sure to close them if you're not going to be editing them. Too many open files can slow down your environment and confuse you.
@@ -181,8 +192,6 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
   9. Once you're done use the submit command to submit your solution.
 
   10. Avoid searching. Open files in editor and use the content in editor to understand the file.
-
-  11. Before trying to make a fix, try to identify the root cause. Explore the codebase and pinpoint the source of the problem. Then fix it.
 
   <WORKSPACE>
   <FOLDERTREE>

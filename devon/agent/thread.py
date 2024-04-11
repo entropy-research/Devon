@@ -6,7 +6,7 @@ from devon.agent.model import AnthropicModel, HumanModel, ModelArguments
 from devon.agent.history_processors import HistoryProcessor, DefaultHistoryProcessor
 from devon.environment.environment import Environment
 from tenacity import RetryError
-from devon.agent.prompt import commands_to_command_docs, history_to_bash_history, last_user_prompt_template, object_to_xml, print_tree, system_prompt_template, user_prompt_template, system_prompt
+from devon.agent.prompt import commands_to_command_docs, editor_repr, history_to_bash_history, last_user_prompt_template, object_to_xml, print_tree, system_prompt_template, user_prompt_template, system_prompt
 from devon.agent.prompt import parse_response
 from simple_parsing.helpers import field, FrozenSerializable, FlattenedAccess
 
@@ -171,7 +171,7 @@ class Agent:
         # ))
         self.name = name
         self.history = []
-        self.max_steps = 15
+        self.max_steps = 10
 
     def forward_with_error_check(self, observation: str, state: str, avaliable_actions: list[str], commanddoc: dict) -> Tuple[str, str, str]:
         try:
@@ -211,7 +211,7 @@ class Agent:
         # REPLACE WITH OUR PROMPT TEMPLATES
         f_tree = state["file_tree"]
 
-        issue,filetree,editor,working_dir = state["issue"],json.dumps(f_tree),object_to_xml(state["editor"]),state["cwd"]
+        issue,filetree,editor,working_dir = state["issue"],json.dumps(f_tree),editor_repr(state["editor"]),state["cwd"]
 
         # print("FILE TREE",f_tree)
 
