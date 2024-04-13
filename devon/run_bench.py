@@ -195,6 +195,7 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent",
             install_environment=True,
+            container_name="default"
         ),
         skip_existing=True,
         agent=AgentArguments(

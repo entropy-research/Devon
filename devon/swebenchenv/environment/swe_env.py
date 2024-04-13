@@ -19,7 +19,7 @@ from simple_parsing.helpers import FrozenSerializable
 from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, generate_unified_diff2
 from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
-from devon.swebenchenv.environment.unified_diff.utils import match_stripped_lines
+from devon.swebenchenv.environment.unified_diff.utils import match_stripped_lines, match_stripped_lines2
 from devon.swebenchenv.environment.utils import (
     copy_file_to_container,
     extract_signature_and_docstring,
@@ -80,7 +80,7 @@ class SWEEnv(gym.Env):
         self.persistent = args.container_name is not None #If set then persist the container across runs
         self.returncode = None
         self.is_from_github_url = is_from_github_url(args.data_path)
-        self.virtual_filesystem = {}
+        self.editor = {}
 
         api_key=os.environ.get("ANTHROPIC_API_KEY")
         anthrpoic_client = Anthropic(api_key=api_key)
@@ -161,7 +161,7 @@ class SWEEnv(gym.Env):
         # exit()
         folders = self.communicate(input="ls").split("\n")
         repo_name = self.record["repo"].replace("/", "__")
-        self.file_root = "/" + repo_name
+        self.file_root = "/" + self.record['repo'].replace('/', '__')
         if repo_name not in folders:
             if not self.args.no_mirror and not self.is_from_github_url:
                 self.logger.info(f"{repo_name} not found in container, cloning...")
@@ -259,6 +259,7 @@ class SWEEnv(gym.Env):
 
         # Write any metadata to info if necessary
         return None, info
+
 
     def step(self, action: str, thought: str) -> Tuple[str, int, bool, dict]:
         """
@@ -523,6 +524,12 @@ class SWEEnv(gym.Env):
             self.communicate_output = ""
             return ""
 
+
+    def refresh_editor(self):
+        for path in list(self.editor.keys()):
+            self.load_file_to_editor(path)
+
+
     def get_state(self) -> dict:
         """
         Returns the entire file tree and specified files in their entirety from the docker container.
@@ -536,6 +543,8 @@ class SWEEnv(gym.Env):
         """
         file_tree = []
         files_content = {}
+
+        self.refresh_editor()
 
         # Execute command in container to list all directories
         result = self.communicate(f"find /{self.record['repo'].replace('/', '__')} -type d")
@@ -553,15 +562,7 @@ class SWEEnv(gym.Env):
 
         file_tree = file_tree_dict
 
-
-        # return scehma
-        #  dict {
-        #      "file_tree": dict,
-        #      "editor": dict,
-        #      "working_dir": str,
-        #  }
-
-        return {"file_tree": file_tree, "editor": self.virtual_filesystem, "cwd": self.get_cwd()}
+        return {"file_tree": file_tree, "editor": self.editor, "cwd": self.get_cwd()}
 
     # Used for mission critical commands (mostly setup) to make sure that we bail from this task if there is a command failure
     def communicate_with_handling(
@@ -575,7 +576,54 @@ class SWEEnv(gym.Env):
             self.logger.error(f"{error_msg}: {logs}")
             self.close()
             raise RuntimeError(f"{error_msg}: {logs}")
+
+
+    def make_abs_path(self, fpath: str) -> str:
+        """
+        Converts relative paths to absolute paths based on the container's root directory.
+
+        Args:
+            fpath (str): The file path to convert.
+
+        Returns:
+            str: The absolute path of the file.
+        """
+
+        base = os.path.split(fpath)[0]
+
+        if base == self.file_root and os.path.isabs(fpath):
+            return fpath
+        else:
+            return os.path.join("/", self.file_root, fpath)
     
+
+    def file_exists(self, fpath):
+        abs_path = self.make_abs_path(fpath)
+        result = self.communicate(input=f"test -f {abs_path}")
+
+        return self.returncode == 0
+
+
+    def read_file(self, file_path: str) -> str:
+        """
+        Reads the content of a specific file from the docker container.
+
+        Args:
+            file_path (str): The path of the file within the system to read.
+
+        Returns:
+            str: The content of the file.
+        """
+        result = self.communicate(f"cat '{file_path}'")
+        return result
+    
+
+    def load_file_to_editor(self, file_path):
+        abs_path = self.make_abs_path(file_path)
+        contents = self.read_file(abs_path)
+        self.editor[abs_path] = contents
+
+
     def _list_files_recursive(self, files: list[str]) -> dict:
         file_tree = []
         files_content = {}
@@ -619,19 +667,6 @@ class SWEEnv(gym.Env):
 
     #TOOL FUNCTIONS
 
-    def read_file(self, file_path: str) -> str:
-        """
-        Reads the content of a specific file from the docker container.
-
-        Args:
-            file_path (str): The path of the file within the system to read.
-
-        Returns:
-            str: The content of the file.
-        """
-        result = self.communicate(f"cat '{file_path}'")
-        return result
-
     def open_file(self, file_path: str):
         """
         Opens a file, and displays it in the editor..
@@ -640,14 +675,19 @@ class SWEEnv(gym.Env):
             file_path (str): The path of the file to open.
         """
         try:
-            file_contents = self.communicate(f"cat '{file_path}'")
-            self.virtual_filesystem[file_path] = file_contents
-            if self.returncode == 1:
-                raise Exception(f"Could not open file, file does not exist: {file_path}")
-            return "File Opened"
+            abs_path = self.make_abs_path(file_path)
+            exists = self.file_exists(abs_path)
+            if not exists:
+                raise Exception(f"Could not open file, file does not exist: {abs_path}")
+
+            file_contents = self.read_file(file_path=abs_path)
+            self.editor[abs_path] = file_contents
+
+            return f"File {abs_path} opened in editor"
+
         except Exception as e:
-            self.logger.error(f"Failed to open file: {file_path}. Error: {str(e)}")
-            return "Failed to open file"
+            self.logger.error(f"Failed to open file: {abs_path}. Error: {str(e)}")
+            return f"Failed to open file: {abs_path}. Error: {str(e)}"
 
     def close_file(self, file_path: str) -> bool:
         """
@@ -659,54 +699,53 @@ class SWEEnv(gym.Env):
         Returns:
             bool: True if the file was successfully deleted, False otherwise.
         """
-        if file_path in self.virtual_filesystem:
-            del self.virtual_filesystem[file_path]
-            return "True"
+        if file_path in self.editor:
+            del self.editor[file_path]
+            return "Successfully closed file!"
 
-        return "False"
+        return "False, file not open in editor"
 
     def write_file(self, file_path: str, content: str = "") -> bool:
 
         try:
-            # Check if file already exists to avoid overwriting
-            result = self.communicate(input=f"test -f {file_path}")
-            if self.returncode == 1:
-                raise Exception(f"Could not write to file, file does not exist: {file_path}")
+            # Check if file doesnt already exists to avoid overwriting
+            abs_path = self.make_abs_path(file_path)
+            exists = self.file_exists(abs_path)
+            if not exists:
+                raise Exception(f"Could not write to file, file does not exist: {abs_path}")
 
-            # Creating the file with initial content
-            # print("READING BEFORE WRITE")
-            # print("OLD CONTENT: ", self.read_file(file_path=file_path))
-
-            create_command = f"cat << DELIM > '{file_path}' \n" + content + "\nDELIM"
+            create_command = f"cat << DELIM > '{abs_path}' \n" + content + "\nDELIM"
             result = self.communicate(input=create_command)
 
-            # print("NEW CONTENT: ", self.read_file(file_path=file_path))
-
-            self.virtual_filesystem[file_path] = content
-            return True
+            if self.returncode == 1:
+                raise Exception(result)
+            
+            self.editor[abs_path] = content
+            return f"Successfully wrote to file {abs_path}"
         
         except Exception as e:
-            print(f"Failed to write to file: {file_path}. Error: {str(e)}")
-            return False
+            print(f"Failed to write to file: {abs_path}. Error: {str(e)}")
+            return f"Failed to write to file: {abs_path}. Error: {str(e)}"
     
     def delete_file(self, file_path: str) -> bool:
         
         try:
             # Check if file already exists to avoid overwriting
-            result = self.communicate(input=f"test -f {file_path}")
-            if self.returncode == 1:
-                raise Exception(f"Could not delete file, file does not exist: {file_path}")
+            abs_path = self.make_abs_path(file_path)
+            exists = self.file_exists(abs_path)
+            if not exists:
+                raise Exception(f"Could not delete file, file does not exist: {abs_path}")
 
             # Creating the file with initial content
-            result = self.communicate(f"rm -f {file_path}")
+            result = self.communicate(f"rm -f {abs_path}")
 
-            if file_path in self.virtual_filesystem:
-                del self.virtual_filesystem[file_path]
-            return True
+            if abs_path in self.editor:
+                del self.editor[abs_path]
+            return f"Successfully deleted file {abs_path}"
         
         except Exception as e:
-            print(f"Failed to write to file: {file_path}. Error: {str(e)}")
-            return False
+            print(f"Failed to delete file: {abs_path}. Error: {str(e)}")
+            return f"Failed to delete file: {abs_path}. Error: {str(e)}"
 
     def create_file(self, file_path: str, content: str = "") -> bool:
         """
@@ -763,31 +802,32 @@ CREATE_FILE(1)                        April 2024                         CREATE_
         """
         try:
             # Check if file already exists to avoid overwriting
-            result = self.communicate(input=f"test -f {file_path}")
-            if self.returncode == 0:
-                raise Exception(f"Could not create file, file already exists: {file_path}")
+            abs_path = self.make_abs_path(file_path)
+            exists = self.file_exists(abs_path)
+            if exists:
+                raise Exception(f"Could not create file, file already exists: {abs_path}")
 
             # Creating the file with initial content
 
-            create_command = f"cat << DELIM > '{file_path}' \n" + content + "\nDELIM"
+            create_command = f"cat << DELIM > '{abs_path}' \n" + content + "\nDELIM"
             result = self.communicate(input=create_command)
 
             # copy_file_to_container(self.container_obj, contents=content, container_path=file_path)
 
-            result = self.communicate(input=f"test -f {file_path}")
+            exists = self.file_exists(abs_path)
             # Verify file creation
-            if self.returncode != 0:
-                raise Exception(f"Failed to create file: {file_path}")
+            if not exists:
+                raise Exception(f"Failed to create file: {abs_path}")
 
-            self.virtual_filesystem[file_path] = content
+            self.editor[abs_path] = content
             # print("VIRTUAL FS ###")
-            # print(self.virtual_filesystem)
+            # print(self.editor)
             # print("VIRTUAL FS ###")
-            return "True"
+            return f"Successfully created file {abs_path}"
         
         except Exception as e:
             print(f"Failed to create file: {file_path}. Error: {str(e)}")
-            return "False"
+            return f"Failed to create file: {file_path}. Error: {str(e)}"
 
     def view_open_files(self) -> dict:
         """
@@ -796,7 +836,7 @@ CREATE_FILE(1)                        April 2024                         CREATE_
         Returns:
             dict: A dictionary representing the open files
         """
-        return json.dumps(self.virtual_filesystem)
+        return json.dumps(self.editor)
 
     #DIFF CODE
 
@@ -847,7 +887,7 @@ EXAMPLES
 
             src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
             tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
-            # src_file_exists = src_file_abs in self.virtual_filesystem
+            # src_file_exists = src_file_abs in self.editor
 
             if src_file == "/dev/null" or not src_file_exists:
                 # Creating a new file
@@ -868,14 +908,15 @@ EXAMPLES
 
                 # Modifying an existing file
                 src_content = self.read_file(file_path=src_file_abs)
-                print("OLD_CODE: ", src_file_abs, src_content)
+                # print("OLD_CODE: ", src_file_abs, src_content)
                 src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
 
                 tgt_lines = list(src_lines)
 
                 for hunk in file_diff.hunks:
                     old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
-                    src_start, src_end = match_stripped_lines(src_lines, old_lines)
+                    src_start, src_end = match_stripped_lines2(src_lines, old_lines)
+                    print("LOCATED DIFF: ", src_start, src_end)
 
                     i = 0
                     while i < len(tgt_lines):
@@ -891,7 +932,7 @@ EXAMPLES
                 
                 new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
                 
-                print("NEW_CODE: ", tgt_file_abs, new_code)
+                # print("NEW_CODE: ", tgt_file_abs, new_code)
                 self.write_file(file_path=tgt_file_abs, content=new_code)
 
     def real_write_diff(self, diff, thought):
@@ -900,16 +941,16 @@ EXAMPLES
             diff= "".join(diff)
 
         file_context = self._list_files_recursive(files=[self.file_root])
-        
-        diff = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.virtual_filesystem, files=list(self.virtual_filesystem.keys()))
 
-        # print(json.dumps(self.virtual_filesystem))
+        diff = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.editor, files=list(self.editor.keys()))
+
+        # print(json.dumps(self.editor))
         # print("WRITING DIFF: ", diff)
-        # print(json.dumps(self.virtual_filesystem))
+        
         src_files = [file.src_file for file in diff.files]
         tgt_files = [file.tgt_file for file in diff.files]
         # print(src_files)
-        # old = self.virtual_filesystem
+        # old = self.editor
         # print([old[fname] for fname in src_files])
 
         # print(diff)
@@ -917,10 +958,10 @@ EXAMPLES
         self.apply_diff2(multi_file_diff=diff, file_tree_root=self.file_root)
 
         # print(tgt_files)  
-        # new = old = self.virtual_filesystem
+        # new = self.editor
         # print([new[fname] for fname in tgt_files])
 
-        return "EDITED"
+        return "Edited file"
 
     ## END DIFF CODE
 
@@ -1034,7 +1075,7 @@ EXAMPLES
 #         """
 
 #         if file is None:
-#             file = list(self.virtual_filesystem.keys())[0]
+#             file = list(self.editor.keys())[0]
 
 #         command = f"grep -nH '{search_term}' {file}"
 #         result = self.communicate(command)
@@ -1123,7 +1164,7 @@ EXAMPLES
 
              list_files "/path/to/directory"
         """
-        
+
         command = f"grep -rl '' {folder_path}"
         result = self.communicate(command)
 
@@ -1211,17 +1252,20 @@ EXAMPLES
         fn_name, args = self.parse_command(command_string)
 
         # print(f"EXECUTING COMMAND: {fn_name}")
+        # print(json.dumps(self.editor))
 
         funcs = [
             # self.list_files,
             self.list_files_recursive,
             self.close_file,
-            self.open_file,
             self.create_file,
+            self.open_file,
             self.view_open_files,
             self.search_dir,
             # self.search_file,
+            # self.search_files,
             self.get_cwd,
+            self.delete_file,
             self.submit,
             self.no_op
         ]

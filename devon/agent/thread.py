@@ -301,8 +301,14 @@ class Agent:
             observations = list()
             if action == "exit":
                 done = True
-            obs, _, done, info = env.step(action, thought)
-            print(info)
+
+            try:
+                assert output.count("<COMMAND>") == 1
+                assert output.count("<THOUGHT>") == 1
+                obs, _, done, info = env.step(action, thought)
+            except AssertionError as e:
+                obs = f"Too many commands in previous output, could not execute. Please remember to only pass one command."
+
             observations.append(obs)
 
             print(action.strip())

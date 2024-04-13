@@ -102,7 +102,6 @@ def match_stripped_lines(file_lines, old_lines):
     i = 0
     while i < len(stripped_file_lines):
         if len(old_lines) > 0 and stripped_file_lines[i][1] == old_lines[start]:
-
             j = 1
             while i + j < len(stripped_file_lines) and stripped_file_lines[i + j][1] != old_lines[-end]:
                 j += 1
@@ -113,8 +112,141 @@ def match_stripped_lines(file_lines, old_lines):
             return start_line, end_line
         else:
             i += 1
+
+    return None, None
+
+
+def find_nth_content_line(lines, n):
+    start = 0
+    for i, line in enumerate(lines):
+        if line != '':
+            start = i
+            break
+    
+    count = 0
+    end = start
+    while end < len(lines) and count < n:
+
+        if lines[end] != '':
+            count += 1
+
+        end += 1
+
+    return lines[start:end] #maybe off by one? dont think so though, need to test
+
+def create_code_fence(old_lines):
+    if len(old_lines) < 4:
+        start_fence = find_nth_content_line(old_lines, len(old_lines))
+        end_fence = start_fence
+    else:
+        start_fence = find_nth_content_line(old_lines, 3)
+        end_fence = list(reversed(find_nth_content_line(list(reversed(old_lines)), 3)))
+    
+    return start_fence, end_fence
+
+def match_fence(lines, fence):
+    subset_length = len(fence)
+    
+    if subset_length > 0:
+        for i in range(len(lines) - subset_length + 1):
+            match = [line[1] for line in lines[i:i+subset_length]]
+            if match == fence:
+                return lines[i][0], lines[i+subset_length-1][0]
     
     return None, None
+
+def match_stripped_lines2(file_lines, old_lines):
+
+    stripped_file_lines = [(i, line.strip()) for i, line in file_lines]
+    stripped_old_lines = [line.strip() for line in old_lines]
+
+    stripped_file_lines = [t for t in stripped_file_lines if t[1] != ""]
+    stripped_old_lines = [line for line in stripped_old_lines if line != ""]
+
+    begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines)
+    print(begin_fence, stop_fence)
+    print(old_lines)
+    begin_start, begin_end = match_fence(stripped_file_lines, begin_fence)
+    stop_start, stop_end = match_fence(stripped_file_lines, stop_fence)
+
+    start = begin_start
+    end = stop_end
+
+    return start, end
+
+"""
+number lines
+strip whitespace and white lines
+match on content lines
+return line numbers
+"""
+
+def test_match_lines2_empty_file():
+    file_lines = []
+    old_lines = ["line 1", "line 2", "line 3"]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start is None and end is None
+
+def test_match_lines2_one_old_line():
+    file_lines = [(0, "line 1"), (1, "line 2"), (2, "line 3")]
+    old_lines = ["line 2"]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    # print(start, end)
+    assert start == 1 and end == 1
+
+def test_match_lines2_two_old_lines():
+    file_lines = [(0, "line 1"), (1, "line 2"), (2, "line 3"), (3, "line 4")]
+    old_lines = ["line 2", "line 3"]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start == 1 and end == 2
+
+def test_match_lines2_three_old_lines():
+    file_lines = [(0, "line 1"), (1, "line 2"), (2, "line 3"), (3, "line 4"), (4, "line 5")]
+    old_lines = ["line 2", "line 3", "line 4"]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start == 1 and end == 3
+
+def test_match_lines2_four_old_lines():
+    file_lines = [(0, "line 1"), (1, "line 2"), (2, "line 3"), (3, "line 4"), (4, "line 5"), (5, "line 6")]
+    old_lines = ["line 2", "line 3", "line 4", "line 5"]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start == 1 and end == 4
+
+def test_match_lines2_five_old_lines():
+    file_lines = [(0, "line 1"), (1, "line 2"), (2, "line 3"), (3, "line 4"), (4, "line 5"), (5, "line 6"), (6, "line 7")]
+    old_lines = ["line 2", "line 3", "line 4", "line 5", "line 6"]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start == 1 and end == 5
+
+def test_match_lines2_empty_lines_in_file():
+    file_lines = [(0, "line 1"), (1, ""), (2, "line 2"), (3, ""), (4, "line 3"), (5, "line 4")]
+    old_lines = ["line 2", "line 3"]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start == 2 and end == 4
+
+def test_match_lines2_empty_lines_in_old_lines():
+    file_lines = [(0, "line 1"), (1, "line 2"), (2, "line 3"), (3, "line 4")]
+    old_lines = ["", "line 2", "", "line 3", ""]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start == 1 and end == 2
+
+def test_match_lines2_empty_lines_in_both():
+    file_lines = [(0, ""), (1, "line 1"), (2, ""), (3, "line 2"), (4, ""), (5, "line 3"), (6, "")]
+    old_lines = ["", "line 2", "", "line 3", ""]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start == 3 and end == 5
+
+def test_match_lines2_all_empty_lines_in_file():
+    file_lines = [(0, ""), (1, ""), (2, ""), (3, "")]
+    old_lines = ["line 1", "line 2"]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start is None and end is None
+
+def test_match_lines2_all_empty_lines_in_old_lines():
+    file_lines = [(0, "line 1"), (1, "line 2"), (2, "line 3")]
+    old_lines = ["", "", ""]
+    start, end = match_stripped_lines2(file_lines, old_lines)
+    assert start is None and end is None
 
 
 if __name__ == "__main__":

@@ -304,12 +304,7 @@ Here is the current editor. Conatins files you have opened.
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
     action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
-    try:
-      assert response.count("<COMMAND>") == 1
-      assert response.count("<THOUGHT>") == 1
-    except AssertionError as e:
-       print(response)
-       raise e
+
     return thought, action
 
 
