@@ -86,19 +86,8 @@ def generate_unified_diff2(client, thought, input_diff, file_tree, code, files):
             content=format_diff_input(thought, input_diff, file_tree, code, files)
         )
     ])
-
-    print(res)
-
-    diffs = extract_diffs(res)
-
-    all_diffs = []
-    for diff in diffs:
-        file_diffs = parse_multi_file_diff2(diff)
-        all_diffs.extend(file_diffs)
-
-    changes = MultiFileDiff2(files=all_diffs)
-
-    return changes
+    
+    return res
 
 def extract_diffs(diff_text):
     return [diff.replace("<DIFF>", "").strip() for diff in diff_text.split("</DIFF>")[:-1] if "<DIFF>" in diff]

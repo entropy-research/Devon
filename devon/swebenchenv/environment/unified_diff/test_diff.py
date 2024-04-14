@@ -1,11 +1,18 @@
 
 
+import os
+from anthropic import Anthropic
 from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, parse_multi_file_diff2
 from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
+from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 from devon.swebenchenv.environment.unified_diff.utils import create_code_fence, match_stripped_lines2
+from devon_agent.agent.clients.client import ClaudeSonnet, Message
 
+goal = """my goal is to improve the error handling in the URLValidator class.
 
-diff = """
+The current implementation catches a ValueError raised by urlsplit() when it encounters an invalid URL, like one with an invalid IPv6 address. But instead of showing the actual error message from urlsplit(), it just raises a generic ValidationError with a predetermined message."""
+
+diff_code = """
 Okay, I understand the issue and the required changes. Here are the diffs to fix it:
 
 <DIFF>
@@ -36,10 +43,22 @@ The key changes are:
 
 This way, instead of a generic error message, the actual `ValueError` message from `urlsplit()` will be shown when it fails to parse the URL, giving a more informative error."""
 
-if __name__ == "__main__":
-    with open("./testcode.py", "r") as file:
-        testcode_content = file.read()
+class Hallucination(Exception):
+    pass
 
+def create_recover_prompt(original, diff):
+
+    return f"""
+The original code looks like this: {original}
+    
+You generated a diff that looked like this: {diff}
+
+Applying this diff failed! The context lines and the src lines from the diff did not match the real code in the file!
+
+Please explain how to fix this, and then generate a new diff that will match.
+"""
+
+def match_with_recover(content, diff):
     diffs = extract_diffs(diff)
 
     all_diffs = []
@@ -53,10 +72,41 @@ if __name__ == "__main__":
         for hunk in file_diff.hunks:
             old, new = construct_versions_from_diff_hunk(hunk)
 
-            # print("\n".join(old))
-            # print("\n".join(new))
+            print("\n".join(old))
+            print("\n".join(new))
 
             begin, end = match_stripped_lines2(src_lines, old)
 
-            print(begin, end)
-            
+            if not ( begin and end ):
+                raise Hallucination()
+        
+            return True
+
+if __name__ == "__main__":
+    with open("./testcode.py", "r") as file:
+        testcode_content = file.read()
+
+    api_key=os.environ.get("ANTHROPIC_API_KEY")
+    anthrpoic_client = Anthropic(api_key=api_key)
+    diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
+
+    fixed = False
+    error_context = []
+    while not fixed:
+        print(diff_code)
+        input()
+        try:
+            fixed = match_with_recover(testcode_content, diff_code)
+        except Hallucination as e:
+            #Get model to explain itself and why the error happened
+
+            diff_code = diff_model.chat([
+                Message(
+                    role="user",
+                    content=create_recover_prompt(testcode_content, diff_code)
+                )
+            ])
+        except Exception:
+            break
+
+    print(fixed)
