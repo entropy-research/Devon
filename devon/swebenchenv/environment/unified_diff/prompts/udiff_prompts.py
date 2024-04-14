@@ -7,6 +7,10 @@ from .base_prompts import CoderPrompts
 end_json_symbol = "<END>"
 
 class UnifiedDiffPrompts(CoderPrompts):
+
+    explainer_system = f"""
+
+"""
     main_system = f"""Act as an expert software developer.
 
 As a seasoned engineer you

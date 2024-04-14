@@ -16,9 +16,10 @@ from dataclasses import dataclass
 from git import Repo
 from rich.logging import RichHandler
 from simple_parsing.helpers import FrozenSerializable
-from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, generate_unified_diff2
+from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, generate_unified_diff2, parse_multi_file_diff2
 from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
+from devon.swebenchenv.environment.unified_diff.test_diff import Hallucination, create_recover_prompt
 from devon.swebenchenv.environment.unified_diff.utils import match_stripped_lines, match_stripped_lines2
 from devon.swebenchenv.environment.utils import (
     copy_file_to_container,
@@ -36,7 +37,7 @@ from swebench import (
 )
 from typing import Optional, Tuple
 
-from devon_agent.agent.clients.client import ClaudeSonnet
+from devon_agent.agent.clients.client import ClaudeSonnet, Message
 
 LONG_TIMEOUT = 500
 PATH_TO_REQS = "/root/requirements.txt"
@@ -925,6 +926,9 @@ EXAMPLES
                     src_start, src_end = match_stripped_lines2(src_lines, old_lines)
                     print("LOCATED DIFF: ", src_start, src_end)
 
+                    if not ( src_start and src_end ):
+                        raise Hallucination()
+
                     i = 0
                     while i < len(tgt_lines):
                         if tgt_lines[i][0] == src_start:
@@ -949,23 +953,50 @@ EXAMPLES
 
         file_context = self._list_files_recursive(files=[self.file_root])
 
-        diff = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.editor, files=list(self.editor.keys()))
+        diff_code = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.editor, files=list(self.editor.keys()))
         
-        src_files = [file.src_file for file in diff.files]
-        tgt_files = [file.tgt_file for file in diff.files]
+        # src_files = [file.src_file for file in diff.files]
+        # tgt_files = [file.tgt_file for file in diff.files]
         # print(src_files)
         # old = self.editor
         # print([old[fname] for fname in src_files])
 
         # print(diff)
 
-        self.apply_diff2(multi_file_diff=diff, file_tree_root=self.file_root)
+        
 
-        # print(tgt_files)  
-        # new = self.editor
-        # print([new[fname] for fname in tgt_files])
+        attempts = 0
+        fixed = False
+        while not fixed and attempts < 5:
+            try:
 
-        return "EDITED FILE"
+                diffs = extract_diffs(diff_code)
+
+                all_diffs = []
+                for diff in diffs:
+                    file_diffs = parse_multi_file_diff2(diff)
+                    all_diffs.extend(file_diffs)
+
+                changes = MultiFileDiff2(files=all_diffs)
+
+                self.apply_diff2(multi_file_diff=changes, file_tree_root=self.file_root)
+
+                fixed = True
+
+            except Hallucination:
+                diff_code = self.diff_model.chat([
+                    Message(
+                        role="user",
+                        content=create_recover_prompt(self.editor, diff_code)
+                    )
+                ])
+            except Exception:
+                break
+
+        if attempts == 5 and not fixed:
+            return "Failed to edit file, please try an alternative approach"
+
+        return "Successfully edited file"
 
     ## END DIFF CODE
 
