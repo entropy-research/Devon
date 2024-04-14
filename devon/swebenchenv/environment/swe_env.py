@@ -589,10 +589,10 @@ class SWEEnv(gym.Env):
             str: The absolute path of the file.
         """
 
-        base = os.path.split(fpath)[0]
+        base = fpath.split("/")[0]
 
-        if base == self.file_root and os.path.isabs(fpath):
-            return fpath
+        if f"/{base}" == self.file_root:
+            return "/" + fpath.lstrip("/")
         else:
             return os.path.join("/", self.file_root, fpath)
     
@@ -881,12 +881,16 @@ EXAMPLES
             src_file = file_diff.src_file
             tgt_file = file_diff.tgt_file
 
+            print("Applying diff to: ", src_file, tgt_file)
+
             # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
-            src_file_abs = os.path.join(file_tree_root, src_file.lstrip("/")) if not os.path.isabs(src_file) else src_file
-            tgt_file_abs = os.path.join(file_tree_root, tgt_file.lstrip("/")) if not os.path.isabs(tgt_file) else tgt_file
+            src_file_abs = self.make_abs_path(src_file)
+            tgt_file_abs = self.make_abs_path(tgt_file)
 
             src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
             tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
+
+            print("Applying diff to: ", src_file_abs, tgt_file_abs)
             # src_file_exists = src_file_abs in self.editor
 
             if src_file == "/dev/null" or not src_file_exists:
@@ -908,6 +912,7 @@ EXAMPLES
 
                 # Modifying an existing file
                 src_content = self.read_file(file_path=src_file_abs)
+                print(src_content)
                 # print("OLD_CODE: ", src_file_abs, src_content)
                 src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
 
@@ -915,6 +920,8 @@ EXAMPLES
 
                 for hunk in file_diff.hunks:
                     old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
+                    print(old_lines, new_lines)
+                    # print(new_lines)
                     src_start, src_end = match_stripped_lines2(src_lines, old_lines)
                     print("LOCATED DIFF: ", src_start, src_end)
 
@@ -929,7 +936,7 @@ EXAMPLES
                             break
                             
                         i += 1
-                
+
                 new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
                 
                 # print("NEW_CODE: ", tgt_file_abs, new_code)
@@ -943,9 +950,6 @@ EXAMPLES
         file_context = self._list_files_recursive(files=[self.file_root])
 
         diff = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.editor, files=list(self.editor.keys()))
-
-        # print(json.dumps(self.editor))
-        # print("WRITING DIFF: ", diff)
         
         src_files = [file.src_file for file in diff.files]
         tgt_files = [file.tgt_file for file in diff.files]
@@ -961,7 +965,7 @@ EXAMPLES
         # new = self.editor
         # print([new[fname] for fname in tgt_files])
 
-        return "Edited file"
+        return "EDITED FILE"
 
     ## END DIFF CODE
 
@@ -1042,99 +1046,101 @@ EXAMPLES
         result = f"Found {num_matches} matches for \"{search_term}\" in {dir}:\n{matches}"
         return result.replace('\n', '\n    ')
 
-#     def search_file(self, search_term: str, file: str = None):
-#         """
-#         NAME
-#       search_file - search for a term in a specific file
-
-# SYNOPSIS
-#       search_file [SEARCH_TERM] [FILE]
-
-# DESCRIPTION
-#       The search_file command searches for SEARCH_TERM in the specified FILE. If FILE is
-#       not provided, it searches in the current open file.
-
-# OPTIONS
-#       SEARCH_TERM
-#              The term to search for in the file.
-
-#       FILE  The file to search in. If not provided, the command searches in the current
-#              open file.
-
-# RETURN VALUE
-#       The search_file command returns a summary of the search results as a string.
-
-# EXAMPLES
-#       To search for the term "hello" in the current open file:
-
-#              search_file "hello"
-
-#       To search for the term "world" in the file "/path/to/file.txt":
-
-#              search_file "world" "/path/to/file.txt"
-#         """
-
-#         if file is None:
-#             file = list(self.editor.keys())[0]
-
-#         command = f"grep -nH '{search_term}' {file}"
-#         result = self.communicate(command)
-
-#         matches = result.strip()
-#         if not matches:
-#             return f"No matches found for \"{search_term}\" in {file}"
-
-#         num_matches = matches.count('\n') + 1
-#         num_lines = len(set(match.split(':')[0] for match in matches.split('\n')))
-
-#         if num_lines > 100:
-#             return f"More than {num_lines} lines matched for \"{search_term}\" in {file}. Please narrow your search."
-
-#         result = f"Found {num_matches} matches for \"{search_term}\" in {file}:\n{matches}"
-#         return result.replace('\n', '\n    ')
-
-    def search_files(self, file_name: str, dir: str = "./"):
+    def search_file(self, search_term: str, file: str = None):
         """
         NAME
-      search_files - find all files with a given name in a directory
+      search_file - search for a term in a specific file
 
 SYNOPSIS
-      search_files [FILE_NAME] [DIR]
+      search_file [SEARCH_TERM] [FILE]
 
 DESCRIPTION
-      The search_files command finds all files with the given FILE_NAME in the specified
-      DIR. If DIR is not provided, it searches in the current directory.
+      The search_file command searches for SEARCH_TERM in the specified FILE. If FILE is
+      not provided, it searches in the current open file.
 
 OPTIONS
-      FILE_NAME
-             The name of the file to search for.
+      SEARCH_TERM
+             The term to search for in the file.
 
-      DIR   The directory to search in. If not provided, the command searches in the
-             current directory ("./").
+      FILE  The file to search in. If not provided, the command searches in the current
+             open file.
 
 RETURN VALUE
-      The search_files command returns a summary of the search results as a string.
+      The search_file command returns a summary of the search results as a string.
 
 EXAMPLES
-      To find all files named "example.txt" in the current directory:
+      To search for the term "hello" in the current open file:
 
-             search_files "example.txt"
+             search_file "hello"
 
-      To find all files named "data.csv" in the "/path/to/directory" directory:
+      To search for the term "world" in the file "/path/to/file.txt":
 
-             search_files "data.csv" "/path/to/directory"
+             search_file "world" "/path/to/file.txt"
         """
 
-        command = f"grep -rl '{file_name}' {dir}"
+        abs_file = self.make_abs_path(file)
+
+        if file is None:
+            file = list(self.editor.keys())[0]
+
+        command = f"grep -nH '{search_term}' {abs_file}"
         result = self.communicate(command)
 
-        matches = result
+        matches = result.strip()
         if not matches:
-            return f"No matches found for \"{file_name}\" in {dir}"
+            return f"No matches found for \"{search_term}\" in {abs_file}"
 
         num_matches = matches.count('\n') + 1
-        result = f"Found {num_matches} matches for \"{file_name}\" in {dir}:\n{matches}"
+        num_lines = len(set(match.split(':')[0] for match in matches.split('\n')))
+
+        if num_lines > 100:
+            return f"More than {num_lines} lines matched for \"{search_term}\" in {abs_file}. Please narrow your search."
+
+        result = f"Found {num_matches} matches for \"{search_term}\" in {abs_file}:\n{matches}"
         return result.replace('\n', '\n    ')
+
+#     def search_files(self, file_name: str, dir: str = "./"):
+#         """
+#         NAME
+#       search_files - find all files with a given name in a directory
+
+# SYNOPSIS
+#       search_files [FILE_NAME] [DIR]
+
+# DESCRIPTION
+#       The search_files command finds all files with the given FILE_NAME in the specified
+#       DIR. If DIR is not provided, it searches in the current directory.
+
+# OPTIONS
+#       FILE_NAME
+#              The name of the file to search for.
+
+#       DIR   The directory to search in. If not provided, the command searches in the
+#              current directory ("./").
+
+# RETURN VALUE
+#       The search_files command returns a summary of the search results as a string.
+
+# EXAMPLES
+#       To find all files named "example.txt" in the current directory:
+
+#              search_files "example.txt"
+
+#       To find all files named "data.csv" in the "/path/to/directory" directory:
+
+#              search_files "data.csv" "/path/to/directory"
+#         """
+
+#         command = f"grep -rl '{file_name}' {dir}"
+#         result = self.communicate(command)
+
+#         matches = result
+#         if not matches:
+#             return f"No matches found for \"{file_name}\" in {dir}"
+
+#         num_matches = matches.count('\n') + 1
+#         result = f"Found {num_matches} matches for \"{file_name}\" in {dir}:\n{matches}"
+#         return result.replace('\n', '\n    ')
 
     def list_files(self, folder_path: str = ".") -> list:
         """NAME
@@ -1205,7 +1211,7 @@ EXAMPLES
             self.open_file,
             self.view_open_files,
             self.search_dir,
-            # self.search_file,
+            self.search_file,
             # self.search_files,
             self.get_cwd,
             self.delete_file,
@@ -1262,7 +1268,7 @@ EXAMPLES
             self.open_file,
             self.view_open_files,
             self.search_dir,
-            # self.search_file,
+            self.search_file,
             # self.search_files,
             self.get_cwd,
             self.delete_file,
@@ -1274,7 +1280,7 @@ EXAMPLES
 
         try:
             if fn_name == "edit_file":
-                print(args)
+                # print(args)
                 return self.real_write_diff(args, thought)
             elif fn_name in fn_names:
                 return self.__getattribute__(fn_name)(*args)

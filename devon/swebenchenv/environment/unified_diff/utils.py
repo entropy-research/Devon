@@ -150,9 +150,11 @@ def match_fence(lines, fence):
     if subset_length > 0:
         for i in range(len(lines) - subset_length + 1):
             match = [line[1] for line in lines[i:i+subset_length]]
+            # if match[0] == fence[0]:
+                # print(match, fence)
             if match == fence:
                 return lines[i][0], lines[i+subset_length-1][0]
-    
+
     return None, None
 
 def match_stripped_lines2(file_lines, old_lines):
@@ -164,8 +166,7 @@ def match_stripped_lines2(file_lines, old_lines):
     stripped_old_lines = [line for line in stripped_old_lines if line != ""]
 
     begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines)
-    print(begin_fence, stop_fence)
-    print(old_lines)
+
     begin_start, begin_end = match_fence(stripped_file_lines, begin_fence)
     stop_start, stop_end = match_fence(stripped_file_lines, stop_fence)
 
@@ -174,12 +175,6 @@ def match_stripped_lines2(file_lines, old_lines):
 
     return start, end
 
-"""
-number lines
-strip whitespace and white lines
-match on content lines
-return line numbers
-"""
 
 def test_match_lines2_empty_file():
     file_lines = []
@@ -250,156 +245,39 @@ def test_match_lines2_all_empty_lines_in_old_lines():
 
 
 if __name__ == "__main__":
-    res = """<DIFF>
---- /dev/null
-+++ agent/kernel/state_machine/__init__.py
-@@ -0,0 +1,1 @@
-+from .state_machine import *
-</DIFF>
-
-<DIFF>
---- /dev/null
-+++ agent/kernel/state_machine/state_types.py
-@@ -0,0 +1,4 @@
-+from typing import Literal, Union
-+
-+type State = Union[Literal["reason"], Literal["write"], Literal["execute"], Literal["evaluate"], Literal["terminate"]]
-+
-</DIFF>
-
-<DIFF>
---- /dev/null
-+++ agent/kernel/state_machine/state_machine.py
-@@ -0,0 +1,19 @@
-+from devon_agent.agent.kernel.state_machine.state_types import State
-+
-+class StateMachine:
-+
-+    def __init__(self, state: State):
-+        self.state = state
-+        self.state_dict = {}
-+
-+    def add_state(self, name: State, state_class):
-+        self.state_dict[name] = state_class
-+
-+    def execute_state(self, name, context):
-+        state = self.state_dict[name]
-+        state.execute(context)
-+
-+    def transition(self, new_state):
-+        self.state = new_state
-+
-</DIFF>
-
-<DIFF>
---- /dev/null
-+++ agent/kernel/state_machine/state.py
-@@ -0,0 +1,7 @@
-+from abc import ABC, abstractmethod
-+
-+class State(ABC):
-+
-+    @abstractmethod
-+    def execute(self, context):
-+        pass
-</DIFF>
-
-<DIFF>
---- /dev/null
-+++ agent/kernel/state_machine/states/reason.py
-@@ -0,0 +1,5 @@
-+fromdevon_agent.agent.kernel.state_machine.state import State
-+
-+class ReasonState(State):
-+    def execute(self, context):
-+        # Implement reasoning logic here
-</DIFF>
-
-<DIFF>
---- /dev/null
-+++ agent/kernel/state_machine/states/write.py
-@@ -0,0 +1,5 @@
-+fromdevon_agent.agent.kernel.state_machine.state import State
-+
-+class WriteState(State):
-+    def execute(self, context):
-+        # Implement code writing logic here
-</DIFF>
-
-<DIFF>
---- /dev/null
-+++ agent/kernel/state_machine/states/execute.py
-@@ -0,0 +1,5 @@
-+fromdevon_agent.agent.kernel.state_machine.state import State
-+
-+class ExecuteState(State):
-+    def execute(self, context):
-+        # Implement code execution logic here
-</DIFF>
-
-<DIFF>
---- /dev/null
-+++ agent/kernel/state_machine/states/evaluate.py
-@@ -0,0 +1,5 @@
-+fromdevon_agent.agent.kernel.state_machine.state import State
-+
-+class EvaluateState(State):
-+    def execute(self, context):
-+        # Implement code evaluation logic here
-</DIFF>
-
-<DIFF>
---- /dev/null
-+++ agent/kernel/state_machine/states/terminate.py
-@@ -0,0 +1,5 @@
-+fromdevon_agent.agent.kernel.state_machine.state import State
-+
-+class TerminateState(State):
-+    def execute(self, context):
-+        # Implement termination logic here
-</DIFF>
-
-<DIFF>
---- agent/kernel/thread.py
-+++ agent/kernel/thread.py
-@@ -10,6 +10,7 @@ from devon_agent.agent.tools.unified_diff.utils import apply_diff, apply_diff2, apply_
- from devon_agent.sandbox.environments import EnvironmentProtocol
- from devon_agent.format import reformat_code
- from devon_agent.agent.reasoning.reason import ReasoningPrompts
-+fromdevon_agent.agent.kernel.state_machine.state_machine import StateMachine
- fromdevon_agent.agentevaluate.evaluate import EvaluatePrompts
- from anthropic import Anthropic
- from devon_agent.agent.clients.client import ClaudeHaiku, ClaudeOpus, ClaudeSonnet, Message
-@@ -40,7 +41,7 @@ class Thread:
-             success = False
-             failure_context = []
-             state_manager = StateMachine(state="reason")
--            file_system = env.tools.file_system(path=os.getcwd())
-+            state_manager.add_state("reason", ReasonState)
- 
-             plan = None
-             create = None
-@@ -48,6 +49,8 @@ class Thread:
-             delete = None
- 
-             # while not state_manager.state == "success":
-+            file_system = env.tools.file_system(path=os.getcwd())
-+            context = {"goal": self.task, "env": env}
- 
-                 #Define run context
-             repo_data = file_system.glob_repo_code(os.getcwd())
-@@ -89,6 +92,9 @@ class Thread:
-             # print(new, touched_files)
- 
-             # file_code_mapping = {path: data.code for path, data in repo_data.items()}
-+            
-+            state_manager.transition("terminate")
-+            state_manager.execute_state("terminate", context)
- 
-     #         match state_manager.state:
-     #             case "reason":
-</DIFF>"""
     
+    res = """Okay, here are the diffs to fix the issue with URLField.clean() raising ValueError instead of ValidationError:
+
+<DIFF>
+--- django/forms/fields.py
++++ django/forms/fields.py
+@@ -1044,8 +1044,11 @@
+             try:
+                 return list(urlsplit(url))
+             except ValueError:
+-                # urlparse.urlsplit can raise a ValueError with some
+-                # misformatted URLs.
+-                raise ValidationError(self.error_messages['invalid'], code='invalid')
++                # urlparse.urlsplit can raise ValueError with some malformed URLs.
++                # Catch that and re-raise as a ValidationError.
++                raise ValidationError(
++                    self.error_messages['invalid'],
++                    code='invalid',
++                    params={'value': url},
++                )
+</DIFF>
+
+This change catches the ValueError raised by urlsplit() when it fails to parse a malformed URL, and re-raises it as a Django ValidationError with the 'invalid' code and the original URL value passed as the 'params' argument.
+
+The key things:
+
+1. Catch the ValueError exception 
+2. Raise a ValidationError instead
+3. Pass the 'invalid' error message code
+4. Pass the original URL value in the 'params' dict for better error messaging
+
+With this change, invalid URLs passed to URLField.clean() will now raise a proper ValidationError that can be handled by Django's form validation system, instead of the low-level ValueError."""
+
     diffs = extract_diffs(res)
 
     all_diffs = []
@@ -409,4 +287,14 @@ if __name__ == "__main__":
 
     changes = MultiFileDiff2(files=all_diffs)
 
-    apply_diff2(changes)
+    for file_diff in all_diffs:
+        for hunk in file_diff.hunks:
+            old, new = construct_versions_from_diff_hunk(hunk)
+
+            # print("\n".join(old))
+            # print("\n".join(new))
+
+            old_fence = create_code_fence(old)
+            print(old_fence)
+
+
