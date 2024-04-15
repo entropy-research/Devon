@@ -1000,10 +1000,10 @@ EXAMPLES
             except Exception:
                 break
 
-        if attempts == 5 and not fixed:
-            return "Failed to edit file, please try an alternative approach"
-
-        return "Successfully edited file"
+        if fixed:
+            return "Successfully edited file"
+            
+        return "Failed to edit file, please try an alternative approach"
 
     ## END DIFF CODE
 
