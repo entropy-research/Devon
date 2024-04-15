@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from git import Repo
 from rich.logging import RichHandler
 from simple_parsing.helpers import FrozenSerializable
-from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, generate_unified_diff2, parse_multi_file_diff2
+from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, extract_diffs2, generate_unified_diff2, parse_multi_file_diff2
 from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 from devon.swebenchenv.environment.unified_diff.test_diff import Hallucination, create_recover_prompt
@@ -834,7 +834,7 @@ CREATE_FILE(1)                        April 2024                         CREATE_
             # print(self.editor)
             # print("VIRTUAL FS ###")
             return f"Successfully created file {abs_path}"
-        
+
         except Exception as e:
             print(f"Failed to create file: {file_path}. Error: {str(e)}")
             return f"Failed to create file: {file_path}. Error: {str(e)}"
@@ -962,13 +962,15 @@ EXAMPLES
 
         file_context = self._list_files_recursive(files=[self.file_root])
 
-        diff_code = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.editor, files=list(self.editor.keys()))
+        # diff_code = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.editor, files=list(self.editor.keys()))
         
         # src_files = [file.src_file for file in diff.files]
         # tgt_files = [file.tgt_file for file in diff.files]
         # print(src_files)
         # old = self.editor
         # print([old[fname] for fname in src_files])
+
+        diff_code = diff
 
         # print(diff)
 
@@ -977,7 +979,7 @@ EXAMPLES
         while not fixed and attempts < 5:
             try:
 
-                diffs = extract_diffs(diff_code)
+                diffs = extract_diffs2(diff_code)
 
                 all_diffs = []
                 for diff in diffs:

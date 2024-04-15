@@ -92,6 +92,12 @@ def generate_unified_diff2(client, thought, input_diff, file_tree, code, files):
 def extract_diffs(diff_text):
     return [diff.replace("<DIFF>", "").strip() for diff in diff_text.split("</DIFF>")[:-1] if "<DIFF>" in diff]
 
+def extract_diffs2(diff_text):
+    if "<DIFF>" in diff_text:
+        return [diff.replace("<DIFF>", "").strip() for diff in diff_text.split("</DIFF>")[:-1] if "<DIFF>" in diff]
+    
+    return [diff.replace("<<<", "").strip() for diff in diff_text.split(">>>")[:-1] if "<<<" in diff]
+
 def format_diff_input(thought, input_diff, file_tree, code, files):
     return f"""
 <GOAL>
