@@ -86,9 +86,24 @@ def match_with_recover(content, diff):
                 raise Hallucination()
         
             return True
+        
+
+diff2 = """
+django/views/debug.py
+@@ -78,6 +78,10 @@
+             cleansed = self.cleansed_substitute
+         elif isinstance(value, dict):
+             cleansed = {k: self.cleanse_setting(k, v) for k, v in value.items()}
++        elif isinstance(value, (list, tuple, set)) and not isinstance(value, str):
++            cleansed = []
++            for item in value:
++                cleansed.append(self.cleanse_setting(key, item))
+         else:
+             cleansed = value
+     except TypeError:"""
 
 if __name__ == "__main__":
-    with open("./testcode.py", "r") as file:
+    with open("devon/swebenchenv/environment/unified_diff/testcode2.py", "r") as file:
         testcode_content = file.read()
 
     api_key=os.environ.get("ANTHROPIC_API_KEY")
@@ -104,6 +119,7 @@ if __name__ == "__main__":
             fixed = match_with_recover(testcode_content, diff_code)
         except Hallucination as e:
             #Get model to explain itself and why the error happened
+            print("HALLUCINATION")
 
             diff_code = diff_model.chat([
                 Message(

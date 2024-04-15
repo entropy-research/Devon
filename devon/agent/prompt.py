@@ -88,7 +88,6 @@ def system_prompt_template(command_docs : str):
 
   10. Avoid searching. Open files in editor and use the content in editor to understand the file.
 
-  11. Before trying to make a fix, try to identify the root cause. Explore the codebase and pinpoint the source of the problem. Then fix it.
 
 </SETTING>
 <COMMANDS>
