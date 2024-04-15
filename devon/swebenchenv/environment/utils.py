@@ -282,7 +282,7 @@ def get_commit(api: GhApi, owner: str, repo: str, base_commit: str = None):
 
 
 
-def get_instances(file_path: str, base_commit: str = None, split: str = None, token: str = None):
+def get_instances(file_path: str, base_commit: str = None, split: str = None, token: str = None, specific_issue: str = None):
     """
     Getter function for handling json, jsonl files
 
@@ -321,9 +321,12 @@ def get_instances(file_path: str, base_commit: str = None, split: str = None, to
     if file_path.endswith(".jsonl"):
         return [json.loads(x) for x in open(file_path, 'r').readlines()]
 
-    # Attempt load from HF datasets as a last resort
     try:
-        return load_dataset(file_path, split=split)
+        # Attempt load from HF datasets as a last resort
+        if specific_issue:
+            return [task for task in load_dataset(file_path, split=split) if task['instance_id'] == specific_issue]
+        else:
+            return load_dataset(file_path, split=split)
     except:
         raise ValueError(
             f"Could not load instances from {file_path}. "

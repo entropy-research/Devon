@@ -62,6 +62,7 @@ class EnvironmentArguments(FrozenSerializable):
     timeout: int = 35
     verbose: bool = False
     no_mirror: bool = False
+    specific_issue: Optional[str] = None
 
 
 class SWEEnv(gym.Env):
@@ -110,7 +111,7 @@ class SWEEnv(gym.Env):
 
         # Load Task Instances
         self.data_path = self.args.data_path
-        self.data = get_instances(self.data_path, self.args.base_commit, self.args.split, token=self.token) #Load data from path
+        self.data = get_instances(self.data_path, self.args.base_commit, self.args.split, token=self.token,specific_issue=self.args.specific_issue) #Load data from path
         self.logger.info(f"💽 Loaded dataset from {self.data_path}")
 
         # Establish connection with execution container
@@ -1242,7 +1243,7 @@ EXAMPLES
             self.open_file,
             self.view_open_files,
             self.search_dir,
-            self.search_file,
+            # self.search_file,
             # self.search_files,
             self.get_cwd,
             self.delete_file,
@@ -1299,7 +1300,7 @@ EXAMPLES
             self.open_file,
             self.view_open_files,
             self.search_dir,
-            self.search_file,
+            # self.search_file,
             # self.search_files,
             self.get_cwd,
             self.delete_file,

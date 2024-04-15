@@ -194,7 +194,8 @@ if __name__ == "__main__":
             split="test",
             verbose=True,
             container_name="swe-agent",
-            install_environment=True
+            install_environment=True,
+            specific_issue="django__django-12700"
         ),
         skip_existing=True,
         agent=AgentArguments(

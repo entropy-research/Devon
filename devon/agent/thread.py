@@ -159,7 +159,7 @@ class Agent:
 
     def __init__(self, name="Devon",args=None):
         self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
-            model_name="claude-opus",
+            model_name="claude-sonnet",
             temperature=0.5
         ))
         # self.model = HumanModel(args=ModelArguments(
@@ -327,6 +327,11 @@ class Agent:
                     "thought": thought,
                 }
             )
+
+        if not done:
+            # sumbit the last thing
+            action = "submit"
+            _, _, done, info = env.step(action, thought)
 
         self.history = []
         print(info)
