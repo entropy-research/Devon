@@ -175,7 +175,7 @@ class Agent:
     def __init__(self, name="Devon",args=None):
         self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
             model_name="claude-sonnet",
-            temperature=0.5
+            temperature=1.0
         ))
         # self.model = HumanModel(args=ModelArguments(
         #     model_name="gpt-4-0314",
@@ -186,12 +186,10 @@ class Agent:
         # ))
         self.name = name
         self.history = []
-        self.max_steps = 5
+        self.max_steps = 20
 
     def forward_with_error_check(self, observation: str, state: str, avaliable_actions: list[str], commanddoc: dict) -> Tuple[str, str, str]:
         try:
-
-
             output = self.forward_model(observation, state,avaliable_actions, commanddoc)
         except KeyboardInterrupt:
             raise

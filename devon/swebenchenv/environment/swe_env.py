@@ -891,6 +891,9 @@ EXAMPLES
             src_file = file_diff.src_file
             tgt_file = file_diff.tgt_file
 
+            if not ( src_file or tgt_file ):
+                raise Hallucination("Could not apply changes, missing source or target file.")
+
             logger.debug("Applying diff to: %s, %s", src_file, tgt_file)
 
             # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
@@ -936,7 +939,7 @@ EXAMPLES
                     logger.debug("LOCATED DIFF: %s, %s", src_start, src_end)
 
                     if not ( src_start and src_end ):
-                        raise Hallucination()
+                        raise Hallucination("Applying this diff failed! The context lines and the src lines from the diff did not match the real code in the file!")
 
                     i = 0
                     while i < len(tgt_lines):
@@ -984,19 +987,31 @@ EXAMPLES
                 all_diffs = []
                 for diff in diffs:
                     file_diffs = parse_multi_file_diff2(diff)
+                    print(file_diffs)
                     all_diffs.extend(file_diffs)
 
                 changes = MultiFileDiff2(files=all_diffs)
+
+                print(changes)
+
+                if changes.files == []:
+                    raise Hallucination("Could not apply changes, missing source or target file.")
 
                 self.apply_diff2(multi_file_diff=changes, file_tree_root=self.file_root)
 
                 fixed = True
 
-            except Hallucination:
+            except Hallucination as h:
+                error_msg = h.args
+
+                attempts += 1
+
+                msg = create_recover_prompt(self.editor, diff_code, error_msg)
+
                 diff_code = self.diff_model.chat([
                     Message(
                         role="user",
-                        content=create_recover_prompt(self.editor, diff_code)
+                        content=msg
                     )
                 ])
             

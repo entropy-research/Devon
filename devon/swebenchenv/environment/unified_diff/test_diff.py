@@ -46,14 +46,14 @@ This way, instead of a generic error message, the actual `ValueError` message fr
 class Hallucination(Exception):
     pass
 
-def create_recover_prompt(original, diff):
+def create_recover_prompt(original, diff, error):
 
     return f"""
 The original code looks like this: {original}
     
 You generated a diff that looked like this: {diff}
 
-Applying this diff failed! The context lines and the src lines from the diff did not match the real code in the file!
+{error}
 
 Please explain how to fix this, and then generate a new diff that will match.
 """

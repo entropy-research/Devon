@@ -14,6 +14,7 @@ def parse_multi_file_diff2(diff: str) -> MultiFileDiff:
     i = 0
     while i < len(lines):
         if lines[i].startswith("---"):
+
             src_file = re.findall(r"--- (.*)", lines[i])[0]
             tgt_file = re.findall(r"\+\+\+ (.*)", lines[i+1])[0]
             hunks = []
@@ -116,3 +117,27 @@ def format_diff_input(thought, input_diff, file_tree, code, files):
 {files}
 </FILES>
 """
+
+if __name__ == "__main__":
+    d = """
+diff --git a/django__django/django/views/debug.py b/django__django/django/views/debug.py                                                                                          
+index 1c2a0f2..7b7d0de 100644                                                                                                                                                     
+--- a/django__django/django/views/debug.py                                                                                                                                        
++++ b/django__django/django/views/debug.py                                                                                                                                        
+@@ -78,6 +78,10 @@ class SafeExceptionReporterFilter:                                                                                                                             
+                cleansed = self.cleansed_substitute                                                                                                                              
+            elif isinstance(value, dict):                                                                                                                                        
+                cleansed = {k: self.cleanse_setting(k, v) for k, v in value.items()}                                                                                             
++            elif isinstance(value, list):                                                                                                                                        
++                cleansed = []                                                                                                                                                    
++                for item in value:                                                                                                                                               
++                    cleansed.append(self.cleanse_setting(key, item))                                                                                                             
+            else:                                                                                                                                                                
+                cleansed = value                                                                                                                                                 
+        except TypeError:
+"""
+
+    res = parse_multi_file_diff2(d)
+    print(res)
+
+
