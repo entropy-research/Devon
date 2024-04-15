@@ -82,6 +82,8 @@ def match_with_recover(content, diff):
 
             begin, end = match_stripped_lines2(src_lines, old)
 
+            print(begin, end)
+
             if not ( begin and end ):
                 raise Hallucination()
         
@@ -110,6 +112,8 @@ if __name__ == "__main__":
     anthrpoic_client = Anthropic(api_key=api_key)
     diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
 
+    original = diff_code
+
     fixed = False
     error_context = []
     while not fixed:
@@ -124,7 +128,7 @@ if __name__ == "__main__":
             diff_code = diff_model.chat([
                 Message(
                     role="user",
-                    content=create_recover_prompt(testcode_content, diff_code)
+                    content=create_recover_prompt(testcode_content, diff_code, e.args)
                 )
             ])
 
