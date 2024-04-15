@@ -277,7 +277,7 @@ class Agent:
         log_dict = {
             "environment": env.name,
             "trajectory": trajectory,
-            # "history": self.history,
+            "history": [],
             "info": info,
         }
         with log_path.open("w") as f:
