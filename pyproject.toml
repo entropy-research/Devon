@@ -29,6 +29,7 @@ datasets = ">=2.14.6,<2.15.0"
 ghapi = "^1.0.5"
 simple-parsing = "^0.1.5"
 dspy-ai = "^2.4.5"
+fabric = "^3.2.2"
 
 [build-system]
 requires = ["poetry-core"]
