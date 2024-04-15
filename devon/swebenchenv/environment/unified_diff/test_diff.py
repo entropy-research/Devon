@@ -64,11 +64,16 @@ def match_with_recover(content, diff):
     all_diffs = []
     for diff in diffs:
         file_diffs = parse_multi_file_diff2(diff)
+        # print(file_diffs)
         all_diffs.extend(file_diffs)
+
+    print(all_diffs)
+
+    diff_m = MultiFileDiff2(files=all_diffs)
 
     src_lines = [(i, line) for i, line in enumerate(testcode_content.splitlines())]
 
-    for file_diff in all_diffs:
+    for file_diff in diff_m.files:
         for hunk in file_diff.hunks:
             old, new = construct_versions_from_diff_hunk(hunk)
 
@@ -106,7 +111,5 @@ if __name__ == "__main__":
                     content=create_recover_prompt(testcode_content, diff_code)
                 )
             ])
-        except Exception:
-            break
 
     print(fixed)

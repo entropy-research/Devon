@@ -1,7 +1,7 @@
 import difflib
 import os
-from devon_agent.agent.clients.client import ClaudeOpus, Message
-from devon_agent.agent.tools.unified_diff.diff_types import FileDiff, FileDiff2, Hunk, Hunk2, HunkLine, MultiFileDiff, MultiFileDiff2
+from devon_agent.agent.clients.client import Message
+from devon.swebenchenv.environment.unified_diff.diff_types import FileDiff, FileDiff2, Hunk, Hunk2, HunkLine, MultiFileDiff, MultiFileDiff2
 import dotenv
 import re
 

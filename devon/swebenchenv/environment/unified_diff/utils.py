@@ -1,8 +1,7 @@
 import difflib
-from devon_agent.agent.tools.unified_diff.create_diff import FileDiff, MultiFileDiff, construct_versions_from_diff_hunk, extract_diffs, parse_multi_file_diff2
+from devon.swebenchenv.environment.unified_diff.diff_types import FileDiff, MultiFileDiff2
+from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, parse_multi_file_diff2
 import os
-
-from devon_agent.agent.tools.unified_diff.diff_types import MultiFileDiff2
 
 import docker
 import os

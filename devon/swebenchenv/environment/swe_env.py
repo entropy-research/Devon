@@ -891,7 +891,7 @@ EXAMPLES
             src_file = file_diff.src_file
             tgt_file = file_diff.tgt_file
 
-            logger.debug("Applying diff to: ", src_file, tgt_file)
+            logger.debug("Applying diff to: %s, %s", src_file, tgt_file)
 
             # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
             src_file_abs = self.make_abs_path(src_file)
@@ -900,7 +900,7 @@ EXAMPLES
             src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
             tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
 
-            logger.debug("Applying diff to: ", src_file_abs, tgt_file_abs)
+            logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
             # src_file_exists = src_file_abs in self.editor
 
             if src_file == "/dev/null" or not src_file_exists:
@@ -922,7 +922,7 @@ EXAMPLES
 
                 # Modifying an existing file
                 src_content = self.read_file(file_path=src_file_abs)
-                logger.debug(src_content)
+                logger.debug("%s", src_content)
                 # print("OLD_CODE: ", src_file_abs, src_content)
                 src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
 
@@ -930,10 +930,10 @@ EXAMPLES
 
                 for hunk in file_diff.hunks:
                     old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
-                    logger.debug(old_lines, new_lines)
+                    logger.debug("%s, %s",old_lines, new_lines)
                     # print(new_lines)
                     src_start, src_end = match_stripped_lines2(src_lines, old_lines)
-                    logger.debug("LOCATED DIFF: ", src_start, src_end)
+                    logger.debug("LOCATED DIFF: %s, %s", src_start, src_end)
 
                     if not ( src_start and src_end ):
                         raise Hallucination()
@@ -997,7 +997,10 @@ EXAMPLES
                         content=create_recover_prompt(self.editor, diff_code)
                     )
                 ])
-            except Exception:
+            
+            except Exception as e:
+                print(e)
+                traceback.print_exc()
                 break
 
         if fixed:
