@@ -43,11 +43,15 @@ LONG_TIMEOUT = 500
 PATH_TO_REQS = "/root/requirements.txt"
 PATH_TO_ENV_YML = "/root/environment.yml"
 
-handler = RichHandler(show_time=False, show_path=False)
-handler.setLevel(logging.DEBUG)
+console_handler = RichHandler(show_time=False, show_path=False)
+console_handler.setLevel(logging.INFO)
+file_handler = logging.FileHandler('debug.log')
+file_handler.setLevel(logging.DEBUG)
+
 logger = logging.getLogger(LOGGER_NAME)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)  # Set to debug since we want all messages to be caught by the logger
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
 logger.propagate = False
 
 
@@ -196,7 +200,8 @@ class SWEEnv(gym.Env):
                 input=cmd,
                 error_msg="Failed to clean repository",
             )
-        print(self.get_cwd())
+        # print(self.get_cwd())
+        logger.debug(f"CWD: {self.get_cwd()}")
 
         # Reset environment variables
         # Reset env vars in the container? maybe this is used for tracking, but why not on the agent?
@@ -883,7 +888,7 @@ EXAMPLES
             src_file = file_diff.src_file
             tgt_file = file_diff.tgt_file
 
-            print("Applying diff to: ", src_file, tgt_file)
+            logger.debug("Applying diff to: ", src_file, tgt_file)
 
             # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
             src_file_abs = self.make_abs_path(src_file)
@@ -892,7 +897,7 @@ EXAMPLES
             src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
             tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
 
-            print("Applying diff to: ", src_file_abs, tgt_file_abs)
+            logger.debug("Applying diff to: ", src_file_abs, tgt_file_abs)
             # src_file_exists = src_file_abs in self.editor
 
             if src_file == "/dev/null" or not src_file_exists:
@@ -914,7 +919,7 @@ EXAMPLES
 
                 # Modifying an existing file
                 src_content = self.read_file(file_path=src_file_abs)
-                print(src_content)
+                logger.debug(src_content)
                 # print("OLD_CODE: ", src_file_abs, src_content)
                 src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
 
@@ -922,10 +927,10 @@ EXAMPLES
 
                 for hunk in file_diff.hunks:
                     old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
-                    print(old_lines, new_lines)
+                    logger.debug(old_lines, new_lines)
                     # print(new_lines)
                     src_start, src_end = match_stripped_lines2(src_lines, old_lines)
-                    print("LOCATED DIFF: ", src_start, src_end)
+                    logger.debug("LOCATED DIFF: ", src_start, src_end)
 
                     if not ( src_start and src_end ):
                         raise Hallucination()

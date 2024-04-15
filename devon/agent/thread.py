@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import json
+import logging
 from pathlib import Path
 from typing import Any, List, Optional, Tuple, Dict
 from devon.agent.model import AnthropicModel, HumanModel, ModelArguments
@@ -9,8 +10,22 @@ from tenacity import RetryError
 from devon.agent.prompt import commands_to_command_docs, editor_repr, history_to_bash_history, last_user_prompt_template, object_to_xml, print_tree, system_prompt_template, user_prompt_template, system_prompt
 from devon.agent.prompt import parse_response
 from simple_parsing.helpers import field, FrozenSerializable, FlattenedAccess
+from rich.logging import RichHandler
 
 from devon.swebenchenv.environment.swe_env import SWEEnv
+from devon.swebenchenv.environment.utils import LOGGER_NAME
+
+# console_handler = RichHandler(show_time=False, show_path=False)
+# console_handler.setLevel(logging.INFO)
+# file_handler = logging.FileHandler('debug.log')
+# file_handler.setLevel(logging.DEBUG)
+
+logger = logging.getLogger(LOGGER_NAME)
+# logger.setLevel(logging.DEBUG)  # Set to debug since we want all messages to be caught by the logger
+# logger.addHandler(console_handler)
+# logger.addHandler(file_handler)
+# logger.propagate = False
+
 
 """
     system_template: str
@@ -209,6 +224,7 @@ class Agent:
 
         # REPLACE WITH OUR PROMPT TEMPLATES
         f_tree = state["file_tree"]
+        logger.debug("EDITOR %s",state["editor"])
 
         issue,filetree,editor,working_dir = state["issue"],json.dumps(f_tree),json.dumps(state["editor"]),state["cwd"]
 
@@ -249,9 +265,9 @@ class Agent:
                 "state": state,
             }
         )
-        print(f"OBSERVATION ({self.name})\n{observation}")
-        print(f"THOUGHT ({self.name})\n{thought}")
-        print(f"ACTION ({self.name})\n{action}")
+        logger.info(f"OBSERVATION ({self.name})\n{observation}")
+        logger.info(f"THOUGHT ({self.name})\n{thought}")
+        logger.info(f"ACTION ({self.name})\n{action}")
         # print(f"RESULT ({self.name})\n{output}")
 
         return thought, action, output
@@ -311,13 +327,12 @@ class Agent:
 
             observations.append(obs)
 
-            print(action.strip())
             if action.strip() == "submit":
                 done = True
 
             observation = '\n'.join([json.dumps(obs) for obs in observations if obs is not None])
 
-            # print("EDITOR",env.virtual_filesystem)
+
             trajectory.append(
                 {
                     "action": action,
@@ -334,7 +349,7 @@ class Agent:
             _, _, done, info = env.step(action, thought)
 
         self.history = []
-        print(info)
+        logger.debug(info)
         return info
 
 if __name__ == "__main__":
