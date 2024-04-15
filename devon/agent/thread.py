@@ -175,7 +175,7 @@ class Agent:
     def __init__(self, name="Devon",args=None):
         self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
             model_name="claude-sonnet",
-            temperature=1.0
+            temperature=0.5
         ))
         # self.model = HumanModel(args=ModelArguments(
         #     model_name="gpt-4-0314",

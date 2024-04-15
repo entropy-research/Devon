@@ -2,7 +2,7 @@
 
 import os
 from anthropic import Anthropic
-from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, parse_multi_file_diff2
+from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, extract_diffs2, parse_multi_file_diff2
 from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 from devon.swebenchenv.environment.unified_diff.utils import create_code_fence, match_stripped_lines2
@@ -59,7 +59,7 @@ Please explain how to fix this, and then generate a new diff that will match.
 """
 
 def match_with_recover(content, diff):
-    diffs = extract_diffs(diff)
+    diffs = extract_diffs2(diff)
 
     all_diffs = []
     for diff in diffs:

@@ -735,7 +735,7 @@ class SWEEnv(gym.Env):
         
         except Exception as e:
             print(f"Failed to write to file: {abs_path}. Error: {str(e)}")
-            return f"Failed to write to file: {abs_path}. Error: {str(e)}"
+            raise Exception(f"Failed to write to file: {abs_path}. Error: {str(e)}")
     
     def delete_file(self, file_path: str) -> bool:
         
@@ -865,16 +865,19 @@ DESCRIPTION
       to calling `diff --git "diff string"` where "diff string" is the argument you
       would pass to the edit_file command.
 
+      You ALWAYS need to provide a source and target file represented with `---` and `+++`.
+
+      ALWAYS make sure that the code STARTS on its own line.
+
 RETURN VALUE
       The edit_file command returns a dictionary of all the files that were changed.
 
 EXAMPLES
       To apply a diff string to open files in the file system:
 
-             edit_file <<<a/file1.txt b/file1.txt
-             index 1234567..8901234 100644
-             --- a/file1.txt
-             +++ b/file1.txt
+             edit_file <<<
+             --- file1.txt
+             +++ file1.txt
              @@ -1,5 +1,5 @@
               Line 1
              -Line 2
@@ -891,6 +894,7 @@ EXAMPLES
             src_file = file_diff.src_file
             tgt_file = file_diff.tgt_file
 
+            print(src_file, tgt_file)
             if not ( src_file or tgt_file ):
                 raise Hallucination("Could not apply changes, missing source or target file.")
 
@@ -956,6 +960,7 @@ EXAMPLES
                 new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
                 
                 # print("NEW_CODE: ", tgt_file_abs, new_code)
+                print("WRITING CODE")
                 self.write_file(file_path=tgt_file_abs, content=new_code)
 
     def real_write_diff(self, diff, thought):
@@ -970,17 +975,19 @@ EXAMPLES
         while not fixed and attempts < 5:
             try:
 
+                print(diff_code)
                 diffs = extract_diffs2(diff_code)
+                print(diffs)
 
                 all_diffs = []
                 for diff in diffs:
                     file_diffs = parse_multi_file_diff2(diff)
-                    logger.info(file_diffs)
+                    print(file_diffs)
                     all_diffs.extend(file_diffs)
 
                 changes = MultiFileDiff2(files=all_diffs)
 
-                logger.info(changes)
+                print(changes)
 
                 if changes.files == []:
                     raise Hallucination("Could not apply changes, missing source or target file.")
@@ -1006,7 +1013,7 @@ EXAMPLES
             except Exception as e:
                 logger.info(e)
                 logger.info(traceback.format_exc())
-                break
+                return f"Failed to write to file due to error: {e.args}"
 
         if fixed:
             return "Successfully edited file"
@@ -1327,7 +1334,7 @@ EXAMPLES
         try:
             if fn_name == "edit_file":
                 # print(args)
-                return self.real_write_diff(args, thought)
+                return self.real_write_diff(command_string, thought)
             elif fn_name in fn_names:
                 return self.__getattribute__(fn_name)(*args)
             else:
