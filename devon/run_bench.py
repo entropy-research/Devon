@@ -65,7 +65,7 @@ def main(args: ScriptArguments):
 
     env = SWEEnv(args.environment)
     agent = Agent("primary", args.agent)
-    traj_dir = Path("trajectories") / Path(getuser()) / "giggsv"
+    traj_dir = Path("trajectories") / Path(getuser()) / "devon"
     os.makedirs(traj_dir, exist_ok=True)
 
     save_arguments(traj_dir, args)
@@ -74,8 +74,8 @@ def main(args: ScriptArguments):
         try:
             # Reset environment
             instance_id = env.data[index]["instance_id"]
-            if should_skip(args, traj_dir, instance_id):
-                continue
+            # if should_skip(args, traj_dir, instance_id):
+            #     continue
             logger.info("▶️  Beginning task " + str(index))
 
             observation, info = env.reset(index)

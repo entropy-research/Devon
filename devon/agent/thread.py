@@ -186,7 +186,7 @@ class Agent:
         # ))
         self.name = name
         self.history = []
-        self.max_steps = 10
+        self.max_steps = 5
 
     def forward_with_error_check(self, observation: str, state: str, avaliable_actions: list[str], commanddoc: dict) -> Tuple[str, str, str]:
         try:
@@ -271,6 +271,18 @@ class Agent:
         # print(f"RESULT ({self.name})\n{output}")
 
         return thought, action, output
+    
+    def save_trajectory(self, trajectory, traj_dir, env, info):
+        log_path = traj_dir / (env.record["instance_id"] + ".traj")
+        log_dict = {
+            "environment": env.name,
+            "trajectory": trajectory,
+            # "history": self.history,
+            "info": info,
+        }
+        with log_path.open("w") as f:
+            json.dump(log_dict, f, indent=2)
+        logger.info(f"Saved trajectory to {log_path}")
 
     def run(
             self,
@@ -349,6 +361,11 @@ class Agent:
             _, _, done, info = env.step(action, thought)
 
         self.history = []
+
+        #  save trajectory as jsonl
+        self.save_trajectory(trajectory, traj_dir, env, info)
+
+
         logger.debug(info)
         return info
 
