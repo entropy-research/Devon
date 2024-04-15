@@ -962,20 +962,8 @@ EXAMPLES
 
         if isinstance(diff, list):
             diff= "".join(diff)
-
-        file_context = self._list_files_recursive(files=[self.file_root])
-
-        # diff_code = generate_unified_diff2(self.diff_model, thought=thought, input_diff=diff, file_tree=file_context["file_tree"], code=self.editor, files=list(self.editor.keys()))
         
-        # src_files = [file.src_file for file in diff.files]
-        # tgt_files = [file.tgt_file for file in diff.files]
-        # print(src_files)
-        # old = self.editor
-        # print([old[fname] for fname in src_files])
-
         diff_code = diff
-
-        # print(diff)
 
         attempts = 0
         fixed = False
@@ -987,12 +975,12 @@ EXAMPLES
                 all_diffs = []
                 for diff in diffs:
                     file_diffs = parse_multi_file_diff2(diff)
-                    print(file_diffs)
+                    logger.info(file_diffs)
                     all_diffs.extend(file_diffs)
 
                 changes = MultiFileDiff2(files=all_diffs)
 
-                print(changes)
+                logger.info(changes)
 
                 if changes.files == []:
                     raise Hallucination("Could not apply changes, missing source or target file.")
@@ -1016,8 +1004,8 @@ EXAMPLES
                 ])
             
             except Exception as e:
-                print(e)
-                traceback.print_exc()
+                logger.info(e)
+                logger.info(traceback.format_exc())
                 break
 
         if fixed:
