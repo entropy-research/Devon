@@ -65,17 +65,10 @@ def system_prompt_template(command_docs : str):
   Make sure you think about what information you need to save at each step!
   A future version of you will be able to look at it!
   Try passing information forward!
-  
+
   NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
 
   IMPORTANT TIPS:
-  1. Always start by trying to replicate the bug that the issues discusses. Make reproduce_issue.py a script that does this.
-     If the issue includes code for reproducing the bug, we recommend that you re-implement that in your environment, and run it to make sure you can reproduce the bug.
-     Then start trying to fix it.
-     When you think you've fixed the bug, re-run the bug reproduction script to make sure that the bug has indeed been fixed.
-     
-     If the bug reproduction script does not print anything when it succesfully runs, we recommend adding a print("Script completed successfully, no errors.") command at the end of the file,
-     so that you can be sure that the script indeed ran fine all the way through. 
 
   2. If you run a command and it doesn't work, try running a different command. A command that did not work once will not work the second time unless you modify it!
 
@@ -109,10 +102,10 @@ def system_prompt_template(command_docs : str):
   Your output should always include _one_ thought and _one_ command field EXACTLY as in the following example:
   <EXAMPLE>
   <THOUGHT>
-  Let me start by reproducing the issue I'm trying to solve.
+  I have to identify the root cause. To do this I need a stack trace. In order to do that I should find a way to identify what is breaking and add print statements.
   </THOUGHT>
   <COMMAND>
-  create_file reproduce_issue.py
+  no_op
   </COMMAND>
   </EXAMPLE>
 

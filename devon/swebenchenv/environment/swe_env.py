@@ -126,7 +126,7 @@ class SWEEnv(gym.Env):
 
         # Set timeout
         self.timeout = self.args.timeout
-        self.idx = 0
+        self.idx = 1
         self.clean_multi_line_functions = lambda x: x
 
     def reset(self, index: int = None, apply_test_patch: bool = False) -> Tuple[str, dict]:
@@ -728,7 +728,10 @@ class SWEEnv(gym.Env):
                 raise Exception(result)
             
             self.editor[abs_path] = content
-            return f"Successfully wrote to file {abs_path}"
+            msg = f"Successfully wrote to file {abs_path}"
+
+            print(msg)
+            return msg
         
         except Exception as e:
             print(f"Failed to write to file: {abs_path}. Error: {str(e)}")
@@ -969,8 +972,6 @@ EXAMPLES
 
         # print(diff)
 
-        
-
         attempts = 0
         fixed = False
         while not fixed and attempts < 5:
@@ -1083,58 +1084,58 @@ EXAMPLES
         result = f"Found {num_matches} matches for \"{search_term}\" in {dir}:\n{matches}"
         return result.replace('\n', '\n    ')
 
-    def search_file(self, search_term: str, file: str = None):
-        """
-        NAME
-      search_file - search for a term in a specific file
+#     def search_file(self, search_term: str, file: str = None):
+#         """
+#         NAME
+#       search_file - search for a term in a specific file
 
-SYNOPSIS
-      search_file [SEARCH_TERM] [FILE]
+# SYNOPSIS
+#       search_file [SEARCH_TERM] [FILE]
 
-DESCRIPTION
-      The search_file command searches for SEARCH_TERM in the specified FILE. If FILE is
-      not provided, it searches in the current open file.
+# DESCRIPTION
+#       The search_file command searches for SEARCH_TERM in the specified FILE. If FILE is
+#       not provided, it searches in the current open file.
 
-OPTIONS
-      SEARCH_TERM
-             The term to search for in the file.
+# OPTIONS
+#       SEARCH_TERM
+#              The term to search for in the file.
 
-      FILE  The file to search in. If not provided, the command searches in the current
-             open file.
+#       FILE  The file to search in. If not provided, the command searches in the current
+#              open file.
 
-RETURN VALUE
-      The search_file command returns a summary of the search results as a string.
+# RETURN VALUE
+#       The search_file command returns a summary of the search results as a string.
 
-EXAMPLES
-      To search for the term "hello" in the current open file:
+# EXAMPLES
+#       To search for the term "hello" in the current open file:
 
-             search_file "hello"
+#              search_file "hello"
 
-      To search for the term "world" in the file "/path/to/file.txt":
+#       To search for the term "world" in the file "/path/to/file.txt":
 
-             search_file "world" "/path/to/file.txt"
-        """
+#              search_file "world" "/path/to/file.txt"
+#         """
 
-        abs_file = self.make_abs_path(file)
+#         abs_file = self.make_abs_path(file)
 
-        if file is None:
-            file = list(self.editor.keys())[0]
+#         if file is None:
+#             file = list(self.editor.keys())[0]
 
-        command = f"grep -nH '{search_term}' {abs_file}"
-        result = self.communicate(command)
+#         command = f"grep -nH '{search_term}' {abs_file}"
+#         result = self.communicate(command)
 
-        matches = result.strip()
-        if not matches:
-            return f"No matches found for \"{search_term}\" in {abs_file}"
+#         matches = result.strip()
+#         if not matches:
+#             return f"No matches found for \"{search_term}\" in {abs_file}"
 
-        num_matches = matches.count('\n') + 1
-        num_lines = len(set(match.split(':')[0] for match in matches.split('\n')))
+#         num_matches = matches.count('\n') + 1
+#         num_lines = len(set(match.split(':')[0] for match in matches.split('\n')))
 
-        if num_lines > 100:
-            return f"More than {num_lines} lines matched for \"{search_term}\" in {abs_file}. Please narrow your search."
+#         if num_lines > 100:
+#             return f"More than {num_lines} lines matched for \"{search_term}\" in {abs_file}. Please narrow your search."
 
-        result = f"Found {num_matches} matches for \"{search_term}\" in {abs_file}:\n{matches}"
-        return result.replace('\n', '\n    ')
+#         result = f"Found {num_matches} matches for \"{search_term}\" in {abs_file}:\n{matches}"
+#         return result.replace('\n', '\n    ')
 
 #     def search_files(self, file_name: str, dir: str = "./"):
 #         """
