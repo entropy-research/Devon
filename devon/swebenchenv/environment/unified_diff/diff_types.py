@@ -27,6 +27,22 @@ class Hunk2(BaseModel):
     start_lines: Optional[List[HunkLine]] = None
     end_lines: Optional[List[HunkLine]] = None
 
+
+
+class ContextHunk(BaseModel):
+    lines: List[HunkLine]
+    start_lines: Optional[List[HunkLine]] = None
+    end_lines: Optional[List[HunkLine]] = None
+
+class FileContextDiff(BaseModel):
+    src_file: str
+    tgt_file: str
+    hunks: List[ContextHunk]
+
+
+class MultiFileContextDiff(BaseModel):
+    files: List[FileContextDiff]
+
 class FileDiff2(BaseModel):
     src_file: str
     tgt_file: str

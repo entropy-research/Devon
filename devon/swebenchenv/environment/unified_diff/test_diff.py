@@ -8,40 +8,40 @@ from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import Uni
 from devon.swebenchenv.environment.unified_diff.utils import create_code_fence, match_stripped_lines2
 from devon_agent.agent.clients.client import ClaudeSonnet, Message
 
-goal = """my goal is to improve the error handling in the URLValidator class.
+# goal = """my goal is to improve the error handling in the URLValidator class.
 
-The current implementation catches a ValueError raised by urlsplit() when it encounters an invalid URL, like one with an invalid IPv6 address. But instead of showing the actual error message from urlsplit(), it just raises a generic ValidationError with a predetermined message."""
+# The current implementation catches a ValueError raised by urlsplit() when it encounters an invalid URL, like one with an invalid IPv6 address. But instead of showing the actual error message from urlsplit(), it just raises a generic ValidationError with a predetermined message."""
 
-diff_code = """
-Okay, I understand the issue and the required changes. Here are the diffs to fix it:
+# diff_code = """
+# Okay, I understand the issue and the required changes. Here are the diffs to fix it:
 
-<DIFF>
---- django__django/django/core/validators.py
-+++ django__django/django/core/validators.py
-@@ -142,10 +142,12 @@ class URLValidator(RegexValidator):
-             scheme, netloc, path, query, fragment = urlsplit(value)
-         except ValueError as e:
-             # urlsplit() raised a ValueError, e.g. for an invalid IPv6 URL.
--            raise ValidationError(self.message, code=self.code, params={'value': value})
-+            raise ValidationError(
-+                str(e),
-+                code=self.code,
-+                params={'value': value},
-+            )
-         try:
-             netloc = punycode(netloc)  # IDN -> ACE
-         except UnicodeError:  # invalid domain part
-             raise e
-</DIFF>
+# <DIFF>
+# --- django__django/django/core/validators.py
+# +++ django__django/django/core/validators.py
+# @@ -142,10 +142,12 @@ class URLValidator(RegexValidator):
+#              scheme, netloc, path, query, fragment = urlsplit(value)
+#          except ValueError as e:
+#              # urlsplit() raised a ValueError, e.g. for an invalid IPv6 URL.
+# -            raise ValidationError(self.message, code=self.code, params={'value': value})
+# +            raise ValidationError(
+# +                str(e),
+# +                code=self.code,
+# +                params={'value': value},
+# +            )
+#          try:
+#              netloc = punycode(netloc)  # IDN -> ACE
+#          except UnicodeError:  # invalid domain part
+#              raise e
+# </DIFF>
 
-The key changes are:
+# The key changes are:
 
-1. Catch the `ValueError` raised by `urlsplit()` and store it in the `e` variable.
-2. Instead of raising a generic `ValidationError`, raise it with the string representation of the caught `ValueError` as the error message.
-3. Pass the `code` and `params` to the `ValidationError` as before.
-4. If there is a `UnicodeError` raised when trying to convert the netloc to punycode, re-raise the original `ValueError` caught earlier.
+# 1. Catch the `ValueError` raised by `urlsplit()` and store it in the `e` variable.
+# 2. Instead of raising a generic `ValidationError`, raise it with the string representation of the caught `ValueError` as the error message.
+# 3. Pass the `code` and `params` to the `ValidationError` as before.
+# 4. If there is a `UnicodeError` raised when trying to convert the netloc to punycode, re-raise the original `ValueError` caught earlier.
 
-This way, instead of a generic error message, the actual `ValueError` message from `urlsplit()` will be shown when it fails to parse the URL, giving a more informative error."""
+# This way, instead of a generic error message, the actual `ValueError` message from `urlsplit()` will be shown when it fails to parse the URL, giving a more informative error."""
 
 class Hallucination(Exception):
     pass
@@ -60,14 +60,14 @@ Please explain how to fix this, and then generate a new diff that will match.
 
 def match_with_recover(content, diff):
     diffs = extract_diffs(diff)
-
+    print("DIFFS",diffs)
     all_diffs = []
     for diff in diffs:
         file_diffs = parse_multi_file_diff2(diff)
         # print(file_diffs)
         all_diffs.extend(file_diffs)
 
-    print(all_diffs)
+    print("DIFFS",all_diffs)
 
     diff_m = MultiFileDiff2(files=all_diffs)
 
@@ -88,6 +88,8 @@ def match_with_recover(content, diff):
                 raise Hallucination()
         
             return True
+        
+    return False
         
 
 diff2 = """
@@ -112,15 +114,15 @@ if __name__ == "__main__":
     anthrpoic_client = Anthropic(api_key=api_key)
     diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
 
-    original = diff_code
+    original = diff2
 
     fixed = False
     error_context = []
     while not fixed:
-        print(diff_code)
+        print("DIFF",diff2)
         input()
         try:
-            fixed = match_with_recover(testcode_content, diff_code)
+            fixed = match_with_recover(testcode_content, diff2)
         except Hallucination as e:
             #Get model to explain itself and why the error happened
             print("HALLUCINATION")
@@ -131,5 +133,9 @@ if __name__ == "__main__":
                     content=create_recover_prompt(testcode_content, diff_code, e.args)
                 )
             ])
+        except Exception as e:
+            print("ERROR",e)
+            raise e
 
-    print(fixed)
+
+    # print(fixed)

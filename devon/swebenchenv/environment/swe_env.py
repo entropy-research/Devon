@@ -1009,6 +1009,7 @@ EXAMPLES
                 break
 
         if fixed:
+            
             return "Successfully edited file"
             
         return "Failed to edit file, please try an alternative approach"
