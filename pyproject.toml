@@ -30,6 +30,7 @@ ghapi = "^1.0.5"
 simple-parsing = "^0.1.5"
 dspy-ai = "^2.4.5"
 fabric = "^3.2.2"
+networkx = "^3.3"
 
 [build-system]
 requires = ["poetry-core"]
