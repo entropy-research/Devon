@@ -6,6 +6,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from devon.swebenchenv.environment.utils import LOGGER_NAME
+from devon_agent.agent.clients.client import Message
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -59,6 +60,26 @@ class FileContextDiff(BaseModel):
 
 class MultiFileContextDiff(BaseModel):
     files: List[FileContextDiff]
+
+
+def create_recover_prompt(original, diff, errors):
+
+    error_block_content = [e[1].args for e in errors]
+
+    return f"""
+<SOURCE_FILE>
+{original}
+</SOURCE_FILE>
+<ORIGINAL_DIFF>
+{diff}
+</ORIGINAL_DIFF>
+<ERRORS>
+Here are the resulting errors:
+    {error_block_content}
+</ERRORS>
+
+Please explain how to fix this, and then generate a new diff that will match.
+"""
 
 
 def extract_diff_from_response(diff_text):
@@ -280,6 +301,43 @@ def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
 #     1. If match on lines doesn’t match the first 3 and last 3 bail
 # 5. Generate indent error -> auto fix indentation after match
 
+not_enough_context_prompt = """
+NotEnoughContextError:
+    In the diff, the deleted lines (denoted with -), and the context lines you provided (unchanged lines) did not match the existing source file.
+
+    The provided deleted (-) and unchanged lines were built into a code block that was then used to identify where the edit would be applied.
+    However, this did not work. The content lines you created did not match the actual source file.
+
+    Please pay more attention to the exact lines you are writing.
+"""
+
+unable_to_parse_old_or_new_lines = """
+UnableToParseBlocksError:
+
+    One of two issues has occurred:
+        1. In the diff, the deleted lines (denoted with -), and the context lines (unchanged lines) do not exist
+        2. In the diff, the added lines (denoted with +), and the context lines (unchanged lines) do not exist
+
+    The provided deleted (-) and unchanged lines were built into code block A, and the added (+) and unchanged lines were built into code block B.
+    One of the two blocks did not exist.
+
+    Please pay more attention to the exact lines you are writing.
+"""
+
+no_diffs_found = """
+NoDiffFoundError:
+    No Diff was found in the response you provided. Please remember to follow the guidelines for creating diffs.
+"""
+
+non_applicable_diff_found = """
+NonApplicableDiffFound:
+    A diff missing either a source or target file was found.
+
+    Without both a target and source file, the diff cannot be applied.
+    Make sure to provide both a target and source file.
+
+    Please remember to follow the guidelines for creating diffs.
+"""
 
 def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
@@ -304,13 +362,13 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
         if not (old_lines is not None and new_lines is not None):
             # if either version is none, raise error
-            raise Exception()
+            raise Hallucination(unable_to_parse_old_or_new_lines)
 
         src_start, src_end = match_stripped_lines_context(stripped_src_lines, old_lines)
 
         if not (src_start is not None and src_end is not None):
             #Raise hallucination due to not matching full src lines
-            raise Hallucination()
+            raise Hallucination(not_enough_context_prompt)
 
         applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
 
@@ -341,7 +399,7 @@ def extract_all_diffs(diff_input):
 
     if len(diffs) == 0:
         #Raise exception about length of diffs
-        raise Hallucination()
+        raise Hallucination(no_diffs_found)
 
     #for each diff, actually parse the changes from it. Assume this just works for parsing the diff hunks (not formatting or anything, but rather just extracting target lines)
     all_diffs = []
@@ -359,7 +417,7 @@ def extract_all_diffs(diff_input):
 
     if len(error_diffs) !=0:
         #Raise exception containing non-applicable diffs
-        raise Hallucination()
+        raise Hallucination(non_applicable_diff_found)
 
     #deduping the diffs here
     return list(all_diffs)
