@@ -90,6 +90,10 @@ class SafeExceptionReporterFilter:
                 cleansed = self.cleansed_substitute
             elif isinstance(value, dict):
                 cleansed = {k: self.cleanse_setting(k, v) for k, v in value.items()}
+            elif isinstance(value, (list, tuple, set)) and not isinstance(value, str):
+                cleansed = []
+                for item in value:
+                    cleansed.append(self.cleanse_setting(key, item))
             else:
                 cleansed = value
         except TypeError:

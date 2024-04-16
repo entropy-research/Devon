@@ -1,4 +1,5 @@
-django/views/debug.py
+--- django/views/debug.py
++++ django/views/debug.py
 @@ -78,6 +78,10 @@
              cleansed = self.cleansed_substitute
          elif isinstance(value, dict):

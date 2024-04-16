@@ -162,8 +162,8 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
                         and not lines[i].startswith("@@")
                         and not lines[i].startswith("---")
                     ):
-
                         content = lines[i][1:]
+
 
                         if lines[i].startswith("-"):
                             hunk_lines.append(HunkLine(type="removed", content=content))
@@ -223,8 +223,24 @@ def get_indent(line):
         return 0
         
 
-            
+def get_prefix_whitespace(line):
+    
+    count = 0
+    while line.startswith(" "):
+        count += 1
+        line = line[1:]
+    return count
 
+def get_relative_indents(lines):
+    assert type(lines) == list
+    assert all(type(line) == str for line in lines)
+    spaces = []
+    for line in lines:
+        space = get_prefix_whitespace(line)
+        print("LINE", line, "SPACE", space)
+        spaces.append(space)
+    print()
+    return spaces
 
 
 
@@ -249,13 +265,15 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
         base_indent_hunk = get_indent(new_lines[0])
 
-        print("BASE INDENT MATCH", base_indent_match, "BASE INDENT HUNK", base_indent_hunk)
-
+        # print("BASE INDENT MATCH", base_indent_match, "BASE INDENT HUNK", base_indent_hunk)
+        print("SPACES", get_relative_indents([line[1] for line in src_lines[src_start:src_end]]), get_relative_indents(new_lines))
         if base_indent_match != base_indent_hunk:
             if base_indent_match > base_indent_hunk:
                 new_lines = ["    " * (base_indent_match - base_indent_hunk) + line for line in new_lines]
             else:
                 new_lines = [line.replace("    " * (base_indent_hunk - base_indent_match), "") for line in new_lines]
+        
+
         
         i = 0
         while i < len(tgt_lines):

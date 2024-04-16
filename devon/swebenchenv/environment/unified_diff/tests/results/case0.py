@@ -115,7 +115,7 @@ class URLValidator(RegexValidator):
             if value:
                 try:
                     scheme, netloc, path, query, fragment = urlsplit(value)
-               except ValueError:  # for example, "Invalid IPv6 URL"
+                except ValueError:  # for example, "Invalid IPv6 URL"
                     raise ValidationError(
                         str(e),
                         code=self.code,
