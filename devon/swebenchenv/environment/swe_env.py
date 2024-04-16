@@ -96,7 +96,7 @@ class SWEEnv(gym.Env):
 
         api_key=os.environ.get("ANTHROPIC_API_KEY")
         anthrpoic_client = Anthropic(api_key=api_key)
-        self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system, max_tokens=4096)
+        self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
 
         if not self.args.verbose:
             self.logger.disabled = True

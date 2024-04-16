@@ -1,0 +1,21 @@
+edit_file <<<
+--- django/views/debug.py
++++ django/views/debug.py
+@@ -41,6 +41,7 @@
+         except TypeError:
+             # If the key isn't regex-able, just return as-is.
+             cleansed = value
++        from collections.abc import Iterable
+ 
+         if callable(cleansed):
+             cleansed = CallableSettingWrapper(cleansed)
+@@ -49,6 +50,11 @@
+             elif isinstance(value, dict):
+                 cleansed = {k: self.cleanse_setting(k, v) for k, v in value.items()}
++            elif isinstance(value, Iterable) and not isinstance(value, dict):
++                cleansed = [self.cleanse_setting(None, v) for v in value]
+             else:
+                 cleansed = value
+
+         return cleansed
+>>>
