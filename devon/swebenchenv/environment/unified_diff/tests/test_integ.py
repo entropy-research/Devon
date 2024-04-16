@@ -5,7 +5,7 @@ from devon.swebenchenv.environment.unified_diff.udiff import apply_context_diff,
 
 def test_diff():
 
-    cases = ["case0","case1","case2"]
+    cases = ["case0","case1","case3"]
 
     current_file = __file__
     current_dir = os.path.dirname(current_file)

@@ -9,6 +9,19 @@ from devon.swebenchenv.environment.utils import LOGGER_NAME
 
 logger = logging.getLogger(LOGGER_NAME)
 
+DATA_LOGGER_NAME = "udiff_data"
+
+data_logger = logging.getLogger(DATA_LOGGER_NAME)
+
+
+def log_data(diff, file_content, src_file, tgt_file):
+    data_logger.info(f"=======================")
+    data_logger.info(f"DIFF: {diff}")
+    data_logger.info(f"FILE CONTENT: {file_content}")
+    data_logger.info(f"SRC FILE: {src_file}")
+    data_logger.info(f"TGT FILE: {tgt_file}")
+    data_logger.info(f"=======================")
+
 
 class Hallucination(Exception):
     pass
@@ -209,7 +222,6 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
 
 
 def get_indent(line):
-    print("LINE", line)
     base_indent = "    "
     if line.startswith(base_indent):
         # find multiple of base_indent present as prefix in line
@@ -236,9 +248,7 @@ def get_relative_indents(lines):
     spaces = []
     for line in lines:
         space = get_prefix_whitespace(line)
-        print("LINE", line, "SPACE", space)
         spaces.append(space)
-    print()
     return spaces
 
 def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
@@ -247,7 +257,6 @@ def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
     base_indent_hunk = get_indent(new_lines[0])
     indented_new_lines = []
 
-    print("BASE INDENT MATCH", base_indent_match, "BASE INDENT HUNK", base_indent_hunk)
 
     if base_indent_match != base_indent_hunk:
         if base_indent_match > base_indent_hunk:
@@ -351,7 +360,8 @@ def apply_multi_file_context_diff(diff, file_root):
         #Raise exception containing non-applicable diffs
         raise Exception()
 
-    #TODO: Should be deduping the diffs here
+    #deduping the diffs here
+    all_diffs = list(set(all_diffs))
 
     succeeded = []
     failed = []
