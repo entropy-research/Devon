@@ -1,3 +1,4 @@
+<<<
 --- test
 +++ test
 @@ +1,6 -1,2 @@
@@ -11,3 +12,4 @@
 +    Verify that the application can add two valid integers.
 +    """
 +    result = run(["python", "evalmath.py", "add", "5", "3"], stdout=PIPE, stderr=PIPE, universal_newlines=True)
+>>>

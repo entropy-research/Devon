@@ -139,8 +139,13 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
     stripped_old_lines = [line.strip() for line in old_lines]
     stripped_old_lines = [line for line in stripped_old_lines if line != ""]
 
+    # print(stripped_file_lines)
+    # print(stripped_old_lines)
+
     #create code fence based on lines. i.e. first N content lines
     begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines)
+
+    # print(begin_fence, stop_fence)
 
     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
     begin_start, begin_end = match_fence(stripped_file_lines, begin_fence)
@@ -180,7 +185,6 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
                         and not lines[i].startswith("---")
                     ):
                         content = lines[i][1:]
-
 
                         if lines[i].startswith("-"):
                             hunk_lines.append(HunkLine(type="removed", content=content))
@@ -260,7 +264,7 @@ def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
 
     base_indent_match = get_indent(src_lines[src_start][1])
     base_indent_hunk = get_indent(new_lines[0])
-    indented_new_lines = []
+    indented_new_lines = new_lines
 
 
     if base_indent_match != base_indent_hunk:
@@ -299,13 +303,13 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
         old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
 
-        if not (old_lines or new_lines):
+        if not (old_lines is not None and new_lines is not None):
             # if either version is none, raise error
             raise Exception()
 
         src_start, src_end = match_stripped_lines_context(stripped_src_lines, old_lines)
 
-        if not (src_start and src_end):
+        if not (src_start is not None and src_end is not None):
             #Raise hallucination due to not matching full src lines
             raise Hallucination()
 
@@ -332,7 +336,7 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 # 2. Capture tags -> if bad return
 # 3. Capture src and tgt file -> if none -> return. Bad
 
-def apply_multi_file_context_diff(diff, file_root):
+def apply_multi_file_context_diff(file_content, diff):
     # By the time we get here we have correctly captured a single command
 
     if isinstance(diff, list):
@@ -374,7 +378,7 @@ def apply_multi_file_context_diff(diff, file_root):
     #for each diff block, apply context diff, returns tuple result (abspath, new_content)
     for diff in all_diffs:
         try:
-            result = apply_context_diff(multi_file_diff=changes, file_tree_root=file_root)
+            result = apply_context_diff(file_content=file_content, file_diff=diff)
             succeeded.append((diff.tgt_file, result))
         except Exception as e:
             failed.append((diff, e))

@@ -1,3 +1,4 @@
+<<<
 --- django/views/debug.py
 +++ django/views/debug.py
 @@ -78,6 +78,10 @@
@@ -11,3 +12,4 @@
          else:
              cleansed = value
      except TypeError:
+>>>

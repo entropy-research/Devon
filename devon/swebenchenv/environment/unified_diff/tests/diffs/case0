@@ -1,3 +1,4 @@
+<<<
 --- django__django/django/core/validators.py
 +++ django__django/django/core/validators.py
 @@ -142,10 +142,12 @@
@@ -12,3 +13,4 @@
          try:
              netloc = punycode(netloc)  # IDN -> ACE
          except UnicodeError:  # invalid domain part
+>>>
