@@ -173,9 +173,10 @@ class AgentArguments(FlattenedAccess, FrozenSerializable):
 class Agent:
 
     def __init__(self, name="Devon",args=None):
+        
         self.model : AnthropicModel = AnthropicModel(args=ModelArguments(
-            model_name="claude-opus",
-            temperature=0.2
+            model_name="claude-sonnet",
+            temperature=0.8
         ))
         # self.model = HumanModel(args=ModelArguments(
         #     model_name="gpt-4-0314",
@@ -333,7 +334,9 @@ class Agent:
                 assert output.count("<THOUGHT>") == 1
                 obs, _, done, info = env.step(action, thought)
             except AssertionError as e:
-                obs = f"Too many commands in previous output, could not execute. Please remember to only pass one command."
+                print(output)
+                print(e)
+                obs = f"Too many commands in previous output, could not execute. Please remember to only pass one command." 
 
             observations.append(obs)
 

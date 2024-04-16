@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from git import Repo
 from rich.logging import RichHandler
 from simple_parsing.helpers import FrozenSerializable
-from devon.retrieval.main import get_class_defn, get_function_defn, initialize_archive, initialize_repository
+from devon.retrieval.main import ClassTable, FunctionTable, get_class_defn, get_function_defn, initialize_archive, initialize_repository
 from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, extract_diffs2, generate_unified_diff2, parse_multi_file_diff2
 from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
@@ -61,6 +61,25 @@ logger.addHandler(file_handler)
 logger.propagate = False
 
 
+class TableCache():
+
+    def __init__(self, dir, function_table=None, class_table=None):
+        self.dir = dir
+        self.function_table = function_table if function_table is not None else FunctionTable()
+        self.class_table = class_table if class_table is not None else ClassTable()
+    
+    def save(self, issue_id):
+        self.function_table.save_to_file(os.path.join(self.dir, f"function_table_{issue_id}.json"))
+        self.class_table.save_to_file(os.path.join(self.dir, f"class_table_{issue_id}.json"))
+
+    def load(self, issue_id):
+        self.function_table.load_from_file(os.path.join(self.dir, f"function_table_{issue_id}.json"))
+        self.class_table.load_from_file(os.path.join(self.dir, f"class_table_{issue_id}.json"))
+
+    def exists(self, issue_id):
+        return os.path.exists(os.path.join(self.dir, f"function_table_{issue_id}.json")) and os.path.exists(os.path.join(self.dir, f"class_table_{issue_id}.json"))
+
+
 @dataclass(frozen=True)
 class EnvironmentArguments(FrozenSerializable):
     data_path: str
@@ -93,6 +112,9 @@ class SWEEnv(gym.Env):
         self.returncode = None
         self.is_from_github_url = is_from_github_url(args.data_path)
         self.editor = {}
+        self.class_table = ClassTable()
+        self.function_table = FunctionTable()
+        self.table_cache = TableCache(dir="table_cache", function_table=self.function_table, class_table=self.class_table)
 
         api_key=os.environ.get("ANTHROPIC_API_KEY")
         anthrpoic_client = Anthropic(api_key=api_key)
@@ -123,6 +145,7 @@ class SWEEnv(gym.Env):
         self.data_path = self.args.data_path
         self.data = get_instances(self.data_path, self.args.base_commit, self.args.split, token=self.token,specific_issue=self.args.specific_issue) #Load data from path
         self.logger.info(f"💽 Loaded dataset from {self.data_path}")
+        self.issue = self.args.specific_issue
 
         # Establish connection with execution container
         self.image_name = args.image_name
@@ -208,8 +231,12 @@ class SWEEnv(gym.Env):
             )
         # print(self.get_cwd())
         logger.debug(f"CWD: {self.get_cwd()}")
-        print(self.communicate(input="ls"))
-        self.build_index("/django__django")
+        # print(self.communicate(input="ls"))
+        if self.table_cache.exists(self.issue):
+            self.table_cache.load(self.issue)
+        else:
+            self.build_index("/django__django", self.class_table, self.function_table)
+            self.table_cache.save(self.issue)
 
         # Reset environment variables
         # Reset env vars in the container? maybe this is used for tracking, but why not on the agent?
@@ -290,6 +317,7 @@ class SWEEnv(gym.Env):
             info (`dict`) - additional information (e.g. debugging information)
         """
         info = {}
+        print(action)
 
         observation = ""
         # Handle special actions -> This is fucking dumb but ok
@@ -1092,22 +1120,27 @@ EXAMPLES
         return tar_data
         
     
-    def build_index(self, file_path):
+    def build_index(self, file_path, class_table, function_table):
 
         tar_data = self.create_tar(file_path)
+        print(tar_data)
 
         with tempfile.NamedTemporaryFile() as temp_file:
             for chunk in tar_data:
                 temp_file.write(chunk)
             temp_file.flush()
+            print(temp_file.read())
+            temp_file.seek(0)
 
             temp_dir = tempfile.mkdtemp()
+            self.class_table.temp_dir = temp_dir
+            self.function_table.temp_dir = temp_dir
 
             # save archive to file
             with tarfile.open(fileobj=temp_file, mode='r') as tar:
                 tar.extractall(path=temp_dir)
             
-            code_graph = initialize_repository(temp_dir)
+            code_graph = initialize_repository(temp_dir, self.class_table, self.function_table)
 
             # os.remove(temp_file)
 
@@ -1117,7 +1150,7 @@ EXAMPLES
 
 
     
-    def get_function_defn(self, function_name):
+    def find_function(self, function_name):
         """NAME 
       find_function - get location of function in the codebase
 
@@ -1149,9 +1182,9 @@ EXAMPLES
              }
         """
 
-        return get_function_defn(function_name)
+        return str(get_function_defn(function_name, self.function_table))
     
-    def get_class_defn(self, class_name):
+    def find_class(self, class_name):
         """NAME
       find_class - get location of class in the codebase
 
@@ -1182,8 +1215,7 @@ EXAMPLES
                "line_number": 10
              }
         """
-
-        return get_class_defn(class_name)
+        return str(get_class_defn(class_name, self.class_table))
 
 
 
@@ -1430,9 +1462,9 @@ EXAMPLES
             self.create_file,
             self.open_file,
             self.view_open_files,
-            self.search_dir,
-            self.get_function_defn,
-            self.get_class_defn,
+            # self.search_dir,
+            self.find_function,
+            self.find_class,
             # self.search_file,
             # self.search_files,
             self.get_cwd,
@@ -1489,9 +1521,9 @@ EXAMPLES
             self.create_file,
             self.open_file,
             self.view_open_files,
-            self.search_dir,
-            self.get_function_defn,
-            self.get_class_defn,
+            # self.search_dir,
+            self.find_function,
+            self.find_class,
             # self.search_file,
             # self.search_files,
             self.get_cwd,
@@ -1548,7 +1580,7 @@ EXAMPLES
         Returns:
             submission (`str`) - diff patch submission
         """
-
+        print(output)
         assert isinstance(output, str), "Output must be a string"
         print(output)
         pattern = r"\<\<SUBMISSION\|\|(.*)\|\|SUBMISSION\>\>"

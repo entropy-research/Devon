@@ -19,7 +19,7 @@ class HumanModel:
         thought = ""
         print(messages[-1])
         command = input(f"enter your command here")
-
+        print(f"<THOUGHT>\n{thought}\n</THOUGHT>\n<COMMAND>\n{command}\n</COMMAND>")
         return f"<THOUGHT>\n{thought}\n</THOUGHT>\n<COMMAND>\n{command}\n</COMMAND>"
 
 class AnthropicModel:

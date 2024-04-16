@@ -90,6 +90,8 @@ def system_prompt_template(command_docs : str):
 
   11. Once you're done use the submit command to submit your solution. Dont add tests to the codebase, just use the submit command to submit your solution.
 
+  12. DO NOT SEARCH FOR CLASSES OR FUNCTION USING SEARCH. If you want to find a class or a function, use the find_class or find_function command respectively.
+
 
 </SETTING>
 <COMMANDS>
@@ -232,6 +234,9 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
   Think command will allow you to think about the problem more instead of having to immediately take an action.
   You're free to use any other bash commands you want (e.g. find, grep, cat, ls, cd) in addition to the special commands listed above.
   However, the environment does NOT support interactive session commands (e.g. python, vim), so please do not invoke them.
+  When trying to look for relevant code, use the find_class and find_function commands instead of search.
+  Finding classes and functions is a much more efficient way to find relevant code.
+  Use the file in the editor.
 
   Try to use the no_op command every so often to take some time to think
 """
