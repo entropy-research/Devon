@@ -46,14 +46,17 @@ from devon_agent.agent.clients.client import ClaudeSonnet, Message
 class Hallucination(Exception):
     pass
 
-def create_recover_prompt(original, diff, error):
+def create_recover_prompt(original, diff, errors):
+
+    error_block_content = [e[1].args for e in errors]
 
     return f"""
 The original code looks like this: {original}
     
 You generated a diff that looked like this: {diff}
 
-{error}
+Here are the resulting errors:
+    {error_block_content}
 
 Please explain how to fix this, and then generate a new diff that will match.
 """

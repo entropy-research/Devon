@@ -20,6 +20,7 @@ from devon.swebenchenv.environment.unified_diff.create_diff import construct_ver
 from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 from devon.swebenchenv.environment.unified_diff.test_diff import Hallucination, create_recover_prompt
+from devon.swebenchenv.environment.unified_diff.udiff import apply_file_context_diffs, extract_all_diffs
 from devon.swebenchenv.environment.unified_diff.utils import match_stripped_lines, match_stripped_lines2
 from devon.swebenchenv.environment.utils import (
     copy_file_to_container,
@@ -889,8 +890,85 @@ EXAMPLES
 
         pass
 
-    def apply_diff2(self, multi_file_diff: MultiFileDiff2, file_tree_root: str):
-        for file_diff in multi_file_diff.files:
+    # def apply_diff2(self, multi_file_diff: MultiFileDiff2, file_tree_root: str):
+    #     for file_diff in multi_file_diff.files:
+    #         src_file = file_diff.src_file
+    #         tgt_file = file_diff.tgt_file
+
+    #         print(src_file, tgt_file)
+    #         if not ( src_file or tgt_file ):
+    #             raise Hallucination("Could not apply changes, missing source or target file.")
+
+    #         logger.debug("Applying diff to: %s, %s", src_file, tgt_file)
+
+    #         # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
+    #         src_file_abs = self.make_abs_path(src_file)
+    #         tgt_file_abs = self.make_abs_path(tgt_file)
+
+    #         src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
+    #         tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
+
+    #         logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
+    #         # src_file_exists = src_file_abs in self.editor
+
+    #         if src_file == "/dev/null" or not src_file_exists:
+    #             # Creating a new file
+    #             self.communicate(f"mkdir -p {os.path.dirname(tgt_file_abs)}")  # Ensure the directory exists
+    #             is_dir = self.communicate(f"test -d {tgt_file_abs} && echo 'dir'").strip() == 'dir'
+    #             if is_dir:
+    #                 continue
+    #             content_to_write = "\n".join([line.content for hunk in file_diff.hunks for line in hunk.lines if line.type != "removed"])
+    #             self.write_file(file_path=tgt_file_abs, content=content_to_write)
+
+    #         elif tgt_file == "/dev/null":
+    #             # Deleting a file
+    #             self.delete_file(file_path=src_file_abs)
+    #         else:
+
+    #             if not src_file_exists:
+    #                 raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
+
+    #             # Modifying an existing file
+    #             src_content = self.read_file(file_path=src_file_abs)
+    #             logger.debug("%s", src_content)
+    #             # print("OLD_CODE: ", src_file_abs, src_content)
+    #             src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
+
+    #             tgt_lines = list(src_lines)
+
+    #             for hunk in file_diff.hunks:
+    #                 old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
+    #                 logger.debug("%s, %s",old_lines, new_lines)
+    #                 # print(new_lines)
+    #                 src_start, src_end = match_stripped_lines2(src_lines, old_lines)
+    #                 logger.debug("LOCATED DIFF: %s, %s", src_start, src_end)
+
+    #                 if not ( src_start and src_end ):
+    #                     raise Hallucination("Applying this diff failed! The context lines and the src lines from the diff did not match the real code in the file!")
+
+    #                 i = 0
+    #                 while i < len(tgt_lines):
+    #                     if tgt_lines[i][0] == src_start:
+    #                         j = 0
+    #                         while i + j < len(tgt_lines) and tgt_lines[i+j][0] != src_end:
+    #                             j += 1
+
+    #                         tgt_lines[i:i+j+1] = [(-1, line) for line in new_lines]
+    #                         break
+
+    #                     i += 1
+
+    #             new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
+                
+    #             # print("NEW_CODE: ", tgt_file_abs, new_code)
+    #             print("WRITING CODE")
+    #             self.write_file(file_path=tgt_file_abs, content=new_code)
+    
+    def apply_diff3(self, multi_file_diffs, file_tree_root: str):
+
+        results = []
+
+        for file_diff in multi_file_diffs:
             src_file = file_diff.src_file
             tgt_file = file_diff.tgt_file
 
@@ -908,65 +986,26 @@ EXAMPLES
             tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
 
             logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
-            # src_file_exists = src_file_abs in self.editor
 
-            if src_file == "/dev/null" or not src_file_exists:
-                # Creating a new file
-                self.communicate(f"mkdir -p {os.path.dirname(tgt_file_abs)}")  # Ensure the directory exists
-                is_dir = self.communicate(f"test -d {tgt_file_abs} && echo 'dir'").strip() == 'dir'
-                if is_dir:
-                    continue
-                content_to_write = "\n".join([line.content for hunk in file_diff.hunks for line in hunk.lines if line.type != "removed"])
-                self.write_file(file_path=tgt_file_abs, content=content_to_write)
+            if not src_file_exists:
+                raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
 
-            elif tgt_file == "/dev/null":
-                # Deleting a file
-                self.delete_file(file_path=src_file_abs)
-            else:
+            # Modifying an existing file
+            src_content = self.read_file(file_path=src_file_abs)
+            logger.debug("%s", src_content)
 
-                if not src_file_exists:
-                    raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
+            file_diff.src_file = src_file_abs
+            file_diff.tgt_file = tgt_file_abs
 
-                # Modifying an existing file
-                src_content = self.read_file(file_path=src_file_abs)
-                logger.debug("%s", src_content)
-                # print("OLD_CODE: ", src_file_abs, src_content)
-                src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
-
-                tgt_lines = list(src_lines)
-
-                for hunk in file_diff.hunks:
-                    old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
-                    logger.debug("%s, %s",old_lines, new_lines)
-                    # print(new_lines)
-                    src_start, src_end = match_stripped_lines2(src_lines, old_lines)
-                    logger.debug("LOCATED DIFF: %s, %s", src_start, src_end)
-
-                    if not ( src_start and src_end ):
-                        raise Hallucination("Applying this diff failed! The context lines and the src lines from the diff did not match the real code in the file!")
-
-                    i = 0
-                    while i < len(tgt_lines):
-                        if tgt_lines[i][0] == src_start:
-                            j = 0
-                            while i + j < len(tgt_lines) and tgt_lines[i+j][0] != src_end:
-                                j += 1
-                            
-                            tgt_lines[i:i+j+1] = [(-1, line) for line in new_lines]
-                            break
-                            
-                        i += 1
-
-                new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
-                
-                # print("NEW_CODE: ", tgt_file_abs, new_code)
-                print("WRITING CODE")
-                self.write_file(file_path=tgt_file_abs, content=new_code)
+            apply_result = apply_file_context_diffs(src_content, [file_diff])
+            results.append(apply_result)
+        
+        return results
 
     def real_write_diff(self, diff, thought):
 
-        if isinstance(diff, list):
-            diff= "".join(diff)
+        # if isinstance(diff, list):
+        #     diff= "".join(diff)
         
         diff_code = diff
 
@@ -975,40 +1014,52 @@ EXAMPLES
         while not fixed and attempts < 5:
             try:
 
-                print(diff_code)
-                diffs = extract_diffs2(diff_code)
-                print(diffs)
+                # print(diff_code)
+                # diffs = extract_diffs2(diff_code)
+                # print(diffs)
 
-                all_diffs = []
-                for diff in diffs:
-                    file_diffs = parse_multi_file_diff2(diff)
-                    print(file_diffs)
-                    all_diffs.extend(file_diffs)
+                # all_diffs = []
+                # for diff in diffs:
+                #     file_diffs = parse_multi_file_diff2(diff)
+                #     print(file_diffs)
+                #     all_diffs.extend(file_diffs)
 
-                changes = MultiFileDiff2(files=all_diffs)
+                # changes = MultiFileDiff2(files=all_diffs)
 
-                print(changes)
+                # print(changes)
 
-                if changes.files == []:
-                    raise Hallucination("Could not apply changes, missing source or target file.")
+                # if changes.files == []:
+                #     raise Hallucination("Could not apply changes, missing source or target file.")
 
-                self.apply_diff2(multi_file_diff=changes, file_tree_root=self.file_root)
+                # self.apply_diff2(multi_file_diff=changes, file_tree_root=self.file_root)
 
-                fixed = True
+                # fixed = True
 
-            except Hallucination as h:
-                error_msg = h.args
+                all_diffs = extract_all_diffs(diff_code)
+                results = self.apply_diff3(all_diffs, self.file_root)
 
-                attempts += 1
+                failures = []
+                successes = []
+                for result in results:
+                    if len(result["fail"]) > 0:
+                        failures.extend(result["fail"])
+                    if len(result["success"]) > 0:
+                        successes.extend(result["success"])
 
-                msg = create_recover_prompt(self.editor, diff_code, error_msg)
+                if len(failures) == 0:
+                    fixed = True
+                    break
+                else:
+                    attempts += 1
 
-                diff_code = self.diff_model.chat([
-                    Message(
-                        role="user",
-                        content=msg
-                    )
-                ])
+                    msg = create_recover_prompt(self.editor, diff_code, failures)
+
+                    diff_code = self.diff_model.chat([
+                        Message(
+                            role="user",
+                            content=msg
+                        )
+                    ])
             
             except Exception as e:
                 logger.info(e)
@@ -1016,7 +1067,11 @@ EXAMPLES
                 return f"Failed to write to file due to error: {e.args}"
 
         if fixed:
-            
+            for result in successes:
+
+                #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
+                self.write_file(file_path=result[0], content=result[1])
+
             return "Successfully edited file"
             
         return "Failed to edit file, please try an alternative approach"

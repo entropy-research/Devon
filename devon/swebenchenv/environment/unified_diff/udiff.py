@@ -266,7 +266,6 @@ def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
     base_indent_hunk = get_indent(new_lines[0])
     indented_new_lines = new_lines
 
-
     if base_indent_match != base_indent_hunk:
         if base_indent_match > base_indent_hunk:
             indented_new_lines = ["    " * (base_indent_match - base_indent_hunk) + line for line in new_lines]
@@ -331,25 +330,18 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
     #return correct code
     return "\n".join([entry[1] for entry in list(tgt_lines)])
 
-
-# 1. Capture command count -> solved by command parsing
-# 2. Capture tags -> if bad return
-# 3. Capture src and tgt file -> if none -> return. Bad
-
-def apply_multi_file_context_diff(file_content, diff):
-    # By the time we get here we have correctly captured a single command
-
-    if isinstance(diff, list):
-        diff= "".join(diff)
+def extract_all_diffs(diff_input):
+    if isinstance(diff_input, list):
+        diff_input= "".join(diff_input)
     
-    diff_code = diff
+    diff_code = diff_input
 
     # extract diff from response
     diffs = extract_diff_from_response(diff_code)
 
     if len(diffs) == 0:
         #Raise exception about length of diffs
-        raise Exception()
+        raise Hallucination()
 
     #for each diff, actually parse the changes from it. Assume this just works for parsing the diff hunks (not formatting or anything, but rather just extracting target lines)
     all_diffs = []
@@ -357,7 +349,7 @@ def apply_multi_file_context_diff(file_content, diff):
         file_diffs = parse_multi_file_diffs(diff)
         all_diffs.extend(file_diffs)
 
-    changes = MultiFileContextDiff(files=all_diffs)
+    # changes = MultiFileContextDiff(files=all_diffs)
     
     #Check to see if there are diffs that have neither src or tgt file
     error_diffs = []
@@ -367,11 +359,12 @@ def apply_multi_file_context_diff(file_content, diff):
 
     if len(error_diffs) !=0:
         #Raise exception containing non-applicable diffs
-        raise Exception()
+        raise Hallucination()
 
     #deduping the diffs here
-    all_diffs = list(set(all_diffs))
+    return list(all_diffs)
 
+def apply_file_context_diffs(file_content, all_diffs):
     succeeded = []
     failed = []
 
@@ -380,7 +373,7 @@ def apply_multi_file_context_diff(file_content, diff):
         try:
             result = apply_context_diff(file_content=file_content, file_diff=diff)
             succeeded.append((diff.tgt_file, result))
-        except Exception as e:
+        except Hallucination as e:
             failed.append((diff, e))
 
     #should return files with new code to write
@@ -388,3 +381,13 @@ def apply_multi_file_context_diff(file_content, diff):
         "success": succeeded,
         "fail": failed
     }
+
+# 1. Capture command count -> solved by command parsing
+# 2. Capture tags -> if bad return
+# 3. Capture src and tgt file -> if none -> return. Bad
+
+def apply_multi_file_context_diff(file_content, diff):
+    # By the time we get here we have correctly captured a single command
+
+    all_diffs = extract_all_diffs(diff)
+    return apply_file_context_diffs(file_content=file_content, all_diffs=all_diffs)
