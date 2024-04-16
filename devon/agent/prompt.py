@@ -88,6 +88,8 @@ def system_prompt_template(command_docs : str):
 
   10. Avoid searching. Open files in editor and use the content in editor to understand the file.
 
+  11. Once you're done use the submit command to submit your solution. Dont add tests to the codebase, just use the submit command to submit your solution.
+
 
 </SETTING>
 <COMMANDS>
