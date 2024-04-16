@@ -29,6 +29,7 @@ from devon.swebenchenv.environment.unified_diff.utils import match_stripped_line
 from devon.swebenchenv.environment.utils import (
     copy_file_to_container,
     extract_signature_and_docstring,
+    get_archive,
     get_container,
     get_instances,
     is_from_github_url,
@@ -207,6 +208,8 @@ class SWEEnv(gym.Env):
             )
         # print(self.get_cwd())
         logger.debug(f"CWD: {self.get_cwd()}")
+        print(self.communicate(input="ls"))
+        self.build_index("/django__django")
 
         # Reset environment variables
         # Reset env vars in the container? maybe this is used for tracking, but why not on the agent?
@@ -430,7 +433,7 @@ class SWEEnv(gym.Env):
         except docker.errors.DockerException as e:
             if "Error while fetching server API version" in str(e):
                 raise RuntimeError(
-                    "Docker is not running. Please start Docker and try again."
+                    "Docker is not runninsg. Please start Docker and try again."
                 ) from e
         
         # ... why does this need to exist. the container already exists above...
@@ -1081,24 +1084,36 @@ EXAMPLES
         return "Failed to edit file, please try an alternative approach"
 
     def create_tar(self, file_path):
-        tar_data, _ = self.container.get_archive(path=file_path)
 
-        # Create a file-like object from the tar data
-        tar_file = io.BytesIO(tar_data.read())
 
-        return tar_file
+        tar_data, _ = self.container_obj.get_archive(path=file_path)
+
+
+        return tar_data
+        
     
     def build_index(self, file_path):
 
-        tar_file = self.create_tar(file_path)
+        tar_data = self.create_tar(file_path)
 
-        temp_dir = tempfile.mkdtemp()
+        with tempfile.NamedTemporaryFile() as temp_file:
+            for chunk in tar_data:
+                temp_file.write(chunk)
+            temp_file.flush()
 
-        # save archive to file
-        with tarfile.open(fileobj=tar_file, mode='r') as tar:
-            tar.extractall(path=temp_dir)
+            temp_dir = tempfile.mkdtemp()
+
+            # save archive to file
+            with tarfile.open(fileobj=temp_file, mode='r') as tar:
+                tar.extractall(path=temp_dir)
+            
+            code_graph = initialize_repository(temp_dir)
+
+            # os.remove(temp_file)
+
+        return code_graph
+
         
-        code_graph = initialize_repository(temp_dir)
 
 
     
@@ -1416,6 +1431,8 @@ EXAMPLES
             self.open_file,
             self.view_open_files,
             self.search_dir,
+            self.get_function_defn,
+            self.get_class_defn,
             # self.search_file,
             # self.search_files,
             self.get_cwd,
@@ -1473,6 +1490,8 @@ EXAMPLES
             self.open_file,
             self.view_open_files,
             self.search_dir,
+            self.get_function_defn,
+            self.get_class_defn,
             # self.search_file,
             # self.search_files,
             self.get_cwd,

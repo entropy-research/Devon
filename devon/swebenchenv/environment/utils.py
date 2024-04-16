@@ -193,6 +193,14 @@ def _get_non_persistent_container(ctr_name: str, image_name: str) -> Tuple[subpr
     return container, {"1", }  # bash PID is always 1 for non-persistent containers
 
 
+def get_archive(path,ctr_name: str):
+
+    client = docker.from_env()
+    conatiner = client.containers.get(ctr_name)
+    archive = conatiner.get_archive(path=path)
+
+    return archive
+
 def _get_persistent_container(ctr_name: str, image_name: str, persistent: bool = False) -> Tuple[subprocess.Popen, set]:
     client = docker.from_env()
     containers = client.containers.list(all=True, filters={"name": ctr_name})
