@@ -1,6 +1,9 @@
 import datetime
 import inspect
+import io
 import json
+import tarfile
+import tempfile
 from anthropic import Anthropic
 import docker
 import gymnasium as gym
@@ -16,6 +19,7 @@ from dataclasses import dataclass
 from git import Repo
 from rich.logging import RichHandler
 from simple_parsing.helpers import FrozenSerializable
+from devon.retrieval.main import get_class_defn, get_function_defn, initialize_archive, initialize_repository
 from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, extract_diffs2, generate_unified_diff2, parse_multi_file_diff2
 from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
@@ -1075,6 +1079,98 @@ EXAMPLES
             return "Successfully edited file"
             
         return "Failed to edit file, please try an alternative approach"
+
+    def create_tar(self, file_path):
+        tar_data, _ = self.container.get_archive(path=file_path)
+
+        # Create a file-like object from the tar data
+        tar_file = io.BytesIO(tar_data.read())
+
+        return tar_file
+    
+    def build_index(self, file_path):
+
+        tar_file = self.create_tar(file_path)
+
+        temp_dir = tempfile.mkdtemp()
+
+        # save archive to file
+        with tarfile.open(fileobj=tar_file, mode='r') as tar:
+            tar.extractall(path=temp_dir)
+        
+        code_graph = initialize_repository(temp_dir)
+
+
+    
+    def get_function_defn(self, function_name):
+        """NAME 
+      find_function - get location of function in the codebase
+
+SYNOPSIS
+      find_function [FUNCTION_NAME]
+
+DESCRIPTION
+      The find_function command searches the codebase for a function with the given name and returns its location.
+
+OPTIONS
+      FUNCTION_NAME
+             The name of the function to search for.
+
+RETURN VALUE
+      The location of the function in the codebase. A dictionary containing the following keys:
+      - file_path: The path to the file containing the function.
+      - line_number: The line number in the file where the function is defined.
+
+EXAMPLES
+      To find the location of a function named "my_function", run the following command:
+
+             find_function "my_function"
+
+      The command will return a dictionary containing the file path and line number of the function:
+
+             {
+               "file_path": "/path/to/file.py",
+               "line_number": 10
+             }
+        """
+
+        return get_function_defn(function_name)
+    
+    def get_class_defn(self, class_name):
+        """NAME
+      find_class - get location of class in the codebase
+
+SYNOPSIS
+      find_class [CLASS_NAME]
+
+DESCRIPTION
+      The find_class command searches the codebase for a class with the given name and returns its location.
+
+OPTIONS
+      CLASS_NAME
+             The name of the class to search for.
+
+RETURN VALUE
+      The location of the class in the codebase. A dictionary containing the following keys:
+      - file_path: The path to the file containing the class.
+      - line_number: The line number in the file where the class is defined.
+
+EXAMPLES
+      To find the location of a class named "MyClass", run the following command:
+
+             find_class "MyClass"
+
+      The command will return a dictionary containing the file path and line number of the class:
+
+             {
+               "file_path": "/path/to/file.py",
+               "line_number": 10
+             }
+        """
+
+        return get_class_defn(class_name)
+
+
 
     ## END DIFF CODE
 
