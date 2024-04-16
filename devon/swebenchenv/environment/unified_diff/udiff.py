@@ -150,11 +150,11 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
             while i < len(lines) and not lines[i].startswith("---"):
                 if lines[i].startswith("@@"):
                     hunk_lines = []
-                    match = re.findall(r"@@ .* @@(.*)", lines[i])[1]
+                    # match = re.findall(r"@@ .* @@(.*)", lines[i])[1]
                     i += 1
 
-                    if match != "":
-                        hunk_lines.append(match)
+                    # if match != "":
+                    #     hunk_lines.append(match)
 
                     while (
                         i < len(lines)
