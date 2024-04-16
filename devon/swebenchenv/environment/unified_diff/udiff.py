@@ -1,5 +1,6 @@
 import logging
 import re
+import traceback
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -56,10 +57,6 @@ def extract_diff_from_response(diff_text):
         if "<<<" in diff
     ]
 
-
-
-
-
 def construct_versions_from_diff_hunk(hunk: ContextHunk):
     old_lines = []
     new_lines = []
@@ -112,24 +109,22 @@ def match_fence(lines, fence):
     if subset_length > 0:
         for i in range(len(lines) - subset_length + 1):
             match = [line[1] for line in lines[i : i + subset_length]]
-            # if match[0] == fence[0]:
-            # print(match, fence)
             if match == fence:
                 return lines[i][0], lines[i + subset_length - 1][0]
 
     return None, None
 
 
-def match_stripped_lines_context(file_lines, old_lines):
+def match_stripped_lines_context(stripped_file_lines, old_lines):
 
-    stripped_file_lines = [(i, line.strip()) for i, line in file_lines]
+    #given stripped file lines and stripped old lines,
     stripped_old_lines = [line.strip() for line in old_lines]
-
-    stripped_file_lines = [t for t in stripped_file_lines if t[1] != ""]
     stripped_old_lines = [line for line in stripped_old_lines if line != ""]
 
+    #create code fence based on lines. i.e. first N content lines
     begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines)
 
+    #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
     begin_start, begin_end = match_fence(stripped_file_lines, begin_fence)
     stop_start, stop_end = match_fence(stripped_file_lines, stop_fence)
 
@@ -155,7 +150,11 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
             while i < len(lines) and not lines[i].startswith("---"):
                 if lines[i].startswith("@@"):
                     hunk_lines = []
+                    match = re.findall(r"@@ .* @@(.*)", lines[i])[1]
                     i += 1
+
+                    if match != "":
+                        hunk_lines.append(match)
 
                     while (
                         i < len(lines)
@@ -242,39 +241,63 @@ def get_relative_indents(lines):
     print()
     return spaces
 
+def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
+
+    base_indent_match = get_indent(src_lines[src_start][1])
+    base_indent_hunk = get_indent(new_lines[0])
+    indented_new_lines = []
+
+    print("BASE INDENT MATCH", base_indent_match, "BASE INDENT HUNK", base_indent_hunk)
+
+    if base_indent_match != base_indent_hunk:
+        if base_indent_match > base_indent_hunk:
+            indented_new_lines = ["    " * (base_indent_match - base_indent_hunk) + line for line in new_lines]
+        else:
+            indented_new_lines = [line.replace("    " * (base_indent_hunk - base_indent_match), "") for line in new_lines]
+    
+    return indented_new_lines
+
+
+# single diff apply rules
+# 4. Try to match on lines -> if no match -> try again with more context = retry loop
+#     1. If match on lines doesn’t match the first 3 and last 3 bail
+# 5. Generate indent error -> auto fix indentation after match
 
 
 def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
+    #create i, line pairs for diff apply
     src_lines = [(i, line) for i, line in enumerate(file_content.splitlines())]
+
+    #get stripped version of original file i.e. strip all lines then filter out empty lines
+    stripped_src_lines = [t for t in [(i, line.strip()) for i, line in src_lines] if t[1] != ""]
 
     tgt_lines = list(src_lines)
 
+    #for hunk in file diffs:
+    #   construct code blocks
+    #   match old code block on stripped lines
+    #   align old code block with new code block
+    #   fix new code block indentation
+    #   replace old code block with new code block -> could cause an overlap error
+
     for hunk in file_diff.hunks:
+
         old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
-        logger.debug("%s, %s", old_lines, new_lines)
-        src_start, src_end = match_stripped_lines_context(src_lines, old_lines)
-        logger.debug("LOCATED DIFF: %s, %s", src_start, src_end)
+
+        if not (old_lines or new_lines):
+            # if either version is none, raise error
+            raise Exception()
+
+        src_start, src_end = match_stripped_lines_context(stripped_src_lines, old_lines)
 
         if not (src_start and src_end):
-            raise Hallucination(
-                "Applying this diff failed! The context lines and the src lines from the diff did not match the real code in the file!"
-            )
-        
-        base_indent_match = get_indent(src_lines[src_start][1])
+            #Raise hallucination due to not matching full src lines
+            raise Hallucination()
 
-        base_indent_hunk = get_indent(new_lines[0])
+        applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
 
-        # print("BASE INDENT MATCH", base_indent_match, "BASE INDENT HUNK", base_indent_hunk)
-        print("SPACES", get_relative_indents([line[1] for line in src_lines[src_start:src_end]]), get_relative_indents(new_lines))
-        if base_indent_match != base_indent_hunk:
-            if base_indent_match > base_indent_hunk:
-                new_lines = ["    " * (base_indent_match - base_indent_hunk) + line for line in new_lines]
-            else:
-                new_lines = [line.replace("    " * (base_indent_hunk - base_indent_match), "") for line in new_lines]
-        
-
-        
+        # insert lines
         i = 0
         while i < len(tgt_lines):
             if tgt_lines[i][0] == src_start:
@@ -282,11 +305,67 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
                 while i + j < len(tgt_lines) and tgt_lines[i + j][0] != src_end:
                     j += 1
 
-                tgt_lines[i : i + j + 1] = [(-1, line) for line in new_lines]
+                tgt_lines[i : i + j + 1] = [(-1, line) for line in applied_code]
                 break
 
             i += 1
 
+    #return correct code
     return "\n".join([entry[1] for entry in list(tgt_lines)])
 
 
+# 1. Capture command count -> solved by command parsing
+# 2. Capture tags -> if bad return
+# 3. Capture src and tgt file -> if none -> return. Bad
+
+def apply_multi_file_context_diff(diff, file_root):
+    # By the time we get here we have correctly captured a single command
+
+    if isinstance(diff, list):
+        diff= "".join(diff)
+    
+    diff_code = diff
+
+    # extract diff from response
+    diffs = extract_diff_from_response(diff_code)
+
+    if len(diffs) == 0:
+        #Raise exception about length of diffs
+        raise Exception()
+
+    #for each diff, actually parse the changes from it. Assume this just works for parsing the diff hunks (not formatting or anything, but rather just extracting target lines)
+    all_diffs = []
+    for diff in diffs:
+        file_diffs = parse_multi_file_diffs(diff)
+        all_diffs.extend(file_diffs)
+
+    changes = MultiFileContextDiff(files=all_diffs)
+    
+    #Check to see if there are diffs that have neither src or tgt file
+    error_diffs = []
+    for diff in all_diffs:
+        if (not (diff.src_file or diff.tgt_file)):
+            error_diffs += diff
+
+    if len(error_diffs) !=0:
+        #Raise exception containing non-applicable diffs
+        raise Exception()
+
+    #TODO: Should be deduping the diffs here
+
+    succeeded = []
+    failed = []
+
+    #for each diff block, apply context diff, returns tuple result (abspath, new_content)
+    for diff in all_diffs:
+        try:
+            result = apply_context_diff(multi_file_diff=changes, file_tree_root=file_root)
+            succeeded.append((diff.tgt_file, result))
+        except Exception as e:
+            failed.append((diff, e))
+
+    #should return files with new code to write
+    return {
+        "success": succeeded,
+        "fail": failed
+    }
