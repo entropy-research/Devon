@@ -120,7 +120,7 @@ def analyze_codebase(root_dir, ignore_dirs=None):
         ast_tree = parse_python_file(file_path)
         if ast_tree is None:
             continue
-        print(file_path)
+        # print(file_path)
 
         # Extract information from the AST and build the graph
         extract_info_from_ast(graph, ast_tree, file_path)
@@ -222,11 +222,11 @@ def initialize_repository(repo_path, class_table, function_table):
             function_table.add_function(name, node[1])
         elif node[1].get("type","") == "class":
             node[1]["location"]["file_path"] = node[1]["location"]["file_path"][len(codebase_root):]
-            print(node[0])
+            # print(node[0])
             name,filepath = node[0].split(":")
             class_table.add_class(name, node[1])
 
-    print(function_table)
+    # print(function_table)
     # print(class_table)
     
     return codebase_graph

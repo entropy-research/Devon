@@ -247,7 +247,7 @@ class SWEEnv(gym.Env):
         if self.table_cache.exists(self.issue):
             self.table_cache.load(self.issue)
         else:
-            self.build_index("/sphinx-doc__sphinx", self.class_table, self.function_table)
+            self.build_index("/django__django", self.class_table, self.function_table)
 
             self.table_cache.save(self.issue)
 
