@@ -1,6 +1,3 @@
-
-
-
 from devon.swebenchenv.environment.unified_diff.udiff import match_stripped_lines_context
 
 

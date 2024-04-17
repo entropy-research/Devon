@@ -70,6 +70,12 @@ def create_recover_prompt(src_lines, original_diff, diff, errors):
 <SOURCE_FILE>
 {src_lines}
 </SOURCE_FILE>
+
+Please answer the following questions thinking step by step:
+
+What are the exact section content lines from the src_file that the ORIGINAL_DIFF targets?
+Copy, and paste this section with additional context lines EXACTLY with an additional 3 context lines on either side.
+
 <ORIGINAL_DIFF>
 {original_diff}
 </ORIGINAL_DIFF>
@@ -81,11 +87,11 @@ Here are the resulting errors from applying the newest diff:
     {error_block_content}
 </ERRORS>
 
-Please answer the following questions thinking step by step:
-
-What are the exact section content lines from the src_file that the ORIGINAL_DIFF targets? Copy, and paste this with only a few extra content lines.
 
 The ORIGINAL_DIFF may source code lines that have typos! These are ok to change! The person who wrote it inaccurately copied the source code down anyways.
+
+Please point out all the lines that are added lines but not marked as added.
+Please point out all the source lines that were accidentally marked as added.
 
 Was enough context added to the original diff to make it work?
 Do all source lines actually exist in the ORIGINAL_DIFF?
@@ -103,8 +109,15 @@ Does the new diff only create a hunk for the content/source lines the original d
 Once those questions are answered, please provide the improved diff according to the guidelines. If you get it right, I'll buy you Taylor Swift tickets.
 """
 
-
 def extract_diff_from_response(diff_text):
+    if "```diff" in diff_text:
+
+        return [
+            diff.split("```")[0].strip()
+            for diff in diff_text.split("```diff")[1:]
+            if "```" in diff
+        ]
+    
     if "<DIFF>" in diff_text:
         return [
             diff.replace("<DIFF>", "").strip()
@@ -370,7 +383,7 @@ NotEnoughContextError:
 
     The problem is that there were not enough context lines provided, and the provided context lines DO NOT EXIST.
     
-    The solution to fix this error is matching the original source lines exactly.
+    The solution to fix this error is to provide additional context lines matching the original source lines exactly.
 
     When writing the lines, ask yourself, does this line actually exist in the source code?
     About half of the time it doesn't actually exist! Make sure you only write source lines that exist.
@@ -481,6 +494,8 @@ def extract_all_diffs(diff_input):
     # extract diff from response
     diffs = extract_diff_from_response(diff_code)
 
+    print(diffs)
+
     if len(diffs) == 0:
         #Raise exception about length of diffs
         raise Hallucination(no_diffs_found)
@@ -519,6 +534,7 @@ def apply_file_context_diffs(file_content, all_diffs):
             result = apply_context_diff(file_content=file_content, file_diff=diff)
             succeeded.append((diff.tgt_file, result))
         except Hallucination as e:
+            # print(e)
             failed.append((diff, e))
 
     #should return files with new code to write
@@ -534,13 +550,17 @@ def apply_file_context_diffs(file_content, all_diffs):
 def apply_multi_file_context_diff(file_content, diff, original_change_count):
     # By the time we get here we have correctly captured a single command
 
+    # print(diff)
+
     failures = []
 
     try:
         all_diffs, total_new_changed = extract_all_diffs(diff)
+        # print(all_diffs)
         if original_change_count is not None and (total_new_changed > (original_change_count + 5) or total_new_changed < (original_change_count - 1)):
             raise Hallucination(recover_failed_new_diff_too_different)
     except Hallucination as e:
+        print(e)
         failures.append((None, e))
 
     apply_res = apply_file_context_diffs(file_content=file_content, all_diffs=all_diffs)
@@ -548,3 +568,39 @@ def apply_multi_file_context_diff(file_content, diff, original_change_count):
     apply_res["fail"].extend(failures)
 
     return apply_res, total_new_changed
+
+
+if __name__ == "__main__":
+    code = """
+    asomawefsdofjn content
+<DIFF>
+```diff
+--- django/views/debug.py
++++ django/views/debug.py
+@@ -38,11 +38,17 @@
+             if self.hidden_settings.search(key):
+                 cleansed = self.cleansed_substitute
+             elif isinstance(value, dict):
+                 cleansed = {k: self.cleanse_setting(k, v) for k, v in value.items()}
++            elif isinstance(value, Iterable) and not isinstance(value, dict):
++                cleansed = [self.cleanse_setting(None, v) for v in value]
+             else:
+                 cleansed = value
+         except TypeError:
+             # If the key isn't regex-able, just return as-is.
+             cleansed = value
++        from collections.abc import Iterable
++
+         if callable(cleansed):
+             cleansed = CallableSettingWrapper(cleansed)
+ 
+         return cleansed
+```
+</DIFF>
+"""
+
+    res = extract_diff_from_response(code)
+
+    print(res)
+    delta = code.split("```diff")[1].split("```")[0]
+    print(delta)
