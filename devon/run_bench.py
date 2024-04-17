@@ -194,7 +194,7 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent2",
             install_environment=True,
-            specific_issue="django__django-14382"
+            specific_issue="django__django-14672"
         ),
         skip_existing=True,
     )
