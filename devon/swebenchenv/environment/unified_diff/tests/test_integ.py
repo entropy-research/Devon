@@ -90,7 +90,7 @@ def test_diff():
 def execute_repair(diff_case, file_case):
     api_key=os.environ.get("ANTHROPIC_API_KEY")
     anthrpoic_client = Anthropic(api_key=api_key)
-    diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v3, max_tokens=4096, temperature=0.2)
+    diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v3, max_tokens=4096, temperature=0.0)
 
     current_file = __file__
     current_dir = os.path.dirname(current_file)
