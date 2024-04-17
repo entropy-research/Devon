@@ -20,6 +20,7 @@ class FunctionTable:
         if function_name not in self.function_table:
             self.function_table[function_name] = [location]
         else:
+            print(f"Function {function_name} already exists in function table")
             self.function_table[function_name].append(location)
 
     def get_function(self, function_name, default):
@@ -33,12 +34,13 @@ class FunctionTable:
         functions =  self.function_table.get(function_name, {})
         if len(functions) == 0:
             return {}
+
         locations = [function.get("location", {}) for function in functions]
         for location in locations:
             # get rid of the temp_dir from the location
             if location.get("file_path","").startswith(self.temp_dir):
                 location["file_path"] = location["file_path"][len(self.temp_dir):]
-        return location
+        return locations
     
     def save_to_file(self, file_path):
         if not os.path.exists(os.path.dirname(file_path)):
@@ -74,12 +76,17 @@ class ClassTable:
         classes =  self.class_table.get(class_name, {})
         if len(classes) == 0:
             return {}
-        locations = [class_.get("location", {}) for class_ in classes]
-        for location in locations:
-            # get rid of the temp_dir from the location
-            if location.get("file_path","").startswith(self.temp_dir):
-                location["file_path"] = location["file_path"][len(self.temp_dir):]
-        return location
+        
+        results = []
+        for _class in classes:
+
+            result  = {}
+            result["location"] = _class["location"]
+            if result["location"].get("file_path","").startswith(self.temp_dir):
+                result["location"]["file_path"] = result["location"]["file_path"][len(self.temp_dir):]
+            result["code"] = _class["code"]
+            results.append(result)
+        return results
     
 
     def save_to_file(self, file_path):
@@ -210,10 +217,12 @@ def initialize_repository(repo_path, class_table, function_table):
     for node in codebase_graph.nodes(data=True):
         if node[1].get("type","") == "function":
             node[1]["location"]["file_path"] = node[1]["location"]["file_path"][len(codebase_root):]
-            function_table.add_function(node[0], node[1])
+            name,filepath = node[0].split("-")
+            function_table.add_function(name, node[1])
         elif node[1].get("type","") == "class":
             node[1]["location"]["file_path"] = node[1]["location"]["file_path"][len(codebase_root):]
-            class_table.add_class(node[0], node[1])
+            name,filepath = node[0].split("-")
+            class_table.add_class(name, node[1])
 
     print(function_table)
     # print(class_table)

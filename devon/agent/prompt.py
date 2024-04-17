@@ -213,6 +213,7 @@ def last_user_prompt_template(issue, history, filetree, editor, working_dir):
   You're free to use any other bash commands you want (e.g. find, grep, cat, ls, cd) in addition to the special commands listed above.
   However, the environment does NOT support interactive session commands (e.g. python, vim), so please do not invoke them.
   Use the file in the editor. Do not open a file that is already open in the editor.
+  Before looking for terms in the file check in editor.
 
   Try to use the no_op command every so often to take some time to think
 """

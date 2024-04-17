@@ -194,7 +194,7 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent",
             install_environment=True,
-            # specific_issue="django__django-11049"
+            specific_issue="sphinx-doc__sphinx-8713"
         ),
         skip_existing=True,
     )

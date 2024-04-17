@@ -53,7 +53,7 @@ def extract_info_from_ast(graph, ast_tree, file_path):
             }
 
             # Add the class node to the graph
-            add_node(graph, class_name, class_attrs)
+            add_node(graph, class_name + "-" + file_path, class_attrs)
 
             # Add edge from file to class
             add_edge(graph, file_path, class_name, "defines", {})
@@ -86,7 +86,7 @@ def extract_info_from_ast(graph, ast_tree, file_path):
             }
 
             # Add the function node to the graph
-            add_node(graph, function_name, function_attrs)
+            add_node(graph, function_name + "-" + file_path, function_attrs)
 
             # Add edge from the current scope to the function
             if self.current_scope:
@@ -113,7 +113,11 @@ def extract_info_from_ast(graph, ast_tree, file_path):
                 # Add the imported module to the dependencies of the current scope
                 if self.current_scope:
                     current_node = self.current_scope[-1]
-                    graph.nodes[current_node]["dependencies"]["imports"].append(imported_module)
+                    try:
+                        graph.nodes[current_node]["dependencies"]["imports"].append(imported_module)
+                    except:
+                        pass
+                    # graph.nodes[current_node]["dependencies"]["imports"].append(imported_module)
                 # else:
                 #     # If not inside a function or class, add the import to the file dependencies
                 #     file_node = file_path
@@ -126,7 +130,10 @@ def extract_info_from_ast(graph, ast_tree, file_path):
             # Add the imported module to the dependencies of the current scope
             if self.current_scope:
                 current_node = self.current_scope[-1]
-                graph.nodes[current_node]["dependencies"]["imports"].append(imported_module)
+                try:
+                    graph.nodes[current_node]["dependencies"]["imports"].append(imported_module)
+                except:
+                    pass
             # else:
             #     # If not inside a function or class, add the import to the file dependencies
             #     file_node = file_path
