@@ -46,7 +46,7 @@ class LanguageModel(ABC):
 
 @dataclass
 class GPT4(LanguageModel):
-    model="gpt-4-0125-preview"
+    model="gpt-4-turbo-2024-04-09"
     
     def __post_init__(self):
         if not isinstance(self.client, OpenAI):
@@ -60,16 +60,14 @@ class GPT4(LanguageModel):
         response = self.client.chat.completions.create(
             max_tokens=self.max_tokens,
             messages=[{"role":"system", "content":self.system_message}] + [{"role": m.role, "content": m.content} if isinstance(m, Message) else m for m in messages],
-            model=self.model,
-            tools=[tool for tool in tools.get_all_tools()] if tools else [],
-            tool_choice=tool_choice
+            model=self.model
         )
 
         message = response.choices[0].message
-        if "tool_calls" in message.__dict__:
-            return message, message.tool_calls
+        # if "tool_calls" in message.__dict__:
+        #     return message.content, message.tool_calls
         
-        return message
+        return message.content
 
 class ClaudeOpus(LanguageModel):
     model="claude-3-opus-20240229"

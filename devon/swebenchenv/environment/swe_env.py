@@ -17,6 +17,7 @@ import time
 
 from dataclasses import dataclass
 from git import Repo
+from openai import OpenAI
 from rich.logging import RichHandler
 from simple_parsing.helpers import FrozenSerializable
 from devon.retrieval.main import ClassTable, FunctionTable, get_class_defn, get_function_defn, initialize_archive, initialize_repository
@@ -43,7 +44,7 @@ from swebench import (
 )
 from typing import Optional, Tuple
 
-from devon_agent.agent.clients.client import ClaudeSonnet, Message
+from devon_agent.agent.clients.client import GPT4, ClaudeSonnet, Message
 
 LONG_TIMEOUT = 500
 PATH_TO_REQS = "/root/requirements.txt"
@@ -116,9 +117,15 @@ class SWEEnv(gym.Env):
         self.function_table = FunctionTable()
         self.table_cache = TableCache(dir="table_cache", function_table=self.function_table, class_table=self.class_table)
 
-        api_key=os.environ.get("ANTHROPIC_API_KEY")
-        anthrpoic_client = Anthropic(api_key=api_key)
-        self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
+        oai_api_key=os.environ.get("OPENAI_API_KEY")
+        openai_client = OpenAI(api_key=oai_api_key)
+
+        anth_api_key=os.environ.get("ANTHROPIC_API_KEY")
+        anthrpoic_client = Anthropic(api_key=anth_api_key)
+        
+        # self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
+
+        self.diff_model = GPT4(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
 
         if not self.args.verbose:
             self.logger.disabled = True
@@ -1217,8 +1224,6 @@ EXAMPLES
         """
         return str(get_class_defn(class_name, self.class_table))
 
-
-
     ## END DIFF CODE
 
     def submit(self):
@@ -1462,7 +1467,7 @@ EXAMPLES
             self.create_file,
             self.open_file,
             # self.view_open_files,
-            # self.search_dir,
+            self.search_dir,
             self.find_function,
             self.find_class,
             # self.search_file,
