@@ -62,23 +62,28 @@ class MultiFileContextDiff(BaseModel):
     files: List[FileContextDiff]
 
 
-def create_recover_prompt(original, diff, errors):
+def create_recover_prompt(src_lines, original_diff, diff, errors):
 
     error_block_content = [e[1].args for e in errors]
 
     return f"""
 <SOURCE_FILE>
-{original}
+{src_lines}
 </SOURCE_FILE>
 <ORIGINAL_DIFF>
-{diff}
+{original_diff}
 </ORIGINAL_DIFF>
+<NEWEST_DIFF>
+{diff}
+</NEWEST_DIFF>
 <ERRORS>
-Here are the resulting errors:
+Here are the resulting errors from applying the newest diff:
     {error_block_content}
 </ERRORS>
 
-Please explain how to fix this, and then generate a new diff that will match.
+First identify the main chunk of code in the source file that needs to be changed.
+
+Then, please explain how to fix the original diff, and then generate a new diff that will match.
 """
 
 
@@ -142,16 +147,46 @@ def create_code_fence(old_lines):
     return start_fence, end_fence
 
 
-def match_fence(lines, fence):
+def levenshtein_distance(s1, s2):
+    m, n = len(s1), len(s2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(m + 1):
+        dp[i][0] = i
+    for j in range(n + 1):
+        dp[0][j] = j
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if s1[i - 1] == s2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+            else:
+                dp[i][j] = min(dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1]) + 1
+
+    return dp[m][n]
+
+
+def is_fuzzy_match(s1, s2, threshold=1):
+
+    for a, b in zip(s1, s2):
+        distance = levenshtein_distance(a, b)
+        if distance > threshold:
+            return False
+    return True
+
+
+def match_fence(lines, fence, start_index=0):
     subset_length = len(fence)
 
     if subset_length > 0:
-        for i in range(len(lines) - subset_length + 1):
+        for i in range(start_index, len(lines) - subset_length + 1):
             match = [line[1] for line in lines[i : i + subset_length]]
-            if match == fence:
-                return lines[i][0], lines[i + subset_length - 1][0]
 
-    return None, None
+            if is_fuzzy_match(match, fence, 1):
+                
+                return lines[i][0], lines[i + subset_length - 1][0], i
+
+    return None, None, None
 
 
 def match_stripped_lines_context(stripped_file_lines, old_lines):
@@ -169,8 +204,12 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
     # print(begin_fence, stop_fence)
 
     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
-    begin_start, begin_end = match_fence(stripped_file_lines, begin_fence)
-    stop_start, stop_end = match_fence(stripped_file_lines, stop_fence)
+    begin_start, begin_end, src_idx = match_fence(stripped_file_lines, begin_fence)
+
+    if src_idx is not None:
+        stop_start, stop_end, _ = match_fence(stripped_file_lines, stop_fence, src_idx)
+    else:
+        stop_start, stop_end, _ = match_fence(stripped_file_lines, stop_fence)
 
     start = begin_start
     end = stop_end
@@ -181,6 +220,8 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
 def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
     file_diffs: List[FileContextDiff] = []
     lines = diff.strip().split("\n")
+
+    changed_lines = 0
 
     i = 0
     while i < len(lines):
@@ -209,8 +250,10 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
 
                         if lines[i].startswith("-"):
                             hunk_lines.append(HunkLine(type="removed", content=content))
+                            changed_lines += 1
                         elif lines[i].startswith("+"):
                             hunk_lines.append(HunkLine(type="added", content=content))
+                            changed_lines += 1
                         else:
                             hunk_lines.append(
                                 HunkLine(type="unchanged", content=content)
@@ -248,7 +291,7 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
         else:
             i += 1
 
-    return file_diffs
+    return file_diffs, changed_lines
 
 
 def get_indent(line):
@@ -308,6 +351,13 @@ NotEnoughContextError:
     The provided deleted (-) and unchanged lines were built into a code block that was then used to identify where the edit would be applied.
     However, this did not work. The content lines you created did not match the actual source file.
 
+    The solution to fix this error is matching the original source lines exactly.
+    Pay attention to which lines actually exist versus which you THINK exist.
+    When writing the lines, ask yourself, does this line actually exist in the source code?
+    About half of the time it doesn't actually exist! Make sure you only write source lines that exist.
+
+    Think through which lines you need to change first, and then write the new diff.
+
     Please pay more attention to the exact lines you are writing.
 """
 
@@ -339,6 +389,21 @@ NonApplicableDiffFound:
     Please remember to follow the guidelines for creating diffs.
 """
 
+recover_failed_new_diff_too_different = """
+ExcessiveChangedLinesInRecoveryAttempt:
+    The new diff does not match the original diff. You've changed too many additional lines (x > 3) compared to the original diff.
+
+    By not faithfully following the content of the original diff, you are changing how the code works.
+
+    The solution to fix this error is changing fewer lines to adhere to the original diff better.
+    Even though it may seem to you that you need to make additional changes, ask yourself if the new change actually exists in the source diff.
+    Half of the time these additional diffs do not exist, and should not since they change the intended functionality.
+
+    Think through which lines you need to change first, and then write the new diff.
+
+    Please remember to follow the guidelines for creating diffs.
+"""
+
 def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
     #create i, line pairs for diff apply
@@ -365,6 +430,8 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
             raise Hallucination(unable_to_parse_old_or_new_lines)
 
         src_start, src_end = match_stripped_lines_context(stripped_src_lines, old_lines)
+
+        print(src_start, src_end)
 
         if not (src_start is not None and src_end is not None):
             #Raise hallucination due to not matching full src lines
@@ -400,11 +467,14 @@ def extract_all_diffs(diff_input):
     if len(diffs) == 0:
         #Raise exception about length of diffs
         raise Hallucination(no_diffs_found)
+    
+    total_changed_lines = 0
 
     #for each diff, actually parse the changes from it. Assume this just works for parsing the diff hunks (not formatting or anything, but rather just extracting target lines)
     all_diffs = []
     for diff in diffs:
-        file_diffs = parse_multi_file_diffs(diff)
+        file_diffs, changed_lines = parse_multi_file_diffs(diff)
+        total_changed_lines += changed_lines
         all_diffs.extend(file_diffs)
 
     # changes = MultiFileContextDiff(files=all_diffs)
@@ -420,7 +490,7 @@ def extract_all_diffs(diff_input):
         raise Hallucination(non_applicable_diff_found)
 
     #deduping the diffs here
-    return list(all_diffs)
+    return list(all_diffs), total_changed_lines
 
 def apply_file_context_diffs(file_content, all_diffs):
     succeeded = []
@@ -444,8 +514,20 @@ def apply_file_context_diffs(file_content, all_diffs):
 # 2. Capture tags -> if bad return
 # 3. Capture src and tgt file -> if none -> return. Bad
 
-def apply_multi_file_context_diff(file_content, diff):
+def apply_multi_file_context_diff(file_content, diff, original_change_count):
     # By the time we get here we have correctly captured a single command
 
-    all_diffs = extract_all_diffs(diff)
-    return apply_file_context_diffs(file_content=file_content, all_diffs=all_diffs)
+    failures = []
+
+    try:
+        all_diffs, total_new_changed = extract_all_diffs(diff)
+        if original_change_count is not None and (total_new_changed > (original_change_count + 5) or total_new_changed < (original_change_count - 1)):
+            raise Hallucination(recover_failed_new_diff_too_different)
+    except Hallucination as e:
+        failures.append((None, e))
+
+    apply_res = apply_file_context_diffs(file_content=file_content, all_diffs=all_diffs)
+
+    apply_res["fail"].extend(failures)
+
+    return apply_res, total_new_changed

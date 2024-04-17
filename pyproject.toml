@@ -31,6 +31,7 @@ simple-parsing = "^0.1.5"
 dspy-ai = "^2.4.5"
 fabric = "^3.2.2"
 networkx = "^3.3"
+flaky = "^3.8.1"
 
 [build-system]
 requires = ["poetry-core"]
