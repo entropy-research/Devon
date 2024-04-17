@@ -20,17 +20,13 @@ from git import Repo
 from openai import OpenAI
 from rich.logging import RichHandler
 from simple_parsing.helpers import FrozenSerializable
-from devon.retrieval.main import ClassTable, FunctionTable, get_class_defn, get_function_defn, initialize_archive, initialize_repository
-from devon.swebenchenv.environment.unified_diff.create_diff import construct_versions_from_diff_hunk, extract_diffs, extract_diffs2, generate_unified_diff2, parse_multi_file_diff2
-from devon.swebenchenv.environment.unified_diff.diff_types import MultiFileDiff2
+from devon.retrieval.main import ClassTable, FunctionTable, get_class_defn, get_function_defn, initialize_repository
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
-from devon.swebenchenv.environment.unified_diff.test_diff import Hallucination, create_recover_prompt
+from devon.swebenchenv.environment.unified_diff.udiff import Hallucination, create_recover_prompt
 from devon.swebenchenv.environment.unified_diff.udiff import apply_file_context_diffs, extract_all_diffs
-from devon.swebenchenv.environment.unified_diff.utils import match_stripped_lines, match_stripped_lines2
 from devon.swebenchenv.environment.utils import (
     copy_file_to_container,
     extract_signature_and_docstring,
-    get_archive,
     get_container,
     get_instances,
     is_from_github_url,
@@ -1055,33 +1051,13 @@ EXAMPLES
         # if isinstance(diff, list):
         #     diff= "".join(diff)
         
+        original_diff = diff
         diff_code = diff
 
         attempts = 0
         fixed = False
-        while not fixed and attempts < 5:
+        while not fixed and attempts < 2:
             try:
-
-                # print(diff_code)
-                # diffs = extract_diffs2(diff_code)
-                # print(diffs)
-
-                # all_diffs = []
-                # for diff in diffs:
-                #     file_diffs = parse_multi_file_diff2(diff)
-                #     print(file_diffs)
-                #     all_diffs.extend(file_diffs)
-
-                # changes = MultiFileDiff2(files=all_diffs)
-
-                # print(changes)
-
-                # if changes.files == []:
-                #     raise Hallucination("Could not apply changes, missing source or target file.")
-
-                # self.apply_diff2(multi_file_diff=changes, file_tree_root=self.file_root)
-
-                # fixed = True
 
                 all_diffs, _ = extract_all_diffs(diff_code)
                 results = self.apply_diff3(all_diffs, self.file_root)
@@ -1099,6 +1075,11 @@ EXAMPLES
                     break
                 else:
                     attempts += 1
+
+                    try:
+                        msg = create_recover_prompt({failures[0][0].tgt_file:failures[0][2]}, original_diff, diff_code, failures)
+                    except:
+                        msg = create_recover_prompt({"":failures[0][2]}, original_diff, diff_code, failures)
 
                     msg = create_recover_prompt(self.editor, diff_code, failures)
 
@@ -1121,8 +1102,9 @@ EXAMPLES
                 self.write_file(file_path=result[0], content=result[1])
 
             return "Successfully edited file"
-            
-        return "Failed to edit file, please try an alternative approach"
+
+        return "\n".join(["Failed to edit file"] + [f[1].args[0] for f in failures])
+
 
     def create_tar(self, file_path):
 

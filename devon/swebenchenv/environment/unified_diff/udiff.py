@@ -70,12 +70,6 @@ def create_recover_prompt(src_lines, original_diff, diff, errors):
 <SOURCE_FILE>
 {src_lines}
 </SOURCE_FILE>
-
-Please answer the following questions thinking step by step:
-
-What are the exact section content lines from the src_file that the ORIGINAL_DIFF targets?
-Copy, and paste this section with additional context lines EXACTLY with an additional 3 context lines on either side.
-
 <ORIGINAL_DIFF>
 {original_diff}
 </ORIGINAL_DIFF>
@@ -87,17 +81,17 @@ Here are the resulting errors from applying the newest diff:
     {error_block_content}
 </ERRORS>
 
+Please answer the following questions thinking step by step:
 
-The ORIGINAL_DIFF may source code lines that have typos! These are ok to change! The person who wrote it inaccurately copied the source code down anyways.
+What are the exact section content lines from the src_file that the ORIGINAL_DIFF targets?
+Copy, and paste this section with additional context lines EXACTLY with an additional 3 context lines on either side.
 
-Please point out all the lines that are added lines but not marked as added.
-Please point out all the source lines that were accidentally marked as added.
+The ORIGINAL_DIFF may source code lines that have typos! These are ok to change! I inaccurately wrote the diff anyways.
 
 Was enough context added to the original diff to make it work?
 Do all source lines actually exist in the ORIGINAL_DIFF?
 
 Are the NEWEST_DIFF lines target the lines you copied above? If not, how can you fix this?
-
 Was enough context added to the newest diff to make it work?
 Do all source lines actually exist in the NEWEST_DIFF?
 
@@ -532,10 +526,10 @@ def apply_file_context_diffs(file_content, all_diffs):
     for diff in all_diffs:
         try:
             result = apply_context_diff(file_content=file_content, file_diff=diff)
-            succeeded.append((diff.tgt_file, result))
+            succeeded.append((diff.tgt_file, result, file_content))
         except Hallucination as e:
             # print(e)
-            failed.append((diff, e))
+            failed.append((diff, e, file_content))
 
     #should return files with new code to write
     return {
