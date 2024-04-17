@@ -1048,54 +1048,21 @@ EXAMPLES
 
     def real_write_diff(self, diff, thought):
 
-        # if isinstance(diff, list):
-        #     diff= "".join(diff)
-        
         original_diff = diff
         diff_code = diff
 
-        attempts = 0
-        fixed = False
-        while not fixed and attempts < 2:
-            try:
+        all_diffs, _ = extract_all_diffs(diff_code)
+        results = self.apply_diff3(all_diffs, self.file_root)
 
-                all_diffs, _ = extract_all_diffs(diff_code)
-                results = self.apply_diff3(all_diffs, self.file_root)
+        failures = []
+        successes = []
+        for result in results:
+            if len(result["fail"]) > 0:
+                failures.extend(result["fail"])
+            if len(result["success"]) > 0:
+                successes.extend(result["success"])
 
-                failures = []
-                successes = []
-                for result in results:
-                    if len(result["fail"]) > 0:
-                        failures.extend(result["fail"])
-                    if len(result["success"]) > 0:
-                        successes.extend(result["success"])
-
-                if len(failures) == 0:
-                    fixed = True
-                    break
-                else:
-                    attempts += 1
-
-                    try:
-                        msg = create_recover_prompt({failures[0][0].tgt_file:failures[0][2]}, original_diff, diff_code, failures)
-                    except:
-                        msg = create_recover_prompt({"":failures[0][2]}, original_diff, diff_code, failures)
-
-                    msg = create_recover_prompt(self.editor, diff_code, failures)
-
-                    diff_code = self.diff_model.chat([
-                        Message(
-                            role="user",
-                            content=msg
-                        )
-                    ])
-            
-            except Exception as e:
-                logger.info(e)
-                logger.info(traceback.format_exc())
-                return f"Failed to write to file due to error: {e.args}"
-
-        if fixed:
+        if len(failures) == 0:
             for result in successes:
 
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
