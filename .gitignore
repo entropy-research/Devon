@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 trajectories/
+table_cache/
 
 # C extensions
 *.so
