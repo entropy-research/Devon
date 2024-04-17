@@ -1,3 +1,4 @@
+<<<
 --- /django__django/django/db/models/fields/__init__.py
 +++ /django__django/django/db/models/fields/__init__.py
 @@ -1582,7 +1582,7 @@
@@ -10,3 +11,4 @@
 +                     "[DD] [[HH:]MM:]ss[.uuuuuu] format."),
      }
      description = _("Duration")
+>>>

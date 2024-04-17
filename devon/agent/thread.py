@@ -184,7 +184,7 @@ class Agent:
             + "\n"
         )
 
-        system_prompt = system_prompt_template_v1(commands + command_docs)
+        system_prompt = system_prompt_template_v2(commands + command_docs)
         self.history.append({"role": "system", "content": system_prompt})
         trajectory = []
         info = {}
