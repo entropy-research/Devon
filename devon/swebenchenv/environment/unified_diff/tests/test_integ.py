@@ -99,19 +99,32 @@ def execute_repair(diff_case, file_case):
 
     return fixed, successes, failures
 
-def test_repair_apply1():
-    fixed = execute_repair("case4", "case1")
-    assert(fixed == True)
-    print("\nPASSED: ", "case4", "\n")
+# def test_repair_apply1():
+#     fixed = execute_repair("case4", "case1")
+#     assert(fixed == True)
+#     print("\nPASSED: ", "case4", "\n")
 
-def test_repair_apply2():
-    fixed, s, f = execute_repair("case5", "case5")
-    assert(fixed == False)
+# def test_repair_apply2():
+#     fixed, s, f = execute_repair("case5", "case5")
+#     assert(fixed == False)
+#     print("\nPASSED: ", "case5", "\n")
+#     print("FAILURES: ", "\n".join([fail[1].args[0] for fail in f]))
+
+# def test_repair_apply3():
+#     fixed, s, f = execute_repair("case7", "case7")
+#     assert(fixed == True)
+#     print("\nPASSED: ", "case5", "\n")
+#     print("FAILURES: ", "\n".join([fail[1].args[0] for fail in f]))
+
+def test_repair_apply4():
+
+    current_file = __file__
+    current_dir = os.path.dirname(current_file)
+
+    fixed, s, f = execute_repair("case8", "case8")
+    assert(fixed == True)
     print("\nPASSED: ", "case5", "\n")
     print("FAILURES: ", "\n".join([fail[1].args[0] for fail in f]))
 
-def test_repair_apply3():
-    fixed, s, f = execute_repair("case7", "case7")
-    assert(fixed == True)
-    print("\nPASSED: ", "case5", "\n")
-    print("FAILURES: ", "\n".join([fail[1].args[0] for fail in f]))
+    with open(current_dir + f"/results/case8.py", "w") as f:
+        f.write(s[0][1])

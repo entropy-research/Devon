@@ -1,0 +1,660 @@
+"""
+    sphinx.ext.napoleon.docstring
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Classes for docstring parsing and formatting.
+
+
+    :copyright: Copyright 2007-2021 by the Sphinx team, see AUTHORS.
+    :license: BSD, see LICENSE for details.
+"""
+
+import collections
+import inspect
+import re
+from functools import partial
+from typing import Any, Callable, Dict, List, Tuple, Type, Union
+
+from sphinx.application import Sphinx
+from sphinx.config import Config as SphinxConfig
+from sphinx.ext.napoleon.iterators import modify_iter
+from sphinx.locale import _, __
+from sphinx.util import logging
+from sphinx.util.inspect import stringify_annotation
+from sphinx.util.typing import get_type_hints
+
+logger = logging.getLogger(__name__)
+
+_directive_regex = re.compile(r'\\.\\. \\S+::')
+_google_section_regex = re.compile(r'^(\\s|\\w)+:\\s*$')
+_google_typed_arg_regex = re.compile(r'(.+?)\\(\\s*(.*[^\\s]+)\\s*\\)')
+_numpy_section_regex = re.compile(r'^[=\\-.+?.+?strliststrsphinx.ext.napoleon.Configsphinx.config.Configappappsphinx.ext.napoleon.Configsphinx.application.Sphinxstrstrsphinx.ext.autodoc.Optionsarg1arg2arg1arg2(?P<name>~?[a-zA-Z0-9_.-]+)' in _type:
+                    field = '**%s** (%s)%s' % (_name, _type, separator)
+                else:
+                    field = '**%s** (*%s*)%s' % (_name, _type, separator)
+            else:
+                field = '**%s**%s' % (_name, separator)
+        elif _type:
+            if '')
+                _type = _type[pos + 1:-1]
+            _type = ' ' + _type if _type else ''
+            _desc = self._strip_empty(_desc)
+            _descs = ' ' + '\
+    '.join(_desc) if any(_desc) else ''
+            lines.append(':raises%s:%s' % (_type, _descs))
+        if lines:
+            lines.append('')
+        return lines
+
+    def _parse_receives_section(self, section: str) -> List[str]:
+        if self._config.napoleon_use_param:
+            # Allow to declare multiple parameters at once (ex: x, y: int)
+            fields = self._consume_fields(multiple=True)
+            return self._format_docutils_params(fields)
+        else:
+            fields = self._consume_fields()
+            return self._format_fields(_('Receives'), fields)
+
+    def _parse_references_section(self, section: str) -> List[str]:
+        use_admonition = self._config.napoleon_use_admonition_for_references
+        return self._parse_generic_section(_('References'), use_admonition)
+
+    def _parse_returns_section(self, section: str) -> List[str]:
+        fields = self._consume_returns_section()
+        multi = len(fields) > 1
+        if multi:
+            use_rtype = False
+        else:
+            use_rtype = self._config.napoleon_use_rtype
+
+        lines = []  # type: List[str]
+        for _name, _type, _desc in fields:
+            if use_rtype:
+                field = self._format_field(_name, '', _desc)
+            else:
+                field = self._format_field(_name, _type, _desc)
+
+            if multi:
+                if lines:
+                    lines.extend(self._format_block('          * ', field))
+                else:
+                    lines.extend(self._format_block(':returns: * ', field))
+            else:
+                lines.extend(self._format_block(':returns: ', field))
+                if _type and use_rtype:
+                    lines.extend([':rtype: %s' % _type, ''])
+        if lines and lines[-1]:
+            lines.append('')
+        return lines
+
+    def _parse_see_also_section(self, section: str) -> List[str]:
+        return self._parse_admonition('seealso', section)
+
+    def _parse_warns_section(self, section: str) -> List[str]:
+        return self._format_fields(_('Warns'), self._consume_fields())
+
+    def _parse_yields_section(self, section: str) -> List[str]:
+        fields = self._consume_returns_section()
+        return self._format_fields(_('Yields'), fields)
+
+    def _partition_field_on_colon(self, line: str) -> Tuple[str, str, str]:
+        before_colon = []
+        after_colon = []
+        colon = ''
+        found_colon = False
+        for i, source in enumerate(_xref_or_code_regex.split(line)):
+            if found_colon:
+                after_colon.append(source)
+            else:
+                m = _single_colon_regex.search(source)
+                if (i % 2) == 0 and m:
+                    found_colon = True
+                    colon = source[m.start(): m.end()]
+                    before_colon.append(source[:m.start()])
+                    after_colon.append(source[m.end():])
+                else:
+                    before_colon.append(source)
+
+        return ("".join(before_colon).strip(),
+                colon,
+                "".join(after_colon).strip())
+
+    def _qualify_name(self, attr_name: str, klass: "Type") -> str:
+        if klass and '.' not in attr_name:
+            if attr_name.startswith('~'):
+                attr_name = attr_name[1:]
+            try:
+                q = klass.__qualname__
+            except AttributeError:
+                q = klass.__name__
+            return '~%s.%s' % (q, attr_name)
+        return attr_name
+
+    def _strip_empty(self, lines: List[str]) -> List[str]:
+        if lines:
+            start = -1
+            for i, line in enumerate(lines):
+                if line:
+                    start = i
+                    break
+            if start == -1:
+                lines = []
+            end = -1
+            for i in reversed(range(len(lines))):
+                line = lines[i]
+                if line:
+                    end = i
+                    break
+            if start > 0 or end + 1 < len(lines):
+                lines = lines[start:end + 1]
+        return lines
+
+    def _lookup_annotation(self, _name: str) -> str:
+        if self._config.napoleon_attr_annotations:
+            if self._what in ("module", "class", "exception") and self._obj:
+                # cache the class annotations
+                if not hasattr(self, "_annotations"):
+                    localns = getattr(self._config, "autodoc_type_aliases", {})
+                    localns.update(getattr(
+                                   self._config, "napoleon_type_aliases", {}
+                                   ) or {})
+                    self._annotations = get_type_hints(self._obj, None, localns)
+                if _name in self._annotations:
+                    return stringify_annotation(self._annotations[_name])
+        # No annotation found
+        return ""
+
+
+def _recombine_set_tokens(tokens: List[str]) -> List[str]:
+    token_queue = collections.deque(tokens)
+    keywords = ("optional", "default")
+
+    def takewhile_set(tokens):
+        open_braces = 0
+        previous_token = None
+        while True:
+            try:
+                token = tokens.popleft()
+            except IndexError:
+                break
+
+            if token == ", ":
+                previous_token = token
+                continue
+
+            if not token.strip():
+                continue
+
+            if token in keywords:
+                tokens.appendleft(token)
+                if previous_token is not None:
+                    tokens.appendleft(previous_token)
+                break
+
+            if previous_token is not None:
+                yield previous_token
+                previous_token = None
+
+            if token == "{":
+                open_braces += 1
+            elif token == "}":
+                open_braces -= 1
+
+            yield token
+
+            if open_braces == 0:
+                break
+
+    def combine_set(tokens):
+        while True:
+            try:
+                token = tokens.popleft()
+            except IndexError:
+                break
+
+            if token == "{":
+                tokens.appendleft("{")
+                yield "".join(takewhile_set(tokens))
+            else:
+                yield token
+
+    return list(combine_set(token_queue))
+
+
+def _tokenize_type_spec(spec: str) -> List[str]:
+    def postprocess(item):
+        if _default_regex.match(item):
+            default = item[:7]
+            # can't be separated by anything other than a single space
+            # for now
+            other = item[8:]
+
+            return [default, " ", other]
+        else:
+            return [item]
+
+    tokens = list(
+        item
+        for raw_token in _token_regex.split(spec)
+        for item in postprocess(raw_token)
+        if item
+    )
+    return tokens
+
+
+def _token_type(token: str, location: str = None) -> str:
+    def is_numeric(token):
+        try:
+            # use complex to make sure every numeric value is detected as literal
+            complex(token)
+        except ValueError:
+            return False
+        else:
+            return True
+
+    if token.startswith(" ") or token.endswith(" "):
+        type_ = "delimiter"
+    elif (
+            is_numeric(token) or
+            (token.startswith("{") and token.endswith("}")) or
+            (token.startswith('"') and token.endswith('"')) or
+            (token.startswith("'") and token.endswith("'"))
+    ):
+        type_ = "literal"
+    elif token.startswith("{"):
+        logger.warning(
+            __("invalid value set (missing closing brace): %s"),
+            token,
+            location=location,
+        )
+        type_ = "literal"
+    elif token.endswith("}"):
+        logger.warning(
+            __("invalid value set (missing opening brace): %s"),
+            token,
+            location=location,
+        )
+        type_ = "literal"
+    elif token.startswith("'") or token.startswith('"'):
+        logger.warning(
+            __("malformed string literal (missing closing quote): %s"),
+            token,
+            location=location,
+        )
+        type_ = "literal"
+    elif token.endswith("'") or token.endswith('"'):
+        logger.warning(
+            __("malformed string literal (missing opening quote): %s"),
+            token,
+            location=location,
+        )
+        type_ = "literal"
+    elif token in ("optional", "default"):
+        # default is not a official keyword (yet) but supported by the
+        # reference implementation (numpydoc) and widely used
+        type_ = "control"
+    elif _xref_regex.match(token):
+        type_ = "reference"
+    else:
+        type_ = "obj"
+
+    return type_
+
+
+def _convert_numpy_type_spec(_type: str, location: str = None, translations: dict = {}) -> str:
+    def convert_obj(obj, translations, default_translation):
+        translation = translations.get(obj, obj)
+
+        # use :class: (the default) only if obj is not a standard singleton
+        if translation in _SINGLETONS and default_translation == ":class:":
+            default_translation = ":obj:"
+        elif translation == "..." and default_translation == ":class:":
+            # allow referencing the builtin ...
+            default_translation = ":obj:"
+
+        if _xref_regex.match(translation) is None:
+            translation = default_translation % translation
+
+        return translation
+
+    tokens = _tokenize_type_spec(_type)
+    combined_tokens = _recombine_set_tokens(tokens)
+    types = [
+        (token, _token_type(token, location))
+        for token in combined_tokens
+    ]
+
+    converters = {
+        "literal": lambda x: "%s" % x,
+        "obj": lambda x: convert_obj(x, translations, ":class:"),
+        "control": lambda x: "*%s*" % x,
+        "delimiter": lambda x: x,
+        "reference": lambda x: x,
+    }
+
+    converted = "".join(converters.get(type_)(token) for token, type_ in types)
+
+    return converted
+
+
+class NumpyDocstring(GoogleDocstring):
+    """Convert NumPy style docstrings to reStructuredText.
+
+    Parameters
+    ----------
+    docstring : :obj: or :obj: of :obj:
+        The docstring to parse, given either as a string or split into
+        individual lines.
+    config: :obj: or :obj:
+        The configuration settings to use. If not given, defaults to the
+        config object on ; or if  is not given defaults to the
+        a new :class: object.
+
+
+    Other Parameters
+    ----------------
+    app : :class:, optional
+        Application object representing the Sphinx process.
+    what : :obj:, optional
+        A string specifying the type of the object to which the docstring
+        belongs. Valid values: "module", "class", "exception", "function",
+        "method", "attribute".
+    name : :obj:, optional
+        The fully qualified name of the object.
+    obj : module, class, exception, function, method, or attribute
+        The object to which the docstring belongs.
+    options : :class:, optional
+        The options given to the directive: an object with attributes
+        inherited_members, undoc_members, show_inheritance and noindex that
+        are True if the flag option of same name was given to the auto
+        directive.
+
+
+    Example
+    -------
+    >>> from sphinx.ext.napoleon import Config
+    >>> config = Config(napoleon_use_param=True, napoleon_use_rtype=True)
+    >>> docstring = '''One line summary.
+    ...
+    ... Extended description.
+    ...
+    ... Parameters
+    ... ----------
+    ... arg1 : int
+    ...     Description of 
+    ... arg2 : str
+    ...     Description of 
+    ... Returns
+    ... -------
+    ... str
+    ...     Description of return value.
+    ... '''
+    >>> print(NumpyDocstring(docstring, config))
+    One line summary.
+    <BLANKLINE>
+    Extended description.
+    <BLANKLINE>
+    :param arg1: Description of 
+    :type arg1: int
+    :param arg2: Description of 
+    :type arg2: str
+    <BLANKLINE>
+    :returns: Description of return value.
+    :rtype: str
+    <BLANKLINE>
+
+    Methods
+    -------
+    __str__()
+        Return the parsed docstring in reStructuredText format.
+
+        Returns
+        -------
+        str
+            UTF-8 encoded version of the docstring.
+
+    __unicode__()
+        Return the parsed docstring in reStructuredText format.
+
+        Returns
+        -------
+        unicode
+            Unicode version of the docstring.
+
+    lines()
+        Return the parsed lines of the docstring in reStructuredText format.
+
+        Returns
+        -------
+        list(str)
+            The lines of the docstring in a list.
+
+    """
+    def __init__(self, docstring: Union[str, List[str]], config: SphinxConfig = None,
+                 app: Sphinx = None, what: str = '', name: str = '',
+                 obj: Any = None, options: Any = None) -> None:
+        self._directive_sections = ['.. index::']
+        super().__init__(docstring, config, app, what, name, obj, options)
+
+    def _get_location(self) -> str:
+        try:
+            filepath = inspect.getfile(self._obj) if self._obj is not None else None
+        except TypeError:
+            filepath = None
+        name = self._name
+
+        if filepath is None and name is None:
+            return None
+        elif filepath is None:
+            filepath = ""
+
+        return ":".join([filepath, "docstring of %s" % name])
+
+    def _escape_args_and_kwargs(self, name: str) -> str:
+        func = super()._escape_args_and_kwargs
+
+        if ", " in name:
+            return ", ".join(func(param) for param in name.split(", "))
+        else:
+            return func(name)
+
+    def _consume_field(self, parse_type: bool = True, prefer_type: bool = False
+                       ) -> Tuple[str, str, List[str]]:
+        line = next(self._line_iter)
+        if parse_type:
+            _name, _, _type = self._partition_field_on_colon(line)
+        else:
+            _name, _type = line, ''
+        _name, _type = _name.strip(), _type.strip()
+        _name = self._escape_args_and_kwargs(_name)
+
+        if parse_type and not _type:
+            _type = self._lookup_annotation(_name)
+
+        if prefer_type and not _type:
+            _type, _name = _name, _type
+
+        if self._config.napoleon_preprocess_types:
+            _type = _convert_numpy_type_spec(
+                _type,
+                location=self._get_location(),
+                translations=self._config.napoleon_type_aliases or {},
+            )
+
+        indent = self._get_indent(line) + 1
+        _desc = self._dedent(self._consume_indented_block(indent))
+        _desc = self.__class__(_desc, self._config).lines()
+        return _name, _type, _desc
+
+    def _consume_returns_section(self) -> List[Tuple[str, str, List[str]]]:
+        return self._consume_fields(prefer_type=True)
+
+    def _consume_section_header(self) -> str:
+        section = next(self._line_iter)
+        if not _directive_regex.match(section):
+            # Consume the header underline
+            next(self._line_iter)
+        return section
+
+    def _is_section_break(self) -> bool:
+        line1, line2 = self._line_iter.peek(2)
+        return (not self._line_iter.has_next() or
+                self._is_section_header() or
+                ['', ''] == [line1, line2] or
+                (self._is_in_section and
+                    line1 and
+                    not self._is_indented(line1, self._section_indent)))
+
+    def _is_section_header(self) -> bool:
+        section, underline = self._line_iter.peek(2)
+        section = section.lower()
+        if section in self._sections and isinstance(underline, str):
+            return bool(_numpy_section_regex.match(underline))
+        elif self._directive_sections:
+            if _directive_regex.match(section):
+                for directive_section in self._directive_sections:
+                    if section.startswith(directive_section):
+                        return True
+        return False
+
+    def _parse_see_also_section(self, section: str) -> List[str]:
+        lines = self._consume_to_next_section()
+        try:
+            return self._parse_numpydoc_see_also_section(lines)
+        except ValueError:
+            return self._format_admonition('seealso', lines)
+
+    def _parse_numpydoc_see_also_section(self, content: List[str]) -> List[str]:
+        """
+        Derived from the NumpyDoc implementation of _parse_see_also.
+
+        See Also
+        --------
+        func_name : Descriptive text
+            continued text
+        another_func_name : Descriptive text
+        func_name1, func_name2, :meth:, func_name3
+
+        """
+        items = []
+
+        def parse_item_name(text: str) -> Tuple[str, str]:
+            """Match ':role:' or 'name'"""
+            m = self._name_rgx.match(text)
+            if m:
+                g = m.groups()
+                if g[1] is None:
+                    return g[3], None
+                else:
+                    return g[2], g[1]
+            raise ValueError("%s is not a item name" % text)
+
+        def push_item(name: str, rest: List[str]) -> None:
+            if not name:
+                return
+            name, role = parse_item_name(name)
+            items.append((name, list(rest), role))
+            del rest[:]
+
+        def translate(func, description, role):
+            translations = self._config.napoleon_type_aliases
+            if role is not None or not translations:
+                return func, description, role
+
+            translated = translations.get(func, func)
+            match = self._name_rgx.match(translated)
+            if not match:
+                return translated, description, role
+
+            groups = match.groupdict()
+            role = groups["role"]
+            new_func = groups["name"] or groups["name2"]
+
+            return new_func, description, role
+
+        current_func = None
+        rest = []  # type: List[str]
+
+        for line in content:
+            if not line.strip():
+                continue
+
+            m = self._name_rgx.match(line)
+            if m and line[m.end():].strip().startswith(':'):
+                push_item(current_func, rest)
+                current_func, line = line[:m.end()], line[m.end():]
+                rest = [line.split(':', 1)[1].strip()]
+                if not rest[0]:
+                    rest = []
+            elif not line.startswith(' '):
+                push_item(current_func, rest)
+                current_func = None
+                if ',' in line:
+                    for func in line.split(','):
+                        if func.strip():
+                            push_item(func, [])
+                elif line.strip():
+                    current_func = line
+            elif current_func is not None:
+                rest.append(line.strip())
+        push_item(current_func, rest)
+
+        if not items:
+            return []
+
+        # apply type aliases
+        items = [
+            translate(func, description, role)
+            for func, description, role in items
+        ]
+
+        lines = []  # type: List[str]
+        last_had_desc = True
+        for name, desc, role in items:
+            if role:
+                link = ':%s:' % (role, name)
+            else:
+                link = ':obj:' % name
+            if desc or last_had_desc:
+                lines += ['']
+                lines += [link]
+            else:
+                lines[-1] += ", %s" % link
+            if desc:
+                lines += self._indent([' '.join(desc)])
+                last_had_desc = True
+            else:
+                last_had_desc = False
+        lines += ['']
+
+        return self._format_admonition('seealso', lines)
+', '/sphinx-doc__sphinx/test_napoleon.py': '
+import sys
+from sphinx.ext.napoleon import Config
+from sphinx.ext.napoleon.docstring import NumpyDocstring
+
+def test_other_params_formatting():
+    config = Config(napoleon_use_param=True)
+    docstring = '''One line summary.
+
+    Parameters
+    ----------
+    arg1 : int
+        Description of arg1
+    arg2 : str
+        Description of arg2
+
+    Other Parameters
+    ----------------
+    other1 : float
+        Description of other1
+    other2 : bool
+        Description of other2
+    '''
+    print(NumpyDocstring(docstring, config))
+
+if __name__ == "__main__":
+    test_other_params_formatting()
+
+'

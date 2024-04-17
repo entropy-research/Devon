@@ -160,13 +160,14 @@ def find_nth_content_line(lines, n):
     return lines[start:end]  # maybe off by one? dont think so though, need to test
 
 
-def create_code_fence(old_lines):
+def create_code_fence(old_lines, fence_len=2):
+
     if len(old_lines) < 4:
         start_fence = find_nth_content_line(old_lines, len(old_lines))
         end_fence = start_fence
     else:
-        start_fence = find_nth_content_line(old_lines, 3)
-        end_fence = list(reversed(find_nth_content_line(list(reversed(old_lines)), 3)))
+        start_fence = find_nth_content_line(old_lines, fence_len)
+        end_fence = list(reversed(find_nth_content_line(list(reversed(old_lines)), fence_len)))
 
     return start_fence, end_fence
 
