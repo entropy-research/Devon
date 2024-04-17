@@ -125,7 +125,7 @@ class SWEEnv(gym.Env):
         
         # self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
 
-        self.diff_model = GPT4(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
+        self.diff_model = GPT4(client=openai_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
 
         if not self.args.verbose:
             self.logger.disabled = True
@@ -182,6 +182,9 @@ class SWEEnv(gym.Env):
         info = {}
         info["commit_sha"] = self.commit_sha
 
+        self.function_table = FunctionTable()
+        self.class_table = ClassTable()
+
         # Get task instance
         self.idx = index if index is not None else self.idx
         self.record = self.data[self.idx] #Self.record maintains tasks specific information, idx is used to access specific tasks in the loaded dataset. sharding is the only way to parallelize, even then apikey rate limits will hit. can reduce this w env step speed.
@@ -237,12 +240,15 @@ class SWEEnv(gym.Env):
                 error_msg="Failed to clean repository",
             )
         # print(self.get_cwd())
+        self.table_cache.function_table = self.function_table
+        self.table_cache.class_table = self.class_table
         logger.debug(f"CWD: {self.get_cwd()}")
         # print(self.communicate(input="ls"))
         if self.table_cache.exists(self.issue):
             self.table_cache.load(self.issue)
         else:
-            self.build_index("/django__django", self.class_table, self.function_table)
+            self.build_index("/sphinx-doc__sphinx", self.class_table, self.function_table)
+
             self.table_cache.save(self.issue)
 
         # Reset environment variables
@@ -1526,7 +1532,7 @@ EXAMPLES
             self.create_file,
             self.open_file,
             # self.view_open_files,
-            # self.search_dir,
+            self.search_dir,
             self.find_function,
             self.find_class,
             # self.search_file,

@@ -8,11 +8,15 @@ def parse_python_file(file_path):
     Returns:
         ast.AST: The AST representation of the Python file.
     """
-    with open(file_path, "r") as file:
-        source_code = file.read()
     try:
+        with open(file_path, "r") as file:
+            source_code = file.read()
+
         return ast.parse(source_code)
     except SyntaxError:
         print(f"SyntaxError: {file_path}")
+        return None
+    except Exception as e:
+        print(f"Error: {e}")
         return None
 

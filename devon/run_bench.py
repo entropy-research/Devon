@@ -192,7 +192,7 @@ if __name__ == "__main__":
             data_path="princeton-nlp/SWE-bench_Lite",
             split="test",
             verbose=True,
-            container_name="swe-agent",
+            container_name="swe-agent2",
             install_environment=True,
             specific_issue="sphinx-doc__sphinx-8713"
         ),

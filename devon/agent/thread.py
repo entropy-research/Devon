@@ -8,7 +8,9 @@ from devon.agent.prompt import (
     commands_to_command_docs,
     history_to_bash_history,
     last_user_prompt_template_v1,
+    last_user_prompt_template_v2,
     system_prompt_template_v1,
+    system_prompt_template_v2,
 )
 from devon.agent.prompt import parse_response
 
@@ -108,11 +110,11 @@ class Agent:
             + "\n"
         )
 
-        system_prompt = system_prompt_template_v1(commands + command_docs)
+        system_prompt = system_prompt_template_v2(commands + command_docs)
 
         history = history_to_bash_history(self.history)
 
-        last_user_prompt = last_user_prompt_template_v1(
+        last_user_prompt = last_user_prompt_template_v2(
             issue, history, filetree, editor, working_dir
         )
 
