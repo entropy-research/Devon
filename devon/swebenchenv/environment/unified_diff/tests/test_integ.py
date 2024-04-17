@@ -24,7 +24,7 @@ def test_diff():
         file_diff = open(current_dir + f"/diffs/{case}").read()
         excepted = open(current_dir + f"/expected/{case}.py").read()
 
-        print(extract_diff_from_response(file_diff))
+        # print(extract_diff_from_response(file_diff))
 
         result, total_changed = apply_multi_file_context_diff(file_content, file_diff, None)
 
@@ -35,6 +35,25 @@ def test_diff():
             f.write(result_code)
 
         assert result_code == excepted
+
+
+def test_diff_backoff_matching():
+
+    cases = ["case10"]
+
+    current_file = __file__
+    current_dir = os.path.dirname(current_file)
+
+    for case in cases:
+
+        print(case)
+
+        file_content = open(current_dir + f"/files/{case}.py").read()
+        file_diff = open(current_dir + f"/diffs/{case}").read()
+
+        result, total_changed = apply_multi_file_context_diff(file_content, file_diff, None)
+
+        assert len(result["fail"]) == 0
 
 def execute_repair(diff_case, file_case):
     api_key=os.environ.get("ANTHROPIC_API_KEY")

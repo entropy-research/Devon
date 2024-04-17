@@ -258,13 +258,8 @@ def match_fence_all(stripped_file_lines, fence):
             break
     return matches
 
-
-def match_stripped_lines_context(stripped_file_lines, old_lines):
-    #given stripped file lines and stripped old lines,
-    stripped_old_lines = [line.strip() for line in old_lines]
-    stripped_old_lines = [line for line in stripped_old_lines if line != ""]
-    
-    #create code fence based on lines. i.e. first N content lines
+def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines):
+        #create code fence based on lines. i.e. first N content lines
     begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines)
     
     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
@@ -275,15 +270,33 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
     valid_pairs = []
     for begin_start, begin_end, src_idx in begin_matches:
         for stop_start, stop_end, end_idx in end_matches:
-            if src_idx <= end_idx and (stop_end - begin_start + 1) <= len(old_lines) + 4:
+            if src_idx <= end_idx and (stop_end - begin_start + 1) == len(old_lines):
                 valid_pairs.append((begin_start, stop_end))
                 break
     
-    #if none throw error
-    if not valid_pairs:
-        raise ValueError("No valid matches found.")
+    return valid_pairs
+
+
+def match_stripped_lines_context(stripped_file_lines, old_lines):
+    #given stripped file lines and stripped old lines,
+    stripped_old_lines = [line.strip() for line in old_lines]
+    stripped_old_lines = [line for line in stripped_old_lines if line != ""]
     
-    return valid_pairs[0]
+    fence_len = 3
+    results = []
+    while not results and fence_len > 1:
+        results = match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines)
+
+        if len(results) > 0:
+            break
+        else:
+            fence_len -= 1
+
+    #if none throw error
+    if not results:
+        return None, None
+    
+    return results[0]
 
 
 def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
@@ -536,8 +549,6 @@ def extract_all_diffs(diff_input):
     # extract diff from response
     diffs = extract_diff_from_response(diff_code)
 
-    print(diffs)
-
     if len(diffs) == 0:
         #Raise exception about length of diffs
         raise Hallucination(no_diffs_found)
@@ -591,8 +602,6 @@ def apply_file_context_diffs(file_content, all_diffs):
 
 def apply_multi_file_context_diff(file_content, diff, original_change_count):
     # By the time we get here we have correctly captured a single command
-
-    # print(diff)
 
     failures = []
 

@@ -1008,7 +1008,7 @@ EXAMPLES
     #             print("WRITING CODE")
     #             self.write_file(file_path=tgt_file_abs, content=new_code)
     
-    def apply_diff3(self, multi_file_diffs, file_tree_root: str):
+    def apply_diff(self, multi_file_diffs, file_tree_root: str):
 
         results = []
 
@@ -1052,7 +1052,7 @@ EXAMPLES
         diff_code = diff
 
         all_diffs, _ = extract_all_diffs(diff_code)
-        results = self.apply_diff3(all_diffs, self.file_root)
+        results = self.apply_diff(all_diffs, self.file_root)
 
         failures = []
         successes = []
