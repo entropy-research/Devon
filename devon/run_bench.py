@@ -15,7 +15,7 @@ from simple_parsing import parse
 from simple_parsing.helpers import FrozenSerializable, FlattenedAccess
 
 from devon.agent.model import ModelArguments
-from devon.agent.thread import Agent, AgentArguments, AgentConfig
+from devon.agent.thread import Agent
 from devon.swebenchenv.environment.swe_env import EnvironmentArguments, SWEEnv
 from devon.swebenchenv.environment.utils import get_data_path_name
 from swebench import KEY_INSTANCE_ID, KEY_MODEL, KEY_PREDICTION
@@ -33,7 +33,6 @@ logging.getLogger("simple_parsing").setLevel(logging.WARNING)
 @dataclass(frozen=True)
 class ScriptArguments(FlattenedAccess, FrozenSerializable):
     environment: EnvironmentArguments
-    agent: AgentArguments
     instance_filter: str = ".*"  # Only run instances that completely match this regex
     skip_existing: bool = True  # Skip instances with existing trajectories
     suffix: str = ""
@@ -64,7 +63,7 @@ def main(args: ScriptArguments):
     print(args.__dict__)
 
     env = SWEEnv(args.environment)
-    agent = Agent("primary", args.agent)
+    agent = Agent("primary")
     traj_dir = Path("trajectories") / Path(getuser()) / "devon"
     os.makedirs(traj_dir, exist_ok=True)
 
@@ -195,20 +194,9 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent",
             install_environment=True,
-            specific_issue="django__django-11049"
+            # specific_issue="django__django-11049"
         ),
         skip_existing=True,
-        agent=AgentArguments(
-            model=ModelArguments(
-                model_name="gpt4",
-                # total_cost_limit=0.0,
-                # per_instance_cost_limit=2.0,
-                temperature=0.2,
-                top_p=0.95,
-            ),
-            config=AgentConfig(
-            )
-        ),
     )
 
     main(defaults)

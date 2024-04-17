@@ -1070,7 +1070,7 @@ EXAMPLES
 
                 # fixed = True
 
-                all_diffs = extract_all_diffs(diff_code)
+                all_diffs, _ = extract_all_diffs(diff_code)
                 results = self.apply_diff3(all_diffs, self.file_root)
 
                 failures = []
@@ -1461,7 +1461,7 @@ EXAMPLES
             self.close_file,
             self.create_file,
             self.open_file,
-            self.view_open_files,
+            # self.view_open_files,
             # self.search_dir,
             self.find_function,
             self.find_class,
@@ -1520,7 +1520,7 @@ EXAMPLES
             self.close_file,
             self.create_file,
             self.open_file,
-            self.view_open_files,
+            # self.view_open_files,
             # self.search_dir,
             self.find_function,
             self.find_class,

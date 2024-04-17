@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 from typing import Optional, Tuple, Dict
 from devon.agent.model import AnthropicModel, ModelArguments
-from devon.environment.environment import Environment
 from tenacity import RetryError
 from devon.agent.prompt import (
     commands_to_command_docs,
@@ -24,7 +23,7 @@ logger = logging.getLogger(LOGGER_NAME)
 class Agent:
     def __init__(self, name="Devon", args=None):
         self.model: AnthropicModel = AnthropicModel(
-            args=ModelArguments(model_name="claude-sonnet", temperature=0.8)
+            args=ModelArguments(model_name="claude-sonnet", temperature=1)
         )
         # self.model = HumanModel(args=ModelArguments(
         #     model_name="gpt-4-0314",
@@ -35,7 +34,7 @@ class Agent:
         # ))
         self.name = name
         self.history = []
-        self.max_steps = 15
+        self.max_steps = 10
 
     def forward_with_error_check(
         self,
@@ -207,8 +206,8 @@ class Agent:
                 done = True
 
             try:
-                assert output.count("<COMMAND>") == 1
-                assert output.count("<THOUGHT>") == 1
+                # assert output.count("<COMMAND>") == 1
+                # assert output.count("<THOUGHT>") == 1
                 obs, _, done, info = env.step(action, thought)
             except AssertionError as e:
                 print(output)
@@ -247,8 +246,3 @@ class Agent:
         logger.debug(info)
         return info
 
-
-if __name__ == "__main__":
-    agent = Agent()
-    env = Environment(path=".")
-    agent.run({}, env)

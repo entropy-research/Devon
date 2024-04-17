@@ -10,4 +10,9 @@ def parse_python_file(file_path):
     """
     with open(file_path, "r") as file:
         source_code = file.read()
-    return ast.parse(source_code)
+    try:
+        return ast.parse(source_code)
+    except SyntaxError:
+        print(f"SyntaxError: {file_path}")
+        return None
+
