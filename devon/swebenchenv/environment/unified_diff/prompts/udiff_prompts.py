@@ -78,7 +78,7 @@ def nth_prime(n):
 I will make sure that the new diffs match the desired code content exactly, while fixing the issues with the provided diff.
 </SCRATCHPAD>
 Here are the diffs for those changes:
-<DIFF>
+```diff
 --- mathweb/flask/app.py
 +++ mathweb/flask/app.py
 @@ ... @@
@@ -91,7 +91,7 @@ Here are the diffs for those changes:
 +        if sympy.isprime(num):
              count += 1
      return str(num)
-</DIFF>
+```
 <ASSISSTANT/>
 
 File editing rules:

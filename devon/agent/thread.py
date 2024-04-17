@@ -7,8 +7,8 @@ from tenacity import RetryError
 from devon.agent.prompt import (
     commands_to_command_docs,
     history_to_bash_history,
-    last_user_prompt_template,
-    system_prompt_template,
+    last_user_prompt_template_v1,
+    system_prompt_template_v1,
 )
 from devon.agent.prompt import parse_response
 
@@ -108,11 +108,11 @@ class Agent:
             + "\n"
         )
 
-        system_prompt = system_prompt_template(commands + command_docs)
+        system_prompt = system_prompt_template_v1(commands + command_docs)
 
         history = history_to_bash_history(self.history)
 
-        last_user_prompt = last_user_prompt_template(
+        last_user_prompt = last_user_prompt_template_v1(
             issue, history, filetree, editor, working_dir
         )
 
@@ -182,7 +182,7 @@ class Agent:
             + "\n"
         )
 
-        system_prompt = system_prompt_template(commands + command_docs)
+        system_prompt = system_prompt_template_v1(commands + command_docs)
         self.history.append({"role": "system", "content": system_prompt})
         trajectory = []
         info = {}
