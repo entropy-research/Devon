@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from anthropic import Anthropic
 import os
 
+
 @dataclass(frozen=True)
 class ModelArguments:
     model_name: str
@@ -12,15 +13,16 @@ class ModelArguments:
 class HumanModel:
     def __init__(self, args: ModelArguments):
         self.args = args
-        self.api_key=os.environ.get("ANTHROPIC_API_KEY")
+        self.api_key = os.environ.get("ANTHROPIC_API_KEY")
         self.model = Anthropic(api_key=self.api_key)
-    
+
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         thought = ""
         print(messages[-1])
-        command = input(f"enter your command here")
+        command = input("enter your command here")
         print(f"<THOUGHT>\n{thought}\n</THOUGHT>\n<COMMAND>\n{command}\n</COMMAND>")
         return f"<THOUGHT>\n{thought}\n</THOUGHT>\n<COMMAND>\n{command}\n</COMMAND>"
+
 
 class AnthropicModel:
     MODELS = {
@@ -48,10 +50,13 @@ class AnthropicModel:
 
         self.api = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-    def history_to_messages(self, history: list[dict[str, str]]) -> list[dict[str, str]]:
+    def history_to_messages(
+        self, history: list[dict[str, str]]
+    ) -> list[dict[str, str]]:
         messages = [
             {k: v for k, v in entry.items() if k in ["role", "content"]}
-            for entry in history if entry["role"] != "system"
+            for entry in history
+            if entry["role"] != "system"
         ]
         for message in messages:
             if message["content"].strip() == "":
@@ -59,23 +64,27 @@ class AnthropicModel:
         return messages
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
-
-    # def query(self, history: list[dict[str, str]]) -> str:
+        # def query(self, history: list[dict[str, str]]) -> str:
         # system_message = "\n".join([
         #     entry["content"] for entry in history if entry["role"] == "system"
         # ])
         # messages = self.history_to_messages(history)
 
-        response = self.api.messages.create(
-            messages=messages,
-            max_tokens=self.model_metadata["max_tokens"],
-            model=self.api_model,
-            temperature=self.args.temperature,
-            top_p=self.args.top_p,
-            system=system_message,
-        ).content[0].text
+        response = (
+            self.api.messages.create(
+                messages=messages,
+                max_tokens=self.model_metadata["max_tokens"],
+                model=self.api_model,
+                temperature=self.args.temperature,
+                top_p=self.args.top_p,
+                system=system_message,
+            )
+            .content[0]
+            .text
+        )
 
         return response
+
 
 # Simple shim for providing commands
 def process_command(model, command):

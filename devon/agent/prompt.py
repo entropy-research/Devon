@@ -1,4 +1,4 @@
-# PROMPT 
+# PROMPT
 # Few shot examples
 # State
 # Observation
@@ -7,46 +7,26 @@
 # Thought
 # Action
 
-
-import os
 from typing import Dict, List, Union
 
-
-# def history_to_bash_prompt(history : List[Dict]):
-#   shell = """"""
-#   for h in history:
-#     observation, action, state, thought = h['observation'], h['action'], h['state'], h['thought']
-#     shell += f"""
-#     (Thought: {thought})
-#     (cwd {state["cwd"]})
-#     bash-$ {action} 
-#     {observation}\n"""
-
-#   return shell
-
-
-def commands_to_command_docs(commands : List[Dict]):
-   doc = """"""
-   for command in commands:
-      signature, docstring = command['signature'], command['docstring']
-      doc += f"""
+def commands_to_command_docs(commands: List[Dict]):
+    doc = """"""
+    for command in commands:
+        signature, docstring = command["signature"], command["docstring"]
+        doc += f"""
       {signature}
       {docstring}
-
-
       """
-   return doc
-
+    return doc
 
 def editor_repr(editor):
+    editorstring = ""
+    for file in editor:
+        editorstring += f"{file}:\n{editor[file]}\n\n"
+    return editor
 
-  editorstring = ""
-  for file in editor:
-    editorstring += f"{file}:\n{editor[file]}\n\n"
-  return editor
-
-def system_prompt_template(command_docs : str):
-   return f"""
+def system_prompt_template(command_docs: str):
+    return f"""
 <SETTING>
   You are an autonomous programmer, and you're working directly in the command line and a special workspace.
 
@@ -91,8 +71,6 @@ def system_prompt_template(command_docs : str):
   11. Once you're done use the submit command to submit your solution. Dont add tests to the codebase, just use the submit command to submit your solution.
 
   12. DO NOT SEARCH FOR CLASSES OR FUNCTION USING SEARCH. If you want to find a class or a function, use the find_class or find_function command respectively.
-
-
 </SETTING>
 <COMMANDS>
   {command_docs}
@@ -116,61 +94,60 @@ def system_prompt_template(command_docs : str):
 </REPONSE FORMAT>
 """
 
-# TODO: More description for the workspace
 
 def history_to_bash_history(history):
-    
-            # self.history.append(
-            # {
-            #     "role": "assistant",
-            #     "content": output,
-            #     "thought": thought,
-            #     "action": action,
-            #     "agent": self.name,
+    # self.history.append(
+    # {
+    #     "role": "assistant",
+    #     "content": output,
+    #     "thought": thought,
+    #     "action": action,
+    #     "agent": self.name,
 
-  bash_history = ""
-  for entry in history:
-
-    if entry["role"] == "user":
-      bash_history += f"{entry['content']}\n"
-    elif entry["role"] == "assistant":
-        bash_history += f"""
+    bash_history = ""
+    for entry in history:
+        if entry["role"] == "user":
+            bash_history += f"{entry['content']}\n"
+        elif entry["role"] == "assistant":
+            bash_history += f"""
 (thought: {entry['thought']})
 (current_dir: {entry['state']['cwd']})
 bash $ {entry['action'][1:]}
 """
-  return bash_history
+    return bash_history
 
 
-def object_to_xml(data: Union[dict, bool], root='object'):
-    xml = f'<{root}>'
+def object_to_xml(data: Union[dict, bool], root="object"):
+    xml = f"<{root}>"
     if isinstance(data, dict):
         for key, value in data.items():
             xml += object_to_xml(value, key)
 
     elif isinstance(data, (list, tuple, set)):
         for item in data:
-            xml += object_to_xml(item, 'item')
+            xml += object_to_xml(item, "item")
 
     else:
         xml += str(data)
 
-    xml += f'</{root}>'
+    xml += f"</{root}>"
     return xml
 
-def print_tree(directory, level=0, indent=''):
-    string =""
+
+def print_tree(directory, level=0, indent=""):
+    string = ""
     for name, content in directory.items():
         if isinstance(content, dict):
             string += f"\n{indent}├── {name}/"
-            string += print_tree(content, level + 1, indent + '│   ')
+            string += print_tree(content, level + 1, indent + "│   ")
         else:
             string += f"\n{indent}├── {name}"
-            
+
     return string
 
-def last_user_prompt_template(issue,history,filetree,editor,working_dir):
-   return f"""
+
+def last_user_prompt_template(issue, history, filetree, editor, working_dir):
+    return f"""
   We're currently solving the following issue within our repository. Here's the issue text:
   <ISSUE>
   {issue}
@@ -241,76 +218,9 @@ def last_user_prompt_template(issue,history,filetree,editor,working_dir):
   Try to use the no_op command every so often to take some time to think
 """
 
-"""
-  <WORKSPACE>
-  <FOLDERTREE>
-  {filetree}
-  </FOLDERTREE>
-  <EDITOR>
-  {editor}
-  </EDITOR> 
-  </WORKSPACE>
-  <SHELL>
-  {observation}
-  (Open file: {open_file})
-  (Current directory: {working_dir})
-  bash-$
-  </SHELL>
-"""
-"""
-  Here is a demonstration of how to correctly accomplish this task.
-  It is included to show you how to correctly use the interface.
-  You do not need to follow exactly what is done in the demonstration.
-  --- DEMONSTRATION ---
-  {demonstration}
-  --- END OF DEMONSTRATION ---
-state_command:
-"""
-
-system_prompt = lambda actions : f"""
-You are an expert software engineer.
-
-<actions>
-{actions}
-</actions>
-
-example response:
-<reponse>
-<thought>
-The code is not working because the function is not returning the correct value. I should change the function
-</thought>
-<action>
-
-</action>"""
-
-user_prompt_template = lambda FS, editor, observation: f"""
-
-<state>
-<FS>
-{FS}
-</FS>
-Here is the current editor. Conatins files you have opened.
-<editor>
-{editor}
-</editor>
-</state>
-<observation>
-{observation}
-</observation>
-
-"""
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
     action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
 
     return thought, action
-
-
-if __name__ == "__main__":
-   
-  history = [{'role': 'system', 'content': "\nYou are an expert software engineer.\n\n<actions>\n['submit', 'exit_context', 'exit_cost', 'exit_error', 'exit_format', 'exit_api', 'skip', 'list_files', 'list_files_recursive', 'close_file', 'open_file', 'view_open_files', 'execute_python_file', 'search_dir', 'search_file', 'search_files', 'get_cwd']\n</actions>\n\nexample response:\n<reponse>\n<thought>\nThe code is not working because the function is not returning the correct value. I should change the function\n</thought>\n<action>\n\n</action>"}, 
-             {'role': 'user', 'content': None, 'agent': 'primary'}, 
-             {'role': 'assistant', 'content': '<THOUGHT>\nTo start, I should create a script to reproduce the issue described in the problem statement. This will allow me to verify that I can replicate the bug before attempting to fix it.\n</THOUGHT>\n\n<COMMAND>\ncreate_file reproduce_issue.py\n</COMMAND>', 'thought': '\nTo start, I should create a script to reproduce the issue described in the problem statement. This will allow me to verify that I can replicate the bug before attempting to fix it.\n', 'action': '\ncreate_file reproduce_issue.py\n', 'agent': 'primary', 'state': {'file_tree': {'sqlfluff__sqlfluff': {'.git': {'branches': {}, 'hooks': {}, 'info': {}, 'refs': {'heads': {}, 'tags': {}, 'remotes': {'origin': {}}}, 'objects': {'pack': {}, 'info': {}}, 'logs': {'refs': {'remotes': {'origin': {}}, 'heads': {}}}}, '.github': {'ISSUE_TEMPLATE': {}, 'workflows': {}}, 'docs': {'source': {'_static': {'images': {}}}}, 'examples': {}, 'images': {}, 'plugins': {'sqlfluff-plugin-example': {'test': {'rules': {'test_cases': {}}}, 'src': {'example': {}}}, 'sqlfluff-templater-dbt': {'sqlfluff_templater_dbt': {}}}, 'src': {'sqlfluff': {'api': {}, 'cli': {}, 'core': {'dialects': {}, 'linter': {}, 'parser': {'grammar': {}, 'segments': {}}, 'plugin': {}, 'rules': {'analysis': {}}, 'templaters': {}}, 'dialects': {}, 'rules': {}, 'testing': {}}, 'sqlfluff.egg-info': {}}, 'test': {'api': {}, 'cli': {}, 'core': {'parser': {}, 'rules': {}, 'templaters': {}}, 'dialects': {}, 'fixtures': {'cli': {}, 'config': {'inheritance_a': {'nested': {}}, 'inheritance_b': {'nested': {}}, 'toml': {}}, 'dialects': {'ansi': {}, 'bigquery': {}, 'exasol': {}, 'hive': {}, 'mysql': {}, 'snowflake': {}, 'sqlite': {}, 'teradata': {}, 'tsql': {}, 'postgres': {}}, 'lexer': {}, 'linter': {'autofix': {'ansi': {'001_long_line': {}, '002_indentation': {}, '003_long_line': {}, '004_indentation': {}, '005_function_spacing': {}, '006_indentation': {}, '007_with_clause': {}, '008_with_clause': {}, '009_keyword_capitalisation': {}, '010_CTEs_and_newlines': {}, '011_indentation': {}, '012_templating': {}, '013_order_by_explicit': {}, '014_looping_interaction_between_l008_and_l030': {}, '015_jinja_leading_whitespace': {}, '016_index_error_with_jinja_if': {}, '016_index_error_with_jinja_if2': {}, '019_trailing_comma_to_leading': {}, '020_L008_trailing_comma': {}, '021_fix_respects_noqa': {}, '008_looping_rules_l003_l016_l019': {}, '016_no_fix_in_template_loops': {}, '017_lintresult_fixes_cannot_span_block_boundaries': {}, '018_l003_indent_templated_code': {}}, 'bigquery': {'001_templating': {}, '002_templating': {}, '003_templating': {}, '004_templating': {}, '005_unnest_spacing': {}}, 'snowflake': {'001_semi_structured': {}}}, 'diffquality': {}, 'sqlfluffignore': {'path_a': {}, 'path_b': {}}}, 'rules': {'custom': {'bad_rule_name': {}}, 'std_rule_cases': {}}, 'templater': {'jinja_a': {}, 'jinja_b': {}, 'jinja_d_roundtrip': {}, 'jinja_e': {}, 'jinja_f': {}, 'jinja_g_macros': {'macros': {}}, 'jinja_h_macros': {'macros': {}}, 'jinja_i_raw': {}, 'jinja_j_libraries': {'libs': {}}, 'jinja_k_config_override_path_macros': {'macros': {}}, 'jinja_l_metas': {}, 'jinja_c_dbt': {}}, 'dbt': {'dbt_project': {'macros': {}, 'models': {'depends_on_ephemeral': {}, 'my_new_project': {}}, 'tests': {}}, 'error_models': {}}}, 'rules': {}}, 'benchmarks': {'bench_002': {}}}, '': {}}, 'editor': {}, 'cwd': '/', 'issue': 'TSQL - L031 incorrectly triggers "Avoid using aliases in join condition" when no join present\n## Expected Behaviour\r\n\r\nBoth of these queries should pass, the only difference is the addition of a table alias \'a\':\r\n\r\n1/ no alias\r\n\r\n```\r\nSELECT [hello]\r\nFROM\r\n    mytable\r\n```\r\n\r\n2/ same query with alias\r\n\r\n```\r\nSELECT a.[hello]\r\nFROM\r\n    mytable AS a\r\n```\r\n\r\n## Observed Behaviour\r\n\r\n1/ passes\r\n2/ fails with: L031: Avoid using aliases in join condition.\r\n\r\nBut there is no join condition :-)\r\n\r\n## Steps to Reproduce\r\n\r\nLint queries above\r\n\r\n## Dialect\r\n\r\nTSQL\r\n\r\n## Version\r\n\r\nsqlfluff 0.6.9\r\nPython 3.6.9\r\n\r\n## Configuration\r\n\r\nN/A\n'}}, {'role': 'user', 'content': '"OCI runtime exec failed: exec failed: unable to start container process: exec: \\"create_file\\": executable file not found in $PATH: unknown\\r\\n"', 'agent': 'primary'}, {'role': 'assistant', 'content': '<THOUGHT>\nTo start, I should create a script to reproduce the issue described in the problem statement. This will allow me to verify that I can replicate the bug before attempting to fix it.\n</THOUGHT>\n\n<COMMAND>\ncreate_file reproduce_issue.py\n</COMMAND>', 'thought': '\nTo start, I should create a script to reproduce the issue described in the problem statement. This will allow me to verify that I can replicate the bug before attempting to fix it.\n', 'action': '\ncreate_file reproduce_issue.py\n', 'agent': 'primary', 'state': {'file_tree': {'sqlfluff__sqlfluff': {'.git': {'branches': {}, 'hooks': {}, 'info': {}, 'refs': {'heads': {}, 'tags': {}, 'remotes': {'origin': {}}}, 'objects': {'pack': {}, 'info': {}}, 'logs': {'refs': {'remotes': {'origin': {}}, 'heads': {}}}}, '.github': {'ISSUE_TEMPLATE': {}, 'workflows': {}}, 'docs': {'source': {'_static': {'images': {}}}}, 'examples': {}, 'images': {}, 'plugins': {'sqlfluff-plugin-example': {'test': {'rules': {'test_cases': {}}}, 'src': {'example': {}}}, 'sqlfluff-templater-dbt': {'sqlfluff_templater_dbt': {}}}, 'src': {'sqlfluff': {'api': {}, 'cli': {}, 'core': {'dialects': {}, 'linter': {}, 'parser': {'grammar': {}, 'segments': {}}, 'plugin': {}, 'rules': {'analysis': {}}, 'templaters': {}}, 'dialects': {}, 'rules': {}, 'testing': {}}, 'sqlfluff.egg-info': {}}, 'test': {'api': {}, 'cli': {}, 'core': {'parser': {}, 'rules': {}, 'templaters': {}}, 'dialects': {}, 'fixtures': {'cli': {}, 'config': {'inheritance_a': {'nested': {}}, 'inheritance_b': {'nested': {}}, 'toml': {}}, 'dialects': {'ansi': {}, 'bigquery': {}, 'exasol': {}, 'hive': {}, 'mysql': {}, 'snowflake': {}, 'sqlite': {}, 'teradata': {}, 'tsql': {}, 'postgres': {}}, 'lexer': {}, 'linter': {'autofix': {'ansi': {'001_long_line': {}, '002_indentation': {}, '003_long_line': {}, '004_indentation': {}, '005_function_spacing': {}, '006_indentation': {}, '007_with_clause': {}, '008_with_clause': {}, '009_keyword_capitalisation': {}, '010_CTEs_and_newlines': {}, '011_indentation': {}, '012_templating': {}, '013_order_by_explicit': {}, '014_looping_interaction_between_l008_and_l030': {}, '015_jinja_leading_whitespace': {}, '016_index_error_with_jinja_if': {}, '016_index_error_with_jinja_if2': {}, '019_trailing_comma_to_leading': {}, '020_L008_trailing_comma': {}, '021_fix_respects_noqa': {}, '008_looping_rules_l003_l016_l019': {}, '016_no_fix_in_template_loops': {}, '017_lintresult_fixes_cannot_span_block_boundaries': {}, '018_l003_indent_templated_code': {}}, 'bigquery': {'001_templating': {}, '002_templating': {}, '003_templating': {}, '004_templating': {}, '005_unnest_spacing': {}}, 'snowflake': {'001_semi_structured': {}}}, 'diffquality': {}, 'sqlfluffignore': {'path_a': {}, 'path_b': {}}}, 'rules': {'custom': {'bad_rule_name': {}}, 'std_rule_cases': {}}, 'templater': {'jinja_a': {}, 'jinja_b': {}, 'jinja_d_roundtrip': {}, 'jinja_e': {}, 'jinja_f': {}, 'jinja_g_macros': {'macros': {}}, 'jinja_h_macros': {'macros': {}}, 'jinja_i_raw': {}, 'jinja_j_libraries': {'libs': {}}, 'jinja_k_config_override_path_macros': {'macros': {}}, 'jinja_l_metas': {}, 'jinja_c_dbt': {}}, 'dbt': {'dbt_project': {'macros': {}, 'models': {'depends_on_ephemeral': {}, 'my_new_project': {}}, 'tests': {}}, 'error_models': {}}}, 'rules': {}}, 'benchmarks': {'bench_002': {}}}, '': {}}, 'editor': {}, 'cwd': '/', 'issue': 'TSQL - L031 incorrectly triggers "Avoid using aliases in join condition" when no join present\n## Expected Behaviour\r\n\r\nBoth of these queries should pass, the only difference is the addition of a table alias \'a\':\r\n\r\n1/ no alias\r\n\r\n```\r\nSELECT [hello]\r\nFROM\r\n    mytable\r\n```\r\n\r\n2/ same query with alias\r\n\r\n```\r\nSELECT a.[hello]\r\nFROM\r\n    mytable AS a\r\n```\r\n\r\n## Observed Behaviour\r\n\r\n1/ passes\r\n2/ fails with: L031: Avoid using aliases in join condition.\r\n\r\nBut there is no join condition :-)\r\n\r\n## Steps to Reproduce\r\n\r\nLint queries above\r\n\r\n## Dialect\r\n\r\nTSQL\r\n\r\n## Version\r\n\r\nsqlfluff 0.6.9\r\nPython 3.6.9\r\n\r\n## Configuration\r\n\r\nN/A\n'}}, {'role': 'user', 'content': '"OCI runtime exec failed: exec failed: unable to start container process: exec: \\"create_file\\": executable file not found in $PATH: unknown\\r\\n"', 'agent': 'primary'}, {'role': 'assistant', 'content': '<THOUGHT>\nTo start, I should create a script to reproduce the issue described in the problem statement. This will allow me to verify that I can replicate the bug before attempting to fix it.\n</THOUGHT>\n\n<COMMAND>\ncreate_file reproduce_issue.py\n</COMMAND>', 'thought': '\nTo start, I should create a script to reproduce the issue described in the problem statement. This will allow me to verify that I can replicate the bug before attempting to fix it.\n', 'action': '\ncreate_file reproduce_issue.py\n', 'agent': 'primary', 'state': {'file_tree': {'sqlfluff__sqlfluff': {'.git': {'branches': {}, 'hooks': {}, 'info': {}, 'refs': {'heads': {}, 'tags': {}, 'remotes': {'origin': {}}}, 'objects': {'pack': {}, 'info': {}}, 'logs': {'refs': {'remotes': {'origin': {}}, 'heads': {}}}}, '.github': {'ISSUE_TEMPLATE': {}, 'workflows': {}}, 'docs': {'source': {'_static': {'images': {}}}}, 'examples': {}, 'images': {}, 'plugins': {'sqlfluff-plugin-example': {'test': {'rules': {'test_cases': {}}}, 'src': {'example': {}}}, 'sqlfluff-templater-dbt': {'sqlfluff_templater_dbt': {}}}, 'src': {'sqlfluff': {'api': {}, 'cli': {}, 'core': {'dialects': {}, 'linter': {}, 'parser': {'grammar': {}, 'segments': {}}, 'plugin': {}, 'rules': {'analysis': {}}, 'templaters': {}}, 'dialects': {}, 'rules': {}, 'testing': {}}, 'sqlfluff.egg-info': {}}, 'test': {'api': {}, 'cli': {}, 'core': {'parser': {}, 'rules': {}, 'templaters': {}}, 'dialects': {}, 'fixtures': {'cli': {}, 'config': {'inheritance_a': {'nested': {}}, 'inheritance_b': {'nested': {}}, 'toml': {}}, 'dialects': {'ansi': {}, 'bigquery': {}, 'exasol': {}, 'hive': {}, 'mysql': {}, 'snowflake': {}, 'sqlite': {}, 'teradata': {}, 'tsql': {}, 'postgres': {}}, 'lexer': {}, 'linter': {'autofix': {'ansi': {'001_long_line': {}, '002_indentation': {}, '003_long_line': {}, '004_indentation': {}, '005_function_spacing': {}, '006_indentation': {}, '007_with_clause': {}, '008_with_clause': {}, '009_keyword_capitalisation': {}, '010_CTEs_and_newlines': {}, '011_indentation': {}, '012_templating': {}, '013_order_by_explicit': {}, '014_looping_interaction_between_l008_and_l030': {}, '015_jinja_leading_whitespace': {}, '016_index_error_with_jinja_if': {}, '016_index_error_with_jinja_if2': {}, '019_trailing_comma_to_leading': {}, '020_L008_trailing_comma': {}, '021_fix_respects_noqa': {}, '008_looping_rules_l003_l016_l019': {}, '016_no_fix_in_template_loops': {}, '017_lintresult_fixes_cannot_span_block_boundaries': {}, '018_l003_indent_templated_code': {}}, 'bigquery': {'001_templating': {}, '002_templating': {}, '003_templating': {}, '004_templating': {}, '005_unnest_spacing': {}}, 'snowflake': {'001_semi_structured': {}}}, 'diffquality': {}, 'sqlfluffignore': {'path_a': {}, 'path_b': {}}}, 'rules': {'custom': {'bad_rule_name': {}}, 'std_rule_cases': {}}, 'templater': {'jinja_a': {}, 'jinja_b': {}, 'jinja_d_roundtrip': {}, 'jinja_e': {}, 'jinja_f': {}, 'jinja_g_macros': {'macros': {}}, 'jinja_h_macros': {'macros': {}}, 'jinja_i_raw': {}, 'jinja_j_libraries': {'libs': {}}, 'jinja_k_config_override_path_macros': {'macros': {}}, 'jinja_l_metas': {}, 'jinja_c_dbt': {}}, 'dbt': {'dbt_project': {'macros': {}, 'models': {'depends_on_ephemeral': {}, 'my_new_project': {}}, 'tests': {}}, 'error_models': {}}}, 'rules': {}}, 'benchmarks': {'bench_002': {}}}, '': {}}, 'editor': {}, 'cwd': '/', 'issue': 'TSQL - L031 incorrectly triggers "Avoid using aliases in join condition" when no join present\n## Expected Behaviour\r\n\r\nBoth of these queries should pass, the only difference is the addition of a table alias \'a\':\r\n\r\n1/ no alias\r\n\r\n```\r\nSELECT [hello]\r\nFROM\r\n    mytable\r\n```\r\n\r\n2/ same query with alias\r\n\r\n```\r\nSELECT a.[hello]\r\nFROM\r\n    mytable AS a\r\n```\r\n\r\n## Observed Behaviour\r\n\r\n1/ passes\r\n2/ fails with: L031: Avoid using aliases in join condition.\r\n\r\nBut there is no join condition :-)\r\n\r\n## Steps to Reproduce\r\n\r\nLint queries above\r\n\r\n## Dialect\r\n\r\nTSQL\r\n\r\n## Version\r\n\r\nsqlfluff 0.6.9\r\nPython 3.6.9\r\n\r\n## Configuration\r\n\r\nN/A\n'}}, {'role': 'user', 'content': '"OCI runtime exec failed: exec failed: unable to start container process: exec: \\"create_file\\": executable file not found in $PATH: unknown\\r\\n"', 'agent': 'primary'}, {'role': 'assistant', 'content': '<THOUGHT>\nTo start, I should create a script to reproduce the issue described in the problem statement. This will allow me to verify that I can replicate the bug before attempting to fix it.\n</THOUGHT>\n\n<COMMAND>\ncreate_file reproduce_issue.py\n</COMMAND>', 'thought': '\nTo start, I should create a script to reproduce the issue described in the problem statement. This will allow me to verify that I can replicate the bug before attempting to fix it.\n', 'action': '\ncreate_file reproduce_issue.py\n', 'agent': 'primary', 'state': {'file_tree': {'sqlfluff__sqlfluff': {'.git': {'branches': {}, 'hooks': {}, 'info': {}, 'refs': {'heads': {}, 'tags': {}, 'remotes': {'origin': {}}}, 'objects': {'pack': {}, 'info': {}}, 'logs': {'refs': {'remotes': {'origin': {}}, 'heads': {}}}}, '.github': {'ISSUE_TEMPLATE': {}, 'workflows': {}}, 'docs': {'source': {'_static': {'images': {}}}}, 'examples': {}, 'images': {}, 'plugins': {'sqlfluff-plugin-example': {'test': {'rules': {'test_cases': {}}}, 'src': {'example': {}}}, 'sqlfluff-templater-dbt': {'sqlfluff_templater_dbt': {}}}, 'src': {'sqlfluff': {'api': {}, 'cli': {}, 'core': {'dialects': {}, 'linter': {}, 'parser': {'grammar': {}, 'segments': {}}, 'plugin': {}, 'rules': {'analysis': {}}, 'templaters': {}}, 'dialects': {}, 'rules': {}, 'testing': {}}, 'sqlfluff.egg-info': {}}, 'test': {'api': {}, 'cli': {}, 'core': {'parser': {}, 'rules': {}, 'templaters': {}}, 'dialects': {}, 'fixtures': {'cli': {}, 'config': {'inheritance_a': {'nested': {}}, 'inheritance_b': {'nested': {}}, 'toml': {}}, 'dialects': {'ansi': {}, 'bigquery': {}, 'exasol': {}, 'hive': {}, 'mysql': {}, 'snowflake': {}, 'sqlite': {}, 'teradata': {}, 'tsql': {}, 'postgres': {}}, 'lexer': {}, 'linter': {'autofix': {'ansi': {'001_long_line': {}, '002_indentation': {}, '003_long_line': {}, '004_indentation': {}, '005_function_spacing': {}, '006_indentation': {}, '007_with_clause': {}, '008_with_clause': {}, '009_keyword_capitalisation': {}, '010_CTEs_and_newlines': {}, '011_indentation': {}, '012_templating': {}, '013_order_by_explicit': {}, '014_looping_interaction_between_l008_and_l030': {}, '015_jinja_leading_whitespace': {}, '016_index_error_with_jinja_if': {}, '016_index_error_with_jinja_if2': {}, '019_trailing_comma_to_leading': {}, '020_L008_trailing_comma': {}, '021_fix_respects_noqa': {}, '008_looping_rules_l003_l016_l019': {}, '016_no_fix_in_template_loops': {}, '017_lintresult_fixes_cannot_span_block_boundaries': {}, '018_l003_indent_templated_code': {}}, 'bigquery': {'001_templating': {}, '002_templating': {}, '003_templating': {}, '004_templating': {}, '005_unnest_spacing': {}}, 'snowflake': {'001_semi_structured': {}}}, 'diffquality': {}, 'sqlfluffignore': {'path_a': {}, 'path_b': {}}}, 'rules': {'custom': {'bad_rule_name': {}}, 'std_rule_cases': {}}, 'templater': {'jinja_a': {}, 'jinja_b': {}, 'jinja_d_roundtrip': {}, 'jinja_e': {}, 'jinja_f': {}, 'jinja_g_macros': {'macros': {}}, 'jinja_h_macros': {'macros': {}}, 'jinja_i_raw': {}, 'jinja_j_libraries': {'libs': {}}, 'jinja_k_config_override_path_macros': {'macros': {}}, 'jinja_l_metas': {}, 'jinja_c_dbt': {}}, 'dbt': {'dbt_project': {'macros': {}, 'models': {'depends_on_ephemeral': {}, 'my_new_project': {}}, 'tests': {}}, 'error_models': {}}}, 'rules': {}}, 'benchmarks': {'bench_002': {}}}, '': {}}, 'editor': {}, 'cwd': '/', 'issue': 'TSQL - L031 incorrectly triggers "Avoid using aliases in join condition" when no join present\n## Expected Behaviour\r\n\r\nBoth of these queries should pass, the only difference is the addition of a table alias \'a\':\r\n\r\n1/ no alias\r\n\r\n```\r\nSELECT [hello]\r\nFROM\r\n    mytable\r\n```\r\n\r\n2/ same query with alias\r\n\r\n```\r\nSELECT a.[hello]\r\nFROM\r\n    mytable AS a\r\n```\r\n\r\n## Observed Behaviour\r\n\r\n1/ passes\r\n2/ fails with: L031: Avoid using aliases in join condition.\r\n\r\nBut there is no join condition :-)\r\n\r\n## Steps to Reproduce\r\n\r\nLint queries above\r\n\r\n## Dialect\r\n\r\nTSQL\r\n\r\n## Version\r\n\r\nsqlfluff 0.6.9\r\nPython 3.6.9\r\n\r\n## Configuration\r\n\r\nN/A\n'}}, {'role': 'user', 'content': '"OCI runtime exec failed: exec failed: unable to start container process: exec: \\"create_file\\": executable file not found in $PATH: unknown\\r\\n"', 'agent': 'primary'}]
-
-  print(history_to_bash_history(history))

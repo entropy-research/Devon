@@ -108,7 +108,7 @@ def extract_info_from_ast(graph, ast_tree, file_path):
         def visit_Import(self, node):
             for alias in node.names:
                 imported_module = alias.name
-                import_lineno = node.lineno
+                # import_lineno = node.lineno
 
                 # Add the imported module to the dependencies of the current scope
                 if self.current_scope:
@@ -121,7 +121,7 @@ def extract_info_from_ast(graph, ast_tree, file_path):
 
         def visit_ImportFrom(self, node):
             imported_module = node.module
-            import_lineno = node.lineno
+            # import_lineno = node.lineno
 
             # Add the imported module to the dependencies of the current scope
             if self.current_scope:

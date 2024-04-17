@@ -8,7 +8,6 @@ from devon.retrieval.file_discovery import discover_python_files
 from devon.retrieval.ast_parser import parse_python_file
 from devon.retrieval.ast_extractor import extract_info_from_ast
 from devon.retrieval.codebase_graph import create_graph
-from devon.retrieval.graph_visualization import print_nodes_with_children, print_node_attributes, print_file_functions, print_node_details, print_function_calls
 
 
 class FunctionTable:

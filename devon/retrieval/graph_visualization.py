@@ -1,6 +1,5 @@
 # graph_visualization.py
 
-import networkx as nx
 
 def print_nodes_with_children(graph):
     """

@@ -1,7 +1,6 @@
 # file_discovery.py
 
 import os
-from pathlib import Path
 
 def discover_python_files(root_dir, ignore_dirs=None):
     """
