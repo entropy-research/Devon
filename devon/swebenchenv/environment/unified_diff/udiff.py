@@ -81,9 +81,26 @@ Here are the resulting errors from applying the newest diff:
     {error_block_content}
 </ERRORS>
 
-First identify the main chunk of code in the source file that needs to be changed.
+Please answer the following questions thinking step by step:
 
-Then, please explain how to fix the original diff, and then generate a new diff that will match.
+What are the exact section content lines from the src_file that the ORIGINAL_DIFF targets? Copy, and paste this with only a few extra content lines.
+
+The ORIGINAL_DIFF may source code lines that have typos! These are ok to change! The person who wrote it inaccurately copied the source code down anyways.
+
+Was enough context added to the original diff to make it work?
+Do all source lines actually exist in the ORIGINAL_DIFF?
+
+Are the NEWEST_DIFF lines target the lines you copied above? If not, how can you fix this?
+
+Was enough context added to the newest diff to make it work?
+Do all source lines actually exist in the NEWEST_DIFF?
+
+Please point out all the lines that are added lines but not marked as added.
+Please point out all the source lines that were accidentally marked as added.
+
+Does the new diff only create a hunk for the content/source lines the original diff targets?
+
+Once those questions are answered, please provide the improved diff according to the guidelines. If you get it right, I'll buy you Taylor Swift tickets.
 """
 
 
@@ -351,12 +368,12 @@ NotEnoughContextError:
     The provided deleted (-) and unchanged lines were built into a code block that was then used to identify where the edit would be applied.
     However, this did not work. The content lines you created did not match the actual source file.
 
+    The problem is that there were not enough context lines provided, and the provided context lines DO NOT EXIST.
+    
     The solution to fix this error is matching the original source lines exactly.
-    Pay attention to which lines actually exist versus which you THINK exist.
+
     When writing the lines, ask yourself, does this line actually exist in the source code?
     About half of the time it doesn't actually exist! Make sure you only write source lines that exist.
-
-    Think through which lines you need to change first, and then write the new diff.
 
     Please pay more attention to the exact lines you are writing.
 """

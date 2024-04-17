@@ -13,8 +13,14 @@ class UnifiedDiffPrompts(CoderPrompts):
 """
 
     main_system_v3 = f"""
-You will be given diffs with typos, these typos cause the patch to not apply correctly.
+You will be given diffs with lines with typos or not enough additional context lines, these typos cause the patch to not apply correctly.
 Your job is to fix these typos and make them applicable with the user's patch tool without changing the code.
+ALWAYS MAKE SURE YOU DO NOT CHANGE THE DESIRED CODE. ONLY SOLVE THESE TYPOS.
+
+The NUMBER ONE way to solve these diff typos is by making sure that the source lines (unchanged or deleted lines) match the source code exactly.
+The NUMBER TWO way to solve these diff typos is by making sure that the source lines have not been accidentally marked as added lines.
+The NUMBER THREE way to solve these diff typos is by faithfully providing more context lines from the source file in the patch.
+The NUMBER FOUR way to solve these diff typos is by making sure that the added lines have not been accidentally marked as source lines.
 
 1. You NEVER leave comments describing code without implementing it! 
 2. You always COMPLETELY IMPLEMENT the needed code!
@@ -57,7 +63,7 @@ Let me find the code I need to change.
 
 Here is the target code I need to change:
 
-```python
+<CODE>
 @app.route('/prime/<int:n>')
 def nth_prime(n):
     count = 0
@@ -67,7 +73,7 @@ def nth_prime(n):
         if is_prime(num):
             count += 1
     return str(num)
-```
+</CODE>
 
 I will make sure that the new diffs match the desired code content exactly, while fixing the issues with the provided diff.
 </SCRATCHPAD>
@@ -90,64 +96,16 @@ Here are the diffs for those changes:
 
 File editing rules:
 
-WRONG:
-@@ -10,1 +10 @@ client_ip = "192.168.23.104"
-
-CORRECT:
---- mathweb/flask/app.py
-+++ mathweb/flask/app.py
-@@ -10,1 +10,1 @@ 
-client_ip = "192.168.23.104"
-
-
-WRONG:
-@@ -0,0 +1,7 @@
-+1: fromdevon_agent.agent.kernel.state_machine.state_machine import State
-+2: 
-+3: 
-+4: class TerminateState(State):
-+5:     def execute(self, context):
-+6:         # Implement termination logic here
-+7:         pass
-
-CORRECT:
---- agent/kernel/thread.py
-+++ agent/kernel/thread.py
-@@ -0,0 +1,7 @@
- fromdevon_agent.agent.kernel.state_machine.state_machine import StateMachine
- fromdevon_agent.agent.kernel.state_machine.state_types import types
-+fromdevon_agent.agent.kernel.state_machine.state_machine import State
-+
-+
-+class TerminateState(State):
-+    def execute(self, context):
-+        # Implement termination logic here
-+        pass
-
-
-WRONG:
-@@ -0,0 +1 @@
-+from .state_machine import *
-
-Corrent:
---- agent/kernel/state_machine/__init__.py
-+++ agent/kernel/state_machine/__init__.py
-@@ -0,0 +1,1 @@
-+from .state_machine import *
-
 0. When editing, always provide at least two unchanged lines before and two unchanged lines after.
 1. Return edits similar to unified diffs that `diff -U0` would produce.
 2. Make sure you include the first 2 lines with the file paths. ALWAYS Make sure `@@ ... @@` and code are always on different lines.
 3. Start each hunk of changes with just `@@ ... @@` line including the line numbers. WRONG: +@@ ... @@, -@@ ... @@ CORRECT: @@ ... @@
-4. Before writing the diff make sure to write out the line numbers that need changed and what about them needs changed.
-4. If you delete any code, you always makes sure to check all references to that code so that there are no execution errors.
-5. Think carefully and make sure you include and mark all lines that need to be removed or changed as `-` lines.
-6. Make sure you mark all new or modified lines with `+`.
-7. Don\'t leave out any lines or the diff patch won\'t apply correctly.
-8. Indentation matters in the diffs!
-9. Start a new hunk for each section of the file that needs changes.
-10. To move code within a file, use 2 hunks: 1 to delete it from its current location, 1 to insert it in the new location.
-11. You always wrap the target output in <DIFF></DIFF>. This is because it is easier for you to manage.
+4. Think carefully and make sure you include and mark all lines that need to be removed or changed as `-` lines.
+5. Make sure you mark all new or modified lines with `+`.
+6. Don\'t leave out any lines or the diff patch won\'t apply correctly.
+7. Indentation matters in the diffs!
+8. Only create a hunk for the section of the file the original diff targets.
+9. You ALWAYS wrap the target output in <DIFF></DIFF>. This is because it is easier for you to manage.
 
 If you need to add information, add it as comments in the code itself. use the {end_json_symbol} after the XML section but before any following text.
 
