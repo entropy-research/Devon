@@ -160,7 +160,7 @@ def find_nth_content_line(lines, n):
     return lines[start:end]  # maybe off by one? dont think so though, need to test
 
 
-def create_code_fence(old_lines, fence_len=2):
+def create_code_fence(old_lines, fence_len=3):
 
     if len(old_lines) < 4:
         start_fence = find_nth_content_line(old_lines, len(old_lines))
@@ -214,32 +214,76 @@ def match_fence(lines, fence, start_index=0):
     return None, None, None
 
 
-def match_stripped_lines_context(stripped_file_lines, old_lines):
+# def match_stripped_lines_context(stripped_file_lines, old_lines):
 
+#     #given stripped file lines and stripped old lines,
+#     stripped_old_lines = [line.strip() for line in old_lines]
+#     stripped_old_lines = [line for line in stripped_old_lines if line != ""]
+
+#     #create code fence based on lines. i.e. first N content lines
+#     begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines)
+#     # print(begin_fence, stop_fence)
+
+#     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
+#     begin_start, begin_end, src_idx = match_fence(stripped_file_lines, begin_fence)
+
+#     #find all begin matches
+#     #find all end matches
+#     #for each begin match, find first end match
+    
+#     #given all pairs filter out the ones longer than size of old_lines
+#     #if none throw error
+#     #return
+
+#     if src_idx is not None:
+#         stop_start, stop_end, _ = match_fence(stripped_file_lines, stop_fence, src_idx)
+#     else:
+#         stop_start, stop_end, _ = match_fence(stripped_file_lines, stop_fence)
+
+#     start = begin_start
+#     end = stop_end
+
+#     return start, end
+
+
+def match_fence_all(stripped_file_lines, fence):
+    matches = []
+    src_idx = 0
+    while src_idx < len(stripped_file_lines):
+        start, end, src_idx = match_fence(stripped_file_lines, fence, src_idx)
+        if src_idx is not None:
+            matches.append((start, end, src_idx))
+            src_idx += 1
+        else:
+            break
+    return matches
+
+
+def match_stripped_lines_context(stripped_file_lines, old_lines):
     #given stripped file lines and stripped old lines,
     stripped_old_lines = [line.strip() for line in old_lines]
     stripped_old_lines = [line for line in stripped_old_lines if line != ""]
-
-    # print(stripped_file_lines)
-    # print(stripped_old_lines)
-
+    
     #create code fence based on lines. i.e. first N content lines
     begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines)
-
-    # print(begin_fence, stop_fence)
-
+    
     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
-    begin_start, begin_end, src_idx = match_fence(stripped_file_lines, begin_fence)
-
-    if src_idx is not None:
-        stop_start, stop_end, _ = match_fence(stripped_file_lines, stop_fence, src_idx)
-    else:
-        stop_start, stop_end, _ = match_fence(stripped_file_lines, stop_fence)
-
-    start = begin_start
-    end = stop_end
-
-    return start, end
+    begin_matches = match_fence_all(stripped_file_lines, begin_fence)
+    end_matches = match_fence_all(stripped_file_lines, stop_fence)
+    
+    #for each begin match, find first end match
+    valid_pairs = []
+    for begin_start, begin_end, src_idx in begin_matches:
+        for stop_start, stop_end, end_idx in end_matches:
+            if src_idx <= end_idx and (stop_end - begin_start + 1) <= len(old_lines) + 4:
+                valid_pairs.append((begin_start, stop_end))
+                break
+    
+    #if none throw error
+    if not valid_pairs:
+        raise ValueError("No valid matches found.")
+    
+    return valid_pairs[0]
 
 
 def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
@@ -460,6 +504,9 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
         if not (src_start is not None and src_end is not None):
             #Raise hallucination due to not matching full src lines
+            raise Hallucination(not_enough_context_prompt)
+
+        if src_end - src_start > len(old_lines) + 5:
             raise Hallucination(not_enough_context_prompt)
 
         applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)

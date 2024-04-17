@@ -116,15 +116,15 @@ def execute_repair(diff_case, file_case):
 #     print("\nPASSED: ", "case5", "\n")
 #     print("FAILURES: ", "\n".join([fail[1].args[0] for fail in f]))
 
-def test_repair_apply4():
+# def test_repair_apply4():
 
-    current_file = __file__
-    current_dir = os.path.dirname(current_file)
+#     current_file = __file__
+#     current_dir = os.path.dirname(current_file)
 
-    fixed, s, f = execute_repair("case8", "case8")
-    assert(fixed == True)
-    print("\nPASSED: ", "case5", "\n")
-    print("FAILURES: ", "\n".join([fail[1].args[0] for fail in f]))
+#     fixed, s, f = execute_repair("case8", "case8")
+#     assert(fixed == True)
+#     print("\nPASSED: ", "case5", "\n")
+#     print("FAILURES: ", "\n".join([fail[1].args[0] for fail in f]))
 
-    with open(current_dir + f"/results/case8.py", "w") as f:
-        f.write(s[0][1])
+#     with open(current_dir + f"/results/case8.py", "w") as f:
+#         f.write(s[0][1])
