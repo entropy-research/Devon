@@ -20,7 +20,7 @@ class FunctionTable:
         if function_name not in self.function_table:
             self.function_table[function_name] = [location]
         else:
-            print(f"Function {function_name} already exists in function table")
+            # print(f"Function {function_name} already exists in function table")
             self.function_table[function_name].append(location)
 
     def get_function(self, function_name, default):
@@ -214,7 +214,7 @@ def initialize_repository(repo_path, class_table, function_table):
 
     # Analyze the codebase and build the graph, excluding the ignored directories
     codebase_graph = analyze_codebase(codebase_root, ignore_dirs=ignore_directories)
-
+    # print(codebase_graph.nodes())
     for node in codebase_graph.nodes(data=True):
         if node[1].get("type","") == "function":
             node[1]["location"]["file_path"] = node[1]["location"]["file_path"][len(codebase_root):]
@@ -222,14 +222,23 @@ def initialize_repository(repo_path, class_table, function_table):
             function_table.add_function(name, node[1])
         elif node[1].get("type","") == "class":
             node[1]["location"]["file_path"] = node[1]["location"]["file_path"][len(codebase_root):]
-            # print(node[0])
             name,filepath = node[0].split(":")
             class_table.add_class(name, node[1])
+            # print(node[0])
+
 
     # print(function_table)
     # print(class_table)
     
     return codebase_graph
+
+if __name__ == "__main__":
+    codebase_root = "."
+    class_table = ClassTable()
+    function_table = FunctionTable()
+    initialize_repository(codebase_root, class_table, function_table)
+
+    print(function_table.function_table.keys())
 
 
 

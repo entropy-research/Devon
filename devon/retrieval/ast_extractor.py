@@ -91,6 +91,7 @@ def extract_info_from_ast(graph, ast_tree, file_path):
             # Add edge from the current scope to the function
             if self.current_scope:
                 parent = self.current_scope[-1]
+                add_node(graph, parent + "." + function_name + ":" + file_path, function_attrs)
                 add_edge(graph, parent, function_name, "defines", {})
             else:
                 # If not inside a class, add edge from file to function
@@ -132,7 +133,7 @@ def extract_info_from_ast(graph, ast_tree, file_path):
                 current_node = self.current_scope[-1]
                 try:
                     graph.nodes[current_node]["dependencies"]["imports"].append(imported_module)
-                except:
+                except Exception:
                     pass
             # else:
             #     # If not inside a function or class, add the import to the file dependencies

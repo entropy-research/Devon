@@ -38,7 +38,7 @@ from swebench import (
     get_requirements,
     MAP_VERSION_TO_INSTALL
 )
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from devon_agent.agent.clients.client import GPT4, ClaudeSonnet, Message
 
@@ -89,7 +89,7 @@ class EnvironmentArguments(FrozenSerializable):
     timeout: int = 35
     verbose: bool = False
     no_mirror: bool = False
-    specific_issue: Optional[str] = None
+    specific_issues: Optional[List[str]] = None
 
 
 class SWEEnv(gym.Env):
@@ -147,9 +147,9 @@ class SWEEnv(gym.Env):
 
         # Load Task Instances
         self.data_path = self.args.data_path
-        self.data = get_instances(self.data_path, self.args.base_commit, self.args.split, token=self.token,specific_issue=self.args.specific_issue) #Load data from path
+        self.data = get_instances(self.data_path, self.args.base_commit, self.args.split, token=self.token,specific_issues=self.args.specific_issues) #Load data from path
         self.logger.info(f"💽 Loaded dataset from {self.data_path}")
-        self.issue = self.args.specific_issue
+        self.issues = self.args.specific_issues
 
         # Establish connection with execution container
         self.image_name = args.image_name
@@ -179,6 +179,8 @@ class SWEEnv(gym.Env):
         info = {}
         info["commit_sha"] = self.commit_sha
 
+        self.editor = {}
+
         self.function_table = FunctionTable()
         self.class_table = ClassTable()
 
@@ -191,6 +193,8 @@ class SWEEnv(gym.Env):
         self.base_commit = self.record["base_commit"]
         self.query = self.record["problem_statement"]
         self.reward = None
+
+        logger.info(f"Issue {self.record['instance_id']}")
 
         ### Setup Container ###
 
@@ -241,12 +245,11 @@ class SWEEnv(gym.Env):
         self.table_cache.class_table = self.class_table
         logger.debug(f"CWD: {self.get_cwd()}")
         # print(self.communicate(input="ls"))
-        if self.table_cache.exists(self.issue):
-            self.table_cache.load(self.issue)
+        if self.table_cache.exists(self.record["instance_id"]):
+            self.table_cache.load(self.record["instance_id"])
         else:
-            self.build_index("/django__django", self.class_table, self.function_table)
-
-            self.table_cache.save(self.issue)
+            self.build_index(self.record["instance_id"].split("-")[0], self.class_table, self.function_table)
+            self.table_cache.save(self.record["instance_id"])
 
         # Reset environment variables
         # Reset env vars in the container? maybe this is used for tracking, but why not on the agent?
@@ -727,7 +730,13 @@ class SWEEnv(gym.Env):
             file_path (str): The path of the file to open.
         """
         try:
-            abs_path = self.make_abs_path(file_path)
+            cwd = self.get_cwd().strip()
+            if file_path.startswith(cwd):
+                abs_path = self.make_abs_path(file_path)
+            else:
+                abs_path = self.make_abs_path(cwd + "/" +  file_path)
+            if abs_path in self.editor:
+                raise Exception(f"File {abs_path} already open in editor")
             exists = self.file_exists(abs_path)
             if not exists:
                 raise Exception(f"Could not open file, file does not exist: {abs_path}")
@@ -751,8 +760,13 @@ class SWEEnv(gym.Env):
         Returns:
             bool: True if the file was successfully deleted, False otherwise.
         """
-        if file_path in self.editor:
-            del self.editor[file_path]
+        if file_path.startswith(self.get_cwd()):
+            abs_path = self.make_abs_path(file_path)
+        else:
+            abs_path = self.make_abs_path(self.get_cwd() + file_path)
+
+        if abs_path in self.editor:
+            del self.editor[abs_path]
             return "Successfully closed file!"
 
         return "False, file not open in editor"
@@ -1038,7 +1052,7 @@ EXAMPLES
     
     def find_function(self, function_name):
         """NAME 
-      find_function - get location of function in the codebase
+      find_function - get location of function or method in the codebase
 
 SYNOPSIS
       find_function [FUNCTION_NAME]
@@ -1048,7 +1062,7 @@ DESCRIPTION
 
 OPTIONS
       FUNCTION_NAME
-             The name of the function to search for.
+             The name of the function to search for. Only function name. For methods specify the class name and the method name separated by a dot.
 
 RETURN VALUE
       The location of the function in the codebase. A dictionary containing the following keys:
@@ -1066,7 +1080,20 @@ EXAMPLES
                "file_path": "/path/to/file.py",
                "line_number": 10
              }
+
+     To find the location of a function named "my_function" in class "MyClass", run the following command:
+
+             find_function "MyClass.my_function"
+
+      The command will return a dictionary containing the file path and line number of the function:
+
+             {
+               "file_path": "/path/to/file.py",
+               "line_number": 10
+             }
         """
+
+    
 
         return str(get_function_defn(function_name, self.function_table))
     
@@ -1144,7 +1171,7 @@ SYNOPSIS
 
 DESCRIPTION
       The search_dir command searches for SEARCH_TERM in all files in the specified DIR.
-      If DIR is not provided, it searches in the current directory.
+      If DIR is not provided, it searches in the current directory. Does not search for files but for the content of the files.
 
 OPTIONS
       SEARCH_TERM

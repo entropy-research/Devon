@@ -16,7 +16,7 @@ from ghapi.all import GhApi
 from io import BytesIO
 from pathlib import Path
 from subprocess import PIPE, STDOUT
-from typing import Tuple
+from typing import List, Tuple
 
 LOGGER_NAME = "intercode"
 START_UP_DELAY = 5
@@ -290,7 +290,7 @@ def get_commit(api: GhApi, owner: str, repo: str, base_commit: str = None):
 
 
 
-def get_instances(file_path: str, base_commit: str = None, split: str = None, token: str = None, specific_issue: str = None):
+def get_instances(file_path: str, base_commit: str = None, split: str = None, token: str = None, specific_issues: List[str] = None):
     """
     Getter function for handling json, jsonl files
 
@@ -331,8 +331,8 @@ def get_instances(file_path: str, base_commit: str = None, split: str = None, to
 
     try:
         # Attempt load from HF datasets as a last resort
-        if specific_issue:
-            return [task for task in load_dataset(file_path, split=split) if task['instance_id'] == specific_issue]
+        if specific_issues:
+            return [task for task in load_dataset(file_path, split=split) if task['instance_id'] in specific_issues]
         else:
             return load_dataset(file_path, split=split)
     except:
