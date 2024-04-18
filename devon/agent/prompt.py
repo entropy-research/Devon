@@ -68,8 +68,6 @@ def system_prompt_template_v1(command_docs : str):
 
   10. Avoid searching. Open files in editor and use the content in editor to understand the file. Do find more about the file, think with no-op
 
-  11. Use find bash command to look for files of specific names.
-
 
 </SETTING>
 <COMMANDS>
