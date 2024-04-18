@@ -22,7 +22,7 @@ from rich.logging import RichHandler
 from simple_parsing.helpers import FrozenSerializable
 from devon.retrieval.main import ClassTable, FunctionTable, get_class_defn, get_function_defn, initialize_repository
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
-from devon.swebenchenv.environment.unified_diff.udiff import Hallucination, create_recover_prompt
+from devon.swebenchenv.environment.unified_diff.udiff import DATA_LOGGER_NAME, Hallucination, create_recover_prompt, log_data, log_failed_diff, log_successful_diff
 from devon.swebenchenv.environment.unified_diff.udiff import apply_file_context_diffs, extract_all_diffs
 from devon.swebenchenv.environment.utils import (
     copy_file_to_container,
@@ -57,6 +57,7 @@ logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 logger.propagate = False
 
+diff_logger = logging.getLogger(DATA_LOGGER_NAME)
 
 class TableCache():
 
@@ -326,7 +327,6 @@ class SWEEnv(gym.Env):
             info (`dict`) - additional information (e.g. debugging information)
         """
         info = {}
-        print(action)
 
         observation = ""
         # Handle special actions -> This is fucking dumb but ok
@@ -381,7 +381,7 @@ class SWEEnv(gym.Env):
             self.reset_container()
             return observation, 0, True, info
         except Exception as e:
-            print(e)
+            logger.error(e)
             observation += "\nEXECUTION FAILED OR COMMAND MALFORMED"
 
         # Record submission and end episode if `submit` keyword found
@@ -757,7 +757,7 @@ class SWEEnv(gym.Env):
 
         return "False, file not open in editor"
 
-    def write_file(self, file_path: str, content: str = "") -> bool:
+    def write_file(self, file_path: str, content: str = "") -> str:
 
         try:
             # Check if file doesnt already exists to avoid overwriting
@@ -774,12 +774,12 @@ class SWEEnv(gym.Env):
             
             self.editor[abs_path] = content
             msg = f"Successfully wrote to file {abs_path}"
+            logger.info(msg)
 
-            print(msg)
             return msg
         
         except Exception as e:
-            print(f"Failed to write to file: {abs_path}. Error: {str(e)}")
+            logger.error(f"Failed to write to file: {abs_path}. Error: {str(e)}")
             raise Exception(f"Failed to write to file: {abs_path}. Error: {str(e)}")
     
     def delete_file(self, file_path: str) -> bool:
@@ -799,7 +799,7 @@ class SWEEnv(gym.Env):
             return f"Successfully deleted file {abs_path}"
         
         except Exception as e:
-            print(f"Failed to delete file: {abs_path}. Error: {str(e)}")
+            logger.error(f"Failed to delete file: {abs_path}. Error: {str(e)}")
             return f"Failed to delete file: {abs_path}. Error: {str(e)}"
 
     def create_file(self, file_path: str, content: str = "") -> bool:
@@ -870,18 +870,16 @@ CREATE_FILE(1)                        April 2024                         CREATE_
             # copy_file_to_container(self.container_obj, contents=content, container_path=file_path)
 
             exists = self.file_exists(abs_path)
+
             # Verify file creation
             if not exists:
-                raise Exception(f"Failed to create file: {abs_path}")
+                raise Exception(f"Command failed to create file: {abs_path}")
 
             self.editor[abs_path] = content
-            # print("VIRTUAL FS ###")
-            # print(self.editor)
-            # print("VIRTUAL FS ###")
             return f"Successfully created file {abs_path}"
 
         except Exception as e:
-            print(f"Failed to create file: {file_path}. Error: {str(e)}")
+            logger.error(f"Failed to create file: {file_path}. Error: {str(e)}")
             return f"Failed to create file: {file_path}. Error: {str(e)}"
 
     def view_open_files(self) -> dict:
@@ -934,80 +932,6 @@ EXAMPLES
 
         pass
 
-    # def apply_diff2(self, multi_file_diff: MultiFileDiff2, file_tree_root: str):
-    #     for file_diff in multi_file_diff.files:
-    #         src_file = file_diff.src_file
-    #         tgt_file = file_diff.tgt_file
-
-    #         print(src_file, tgt_file)
-    #         if not ( src_file or tgt_file ):
-    #             raise Hallucination("Could not apply changes, missing source or target file.")
-
-    #         logger.debug("Applying diff to: %s, %s", src_file, tgt_file)
-
-    #         # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
-    #         src_file_abs = self.make_abs_path(src_file)
-    #         tgt_file_abs = self.make_abs_path(tgt_file)
-
-    #         src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
-    #         tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
-
-    #         logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
-    #         # src_file_exists = src_file_abs in self.editor
-
-    #         if src_file == "/dev/null" or not src_file_exists:
-    #             # Creating a new file
-    #             self.communicate(f"mkdir -p {os.path.dirname(tgt_file_abs)}")  # Ensure the directory exists
-    #             is_dir = self.communicate(f"test -d {tgt_file_abs} && echo 'dir'").strip() == 'dir'
-    #             if is_dir:
-    #                 continue
-    #             content_to_write = "\n".join([line.content for hunk in file_diff.hunks for line in hunk.lines if line.type != "removed"])
-    #             self.write_file(file_path=tgt_file_abs, content=content_to_write)
-
-    #         elif tgt_file == "/dev/null":
-    #             # Deleting a file
-    #             self.delete_file(file_path=src_file_abs)
-    #         else:
-
-    #             if not src_file_exists:
-    #                 raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
-
-    #             # Modifying an existing file
-    #             src_content = self.read_file(file_path=src_file_abs)
-    #             logger.debug("%s", src_content)
-    #             # print("OLD_CODE: ", src_file_abs, src_content)
-    #             src_lines = [(i, line) for i, line in enumerate(src_content.splitlines())]
-
-    #             tgt_lines = list(src_lines)
-
-    #             for hunk in file_diff.hunks:
-    #                 old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
-    #                 logger.debug("%s, %s",old_lines, new_lines)
-    #                 # print(new_lines)
-    #                 src_start, src_end = match_stripped_lines2(src_lines, old_lines)
-    #                 logger.debug("LOCATED DIFF: %s, %s", src_start, src_end)
-
-    #                 if not ( src_start and src_end ):
-    #                     raise Hallucination("Applying this diff failed! The context lines and the src lines from the diff did not match the real code in the file!")
-
-    #                 i = 0
-    #                 while i < len(tgt_lines):
-    #                     if tgt_lines[i][0] == src_start:
-    #                         j = 0
-    #                         while i + j < len(tgt_lines) and tgt_lines[i+j][0] != src_end:
-    #                             j += 1
-
-    #                         tgt_lines[i:i+j+1] = [(-1, line) for line in new_lines]
-    #                         break
-
-    #                     i += 1
-
-    #             new_code = "\n".join([entry[1] for entry in list(tgt_lines)])
-                
-    #             # print("NEW_CODE: ", tgt_file_abs, new_code)
-    #             print("WRITING CODE")
-    #             self.write_file(file_path=tgt_file_abs, content=new_code)
-    
     def apply_diff(self, multi_file_diffs, file_tree_root: str):
 
         results = []
@@ -1016,11 +940,11 @@ EXAMPLES
             src_file = file_diff.src_file
             tgt_file = file_diff.tgt_file
 
-            print(src_file, tgt_file)
+            diff_logger.debug(src_file, tgt_file)
             if not ( src_file or tgt_file ):
                 raise Hallucination("Could not apply changes, missing source or target file.")
 
-            logger.debug("Applying diff to: %s, %s", src_file, tgt_file)
+            diff_logger.debug("Applying diff to: %s, %s", src_file, tgt_file)
 
             # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
             src_file_abs = self.make_abs_path(src_file)
@@ -1029,14 +953,14 @@ EXAMPLES
             src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
             tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
 
-            logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
+            diff_logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
 
             if not src_file_exists:
                 raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
 
             # Modifying an existing file
             src_content = self.read_file(file_path=src_file_abs)
-            logger.debug("%s", src_content)
+            diff_logger.debug("source content: %s", src_content)
 
             file_diff.src_file = src_file_abs
             file_diff.tgt_file = tgt_file_abs
@@ -1048,7 +972,6 @@ EXAMPLES
 
     def real_write_diff(self, diff, thought):
 
-        original_diff = diff
         diff_code = diff
 
         all_diffs, _ = extract_all_diffs(diff_code)
@@ -1059,14 +982,17 @@ EXAMPLES
         for result in results:
             if len(result["fail"]) > 0:
                 failures.extend(result["fail"])
+                log_failed_diff(diff=diff_code, file_content=result[1], src_file=result[0], tgt_file=result[0])
             if len(result["success"]) > 0:
                 successes.extend(result["success"])
+                log_successful_diff(diff=diff_code, file_content=result[1], src_file=result[0], tgt_file=result[0])
 
         if len(failures) == 0:
             for result in successes:
-
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
-                self.write_file(file_path=result[0], content=result[1])
+                diff_logger.debug("FILE CONTENT BEFORE WRITING TO CONTAINER: ", result[1])
+                self.write_file(file_path=result[0], content=result[0])
+                diff_logger.debug("FILE CONTENT AFTER WRITING TO CONTAINER: ", self.read_file(file_path=result[0]))
 
             return "Successfully edited file"
 
@@ -1075,9 +1001,7 @@ EXAMPLES
 
     def create_tar(self, file_path):
 
-
         tar_data, _ = self.container_obj.get_archive(path=file_path)
-
 
         return tar_data
         
@@ -1085,13 +1009,13 @@ EXAMPLES
     def build_index(self, file_path, class_table, function_table):
 
         tar_data = self.create_tar(file_path)
-        print(tar_data)
+        # logger.debug(tar_data)
 
         with tempfile.NamedTemporaryFile() as temp_file:
             for chunk in tar_data:
                 temp_file.write(chunk)
             temp_file.flush()
-            print(temp_file.read())
+            # print(temp_file.read())
             temp_file.seek(0)
 
             temp_dir = tempfile.mkdtemp()
@@ -1107,9 +1031,6 @@ EXAMPLES
             # os.remove(temp_file)
 
         return code_graph
-
-        
-
 
     
     def find_function(self, function_name):
@@ -1400,7 +1321,7 @@ EXAMPLES
         command = "pwd"
         result = self.communicate(command)
 
-        print(f"CWD {result}")
+        # logger.info(f"CWD {result}")
         
         return result
     
@@ -1507,7 +1428,7 @@ EXAMPLES
                     logger.error(f"Failed to execute bash command '{fn_name}': {str(e)}")
                     return None
         except Exception as e:
-            traceback.print_exc()
+            logger.error(traceback.print_exc())
             raise e
 
     def get_available_actions(self) -> list[str]:
@@ -1540,9 +1461,9 @@ EXAMPLES
         Returns:
             submission (`str`) - diff patch submission
         """
-        print(output)
+        # print(output)
         assert isinstance(output, str), "Output must be a string"
-        print(output)
+        logger.info(output)
         pattern = r"\<\<SUBMISSION\|\|(.*)\|\|SUBMISSION\>\>"
         match = re.search(pattern, output, re.DOTALL)
         if match is None:

@@ -34,44 +34,10 @@ class Agent:
         #     temperature=0.5,
         #     top_p=0.95
         # ))
+
         self.name = name
         self.history = []
         self.max_steps = 10
-
-    def forward_with_error_check(
-        self,
-        observation: str,
-        state: str,
-        avaliable_actions: list[str],
-        commanddoc: dict,
-    ) -> Tuple[str, str, str]:
-        try:
-            output = self.forward_model(
-                observation, state, avaliable_actions, commanddoc
-            )
-        except KeyboardInterrupt:
-            raise
-        except RuntimeError as e:
-            print(f"Runtime error: {e}")
-            return (
-                f"Exit due to runtime error: {e}",
-                "exit_error",
-                f"exit due to runtime error: {e}",
-            )
-        except RetryError as e:
-            print(f"Retry error: {e}")
-            return (
-                f"Exit due to retry error: {e}",
-                "exit_api",
-                f"exit due to retry error: {e}",
-            )
-
-        try:
-            thought, action = parse_response(output)
-        except Exception:
-            raise ValueError(f"Multiple actions found in response: {output}")
-
-        return thought, action, output
 
     def forward_model(
         self,
@@ -79,14 +45,13 @@ class Agent:
         state: Dict[str, str],
         available_actions,
         commanddoc: dict,
+        step: int
     ) -> str:
         """Query the model with the current state and observation with the appropriate template.
 
         Returns the model output."""
 
-        # REPLACE WITH OUR PROMPT TEMPLATES
         f_tree = state["file_tree"]
-        logger.debug("EDITOR %s", state["editor"])
 
         issue, filetree, editor, working_dir = (
             state["issue"],
@@ -104,6 +69,7 @@ class Agent:
             + "\n".join([f"{command}" for command in available_actions])
             + "\n"
         )
+
         command_docs = (
             "Custom Commands Documentation:\n"
             + commands_to_command_docs(list(commanddoc.values()))
@@ -120,7 +86,51 @@ class Agent:
 
         messages = [{"role": "user", "content": last_user_prompt}]
 
-        return self.model.query(messages, system_message=system_prompt)
+        output = self.model.query(messages, system_message=system_prompt)
+
+        logger.debug("<MODEL_OUT>" + json.dumps({
+            "step": step, 
+            "input": messages[0],
+            "output": output
+        }) + "<MODEL_OUT>")
+
+        return output
+
+    def forward_with_error_check(
+        self,
+        observation: str,
+        state: str,
+        avaliable_actions: list[str],
+        commanddoc: dict,
+        step: int
+    ) -> Tuple[str, str, str]:
+        try:
+            output = self.forward_model(
+                observation, state, avaliable_actions, commanddoc, step
+            )
+        except KeyboardInterrupt:
+            raise
+        except RuntimeError as e:
+            logger.error(f"Runtime error: {e}")
+            return (
+                f"Exit due to runtime error: {e}",
+                "exit_error",
+                f"exit due to runtime error: {e}",
+            )
+        except RetryError as e:
+            logger.error(f"Retry error: {e}")
+            return (
+                f"Exit due to retry error: {e}",
+                "exit_api",
+                f"exit due to retry error: {e}",
+            )
+
+        try:
+            thought, action = parse_response(output)
+        except Exception:
+            raise ValueError(f"Multiple actions found in response: {output}")
+
+        return thought, action, output
 
     def forward(
         self,
@@ -128,9 +138,10 @@ class Agent:
         available_actions: list[str],
         state: dict,
         commanddoc: dict,
+        step: int
     ) -> Tuple[str, str, str]:
         thought, action, output = self.forward_with_error_check(
-            observation, state, available_actions, commanddoc
+            observation, state, available_actions, commanddoc, step
         )
 
         self.history.append(
@@ -143,9 +154,6 @@ class Agent:
                 "state": state,
             }
         )
-        logger.info(f"OBSERVATION ({self.name})\n{observation}")
-        logger.info(f"THOUGHT ({self.name})\n{thought}")
-        logger.info(f"ACTION ({self.name})\n{action}")
 
         return thought, action, output
 
@@ -190,17 +198,19 @@ class Agent:
         info = {}
         done = False
         for i in range(self.max_steps):
+
             if done:
                 break
 
-            # state = Get state
             state = env.get_state()
             state["issue"] = setup_args["issue"]
+
             thought, action, output = self.forward(
                 observation,
                 env.get_available_actions(),
                 state,
                 env.generate_command_docs(),
+                i
             )
 
             observations = list()
@@ -212,8 +222,8 @@ class Agent:
                 # assert output.count("<THOUGHT>") == 1
                 obs, _, done, info = env.step(action, thought)
             except AssertionError as e:
-                print(output)
-                print(e)
+                # logger.error(output)
+                # logger.error(e)
                 obs = "Too many commands in previous output, could not execute. Please remember to only pass one command."
 
             observations.append(obs)
@@ -233,6 +243,20 @@ class Agent:
                     "state": state,
                     "thought": thought,
                 }
+            )
+
+            logger.info(f"""
+\n\n\n\n****************\n\n
+NAME: {self.name}                        
+
+STEP: {i}
+
+THOUGHT: {thought}
+
+ACTION: {action}
+
+OBSERVATION: {observation}
+\n\n****************\n\n\n\n"""
             )
 
         if not done:

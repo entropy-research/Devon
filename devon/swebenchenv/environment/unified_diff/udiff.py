@@ -20,13 +20,21 @@ data_logger.setLevel(logging.DEBUG)
 data_logger.addHandler(data_handler)
 
 
-def log_data(diff, file_content, src_file, tgt_file):
-    data_logger.info(f"=======================")
+def log_successful_diff(diff, file_content, src_file, tgt_file):
+    data_logger.info(f"<SUCCESS>")
     data_logger.info(f"DIFF: {diff}")
     data_logger.info(f"FILE CONTENT: {file_content}")
     data_logger.info(f"SRC FILE: {src_file}")
     data_logger.info(f"TGT FILE: {tgt_file}")
-    data_logger.info(f"=======================")
+    data_logger.info(f"<SUCCESS>")
+
+def log_failed_diff(diff, file_content, src_file, tgt_file):
+    data_logger.info(f"<FAIL>")
+    data_logger.info(f"DIFF: {diff}")
+    data_logger.info(f"FILE CONTENT: {file_content}")
+    data_logger.info(f"SRC FILE: {src_file}")
+    data_logger.info(f"TGT FILE: {tgt_file}")
+    data_logger.info(f"<FAIL>")
 
 
 class Hallucination(Exception):
@@ -208,7 +216,6 @@ def match_fence(lines, fence, start_index=0):
             match = [line[1] for line in lines[i : i + subset_length]]
 
             if is_fuzzy_match(match, fence, 1):
-                
                 return lines[i][0], lines[i + subset_length - 1][0], i
 
     return None, None, None
@@ -256,6 +263,7 @@ def match_fence_all(stripped_file_lines, fence):
             src_idx += 1
         else:
             break
+
     return matches
 
 def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines):
@@ -607,11 +615,10 @@ def apply_multi_file_context_diff(file_content, diff, original_change_count):
 
     try:
         all_diffs, total_new_changed = extract_all_diffs(diff)
-        # print(all_diffs)
         if original_change_count is not None and (total_new_changed > (original_change_count + 5) or total_new_changed < (original_change_count - 1)):
             raise Hallucination(recover_failed_new_diff_too_different)
     except Hallucination as e:
-        print(e)
+        data_logger.error(e)
         failures.append((None, e))
 
     apply_res = apply_file_context_diffs(file_content=file_content, all_diffs=all_diffs)
