@@ -196,6 +196,29 @@ if __name__ == "__main__":
         tasks = f.readlines()
     tasks = [x.strip() for x in tasks]
 
+    issues = [
+    "astropy__astropy-12907",
+    "django__django-13230",
+    "sympy__sympy-16988",
+    "django__django-17051",
+    "django__django-11049",
+    "pytest__pytest-7373",
+    "pytest__pytest-5221",
+    "django__django-12700",
+    "sympy__sympy-12481",
+    "matplotlib__matplotlib-25079",
+    "django__django-12856",
+    "django__django-16229",
+    "django__django-11283",
+    "sympy__sympy-14817",
+    "sympy__sympy-16106",
+    "scikit-learn__scikit-learn-14817",
+    "matplotlib__matplotlib-24334",
+    "pytest__pytest-7432",
+    "astropy__astropy-12907",
+    "psf__requests-2674",
+]
+
     defaults = ScriptArguments(
         suffix="",
         environment=EnvironmentArguments(
@@ -205,7 +228,7 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent2",
             install_environment=True,
-            specific_issues=["sympy__sympy-12481"]
+            specific_issues=["sympy__sympy-16988"]
         ),
         skip_existing=True,
     )
