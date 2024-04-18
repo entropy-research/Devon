@@ -14,10 +14,6 @@ DATA_LOGGER_NAME = "udiff_data"
 
 data_logger = logging.getLogger(DATA_LOGGER_NAME)
 
-data_handler = logging.FileHandler('udiff_data.log')
-
-data_logger.setLevel(logging.DEBUG)
-data_logger.addHandler(data_handler)
 
 
 def log_successful_diff(diff, file_content, src_file, tgt_file):

@@ -27,7 +27,7 @@ logger = logging.getLogger(LOGGER_NAME)
 class Agent:
     def __init__(self, name="Devon", args=None):
         self.model: AnthropicModel = AnthropicModel(
-            args=ModelArguments(model_name="claude-sonnet", temperature=0)
+            args=ModelArguments(model_name="claude-opus", temperature=0)
         )
         # self.model = HumanModel(args=ModelArguments(
         #     model_name="gpt-4-0314",

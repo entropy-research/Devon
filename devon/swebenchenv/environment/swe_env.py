@@ -59,6 +59,12 @@ logger.propagate = False
 
 diff_logger = logging.getLogger(DATA_LOGGER_NAME)
 
+
+data_handler = logging.FileHandler('udiff_data.log')
+
+diff_logger.setLevel(logging.DEBUG)
+diff_logger.addHandler(data_handler)
+
 class TableCache():
 
     def __init__(self, dir, function_table=None, class_table=None):
@@ -114,15 +120,11 @@ class SWEEnv(gym.Env):
         self.function_table = FunctionTable()
         self.table_cache = TableCache(dir="table_cache", function_table=self.function_table, class_table=self.class_table)
 
-        oai_api_key=os.environ.get("OPENAI_API_KEY")
-        openai_client = OpenAI(api_key=oai_api_key)
 
         anth_api_key=os.environ.get("ANTHROPIC_API_KEY")
         anthrpoic_client = Anthropic(api_key=anth_api_key)
         
         # self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
-
-        self.diff_model = GPT4(client=openai_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
 
         if not self.args.verbose:
             self.logger.disabled = True
@@ -248,7 +250,13 @@ class SWEEnv(gym.Env):
         if self.table_cache.exists(self.record["instance_id"]):
             self.table_cache.load(self.record["instance_id"])
         else:
-            self.build_index(self.record["instance_id"].split("-")[0], self.class_table, self.function_table)
+            instance = self.record["instance_id"].split("-")
+            if len(instance) == 3:
+                instance = instance[0] + "-" + instance[1]
+            else:
+                instance = instance[0]
+            print(instance)
+            self.build_index(instance, self.class_table, self.function_table)
             self.table_cache.save(self.record["instance_id"])
 
         # Reset environment variables
@@ -1193,14 +1201,20 @@ EXAMPLES
              search_dir "world" "/path/to/directory"
         """
 
+        if search_term.startswith("--"):
+            search_term = "\"" + search_term + "\""
+
         command = f"find {dir} -type f ! -path '*/.*' -exec grep -nIH '{search_term}' {{}} + | cut -d: -f1 | sort | uniq -c"
         result = self.communicate(command)
 
         matches = result.strip()
         if not matches:
             return f"No matches found for \"{search_term}\" in {dir}"
-
-        num_matches = sum(int(line.split()[0]) for line in matches.split('\n'))
+        print(matches)
+        try:
+            num_matches = sum(int(line.split()[0]) for line in matches.split('\n'))
+        except:
+            raise Exception("Command not formed well. Make sure the term you are searching for is in quotes and you are providing the correct directory." + matches)
         num_files = matches.count('\n') + 1
 
         if num_files > 100:

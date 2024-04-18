@@ -73,7 +73,12 @@ def main(args: ScriptArguments):
             #     continue
             logger.info("▶️  Beginning task " + str(index))
 
-            observation, info = env.reset(index)
+
+            try:
+                observation, info = env.reset(index)
+            except Exception as e:
+                logger.error(f"Error resetting environment: {e}")
+                continue
             if info is None:
                 continue
 
@@ -200,7 +205,7 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent2",
             install_environment=True,
-            specific_issues=tasks
+            specific_issues=["sympy__sympy-12481"]
         ),
         skip_existing=True,
     )

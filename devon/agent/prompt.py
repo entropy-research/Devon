@@ -195,7 +195,7 @@ def system_prompt_template_v2(command_docs: str):
 
   6. Once you're done use the submit command to submit your solution. Dont add tests to the codebase, just use the submit command to submit your solution.
 
-  7. DO NOT SEARCH FOR CLASSES OR FUNCTION USING SEARCH. If you want to find a class or a function, use the find_class or find_function command respectively.
+  7.  If you want to find a class or a function, use the find_class or find_function command respectively. DO NOT SEARCH FOR CLASSES OR FUNCTION USING SEARCH.
 
   8. Come up with a plan. Think about what you want to do and how you can do it. Write down your plan.
 

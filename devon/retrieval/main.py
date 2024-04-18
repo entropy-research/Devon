@@ -233,12 +233,20 @@ def initialize_repository(repo_path, class_table, function_table):
     return codebase_graph
 
 if __name__ == "__main__":
-    codebase_root = "."
+    codebase_root = "/Users/mihirchintawar/sympy"
     class_table = ClassTable()
     function_table = FunctionTable()
     initialize_repository(codebase_root, class_table, function_table)
 
-    print(function_table.function_table.keys())
+    # print(class_table.class_table)
+    # print(function_table.function_table.keys())
+
+    assert "_print_Basic" in function_table.function_table.keys()
+    assert "MathMLPresentationPrinter" in class_table.class_table.keys()
+    assert "MathMLPresentationPrinter._print_Basic" in function_table.function_table.keys()
+
+
+# _print_Basic
 
 
 
