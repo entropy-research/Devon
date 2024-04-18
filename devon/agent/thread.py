@@ -1,6 +1,8 @@
+from datetime import datetime
 import json
 import logging
 from pathlib import Path
+import random
 from typing import Optional, Tuple, Dict
 from devon.agent.model import AnthropicModel, ModelArguments
 from tenacity import RetryError
@@ -157,8 +159,8 @@ class Agent:
 
         return thought, action, output
 
-    def save_trajectory(self, trajectory, traj_dir, env, info):
-        log_path = traj_dir / (env.record["instance_id"] + ".traj")
+    def save_trajectory(self, trajectory, traj_dir, env, info, run_id):
+        log_path = traj_dir / (str(run_id) + ".traj")
         log_dict = {
             "environment": env.name,
             "trajectory": trajectory,
@@ -196,6 +198,7 @@ class Agent:
         self.history.append({"role": "system", "content": system_prompt})
         trajectory = []
         info = {}
+        run_id = hash(str(datetime.now()))
         done = False
         for i in range(self.max_steps):
 
@@ -267,7 +270,7 @@ OBSERVATION: {observation}
         self.history = []
 
         #  save trajectory as jsonl
-        self.save_trajectory(trajectory, traj_dir, env, info)
+        self.save_trajectory(trajectory, traj_dir, env, info, run_id)
 
         logger.debug(info)
         return info

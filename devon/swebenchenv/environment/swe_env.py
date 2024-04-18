@@ -22,7 +22,7 @@ from rich.logging import RichHandler
 from simple_parsing.helpers import FrozenSerializable
 from devon.retrieval.main import ClassTable, FunctionTable, get_class_defn, get_function_defn, initialize_repository
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
-from devon.swebenchenv.environment.unified_diff.udiff import DATA_LOGGER_NAME, Hallucination, create_recover_prompt, log_data, log_failed_diff, log_successful_diff
+from devon.swebenchenv.environment.unified_diff.udiff import DATA_LOGGER_NAME, Hallucination, create_recover_prompt, log_failed_diff, log_successful_diff
 from devon.swebenchenv.environment.unified_diff.udiff import apply_file_context_diffs, extract_all_diffs
 from devon.swebenchenv.environment.utils import (
     copy_file_to_container,
@@ -940,7 +940,7 @@ EXAMPLES
             src_file = file_diff.src_file
             tgt_file = file_diff.tgt_file
 
-            diff_logger.debug(src_file, tgt_file)
+            diff_logger.debug(src_file + " " + tgt_file)
             if not ( src_file or tgt_file ):
                 raise Hallucination("Could not apply changes, missing source or target file.")
 
@@ -977,22 +977,25 @@ EXAMPLES
         all_diffs, _ = extract_all_diffs(diff_code)
         results = self.apply_diff(all_diffs, self.file_root)
 
+        #TODO: This needs to be fixed so that it actually works for multi file diffs
         failures = []
         successes = []
         for result in results:
             if len(result["fail"]) > 0:
                 failures.extend(result["fail"])
-                log_failed_diff(diff=diff_code, file_content=result[1], src_file=result[0], tgt_file=result[0])
+                for failure in result["fail"]:
+                    log_failed_diff(diff=diff_code, file_content=failure[1], src_file=failure[0], tgt_file=failure[0])
             if len(result["success"]) > 0:
                 successes.extend(result["success"])
-                log_successful_diff(diff=diff_code, file_content=result[1], src_file=result[0], tgt_file=result[0])
+                for success in result["success"]:
+                    log_successful_diff(diff=diff_code, file_content=success[1], src_file=success[0], tgt_file=success[0])
 
         if len(failures) == 0:
             for result in successes:
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
-                diff_logger.debug("FILE CONTENT BEFORE WRITING TO CONTAINER: ", result[1])
-                self.write_file(file_path=result[0], content=result[0])
-                diff_logger.debug("FILE CONTENT AFTER WRITING TO CONTAINER: ", self.read_file(file_path=result[0]))
+                diff_logger.debug("FILE CONTENT BEFORE WRITING TO CONTAINER: " + result[1])
+                self.write_file(file_path=result[0], content=result[1])
+                diff_logger.debug("FILE CONTENT AFTER WRITING TO CONTAINER: " + self.read_file(file_path=result[0]))
 
             return "Successfully edited file"
 
@@ -1004,8 +1007,8 @@ EXAMPLES
         tar_data, _ = self.container_obj.get_archive(path=file_path)
 
         return tar_data
-        
-    
+
+
     def build_index(self, file_path, class_table, function_table):
 
         tar_data = self.create_tar(file_path)

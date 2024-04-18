@@ -64,10 +64,6 @@ def main(args: ScriptArguments):
 
     env = SWEEnv(args.environment)
     agent = Agent("primary")
-    traj_dir = Path("trajectories") / Path(getuser()) / "devon"
-    os.makedirs(traj_dir, exist_ok=True)
-
-    save_arguments(traj_dir, args)
 
     for index in range(len(env.data)):
         try:
@@ -105,6 +101,11 @@ def main(args: ScriptArguments):
                 "test_files": test_files,
                 "tests": tests
             }
+
+            traj_dir = Path("trajectories") / Path(getuser()) / Path("_".join([agent.model.args.model_name, str(agent.model.args.temperature)])) / Path(env.record["instance_id"])
+            os.makedirs(traj_dir, exist_ok=True)
+            save_arguments(traj_dir, args)
+            
             info = agent.run(
                 setup_args=setup_args,
                 env=env,
