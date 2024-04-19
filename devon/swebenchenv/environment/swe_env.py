@@ -1101,8 +1101,6 @@ EXAMPLES
              }
         """
 
-    
-
         return str(get_function_defn(function_name, self.function_table))
     
     def find_class(self, class_name):
@@ -1438,7 +1436,7 @@ EXAMPLES
                 arg = arg[3:-3]
             args.append(arg)
         return fn_name, args
-    
+
     def parse_command_to_function(self, command_string, thought: str):
 
         fn_name, args = self.parse_command(command_string)

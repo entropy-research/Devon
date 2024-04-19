@@ -107,7 +107,7 @@ def main(args: ScriptArguments):
                 "tests": tests
             }
 
-            traj_dir = Path("trajectories") / Path(getuser()) / Path("_".join([agent.model.args.model_name, str(agent.model.args.temperature)])) / Path(env.record["instance_id"])
+            traj_dir = Path("trajectories") / Path(getuser()) / Path("_".join([agent.default_model.args.model_name, str(agent.default_model.args.temperature)])) / Path(env.record["instance_id"])
             os.makedirs(traj_dir, exist_ok=True)
             save_arguments(traj_dir, args)
             
@@ -228,7 +228,7 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent2",
             install_environment=True,
-            specific_issues=["sympy__sympy-16988"]
+            specific_issues=["django__django-13028"]
         ),
         skip_existing=True,
     )

@@ -26,9 +26,14 @@ logger = logging.getLogger(LOGGER_NAME)
 
 class Agent:
     def __init__(self, name="Devon", args=None):
-        self.model: AnthropicModel = AnthropicModel(
-            args=ModelArguments(model_name="claude-sonnet", temperature=0)
+        self.sonnet: AnthropicModel = AnthropicModel(
+            args=ModelArguments(model_name="claude-sonnet", temperature=0.5)
         )
+        self.opus: AnthropicModel = AnthropicModel(
+            args=ModelArguments(model_name="claude-opus", temperature=0.0)
+        )
+        self.default_model = self.opus
+        self.current_model = self.opus
         # self.model = HumanModel(args=ModelArguments(
         #     model_name="gpt-4-0314",
         #     # total_cost_limit=0.0,
@@ -88,7 +93,7 @@ class Agent:
 
         messages = [{"role": "user", "content": last_user_prompt}]
 
-        output = self.model.query(messages, system_message=system_prompt)
+        output = self.current_model.query(messages, system_message=system_prompt)
 
         logger.debug("<MODEL_OUT>" + json.dumps({
             "step": step, 
@@ -219,6 +224,11 @@ class Agent:
             observations = list()
             if action == "exit":
                 done = True
+
+            if action == "no_op" and self.current_model == self.sonnet:
+                self.current_model = self.opus
+            else:
+                self.current_model = self.default_model
 
             try:
                 # assert output.count("<COMMAND>") == 1

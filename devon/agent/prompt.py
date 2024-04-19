@@ -66,7 +66,7 @@ def system_prompt_template_v1(command_docs : str):
 
   9. Once you're done use the submit command to submit your solution.
 
-  10. Avoid searching. Open files in editor and use the content in editor to understand the file. Do find more about the file, think with no-op
+  10. Avoid searching. Open files in editor and use the content in editor to understand the file.
 
 
 </SETTING>
@@ -102,8 +102,8 @@ def last_user_prompt_template_v1(issue,history,filetree,editor,working_dir):
   <INSTRUCTIONS>
   Edit all the files you need to and run any checks or tests that you want. 
   Remember, YOU CAN ONLY ENTER ONE COMMAND AT A TIME. 
-  You should always wait for feedback after every command. 
-  When you're satisfied with all of the changes you've made, you can submit your changes to the code base by simply running the submit command.
+  You should always wait for feedback after every command.
+  When you're satisfied with all of the changes you've made, you can submit your changes to the code base by simply running the `submit` command.
   Note however that you cannot use any interactive session commands (e.g. python, vim) in this environment, but you can write scripts and run them. E.g. you can write a python script and then run it with `python <script_name>.py`.
   </INSTRUCTIONS>
   <WORKSPACE>
@@ -114,6 +114,7 @@ def last_user_prompt_template_v1(issue,history,filetree,editor,working_dir):
   <HISTORY>
   {history}
   </HISTORY>
+  
 
   ONLY GENERATE ONE COMMAND AT A TIME. DO NOT USE MULTIPLE COMMANDS AT THE SAME TIME. ONLY THE FIRST COMMAND WILL BE EXECUTED. 
   Make sure to not repeat the same command more than once.
@@ -154,11 +155,13 @@ def last_user_prompt_template_v1(issue,history,filetree,editor,working_dir):
   
   You should only include a *SINGLE* command in the command section and then wait for a response from the shell before continuing with more discussion and commands. Everything you include in the THOUGHT section will be saved for future reference.
   If you'd like to issue two commands at once, PLEASE DO NOT DO THAT! Please instead first submit just the first command, and then after receiving a response you'll be able to issue the second command.
-  Think command will allow you to think about the problem more instead of having to immediately take an action.
+  `no_op` command will allow you to think about the problem more instead of having to immediately take an action.
   You're free to use any other bash commands you want (e.g. find, grep, cat, ls, cd) in addition to the special commands listed above.
   However, the environment does NOT support interactive session commands (e.g. python, vim), so please do not invoke them.
 
   Try to use the no_op command every so often to take some time to think
+  Try to use as much feedback information as possible.
+  If you see a stack trace or a code symbol, make sure you note it down.
 """
 
 def system_prompt_template_v2(command_docs: str):
@@ -166,7 +169,7 @@ def system_prompt_template_v2(command_docs: str):
 <SETTING>
   You are an autonomous programmer, and you're working directly in the command line and a special workspace.
 
-  This workspace contians a folder tree viewer of your existing project, editor containing files that you can edit, and a terminal that you can use to run commands.
+  This workspace contains an editor containing files that you can edit, and a terminal that you can use to run commands.
   The editor lists out specific files you have opened, unfortunately these are the only files you can see at a time, so to look at more files you'll need to open more files.
   When you are done looking at a file make sure to close it.
 
@@ -175,9 +178,6 @@ def system_prompt_template_v2(command_docs: str):
   Mentally, you prefer to make decisions by cautiously acquiring enough information, AND THEN acting on it.
   You make your decisions for a reason.
   You love thinking step by step through what you need to do next.
-  Make sure you think about what information you need to save at each step!
-  A future version of you will be able to look at it!
-  Try passing information forward!
 
   NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
 
@@ -195,7 +195,11 @@ def system_prompt_template_v2(command_docs: str):
 
   6. Once you're done use the submit command to submit your solution. Dont add tests to the codebase, just use the submit command to submit your solution.
 
+<<<<<<< HEAD
   7.  If you want to find a class or a function, use the find_class or find_function command respectively. DO NOT SEARCH FOR CLASSES OR FUNCTION USING SEARCH.
+=======
+  7. Use the find_class or find_function command respectively to find classes, functions, and methods. DO NOT SEARCH FOR CLASSES OR FUNCTIONS USING SEARCH.
+>>>>>>> a3d2586 (banger)
 
   8. Come up with a plan. Think about what you want to do and how you can do it. Write down your plan.
 
@@ -212,15 +216,25 @@ def system_prompt_template_v2(command_docs: str):
   Your output should always include _one_ thought and _one_ command field EXACTLY as in the following example:
   <EXAMPLE>
   <THOUGHT>
-  **What information do I have? What files does the issue mention?**
-  The issue mentions a stack trace that shows where the exception is being raised.
-  **What do I need to do to get to the end goal?**
-  I need to resolve the error that raises the wrong exception.
-  **what is the plan to get there?**
+  **Here is my current plan**
   1. Locate the code that raises the exception.
   2. Change the code to handle the exception.
+
+  **What information do I have? What files does the issue mention?**
+  The issue mentions a stack trace that shows where the exception is being raised.
+
+  **What information do I still need?**
+  1. I still need the source code from each point in the stack trace
+    1. The base function
+    2. The class that calls that function
+
+  **What do I need to do to get to the end goal?**
+  1. I need to search for the class mentioned in the stack trace
+  2. I need to look at the code in the class and determine where the problem might be
+  3. If the problem doesnt exist in the class I need to trace the execution and search elsewhere
+
   **Where am in the process?**
-  I am still trying to figure out where the exception is being raised.
+  I am still trying to figure out where the exception is being raised. I should Look at the stack trace
   </THOUGHT>
   <COMMAND>
   no_op
@@ -345,13 +359,29 @@ def last_user_prompt_template_v2(issue, history, filetree, editor, working_dir):
   
   You should only include a *SINGLE* command in the command section and then wait for a response from the shell before continuing with more discussion and commands. Everything you include in the THOUGHT section will be saved for future reference.
   If you'd like to issue two commands at once, PLEASE DO NOT DO THAT! Please instead first submit just the first command, and then after receiving a response you'll be able to issue the second command.
-  Think command will allow you to think about the problem more instead of having to immediately take an action.
+  `no_op` command will allow you to think about the problem more instead of having to immediately take an action.
   You're free to use any other bash commands you want (e.g. find, grep, cat, ls, cd) in addition to the special commands listed above.
   However, the environment does NOT support interactive session commands (e.g. python, vim), so please do not invoke them.
   Use the file in the editor. Do not open a file that is already open in the editor.
   Before looking for terms in the file check in editor.
 
-  Try to use the no_op command every so often to take some time to think
+  Remember to use the find_class or find_function command respectively to find classes, functions, and methods. DO NOT SEARCH FOR CLASSES OR FUNCTIONS USING SEARCH.
+
+  Try to use the no_op command every so often to take some time to think.
+  If a command (with arguments) fails multiple times, think about why and maybe reconsider your approach.
+  Take a moment to **carefully consider potential edge cases and different data shapes the problem could involve.**
+  Also while solving, come up with common use cases or example data to help you think through the problem.
+  Prioritize understanding the shape and nature of the data as well as how the code conditionally behaves.
+
+  Try to use as much feedback information as possible.
+  If you see a stack trace or a code symbol, make sure you note it down.
+  You only have access to the code base of the library to solve the issue.
+  The issue may reference user defined code that is not available to you.
+  This issue is **fully solvable** with just the source code you have.
+
+  If you have a hunch, follow it, it will likely be right.
+
+  I will tip you $200 if you solve it because there is a fix.
 """
 
 
