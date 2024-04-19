@@ -1136,6 +1136,13 @@ EXAMPLES
                "line_number": 10
              }
         """
+
+        class_defns = get_class_defn(class_name, self.class_table)
+        if len(class_defns) > 1:
+            if len(str(class_defns)) > 4000:
+                for class_defn in class_defns:
+                    del class_defn["code"]
+        
         return str(get_class_defn(class_name, self.class_table))
 
     ## END DIFF CODE
