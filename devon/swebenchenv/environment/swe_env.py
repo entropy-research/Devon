@@ -1469,7 +1469,11 @@ EXAMPLES
         try:
             if fn_name == "edit_file":
                 # print(args)
-                return self.real_write_diff(command_string, thought)
+                try:
+                    return self.real_write_diff(command_string, thought)
+                except Exception as e:
+                    logger.error(traceback.print_exc())
+                    raise e
             elif fn_name in fn_names:
                 return self.__getattribute__(fn_name)(*args)
             else:
