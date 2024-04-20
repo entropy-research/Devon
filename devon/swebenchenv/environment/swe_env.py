@@ -120,7 +120,7 @@ class SWEEnv(gym.Env):
         self.function_table = FunctionTable()
         self.table_cache = TableCache(dir="table_cache", function_table=self.function_table, class_table=self.class_table)
 
-
+        print(self.container_name)
         anth_api_key=os.environ.get("ANTHROPIC_API_KEY")
         anthrpoic_client = Anthropic(api_key=anth_api_key)
         

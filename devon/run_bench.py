@@ -64,7 +64,7 @@ def main(args: ScriptArguments):
 
     env = SWEEnv(args.environment)
 
-    traj_dir = Path("trajectories") / Path(getuser()) / "claude-sonnet_0"
+    traj_dir = Path("trajectories") / Path(getuser()) / "claude-opus_0"
     # os.makedirs(traj_dir, exist_ok=True)
 
 
@@ -110,6 +110,7 @@ def main(args: ScriptArguments):
                 "test_files": test_files,
                 "tests": tests
             }
+            print(agent.default_model.args.model_name)
 
             traj_dir = Path("trajectories") / Path(getuser()) / Path("_".join([agent.default_model.args.model_name, str(agent.default_model.args.temperature)])) / Path(env.record["instance_id"])
             os.makedirs(traj_dir, exist_ok=True)
@@ -235,9 +236,9 @@ if __name__ == "__main__":
             data_path="princeton-nlp/SWE-bench_Lite",
             split="test",
             verbose=True,
-            container_name="swe-agent2",
+            container_name="swe-agent",
             install_environment=True,
-            specific_issues=["sympy__sympy-23262"]
+            specific_issues="django__django-13447"
         ),
         skip_existing=True,
     )
