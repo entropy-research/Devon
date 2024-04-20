@@ -237,7 +237,7 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent2",
             install_environment=True,
-            # specific_issues="django__django-14915"
+            specific_issues=["sympy__sympy-23262"]
         ),
         skip_existing=True,
     )
