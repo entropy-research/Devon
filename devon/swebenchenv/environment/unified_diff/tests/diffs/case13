@@ -1,0 +1,14 @@
+--- django/forms/fields.py
++++ django/forms/fields.py
+@@ -673,9 +673,9 @@
+             Return a list of url parts via urlparse.urlsplit(), or raise
+             ValidationError for some malformed URLs.
+             """
+-            try:
+-                return list(urlsplit(url))
+-            except ValueError:
++            parts = urlsplit(url)
++            if not all(parts):
++                # urlsplit failed to parse the URL
+                 raise ValidationError(self.error_messages['invalid'], code='invalid')
++            return list(parts)
