@@ -702,9 +702,11 @@ class SWEEnv(gym.Env):
                 tree = tree.setdefault(part, {})
             tree[parts[-1]] = {}
 
+        directory_tree = {}
         file_tree_dict = {}
         for file_path in all_files:
-            add_to_tree(file_path, file_tree_dict)
+            add_to_tree(file_path, file_tree_dict)  # Adds to file tree
+            add_to_tree(file_path, directory_tree)  # Additionally, adds to directory tree for a broader structure
             if file_path in files:
                 # Read file content from container
                 result = self.communicate(f"cat '{file_path}'")
@@ -712,11 +714,11 @@ class SWEEnv(gym.Env):
 
         file_tree = file_tree_dict
 
-        return {"file_tree": file_tree, "files_content": files_content}
+        return {"directory_tree": directory_tree, "file_tree": file_tree, "files_content": files_content}
 
-    def list_files_recursive(self, files: list[str]) -> dict:
+    def list_dirs_recursive(self, files: list[str]) -> dict:
         """
-        Returns the entire file tree and specified files in their entirety from the file system.
+        Returns the entire directory tree in its entirety from the file system.
 
         Args:
             files (`list[str]`): List of file paths within the container to return in their entirety.
@@ -726,7 +728,7 @@ class SWEEnv(gym.Env):
                 and 'files_content' containing a dictionary of specified files and their content.
         """
 
-        return json.dumps(self._list_files_recursive(files))
+        return json.dumps(self._list_files_recursive(files)["directory_tree"])
 
     #TOOL FUNCTIONS
 
@@ -1387,7 +1389,7 @@ EXAMPLES
 
         funcs = [
             # self.list_files,
-            self.list_files_recursive,
+            self.list_dirs_recursive,
             self.close_file,
             self.create_file,
             self.open_file,
@@ -1446,7 +1448,7 @@ EXAMPLES
 
         funcs = [
             # self.list_files,
-            self.list_files_recursive,
+            self.list_dirs_recursive,
             self.close_file,
             self.create_file,
             self.open_file,
@@ -1482,7 +1484,7 @@ EXAMPLES
                     return None
         except Exception as e:
             logger.error(traceback.print_exc())
-            raise e
+            return e.args[0]
 
     def get_available_actions(self) -> list[str]:
         """
