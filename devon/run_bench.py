@@ -63,24 +63,28 @@ def main(args: ScriptArguments):
     print(args.__dict__)
 
     env = SWEEnv(args.environment)
-    agent = Agent("primary")
+
+    traj_dir = Path("trajectories") / Path(getuser()) / "claude-sonnet_0"
+    # os.makedirs(traj_dir, exist_ok=True)
+
 
     for index in range(len(env.data)):
         try:
             # Reset environment
             instance_id = env.data[index]["instance_id"]
-            # if should_skip(args, traj_dir, instance_id):
-            #     continue
+            if should_skip(args, traj_dir, instance_id):
+                continue
             logger.info("▶️  Beginning task " + str(index))
-
-
             try:
                 observation, info = env.reset(index)
             except Exception as e:
                 logger.error(f"Error resetting environment: {e}")
+                env.reset_container()
                 continue
             if info is None:
                 continue
+
+            agent = Agent("primary")
 
             # Get info, patch information
             issue = getattr(env, "query", None)
@@ -110,14 +114,19 @@ def main(args: ScriptArguments):
             traj_dir = Path("trajectories") / Path(getuser()) / Path("_".join([agent.default_model.args.model_name, str(agent.default_model.args.temperature)])) / Path(env.record["instance_id"])
             os.makedirs(traj_dir, exist_ok=True)
             save_arguments(traj_dir, args)
-            
-            info = agent.run(
-                setup_args=setup_args,
-                env=env,
-                observation=observation,
-                traj_dir=traj_dir,
-                return_type="info",
-            )
+
+            try:
+                
+                info = agent.run(
+                    setup_args=setup_args,
+                    env=env,
+                    observation=observation,
+                    traj_dir=traj_dir,
+                    return_type="info",
+                )
+            except Exception as e:
+                logger.error(f"Error running agent: {e}")
+                continue
             save_predictions(traj_dir, instance_id, info)
 
         except KeyboardInterrupt:
@@ -152,30 +161,30 @@ def save_arguments(traj_dir, args):
 def should_skip(args, traj_dir, instance_id):
     """Check if we should skip this instance based on the instance filter and skip_existing flag."""
     # Skip instances that don't match the instance filter
-    if re.match(args.instance_filter, instance_id) is None:
-        logger.info(f"Instance filter not matched. Skipping instance {instance_id}")
-        return True
+    # if re.match(args.instance_filter, instance_id) is None:
+    #     logger.info(f"Instance filter not matched. Skipping instance {instance_id}")
+    #     return True
 
     # If flag is set to False, don't skip
     if not args.skip_existing:
         return False
 
     # Check if there's an existing trajectory for this instance
-    log_path = traj_dir / (instance_id + ".traj")
-    if log_path.exists():
-        with log_path.open("r") as f:
-            data = json.load(f)
-        # If the trajectory has no exit status, it's incomplete and we will redo it
-        exit_status = data["info"].get("exit_status", None)
-        if exit_status == "early_exit" or exit_status is None:
-            logger.info(f"Found existing trajectory with no exit status: {log_path}")
-            logger.info("Removing incomplete trajectory...")
-            os.remove(log_path)
-        else:
-            logger.info(f"⏭️ Skipping existing trajectory: {log_path}")
-            return True
-    return False
+    log_path = traj_dir / (instance_id)
 
+    if log_path.exists():
+        # with log_path.open("r") as f:
+        #     data = json.load(f)
+        # # If the trajectory has no exit status, it's incomplete and we will redo it
+        # exit_status = data["info"].get("exit_status", None)
+        # if exit_status == "early_exit" or exit_status is None:
+        #     logger.info(f"Found existing trajectory with no exit status: {log_path}")
+        #     logger.info("Removing incomplete trajectory...")
+        #     os.remove(log_path)
+        # else:
+        #     logger.info(f"⏭️ Skipping existing trajectory: {log_path}")
+        #     return True
+        return True
 
 def save_predictions(traj_dir, instance_id, info):
     output_file = Path(traj_dir) / "all_preds.jsonl"
@@ -197,25 +206,25 @@ if __name__ == "__main__":
     tasks = [x.strip() for x in tasks]
 
     issues = [
-    "astropy__astropy-12907",
-    "django__django-13230",
     "sympy__sympy-16988",
+#    "astropy__astropy-12907",
+    "django__django-13230",
     "django__django-17051",
     "django__django-11049",
     "pytest__pytest-7373",
     "pytest__pytest-5221",
     "django__django-12700",
     "sympy__sympy-12481",
-    "matplotlib__matplotlib-25079",
+#    "matplotlib__matplotlib-25079",
     "django__django-12856",
     "django__django-16229",
     "django__django-11283",
     "sympy__sympy-14817",
     "sympy__sympy-16106",
     "scikit-learn__scikit-learn-14817",
-    "matplotlib__matplotlib-24334",
+#    "matplotlib__matplotlib-24334",
     "pytest__pytest-7432",
-    "astropy__astropy-12907",
+#    "astropy__astropy-12907",
     "psf__requests-2674",
 ]
 
@@ -228,7 +237,7 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent2",
             install_environment=True,
-            specific_issues=["django__django-13028"]
+            # specific_issues="django__django-14915"
         ),
         skip_existing=True,
     )

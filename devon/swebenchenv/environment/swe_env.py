@@ -251,10 +251,7 @@ class SWEEnv(gym.Env):
             self.table_cache.load(self.record["instance_id"])
         else:
             instance = self.record["instance_id"].split("-")
-            if len(instance) == 3:
-                instance = instance[0] + "-" + instance[1]
-            else:
-                instance = instance[0]
+            instance = "-".join(instance[:-1])
             print(instance)
             self.build_index(instance, self.class_table, self.function_table)
             self.table_cache.save(self.record["instance_id"])
@@ -393,6 +390,8 @@ class SWEEnv(gym.Env):
             return observation, 0, True, info
         except Exception as e:
             logger.error(e)
+            import traceback
+            traceback.print_exc()
             observation += "\nEXECUTION FAILED OR COMMAND MALFORMED"
 
         # Record submission and end episode if `submit` keyword found
@@ -450,7 +449,10 @@ class SWEEnv(gym.Env):
         self._init_scripts()
 
     def reset_container(self) -> None:
-        self.close()
+        try:
+            self.close()
+        except:
+            pass
         self.container = None
         self.container_obj = None
         self._reset_container()
@@ -1426,13 +1428,14 @@ EXAMPLES
         Returns:
             tuple: A tuple containing the function name (str) and a list of arguments (list).
         """
+        print(command)
         parts = re.findall(r'(?:"[^"]*"|\[[^]]*\]|<<<[^>]*>>>|[^"\s]+)', command)
         fn_name = parts[0]
         args = []
         for arg in parts[1:]:
-            if arg.startswith("[") and arg.endswith("]"):
-                arg = eval(arg)
-            elif arg.startswith('"') and arg.endswith('"'):
+            # if arg.startswith("[") and arg.endswith("]"):
+            #     arg = eval(arg)
+            if arg.startswith('"') and arg.endswith('"'):
                 arg = arg[1:-1]
             elif arg.startswith("<<<") and arg.endswith(">>>"):
                 arg = arg[3:-3]

@@ -189,6 +189,7 @@ class Agent:
     ):
         available_actions = env.get_available_actions()
         commanddoc = env.generate_command_docs()
+        self.history = []
 
         commands = (
             "Avaliable Custom Commands:\n"
@@ -200,6 +201,7 @@ class Agent:
             + commands_to_command_docs(list(commanddoc.values()))
             + "\n"
         )
+        print(len(self.history))
 
         system_prompt = system_prompt_template_v3(commands + command_docs)
         self.history.append({"role": "system", "content": system_prompt})
