@@ -1,3 +1,4 @@
+<<<
 --- django/db/models/query_utils.py
 +++ django/db/models/query_utils.py
 @@ -40,6 +40,12 @@
@@ -13,3 +14,4 @@
              raise TypeError(other)
  
          # If the other Q() is empty, ignore it and just use `self`.
+>>>

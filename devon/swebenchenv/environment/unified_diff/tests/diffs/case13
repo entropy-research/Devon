@@ -1,3 +1,4 @@
+<<<
 --- django/forms/fields.py
 +++ django/forms/fields.py
 @@ -673,9 +673,9 @@
@@ -12,3 +13,4 @@
 +                # urlsplit failed to parse the URL
                  raise ValidationError(self.error_messages['invalid'], code='invalid')
 +            return list(parts)
+>>>

@@ -38,7 +38,7 @@ def test_diff():
 
 def test_diff_backoff_matching():
 
-    cases = ["case10", "case11"]
+    cases = ["case10", "case12", "case14"]
 
     current_file = __file__
     current_dir = os.path.dirname(current_file)

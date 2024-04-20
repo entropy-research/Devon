@@ -129,6 +129,10 @@ def extract_diff_from_response(diff_text):
         if "<<<" in diff
     ]
 
+def strip_new_lines_from_ends(lines):
+    temp = "\n".join(lines)
+    return temp.strip().splitlines()
+
 def construct_versions_from_diff_hunk(hunk: ContextHunk):
     old_lines = []
     new_lines = []
@@ -275,10 +279,12 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
     for begin_start, begin_end, src_idx in begin_matches:
         for stop_start, stop_end, end_idx in end_matches:
             #TODO: add a line count error here
-            if src_idx <= end_idx and (stop_end - begin_start + 1) == len(old_lines):
+            print(begin_start, stop_end)
+            print(src_idx, end_idx)
+            if src_idx <= end_idx and (stop_end - begin_start + 1) == len(strip_new_lines_from_ends(old_lines)):
                 valid_pairs.append((begin_start, stop_end))
                 break
-    
+
     return valid_pairs
 
 

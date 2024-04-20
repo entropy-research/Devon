@@ -1,3 +1,4 @@
+<<<
 --- /django__django/django/forms/fields.py
 +++ /django__django/django/forms/fields.py
 @@ -686,7 +686,10 @@
@@ -12,3 +13,4 @@
              if not url_fields[0]:
                  # If no URL scheme given, assume http://
                  url_fields[0] = 'http'
+>>>
