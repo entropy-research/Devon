@@ -11,7 +11,7 @@ from devon_agent.agent.clients.client import GPT4, ClaudeHaiku, ClaudeSonnet, Me
 
 def test_diff():
 
-    cases = ["case11"]
+    cases = ["case0", "case1", "case2", "case3"]
 
     current_file = __file__
     current_dir = os.path.dirname(current_file)
@@ -36,10 +36,9 @@ def test_diff():
 
         assert result_code == excepted
 
-
 def test_diff_backoff_matching():
 
-    cases = ["case10"]
+    cases = ["case10", "case11"]
 
     current_file = __file__
     current_dir = os.path.dirname(current_file)

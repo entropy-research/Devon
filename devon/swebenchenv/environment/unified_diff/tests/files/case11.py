@@ -1,4 +1,4 @@
-source content: # Authors: Alexandre Gramfort <alexandre.gramfort@inria.fr>
+# Authors: Alexandre Gramfort <alexandre.gramfort@inria.fr>
 #          Mathieu Blondel <mathieu@mblondel.org>
 #          Olivier Grisel <olivier.grisel@ensta.org>
 #          Andreas Mueller <amueller@ais.uni-bonn.de>

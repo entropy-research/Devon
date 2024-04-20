@@ -262,18 +262,19 @@ def match_fence_all(stripped_file_lines, fence):
 
     return matches
 
-def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines):
+def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines, fence_len):
         #create code fence based on lines. i.e. first N content lines
-    begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines)
+    begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
     
     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
     begin_matches = match_fence_all(stripped_file_lines, begin_fence)
     end_matches = match_fence_all(stripped_file_lines, stop_fence)
-    
+
     #for each begin match, find first end match
     valid_pairs = []
     for begin_start, begin_end, src_idx in begin_matches:
         for stop_start, stop_end, end_idx in end_matches:
+            #TODO: add a line count error here
             if src_idx <= end_idx and (stop_end - begin_start + 1) == len(old_lines):
                 valid_pairs.append((begin_start, stop_end))
                 break
@@ -285,11 +286,11 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
     #given stripped file lines and stripped old lines,
     stripped_old_lines = [line.strip() for line in old_lines]
     stripped_old_lines = [line for line in stripped_old_lines if line != ""]
-    
+
     fence_len = 3
     results = []
     while not results and fence_len > 1:
-        results = match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines)
+        results = match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines, fence_len=fence_len)
 
         if len(results) > 0:
             break
@@ -591,7 +592,7 @@ def apply_file_context_diffs(file_content, all_diffs):
             result = apply_context_diff(file_content=file_content, file_diff=diff)
             succeeded.append((diff.tgt_file, result, file_content))
         except Hallucination as e:
-            # print(e)
+            print(e)
             failed.append((diff, e, file_content))
 
     #should return files with new code to write

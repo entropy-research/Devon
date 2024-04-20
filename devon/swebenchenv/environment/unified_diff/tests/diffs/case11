@@ -1,3 +1,4 @@
+<<<
 --- /scikit-learn__scikit-learn/sklearn/preprocessing/label.py
 +++ /scikit-learn__scikit-learn/sklearn/preprocessing/label.py
 @@ -127,6 +127,8 @@
@@ -9,3 +10,4 @@
          return np.searchsorted(self.classes_, y)
  
      def inverse_transform(self, y):
+>>>
