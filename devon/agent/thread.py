@@ -46,7 +46,7 @@ class Agent:
 
         self.name = name
         self.history = []
-        self.max_steps = 5
+        self.max_steps = 15
 
     def forward_model(
         self,
