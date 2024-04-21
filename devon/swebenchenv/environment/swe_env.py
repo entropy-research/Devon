@@ -964,7 +964,15 @@ EXAMPLES
             tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
 
             # diff_logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
-
+            cwd = self.get_cwd().strip()
+            if tgt_file_abs.startswith(cwd):
+                tgt_file_abs = self.make_abs_path(tgt_file_abs)
+            else:
+                tgt_file_abs = self.make_abs_path(cwd + "/" +  file_path)
+            if src_file_abs.startswith(cwd):
+                src_file_abs = self.make_abs_path(src_file_abs)
+            else:
+                src_file_abs = self.make_abs_path(cwd + "/" +  file_path)
             if not src_file_exists:
                 raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
 
@@ -1432,7 +1440,11 @@ EXAMPLES
 
     def parse_command_to_function(self, command_string, thought: str):
 
+    
+
         fn_name, args = self.parse_command(command_string)
+        if fn_name in ["python","vim","nano"]:
+            return "Interactive Commands are not allowed"
 
         # print(f"EXECUTING COMMAND: {fn_name}")
         # print(json.dumps(self.editor))

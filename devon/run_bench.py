@@ -354,6 +354,7 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent",
             install_environment=True,
+            specific_issues=issues
         ),
         skip_existing=True,
     )
