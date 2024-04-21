@@ -434,7 +434,7 @@ A single executable command goes here
 </RESPONSE FORMAT>
 """
 
-def last_user_prompt_template_v3(issue, history, filetree, editor, working_dir):
+def last_user_prompt_template_v3(issue, history, editor, working_dir):
     return f"""
 <SETTING> 
 Current issue: <ISSUE>{issue}</ISSUE>

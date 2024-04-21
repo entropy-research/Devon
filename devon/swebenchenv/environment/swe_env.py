@@ -607,27 +607,11 @@ class SWEEnv(gym.Env):
                   and 'files_content' containing a dictionary of specified files and their content.
         """
         file_tree = []
-        files_content = {}
+
 
         self.refresh_editor()
 
-        # Execute command in container to list all directories
-        result = self.communicate(f"find /{self.record['repo'].replace('/', '__')} -type d")
-        all_dirs = result.split('\n')
-
-        # Generate folder tree as a nested dictionary
-        def add_to_tree(path, tree):
-            parts = path.strip('/').split('/')
-            for part in parts:  # Include all parts as they are directories
-                tree = tree.setdefault(part, {})
-
-        file_tree_dict = {}
-        for dir_path in all_dirs:
-            add_to_tree(dir_path, file_tree_dict)
-
-        file_tree = file_tree_dict
-
-        return {"file_tree": file_tree, "editor": self.editor, "cwd": self.get_cwd()}
+        return {"editor": self.editor, "cwd": self.get_cwd()}
 
     # Used for mission critical commands (mostly setup) to make sure that we bail from this task if there is a command failure
     def communicate_with_handling(
@@ -966,11 +950,11 @@ EXAMPLES
             src_file = file_diff.src_file
             tgt_file = file_diff.tgt_file
 
-            diff_logger.debug(src_file + " " + tgt_file)
+            # diff_logger.debug(src_file + " " + tgt_file)
             if not ( src_file or tgt_file ):
                 raise Hallucination("Could not apply changes, missing source or target file.")
 
-            diff_logger.debug("Applying diff to: %s, %s", src_file, tgt_file)
+            # diff_logger.debug("Applying diff to: %s, %s", src_file, tgt_file)
 
             # Ensure src_file and tgt_file are valid paths, if not, make them absolute paths from file_tree_root
             src_file_abs = self.make_abs_path(src_file)
@@ -979,14 +963,14 @@ EXAMPLES
             src_file_exists = self.communicate(f"test -e {src_file_abs} && echo 'exists'").strip() == 'exists'
             tgt_file_exists = self.communicate(f"test -e {tgt_file_abs} && echo 'exists'").strip() == 'exists'
 
-            diff_logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
+            # diff_logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
 
             if not src_file_exists:
                 raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
 
             # Modifying an existing file
             src_content = self.read_file(file_path=src_file_abs)
-            diff_logger.debug("source content: %s", src_content)
+            # diff_logger.debug("source content: %s", src_content)
 
             file_diff.src_file = src_file_abs
             file_diff.tgt_file = tgt_file_abs
@@ -1010,18 +994,18 @@ EXAMPLES
             if len(result["fail"]) > 0:
                 failures.extend(result["fail"])
                 for failure in result["fail"]:
-                    log_failed_diff(diff=diff_code, file_content=failure[1], src_file=failure[0], tgt_file=failure[0])
+                    log_failed_diff(diff=diff_code, file_content=failure[2], src_file=failure[0], tgt_file=failure[0])
             if len(result["success"]) > 0:
                 successes.extend(result["success"])
                 for success in result["success"]:
-                    log_successful_diff(diff=diff_code, file_content=success[1], src_file=success[0], tgt_file=success[0])
+                    log_successful_diff(diff=diff_code, file_content=success[2], src_file=success[0], tgt_file=success[0])
 
         if len(failures) == 0:
             for result in successes:
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
-                diff_logger.debug("FILE CONTENT BEFORE WRITING TO CONTAINER: " + result[1])
+                # diff_logger.debug("<BEFORE>" + result[1] + "</BEFORE>")
                 self.write_file(file_path=result[0], content=result[1])
-                diff_logger.debug("FILE CONTENT AFTER WRITING TO CONTAINER: " + self.read_file(file_path=result[0]))
+                # diff_logger.debug("<AFTER>" + self.read_file(file_path=result[0]) + "</AFTER>")
 
             return "Successfully edited file"
 

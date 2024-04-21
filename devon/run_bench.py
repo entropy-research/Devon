@@ -64,8 +64,9 @@ def main(args: ScriptArguments):
 
     env = SWEEnv(args.environment)
 
-    traj_dir = Path("trajectories") / Path(getuser()) / "claude-opus_0"
-    # os.makedirs(traj_dir, exist_ok=True)
+    agent = Agent("primary")
+
+    traj_dir = Path("trajectories") / Path(getuser()) / Path("_".join([agent.default_model.args.model_name, str(agent.default_model.args.temperature)]))
 
 
     for index in range(len(env.data)):
@@ -112,7 +113,7 @@ def main(args: ScriptArguments):
             }
             print(agent.default_model.args.model_name)
 
-            traj_dir = Path("trajectories") / Path(getuser()) / Path("_".join([agent.default_model.args.model_name, str(agent.default_model.args.temperature)])) / Path(env.record["instance_id"])
+
             os.makedirs(traj_dir, exist_ok=True)
             save_arguments(traj_dir, args)
 
@@ -171,21 +172,21 @@ def should_skip(args, traj_dir, instance_id):
         return False
 
     # Check if there's an existing trajectory for this instance
-    log_path = traj_dir / (instance_id)
+    log_path = traj_dir / f"{instance_id}.traj"
 
     if log_path.exists():
-        # with log_path.open("r") as f:
-        #     data = json.load(f)
-        # # If the trajectory has no exit status, it's incomplete and we will redo it
-        # exit_status = data["info"].get("exit_status", None)
-        # if exit_status == "early_exit" or exit_status is None:
-        #     logger.info(f"Found existing trajectory with no exit status: {log_path}")
-        #     logger.info("Removing incomplete trajectory...")
-        #     os.remove(log_path)
-        # else:
-        #     logger.info(f"⏭️ Skipping existing trajectory: {log_path}")
-        #     return True
-        return True
+        with log_path.open("r") as f:
+            data = json.load(f)
+        # If the trajectory has no exit status, it's incomplete and we will redo it
+        exit_status = data["info"].get("exit_status", None)
+        if exit_status == "early_exit" or exit_status is None:
+            logger.info(f"Found existing trajectory with no exit status: {log_path}")
+            logger.info("Removing incomplete trajectory...")
+            os.remove(log_path)
+        else:
+            logger.info(f"⏭️ Skipping existing trajectory: {log_path}")
+            return True
+        return False
 
 def save_predictions(traj_dir, instance_id, info):
     output_file = Path(traj_dir) / "all_preds.jsonl"

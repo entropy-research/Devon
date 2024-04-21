@@ -18,19 +18,35 @@ data_logger = logging.getLogger(DATA_LOGGER_NAME)
 
 def log_successful_diff(diff, file_content, src_file, tgt_file):
     data_logger.info(f"<SUCCESS>")
-    data_logger.info(f"DIFF: {diff}")
-    data_logger.info(f"FILE CONTENT: {file_content}")
-    data_logger.info(f"SRC FILE: {src_file}")
-    data_logger.info(f"TGT FILE: {tgt_file}")
-    data_logger.info(f"<SUCCESS>")
+    data_logger.info(f"<DIFF>")
+    data_logger.info(f"{diff}")
+    data_logger.info(f"</DIFF>")
+    data_logger.info(f"<FILECONTENT>")
+    data_logger.info(f"{file_content}")
+    data_logger.info(f"</FILECONTENT>")
+    data_logger.info(f"<SRCFILE>")
+    data_logger.info(f"{src_file}")
+    data_logger.info(f"</SRCFILE>")
+    data_logger.info(f"<TGTFILE>")
+    data_logger.info(f"{tgt_file}")
+    data_logger.info(f"</TGTFILE>")
+    data_logger.info(f"</SUCCESS>")
 
 def log_failed_diff(diff, file_content, src_file, tgt_file):
     data_logger.info(f"<FAIL>")
-    data_logger.info(f"DIFF: {diff}")
-    data_logger.info(f"FILE CONTENT: {file_content}")
-    data_logger.info(f"SRC FILE: {src_file}")
-    data_logger.info(f"TGT FILE: {tgt_file}")
-    data_logger.info(f"<FAIL>")
+    data_logger.info(f"<DIFF>")
+    data_logger.info(f"{diff}")
+    data_logger.info(f"</DIFF>")
+    data_logger.info(f"<FILECONTENT>")
+    data_logger.info(f"{file_content}")
+    data_logger.info(f"</FILECONTENT>")
+    data_logger.info(f"<SRC FILE>")
+    data_logger.info(f"{src_file}")
+    data_logger.info(f"</SRCFILE>")
+    data_logger.info(f"<TGTFILE>")
+    data_logger.info(f"{tgt_file}")
+    data_logger.info(f"</TGTFILE>")
+    data_logger.info(f"</FAIL>")
 
 
 class Hallucination(Exception):
@@ -422,13 +438,14 @@ def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
     base_indent_match = get_indent(src_lines[src_start][1])
     base_indent_hunk = get_indent(new_lines[0])
     indented_new_lines = new_lines
+    print(base_indent_match)
 
     if base_indent_match != base_indent_hunk:
         if base_indent_match > base_indent_hunk:
             indented_new_lines = ["    " * (base_indent_match - base_indent_hunk) + line for line in new_lines]
         else:
             indented_new_lines = [line.replace("    " * (base_indent_hunk - base_indent_match), "") for line in new_lines]
-    
+    print(indented_new_lines)
     return indented_new_lines
 
 
@@ -524,7 +541,7 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
         src_start, src_end = match_stripped_lines_context(stripped_src_lines, old_lines)
 
-        print(src_start, src_end)
+        print("LINES",src_start, src_end)
 
         if not (src_start is not None and src_end is not None):
             #Raise hallucination due to not matching full src lines
@@ -621,7 +638,9 @@ def apply_multi_file_context_diff(file_content, diff, original_change_count):
         if original_change_count is not None and (total_new_changed > (original_change_count + 5) or total_new_changed < (original_change_count - 1)):
             raise Hallucination(recover_failed_new_diff_too_different)
     except Hallucination as e:
+        data_logger.error("<ERROR>")
         data_logger.error(e)
+        data_logger.error("</ERROR>")
         failures.append((None, e))
 
     apply_res = apply_file_context_diffs(file_content=file_content, all_diffs=all_diffs)
