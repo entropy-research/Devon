@@ -1656,7 +1656,7 @@ EXAMPLES
 
     def parse_command_to_function(self, command_string, thought: str):
 
-    
+
 
         fn_name, args = self.parse_command(command_string)
         if fn_name in ["python","vim","nano"]:
