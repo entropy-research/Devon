@@ -776,8 +776,6 @@ class SWEEnv(gym.Env):
             if not exists:
                 raise Exception(f"Could not write to file, file does not exist: {abs_path}")
 
-
-            print("WRITING FILE")
             create_command = f"cat << 'DELIM' > {abs_path} \n" + content + "\nDELIM"
             result = self.communicate(input=create_command)
 
