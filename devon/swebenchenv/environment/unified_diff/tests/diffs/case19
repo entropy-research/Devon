@@ -1,3 +1,4 @@
+<<<
 --- /scikit-learn__scikit-learn/sklearn/ensemble/voting.py
 +++ /scikit-learn__scikit-learn/sklearn/ensemble/voting.py
 @@ -88,7 +88,7 @@
@@ -9,3 +10,4 @@
                  for clf in clfs if clf is not None)
  
          self.named_estimators_ = Bunch()
+>>>

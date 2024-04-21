@@ -1,3 +1,4 @@
+<<<
 --- sympy/utilities/autowrap.py
 +++ sympy/utilities/autowrap.py
 @@ -406,18 +406,12 @@
@@ -18,7 +19,8 @@
                  py_args.append(arg)
              if isinstance(arg, (InputArgument, InOutArgument)) and arg.dimensions:
                  dims = [d[1] + 1 for d in arg.dimensions]
--                sym_dims = [(i, d) for (i, d) in enumerate(dims) if isinstance(d, Symbol)]
+-                sym_dims = [(i, d) for (i, d) in enumerate(dims) if 
+-                       isinstance(d, Symbol)]
 -                for (i, d) in sym_dims:
 -                    py_inferred[d] = (arg.name, i)
 -        for arg in args:
@@ -41,3 +43,4 @@
              return mat_dec.format(mtype=mtype, ndim=ndim, name=self._string_var(arg.name))
          else:
              return "%s %s" % (t, self._string_var(arg.name))
+>>>

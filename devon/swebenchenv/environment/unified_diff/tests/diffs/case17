@@ -1,3 +1,4 @@
+<<<
 --- /django__django/tests/utils_tests/test_numberformat.py
 +++ /django__django/tests/utils_tests/test_numberformat.py
 @@ -6,6 +6,13 @@
@@ -14,3 +15,4 @@
      def test_format_number(self):
          self.assertEqual(nformat(1234, "."), "1234")
          self.assertEqual(nformat(1234.2, "."), "1234.2")
+>>>

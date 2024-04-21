@@ -266,22 +266,38 @@ def match_fence_all(stripped_file_lines, fence):
 
     return matches
 
+def strip_comment_from_line(line):
+    comment_index = line.find('#')
+        
+    # If '#' is found, return the line up to that index (stripped of leading/trailing whitespace)
+    if comment_index != -1:
+        return line[:comment_index].strip()
+    
+    # If '#' is not found, return the original line (stripped of leading/trailing whitespace)
+    return line.strip()
+        
+
 def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines, fence_len):
         #create code fence based on lines. i.e. first N content lines
-    begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
+
+    stripped_file_lines = [(i, line) for i, line in [(i, strip_comment_from_line(line)) for i, line in stripped_file_lines] if line != ""]
+    stripped_old_lines = [line for line in [strip_comment_from_line(line) for line in stripped_old_lines] if line != ""]
     
+    begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
+
     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
     begin_matches = match_fence_all(stripped_file_lines, begin_fence)
     end_matches = match_fence_all(stripped_file_lines, stop_fence)
+
+    # print(begin_matches, end_matches)
 
     #for each begin match, find first end match
     valid_pairs = []
     for begin_start, begin_end, src_idx in begin_matches:
         for stop_start, stop_end, end_idx in end_matches:
             #TODO: add a line count error here
-            print(begin_start, stop_end)
-            print(src_idx, end_idx)
-            if src_idx <= end_idx and (stop_end - begin_start + 1) == len(strip_new_lines_from_ends(old_lines)):
+            
+            if src_idx <= end_idx and (end_idx - src_idx + fence_len) == len(stripped_old_lines):
                 valid_pairs.append((begin_start, stop_end))
                 break
 
@@ -514,42 +530,48 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
     #   fix new code block indentation
     #   replace old code block with new code block -> could cause an overlap error
 
+    errors = []
+
     for hunk in file_diff.hunks:
 
-        old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
+        try:
+            old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
 
-        if not (old_lines is not None and new_lines is not None):
-            # if either version is none, raise error
-            raise Hallucination(unable_to_parse_old_or_new_lines)
+            if not (old_lines is not None and new_lines is not None):
+                # if either version is none, raise error
+                raise Hallucination(unable_to_parse_old_or_new_lines)
 
-        src_start, src_end = match_stripped_lines_context(stripped_src_lines, old_lines)
+            src_start, src_end = match_stripped_lines_context(stripped_src_lines, old_lines)
 
-        print(src_start, src_end)
+            print(src_start, src_end)
 
-        if not (src_start is not None and src_end is not None):
-            #Raise hallucination due to not matching full src lines
-            raise Hallucination(not_enough_context_prompt)
+            if not (src_start is not None and src_end is not None):
+                #Raise hallucination due to not matching full src lines
+                raise Hallucination(not_enough_context_prompt)
 
-        if src_end - src_start > len(old_lines) + 5:
-            raise Hallucination(not_enough_context_prompt)
+            if src_end - src_start > len(old_lines) + 5:
+                raise Hallucination(not_enough_context_prompt)
 
-        applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
+            applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
 
-        # insert lines
-        i = 0
-        while i < len(tgt_lines):
-            if tgt_lines[i][0] == src_start:
-                j = 0
-                while i + j < len(tgt_lines) and tgt_lines[i + j][0] != src_end:
-                    j += 1
+            # insert lines
+            i = 0
+            while i < len(tgt_lines):
+                if tgt_lines[i][0] == src_start:
+                    j = 0
+                    while i + j < len(tgt_lines) and tgt_lines[i + j][0] != src_end:
+                        j += 1
 
-                tgt_lines[i : i + j + 1] = [(-1, line) for line in applied_code]
-                break
+                    tgt_lines[i : i + j + 1] = [(-1, line) for line in applied_code]
+                    break
 
-            i += 1
+                i += 1
+        except Hallucination as e:
+            print(e)
+            errors.append((hunk, e, file_content))
 
     #return correct code
-    return "\n".join([entry[1] for entry in list(tgt_lines)])
+    return "\n".join([entry[1] for entry in list(tgt_lines)]), errors
 
 def extract_all_diffs(diff_input):
     if isinstance(diff_input, list):
@@ -594,12 +616,11 @@ def apply_file_context_diffs(file_content, all_diffs):
 
     #for each diff block, apply context diff, returns tuple result (abspath, new_content)
     for diff in all_diffs:
-        try:
-            result = apply_context_diff(file_content=file_content, file_diff=diff)
+        result, errors = apply_context_diff(file_content=file_content, file_diff=diff)
+        if len(errors) == 0:
             succeeded.append((diff.tgt_file, result, file_content))
-        except Hallucination as e:
-            print(e)
-            failed.append((diff, e, file_content))
+        else:
+            failed.extend(errors)
 
     #should return files with new code to write
     return {
