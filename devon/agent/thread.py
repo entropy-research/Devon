@@ -60,11 +60,8 @@ class Agent:
 
         Returns the model output."""
 
-        f_tree = state["file_tree"]
-
-        issue, filetree, editor, working_dir = (
+        issue, editor, working_dir = (
             state["issue"],
-            json.dumps(f_tree),
             json.dumps(state["editor"]),
             state["cwd"],
         )
@@ -90,7 +87,7 @@ class Agent:
         history = history_to_bash_history(self.history)
 
         last_user_prompt = last_user_prompt_template_v3(
-            issue, history, filetree, editor, working_dir
+            issue, history, editor, working_dir
         )
 
         messages = [{"role": "user", "content": last_user_prompt}]
@@ -201,7 +198,6 @@ class Agent:
             + commands_to_command_docs(list(commanddoc.values()))
             + "\n"
         )
-        print(len(self.history))
 
         system_prompt = system_prompt_template_v3(commands + command_docs)
         self.history.append({"role": "system", "content": system_prompt})
@@ -284,7 +280,7 @@ OBSERVATION: {observation}
         self.history = []
 
         #  save trajectory as jsonl
-        self.save_trajectory(trajectory, traj_dir, env, info, run_id)
+        self.save_trajectory(trajectory, traj_dir, env, info, env.record["instance_id"])
 
         logger.debug(info)
         return info
