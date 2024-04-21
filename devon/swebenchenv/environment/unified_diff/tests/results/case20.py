@@ -428,12 +428,12 @@ class AdminSite:
             else:
                 if getattr(match.func, 'should_append_slash', True):
                     return HttpResponsePermanentRedirect(path)
-        raise Http404
-
-    def build_app_dict(self, request, label=None):
-        """
-        Build the app dictionary. The optional  parameter filters models
-        of a specific app.
+                raise Http404
+        
+            def build_app_dict(self, request, label=None):
+                """
+                Build the app dictionary. The optional  parameter filters models
+                of a specific app.
         """
         app_dict = {}
 

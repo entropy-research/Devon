@@ -1004,7 +1004,11 @@ EXAMPLES
             for result in successes:
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
                 # diff_logger.debug("<BEFORE>" + result[1] + "</BEFORE>")
+                old_editor_code = self.editor[result[0]]
                 self.write_file(file_path=result[0], content=result[1])
+                new_editor_code = self.editor[result[0]]
+
+                assert(old_editor_code != new_editor_code)
                 # diff_logger.debug("<AFTER>" + self.read_file(file_path=result[0]) + "</AFTER>")
 
             return "Successfully edited file"
