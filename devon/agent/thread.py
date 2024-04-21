@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 import random
 from typing import Optional, Tuple, Dict
-from devon.agent.model import AnthropicModel, ModelArguments
+from devon.agent.model import AnthropicModel, HumanModel, ModelArguments
 from tenacity import RetryError
 from devon.agent.prompt import (
     commands_to_command_docs,
@@ -36,7 +36,7 @@ class Agent:
         )
         self.default_model = self.opus
         self.current_model = self.opus
-        # self.model = HumanModel(args=ModelArguments(
+        # self.default_model = HumanModel(args=ModelArguments(
         #     model_name="gpt-4-0314",
         #     # total_cost_limit=0.0,
         #     # per_instance_cost_limit=2.0,
@@ -46,7 +46,7 @@ class Agent:
 
         self.name = name
         self.history = []
-        self.max_steps = 15
+        self.max_steps = 5
 
     def forward_model(
         self,

@@ -296,8 +296,8 @@ def strip_comment_from_line(line):
 def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines, fence_len):
         #create code fence based on lines. i.e. first N content lines
 
-    stripped_file_lines = [(i, line) for i, line in [(i, strip_comment_from_line(line)) for i, line in stripped_file_lines] if line != ""]
-    stripped_old_lines = [line for line in [strip_comment_from_line(line) for line in stripped_old_lines] if line != ""]
+    # stripped_file_lines = 
+    # stripped_old_lines = 
     
     begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
 
@@ -328,12 +328,27 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
     fence_len = 3
     results = []
     while not results and fence_len > 1:
-        results = match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines, fence_len=fence_len)
+        results = match_stripped_lines_context_with_fence_len(
+            [(i, line) for i, line in [(i, line.strip()) for i, line in stripped_file_lines] if line != ""],
+            [line for line in [line.strip() for line in stripped_old_lines] if line != ""],
+            old_lines, 
+            fence_len=fence_len
+        )
 
         if len(results) > 0:
             break
-        else:
-            fence_len -= 1
+
+        results = match_stripped_lines_context_with_fence_len(
+            [(i, line) for i, line in [(i, strip_comment_from_line(line)) for i, line in stripped_file_lines] if line != ""],
+            [line for line in [strip_comment_from_line(line) for line in stripped_old_lines] if line != ""],
+            old_lines, 
+            fence_len=fence_len
+        )
+
+        if len(results) > 0:
+            break
+
+        fence_len -= 1
 
     #if none throw error
     if not results:
@@ -472,19 +487,20 @@ def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
 
 not_enough_context_prompt = """
 NotEnoughContextError:
-    In the diff, the deleted lines (denoted with -), and the context lines you provided (unchanged lines) did not match the existing source file.
+    It appears that the diff you provided could not be applied successfully because the deleted lines (starting with -) and the context lines did not match the content of the existing source file.
 
-    The provided deleted (-) and unchanged lines were built into a code block that was then used to identify where the edit would be applied.
-    However, this did not work. The content lines you created did not match the actual source file.
+    To resolve this issue, please generate additional context lines that match the original source code exactly.
+    When selecting lines to include, carefully compare each line to the actual source file to ensure a perfect match. Aim to provide at least 3-4 lines of matching context before and after the section you want to modify.
 
-    The problem is that there were not enough context lines provided, and the provided context lines DO NOT EXIST.
-    
-    The solution to fix this error is to provide additional context lines matching the original source lines exactly.
+    Keep in mind that even minor discrepancies between the context lines and the original code will prevent the diff from being applied correctly.
+    In about half of these cases, the problem stems from context lines that don't precisely align with the source.
 
-    When writing the lines, ask yourself, does this line actually exist in the source code?
-    About half of the time it doesn't actually exist! Make sure you only write source lines that exist.
-
-    Please pay more attention to the exact lines you are writing.
+    To generate the additional lines needed:
+    1. Locate the section of the source code where you want to make changes
+    2. Carefully copy several lines immediately before and after the relevant section
+    3. Double-check that each copied line is identical to the original source code
+    4. Include these matching context lines in your diff, surrounding the lines you want to change
+    5. By providing sufficient and accurate context, the diff tool will be able to pinpoint the correct location in the file and apply your changes seamlessly.
 """
 
 unable_to_parse_old_or_new_lines = """

@@ -776,7 +776,9 @@ class SWEEnv(gym.Env):
             if not exists:
                 raise Exception(f"Could not write to file, file does not exist: {abs_path}")
 
-            create_command = f"cat << DELIM > '{abs_path}' \n" + content + "\nDELIM"
+
+            print("WRITING FILE")
+            create_command = f"cat << 'DELIM' > {abs_path} \n" + content + "\nDELIM"
             result = self.communicate(input=create_command)
 
             if self.returncode == 1:
@@ -874,7 +876,7 @@ CREATE_FILE(1)                        April 2024                         CREATE_
 
             # Creating the file with initial content
 
-            create_command = f"cat << DELIM > '{abs_path}' \n" + content + "\nDELIM"
+            create_command = f"cat << 'EOF' > '{abs_path}' \n" + content + "\nEOF"
             result = self.communicate(input=create_command)
 
             # copy_file_to_container(self.container_obj, contents=content, container_path=file_path)
@@ -977,7 +979,7 @@ EXAMPLES
 
             apply_result = apply_file_context_diffs(src_content, [file_diff])
             results.append(apply_result)
-        
+
         return results
 
     def real_write_diff(self, diff, thought):
@@ -1042,14 +1044,14 @@ EXAMPLES
             # save archive to file
             with tarfile.open(fileobj=temp_file, mode='r') as tar:
                 tar.extractall(path=temp_dir)
-            
+
             code_graph = initialize_repository(temp_dir, self.class_table, self.function_table)
 
             # os.remove(temp_file)
 
         return code_graph
 
-    
+
     def find_function(self, function_name):
         """NAME 
       find_function - get location of function or method in the codebase

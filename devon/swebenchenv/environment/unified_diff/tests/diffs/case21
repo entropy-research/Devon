@@ -1,0 +1,13 @@
+edit_file <<<
+--- sympy/printing/latex.py
++++ sympy/printing/latex.py
+@@ -740,7 +740,7 @@
+             inv_trig_style = self._settings['inv_trig_style']
+             # If we are dealing with a power-style inverse trig function
+             inv_trig_power_case = False
+-            inv_trig_table = ["asin", "acos", "atan", "acot"]
++            inv_trig_table = ["asin", "acos", "atan", "acsc", "asec", "acot"]
+ 
+             # If the function is an inverse trig function, handle the style
+             if func in inv_trig_table:
+>>>

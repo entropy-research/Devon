@@ -500,7 +500,7 @@ Single executable command here
 </PROBLEM SCOPE>
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
-- When editing, try to write out the target code block first in ```python ... target-code ... ```
+- Focus on matching the source lines precisely
 </EDITING TIPS>"""
 
 def parse_response(response):
