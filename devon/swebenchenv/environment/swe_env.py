@@ -406,7 +406,6 @@ class SWEEnv(gym.Env):
 
     # terminates container
     # if persistent, pause container
-    # 
     def close(self):
         """
         Handle environment shutdown
@@ -670,7 +669,7 @@ class SWEEnv(gym.Env):
     def load_file_to_editor(self, file_path):
         abs_path = self.make_abs_path(file_path)
         contents = self.read_file(abs_path)
-        self.editor[abs_path] = contents
+        self.editor[abs_path]["lines"] = contents
 
 
     def _list_files_recursive(self, files: list[str]) -> dict:
@@ -738,13 +737,204 @@ class SWEEnv(gym.Env):
                 raise Exception(f"Could not open file, file does not exist: {abs_path}")
 
             file_contents = self.read_file(file_path=abs_path)
-            self.editor[abs_path] = file_contents
+            self.editor[abs_path] = {}
+            self.editor[abs_path]["lines"] = file_contents
+            self.editor[abs_path]["page"] = 0
 
             return f"File {abs_path} opened in editor"
 
         except Exception as e:
             self.logger.error(f"Failed to open file: {abs_path}. Error: {str(e)}")
             return f"Failed to open file: {abs_path}. Error: {str(e)}"
+
+    PAGE_SIZE = 500
+
+    def scroll_down(self, file_path: str):
+        """
+    SCROLL_DOWN(1)        General Commands Manual        SCROLL_DOWN(1)
+
+    NAME
+        scroll_down - scroll down by one window of size 500 in the specified file
+
+    SYNOPSIS
+        scroll_down FILE_PATH
+
+    DESCRIPTION
+        The scroll_down command scrolls down by one page in the file
+        specified by FILE_PATH. If the file is not open or does not exist,
+        an exception is raised.
+
+    OPTIONS
+        FILE_PATH
+            The path of the file to scroll down in. The path can be either
+            an absolute path or a relative path from the current working
+            directory.
+
+    RETURN VALUE
+        The scroll_down command returns a string indicating the new line
+        number after scrolling down.
+
+    EXAMPLES
+        To scroll down by one page in the file "/path/to/file.txt":
+
+            scroll_down "/path/to/file.txt"
+
+    SEE ALSO
+        scroll_up(1), open_file(1), close_file(1)
+
+    SCROLL_DOWN(1)         April 2024         SCROLL_DOWN(1)
+    """
+        cwd = self.get_cwd().strip()
+        if file_path.startswith(cwd):
+            abs_path = self.make_abs_path(file_path)
+        else:
+            abs_path = self.make_abs_path(cwd + "/" +  file_path)
+        
+        exists = self.file_exists(abs_path)
+        if not exists:
+            raise Exception(f"Could not scroll in file, file does not exist: {abs_path}")
+        
+        if not (abs_path in self.editor):
+            raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
+
+        lines = self.editor[abs_path]["lines"].splitlines()
+
+        last_page_idx = len(lines) // self.PAGE_SIZE
+
+        old_page_number = self.editor[abs_path]["page"]
+
+        if old_page_number == last_page_idx:
+            new_page_number = last_page_idx
+        else:
+            new_page_number = old_page_number + 1
+        
+        self.editor[abs_path]["page"] = new_page_number
+
+        return f"Scrolled down in file {abs_path} to line {self.PAGE_SIZE * new_page_number}"
+    
+    def scroll_up(self, file_path: str):
+        """
+    SCROLL_UP(1)        General Commands Manual        SCROLL_UP(1)
+
+    NAME
+        scroll_up - scroll up by one page in the specified file
+
+    SYNOPSIS
+        scroll_up FILE_PATH
+
+    DESCRIPTION
+        The scroll_up command scrolls up by one page in the file specified
+        by FILE_PATH. If the file is not open or does not exist, an
+        exception is raised.
+
+    OPTIONS
+        FILE_PATH
+            The path of the file to scroll up in. The path can be either an
+            absolute path or a relative path from the current working
+            directory.
+
+    RETURN VALUE
+        The scroll_up command returns a string indicating the new line
+        number after scrolling up.
+
+    EXAMPLES
+        To scroll up by one page in the file "/path/to/file.txt":
+
+            scroll_up "/path/to/file.txt"
+
+    SEE ALSO
+        scroll_down(1), open_file(1), close_file(1)
+
+    SCROLL_UP(1)         April 2024         SCROLL_UP(1)
+    """
+        cwd = self.get_cwd().strip()
+        if file_path.startswith(cwd):
+            abs_path = self.make_abs_path(file_path)
+        else:
+            abs_path = self.make_abs_path(cwd + "/" +  file_path)
+        
+        exists = self.file_exists(abs_path)
+        if not exists:
+            raise Exception(f"Could not scroll in file, file does not exist: {abs_path}")
+        
+        if not (abs_path in self.editor):
+            raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
+
+        lines = self.editor[abs_path]["lines"].splitlines()
+
+        old_page_number = self.editor[abs_path]["page"]
+
+        if old_page_number == 0:
+            new_page_number = 0
+        else:
+            new_page_number = old_page_number - 1
+        
+        self.editor[abs_path]["page"] = new_page_number
+
+        return f"Scrolled up in file {abs_path} to line {self.PAGE_SIZE * new_page_number}"
+
+    def scroll_to_line(self, file_path: str, line_number: str):
+        """
+        SCROLL_TO_LINE(1)        General Commands Manual        SCROLL_TO_LINE(1)
+
+        NAME
+            scroll_to_line - scroll to the window containing the specified line in the file
+
+        SYNOPSIS
+            scroll_to_line FILE_PATH LINE_NUMBER
+
+        DESCRIPTION
+            The scroll_to_line command scrolls to the window containing the specified
+            LINE_NUMBER in the file specified by FILE_PATH. If the file is not open or
+            does not exist, an exception is raised.
+
+        OPTIONS
+            FILE_PATH
+                The path of the file to scroll to the line in. The path can be either an
+                absolute path or a relative path from the current working directory.
+
+            LINE_NUMBER
+                The line number to scroll to within the file.
+
+        RETURN VALUE
+            The scroll_to_line command returns a string indicating the line number at
+            the start of the window after scrolling.
+
+        EXAMPLES
+            To scroll to the window containing line 1000 in the file "/path/to/file.txt":
+
+                scroll_to_line "/path/to/file.txt" 1000
+
+        SEE ALSO
+            scroll_up(1), scroll_down(1), open_file(1), close_file(1)
+
+        SCROLL_TO_LINE(1)         April 2024         SCROLL_TO_LINE(1)
+        """
+        cwd = self.get_cwd().strip()
+        if file_path.startswith(cwd):
+            abs_path = self.make_abs_path(file_path)
+        else:
+            abs_path = self.make_abs_path(cwd + "/" + file_path)
+
+        exists = self.file_exists(abs_path)
+        if not exists:
+            raise Exception(f"Could not scroll in file, file does not exist: {abs_path}")
+
+        if not (abs_path in self.editor):
+            raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
+
+        lines = self.editor[abs_path]["lines"].splitlines()
+        total_lines = len(lines)
+        line_number = int(line_number)
+
+        if line_number < 1 or line_number > total_lines:
+            raise Exception(f"Invalid line number: {line_number}. Line number should be between 1 and {total_lines}.")
+
+        window_number = (line_number - 1) // self.PAGE_SIZE
+        self.editor[abs_path]["page"] = window_number
+
+        window_start_line = window_number * self.PAGE_SIZE + 1
+        return f"Scrolled to window containing line {line_number} in file {abs_path}. Window starts at line {window_start_line}."
 
     def close_file(self, file_path: str) -> bool:
         """
@@ -782,7 +972,7 @@ class SWEEnv(gym.Env):
             if self.returncode == 1:
                 raise Exception(result)
             
-            self.editor[abs_path] = content
+            self.editor[abs_path]["lines"] = content
             msg = f"Successfully wrote to file {abs_path}"
             logger.info(msg)
 
@@ -885,7 +1075,9 @@ CREATE_FILE(1)                        April 2024                         CREATE_
             if not exists:
                 raise Exception(f"Command failed to create file: {abs_path}")
 
-            self.editor[abs_path] = content
+            self.editor[abs_path] = {}
+            self.editor[abs_path]["lines"] = content
+            self.editor[abs_path]["page"] = 0
             return f"Successfully created file {abs_path}"
 
         except Exception as e:
@@ -1012,9 +1204,9 @@ EXAMPLES
             for result in successes:
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
                 # diff_logger.debug("<BEFORE>" + result[1] + "</BEFORE>")
-                old_editor_code = self.editor[result[0]]
+                old_editor_code = self.editor[result[0]]["lines"]
                 self.write_file(file_path=result[0], content=result[1])
-                new_editor_code = self.editor[result[0]]
+                new_editor_code = self.editor[result[0]]["lines"]
 
                 assert(old_editor_code != new_editor_code)
                 # diff_logger.debug("<AFTER>" + self.read_file(file_path=result[0]) + "</AFTER>")
@@ -1228,58 +1420,78 @@ EXAMPLES
         result = f"Found {num_matches} matches for \"{search_term}\" in {dir}:\n{matches}"
         return result.replace('\n', '\n    ')
 
-#     def search_file(self, search_term: str, file: str = None):
-#         """
-#         NAME
-#       search_file - search for a term in a specific file
+    def _capture_window(self, lines, index, window_size):
 
-# SYNOPSIS
-#       search_file [SEARCH_TERM] [FILE]
+        start_line = index - window_size if index - window_size >= 0 else 0
+        end_line = index + window_size if index + window_size <= len(lines) else len(lines)
 
-# DESCRIPTION
-#       The search_file command searches for SEARCH_TERM in the specified FILE. If FILE is
-#       not provided, it searches in the current open file.
+        content_lines = "\n".join(lines[start_line:end_line])
 
-# OPTIONS
-#       SEARCH_TERM
-#              The term to search for in the file.
 
-#       FILE  The file to search in. If not provided, the command searches in the current
-#              open file.
+        return f"""
+Match found on line: {index}
+{content_lines}
+"""
 
-# RETURN VALUE
-#       The search_file command returns a summary of the search results as a string.
+    def search_file(self, search_term: str, file_path: str = None):
+        """
+        NAME
+      search_file - search for a term in a specific file
 
-# EXAMPLES
-#       To search for the term "hello" in the current open file:
+SYNOPSIS
+      search_file [SEARCH_TERM] [FILE]
 
-#              search_file "hello"
+DESCRIPTION
+      The search_file command searches for SEARCH_TERM in the specified FILE. If FILE is
+      not provided, it searches in the current open file.
 
-#       To search for the term "world" in the file "/path/to/file.txt":
+OPTIONS
+      SEARCH_TERM
+             The term to search for in the file.
 
-#              search_file "world" "/path/to/file.txt"
-#         """
+      FILE  The file to search in. If not provided, the command searches in the current
+             open file.
 
-#         abs_file = self.make_abs_path(file)
+RETURN VALUE
+      The search_file command returns a summary of the search results as a string.
 
-#         if file is None:
-#             file = list(self.editor.keys())[0]
+EXAMPLES
+      To search for the term "hello" in the current open file:
 
-#         command = f"grep -nH '{search_term}' {abs_file}"
-#         result = self.communicate(command)
+             search_file "hello"
 
-#         matches = result.strip()
-#         if not matches:
-#             return f"No matches found for \"{search_term}\" in {abs_file}"
+      To search for the term "world" in the file "/path/to/file.txt":
 
-#         num_matches = matches.count('\n') + 1
-#         num_lines = len(set(match.split(':')[0] for match in matches.split('\n')))
+             search_file "world" "/path/to/file.txt"
+        """
 
-#         if num_lines > 100:
-#             return f"More than {num_lines} lines matched for \"{search_term}\" in {abs_file}. Please narrow your search."
+        cwd = self.get_cwd().strip()
+        if file_path.startswith(cwd):
+            abs_path = self.make_abs_path(file_path)
+        else:
+            abs_path = self.make_abs_path(cwd + "/" +  file_path)
+        
+        if not (abs_path in self.editor):
+            raise Exception(f"Could not find in file, file is not open: {abs_path}")
 
-#         result = f"Found {num_matches} matches for \"{search_term}\" in {abs_file}:\n{matches}"
-#         return result.replace('\n', '\n    ')
+        content_lines = self.editor[abs_path]["lines"].splitlines()
+
+        matches = []
+        tolerance = 10
+        for i, line in enumerate(content_lines):
+            if search_term in line:
+                matches.append(self._capture_window(content_lines, i, tolerance))
+
+        if not matches:
+            return f"No matches found for \"{search_term}\" in {abs_path}"
+
+        num_matches = len(matches)
+
+        if num_matches > 10:
+            return f"More than {10} lines matched for \"{search_term}\" in {abs_path}. Please narrow your search."
+
+        result = f"Found {num_matches} matches for \"{search_term}\" in {abs_path}:\n{"\n".join(matches)}"
+        return result
 
 #     def search_files(self, file_name: str, dir: str = "./"):
 #         """
@@ -1397,11 +1609,15 @@ EXAMPLES
             self.find_class,
             # self.search_file,
             # self.search_files,
+            self.search_file,
             self.get_cwd,
             self.delete_file,
             self.edit_file,
             self.submit,
-            self.no_op
+            self.no_op,
+            self.scroll_up,
+            self.scroll_down,
+            self.scroll_to_line,
         ]
 
         docs = {}
@@ -1461,10 +1677,14 @@ EXAMPLES
             self.find_class,
             # self.search_file,
             # self.search_files,
+            self.search_file,
             self.get_cwd,
             self.delete_file,
             self.submit,
-            self.no_op
+            self.no_op,
+            self.scroll_up,
+            self.scroll_down,
+            self.scroll_to_line,
         ]
 
         fn_names = [fn.__name__ for fn in funcs]

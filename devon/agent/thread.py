@@ -48,6 +48,36 @@ class Agent:
         self.history = []
         self.max_steps = 15
 
+    def _format_editor_entry(self, k, v):
+
+        path = k
+        page = v["page"]
+        content_lines = v["lines"].splitlines()
+
+        last_idx = len(content_lines) // self.PAGE_SIZE
+        if page == last_idx:
+            content_len = content_lines % self.PAGE_SIZE
+        else:
+            content_len = self.PAGE_SIZE
+
+        start_idx = page * self.PAGE_SIZE
+        window_lines = "\n".join(content_lines[start_idx:start_idx+content_len])
+
+        return f"""
+************ FILE: {path}, WINDOW STARTLINE: {start_idx}, TOTAL FILE LINES: {len(content_lines)} ************
+{window_lines}
+************************************
+"""
+
+    def _convert_editor_to_view(self, editor):
+        result = []
+
+        for k, v in editor.items():
+
+            result.append(self._format_editor_entry(k, v))
+        
+        return "\n".join(result)
+
     def forward_model(
         self,
         observation: str,
@@ -62,7 +92,7 @@ class Agent:
 
         issue, editor, working_dir = (
             state["issue"],
-            json.dumps(state["editor"]),
+            self._convert_editor_to_view(state["editor"]),
             state["cwd"],
         )
 
@@ -187,6 +217,7 @@ class Agent:
         available_actions = env.get_available_actions()
         commanddoc = env.generate_command_docs()
         self.history = []
+        self.PAGE_SIZE = env.PAGE_SIZE
 
         commands = (
             "Avaliable Custom Commands:\n"

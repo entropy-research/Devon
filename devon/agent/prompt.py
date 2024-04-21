@@ -388,7 +388,7 @@ def system_prompt_template_v3(command_docs: str):
 
 **Environment:**
 
-Editor: Can open and edit code files. Focus on files relevant to each bug fix.
+Editor: Can open and edit code files. Focus on files relevant to each bug fix. Auto-saves when editing.
 Terminal: Execute commands to perform actions. Modify failed commands before retrying.
 History: Access previous thoughts and actions for reflection.
 
@@ -443,7 +443,7 @@ Instructions:
 
 Edit necessary files and run checks/tests
 Submit changes with 'submit' command when ready
-Interactive session commands (e.g. python, vim) not supported
+Interactive session commands (e.g. python, vim) NOT supported
 Write and run scripts instead (e.g. 'python script.py')
 </SETTING>
 <WORKSPACE>
@@ -501,6 +501,7 @@ Single executable command here
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
 - Focus on matching the source lines precisely
+- scroll to the target lines first using the scroll commands
 </EDITING TIPS>"""
 
 def parse_response(response):
