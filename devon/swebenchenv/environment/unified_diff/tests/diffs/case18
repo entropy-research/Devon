@@ -1,0 +1,43 @@
+--- sympy/utilities/autowrap.py
++++ sympy/utilities/autowrap.py
+@@ -406,18 +406,12 @@
+     def _partition_args(self, args):
+         """Group function arguments into categories."""
+         py_args = []
+         py_returns = []
+         py_locals = []
+-        py_inferred = {}
+         for arg in args:
+             if isinstance(arg, OutputArgument):
+                 py_returns.append(arg)
+                 py_locals.append(arg)
+             elif isinstance(arg, InOutArgument):
+                 py_returns.append(arg)
+                 py_args.append(arg)
+             else:
+                 py_args.append(arg)
+             if isinstance(arg, (InputArgument, InOutArgument)) and arg.dimensions:
+                 dims = [d[1] + 1 for d in arg.dimensions]
+-                sym_dims = [(i, d) for (i, d) in enumerate(dims) if isinstance(d, Symbol)]
+-                for (i, d) in sym_dims:
+-                    py_inferred[d] = (arg.name, i)
+-        for arg in args:
+-            if arg.name in py_inferred:
+-                py_inferred[arg] = py_inferred.pop(arg.name)
+-        py_args = [a for a in py_args if a not in py_inferred]
++                arg.cython_dims = dims
+         return py_returns, py_args, py_locals, py_inferred
+@@ -438,10 +438,10 @@
+         mat_dec = "np.ndarray[{mtype}, ndim={ndim}] {name}"
+         np_types = {'double': 'np.double_t',
+                     'int': 'np.int_t'}
+         t = arg.get_datatype('c')
+-        if arg.dimensions:
++        if hasattr(arg, 'cython_dims'):
+             self._need_numpy = True
+-            ndim = len(arg.dimensions)
++            ndim = len(arg.cython_dims)
+             mtype = np_types[t]
+             return mat_dec.format(mtype=mtype, ndim=ndim, name=self._string_var(arg.name))
+         else:
+             return "%s %s" % (t, self._string_var(arg.name))
