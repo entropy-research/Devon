@@ -116,8 +116,19 @@ class Agent:
 
         system_prompt = system_prompt_template_v3(commands + command_docs)
 
-        history = history_to_bash_history(self.history)
 
+        last_observation = None
+        second_last_observation = None
+        if len(self.history) > 2:
+            last_observation = self.history[-1]["content"]
+            second_last_observation = self.history[-3]["content"]
+        if last_observation and second_last_observation and "Failed to edit file" in last_observation and "Failed to edit file" in second_last_observation:
+            self.history = self.history[:-6]
+            history = history_to_bash_history(self.history)
+            self.current_model.args.temperature+= 0.2 if self.current_model.args.temperature < 0.8 else 0
+        else:
+            history = history_to_bash_history(self.history)
+        print("HISTORY: ", history)
         last_user_prompt = last_user_prompt_template_v3(
             issue, history, editor, working_dir
         )

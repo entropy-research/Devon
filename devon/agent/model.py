@@ -3,7 +3,7 @@ from anthropic import Anthropic
 import os
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class ModelArguments:
     model_name: str
     temperature: float = 1.0
