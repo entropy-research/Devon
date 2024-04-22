@@ -66,7 +66,7 @@ class Agent:
         window_lines = "\n".join(content_lines[start_idx:start_idx+content_len])
 
         return f"""
-************ FILE: {path}, WINDOW STARTLINE: {start_idx}, TOTAL FILE LINES: {all_lines_len} ************
+************ FILE: {path}, WINDOW STARTLINE: {start_idx}, WINDOW ENDLINE: {start_idx+content_len}, TOTAL FILE LINES: {all_lines_len} ************
 {window_lines}
 ************************************
 """

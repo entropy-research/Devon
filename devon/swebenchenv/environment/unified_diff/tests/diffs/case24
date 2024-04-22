@@ -1,0 +1,11 @@
+edit_file <<<
+--- /sympy__sympy/sympy/printing/latex.py
++++ /sympy__sympy/sympy/printing/latex.py
+@@ -742,7 +742,7 @@
+ 
+-            inv_trig_table = ["asin", "acos", "atan", "acot"]
++            inv_trig_table = ["asin", "acos", "atan", "acsc", "asec", "acot"]
+
+             # If the function is an inverse trig function, handle the style
+             if func in inv_trig_table:
+>>>

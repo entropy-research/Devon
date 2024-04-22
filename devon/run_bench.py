@@ -346,7 +346,6 @@ if __name__ == "__main__":
     "psf__requests-2674",
 ]
 
-
     defaults = ScriptArguments(
         suffix="",
         environment=EnvironmentArguments(
@@ -361,7 +360,7 @@ if __name__ == "__main__":
             # django-13447
             # django-11583
             # "pytest__pytest-7373"
-            specific_issues=issues
+            specific_issues=["django__django-14915"]
         ),
         skip_existing=True,
     )

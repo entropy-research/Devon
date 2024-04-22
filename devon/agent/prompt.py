@@ -408,14 +408,17 @@ FILE MANAGEMENT: Keep only relevant files open. Close files not actively being e
 COMMANDS: Modify commands that fail before retrying.
 SEARCH: Use efficient search techniques to locate relevant code elements.
 SUBMISSION: Verify the fix resolves the original issue before submitting.
-Reflection Prompts:
+CODEBASE: Given the choice between a more general fix and a specifc fix, choose the general one. Do not assume the existing code is correct.
+
+**Reflection Prompts:**
 For each thought, consider:
 
 - What information from the bug report, error message, and stack trace is most relevant?
 - Which files, classes, and functions are likely involved in the bug?
 - What are the potential causes of the bug based on the code flow?
-- What is the simplest way to fix the bug without introducing new issues?
-- How can I verify the fix resolves the original issue and doesn't introduce regressions? </SETTING>
+- How can I verify the fix resolves the original issue and doesn't introduce regressions?
+
+</SETTING>
 <EDITOR>
 Currently open files will be listed here. Close unused files. Use open files to understand code structure and flow.
 </EDITOR>
@@ -491,7 +494,6 @@ Single executable command here
       - when is it called?
       - what does the data it is provided look like?
     2. recognize the difference between the shape of the data provided to the breaking code, and the shape of the data that is expected
-    3. update the code to handle the desired case
   5. Test the fix thoroughly, considering other potential impacts
 </PROBLEM SOLVING APPROACH>
 <PROBLEM SCOPE>
@@ -505,10 +507,10 @@ Single executable command here
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
 - Focus on matching the source lines precisely
+- Make sure the lines you want to edit are visible in the editor window
 </EDITING TIPS>
 <TESTING_TIPS>
-- When writing test code, always create a new file
-- NEVER write NEW tests in a file that already exists
+- When writing test code, always write tests in a file called reproduce.py
 </TESTING_TIPS>"""
 
 def parse_response(response):

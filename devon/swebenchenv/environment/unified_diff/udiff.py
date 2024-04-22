@@ -146,8 +146,15 @@ def extract_diff_from_response(diff_text):
     ]
 
 def strip_new_lines_from_ends(lines):
-    temp = "\n".join(lines)
-    return temp.strip().splitlines()
+    content_lines_start = 0
+    while content_lines_start < len(lines) and lines[content_lines_start] == "":
+        content_lines_start += 1
+    
+    content_lines_end = 0
+    while content_lines_end < len(lines) and list(reversed(lines[content_lines_start])) == "":
+        content_lines_start += 1
+
+    return lines[content_lines_start: len(lines)-content_lines_end]
 
 def construct_versions_from_diff_hunk(hunk: ContextHunk):
     old_lines = []
@@ -163,7 +170,6 @@ def construct_versions_from_diff_hunk(hunk: ContextHunk):
             new_lines.append(line.content)
 
     return old_lines, new_lines
-
 
 def find_nth_content_line(lines, n):
     start = 0
@@ -183,7 +189,6 @@ def find_nth_content_line(lines, n):
 
     return lines[start:end]  # maybe off by one? dont think so though, need to test
 
-
 def create_code_fence(old_lines, fence_len=3):
 
     if len(old_lines) < 4:
@@ -194,7 +199,6 @@ def create_code_fence(old_lines, fence_len=3):
         end_fence = list(reversed(find_nth_content_line(list(reversed(old_lines)), fence_len)))
 
     return start_fence, end_fence
-
 
 def levenshtein_distance(s1, s2):
     m, n = len(s1), len(s2)
@@ -214,7 +218,6 @@ def levenshtein_distance(s1, s2):
 
     return dp[m][n]
 
-
 def is_fuzzy_match(s1, s2, threshold=1):
 
     for a, b in zip(s1, s2):
@@ -222,7 +225,6 @@ def is_fuzzy_match(s1, s2, threshold=1):
         if distance > threshold:
             return False
     return True
-
 
 def match_fence(lines, fence, start_index=0):
     subset_length = len(fence)
@@ -235,39 +237,6 @@ def match_fence(lines, fence, start_index=0):
                 return lines[i][0], lines[i + subset_length - 1][0], i
 
     return None, None, None
-
-
-# def match_stripped_lines_context(stripped_file_lines, old_lines):
-
-#     #given stripped file lines and stripped old lines,
-#     stripped_old_lines = [line.strip() for line in old_lines]
-#     stripped_old_lines = [line for line in stripped_old_lines if line != ""]
-
-#     #create code fence based on lines. i.e. first N content lines
-#     begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines)
-#     # print(begin_fence, stop_fence)
-
-#     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
-#     begin_start, begin_end, src_idx = match_fence(stripped_file_lines, begin_fence)
-
-#     #find all begin matches
-#     #find all end matches
-#     #for each begin match, find first end match
-    
-#     #given all pairs filter out the ones longer than size of old_lines
-#     #if none throw error
-#     #return
-
-#     if src_idx is not None:
-#         stop_start, stop_end, _ = match_fence(stripped_file_lines, stop_fence, src_idx)
-#     else:
-#         stop_start, stop_end, _ = match_fence(stripped_file_lines, stop_fence)
-
-#     start = begin_start
-#     end = stop_end
-
-#     return start, end
-
 
 def match_fence_all(stripped_file_lines, fence):
     matches = []
@@ -294,21 +263,27 @@ def strip_comment_from_line(line):
         
 
 def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines, fence_len):
-        #create code fence based on lines. i.e. first N content lines
+    #create code fence based on lines. i.e. first N content lines
 
-    # stripped_file_lines = 
-    # stripped_old_lines = 
-    
-    begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
+    # Match single line changes
+    if len(stripped_old_lines) == 1:
 
-    if len(begin_fence) < 2 or len(stop_fence) < 2:
-        raise Hallucination(not_enough_context_prompt)
+        begin_fence = stripped_old_lines
+        stop_fence = stripped_old_lines
+        begin_matches = match_fence_all(stripped_file_lines, begin_fence)
+
+        # If we allowed a single line match, but the match is not unique, bail
+        if len(stripped_old_lines) == 1 and len(begin_matches) > 1:
+            raise Hallucination(not_enough_context_prompt)
+        else:
+            return [begin_matches[0][:2]]
+
+    else:
+        begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
 
     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
     begin_matches = match_fence_all(stripped_file_lines, begin_fence)
     end_matches = match_fence_all(stripped_file_lines, stop_fence)
-
-    # print(begin_matches, end_matches)
 
     #for each begin match, find first end match
     valid_pairs = []
@@ -319,7 +294,7 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
             if src_idx <= end_idx and (end_idx - src_idx + fence_len) == len(stripped_old_lines):
                 valid_pairs.append((begin_start, stop_end))
                 break
-
+    
     return valid_pairs
 
 
@@ -467,18 +442,16 @@ def get_relative_indents(lines):
     return spaces
 
 def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
-
     base_indent_match = get_indent(src_lines[src_start][1])
     base_indent_hunk = get_indent(new_lines[0])
     indented_new_lines = new_lines
-    print(base_indent_match)
 
     if base_indent_match != base_indent_hunk:
         if base_indent_match > base_indent_hunk:
             indented_new_lines = ["    " * (base_indent_match - base_indent_hunk) + line for line in new_lines]
         else:
             indented_new_lines = [line.replace("    " * (base_indent_hunk - base_indent_match), "") for line in new_lines]
-    print(indented_new_lines)
+
     return indented_new_lines
 
 # single diff apply rules
@@ -499,6 +472,7 @@ IncorrectContextLines:
     The user's patch tool requires at minimum the first two and last two source lines to match in order apply the patch.
 
     Keep in mind that even minor discrepancies between the context lines and the original code will prevent the diff from being applied correctly.
+    To solve this, always makre sure you have the target lines open in the editor.
 """
 
 not_enough_context_prompt = """
@@ -572,13 +546,6 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
     tgt_lines = list(src_lines)
 
-    #for hunk in file diffs:
-    #   construct code blocks
-    #   match old code block on stripped lines
-    #   align old code block with new code block
-    #   fix new code block indentation
-    #   replace old code block with new code block -> could cause an overlap error
-
     errors = []
 
     for hunk in file_diff.hunks:
@@ -591,6 +558,8 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
                 raise Hallucination(unable_to_parse_old_or_new_lines)
 
             src_start, src_end = match_stripped_lines_context(stripped_src_lines, old_lines)
+
+            new_lines = strip_new_lines_from_ends(new_lines)
 
             print(src_start, src_end)
 
