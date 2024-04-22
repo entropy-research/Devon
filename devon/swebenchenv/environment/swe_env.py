@@ -1569,7 +1569,8 @@ EXAMPLES
         if num_matches > 10:
             return f"More than {10} lines matched for \"{search_term}\" in {abs_path}. Please narrow your search."
 
-        result = f"Found {num_matches} matches for \"{search_term}\" in {abs_path}:\n{"\n".join(matches)}"
+        matches = '\n'.join(matches)
+        result = f"Found {num_matches} matches for \"{search_term}\" in {abs_path}:\n {matches}"
         return result
 
 #     def search_files(self, file_name: str, dir: str = "./"):

@@ -332,7 +332,7 @@ def get_instances(file_path: str, base_commit: str = None, split: str = None, to
     try:
         # Attempt load from HF datasets as a last resort
         if specific_issues:
-            return [task for task in load_dataset(file_path, split=split) if task['instance_id'] in specific_issues]
+            return [task for task in load_dataset(file_path, split=split) if task['instance_id'] in specific_issues] + [task for task in load_dataset(file_path, split=split)]
         else:
             return load_dataset(file_path, split=split)
     except:
