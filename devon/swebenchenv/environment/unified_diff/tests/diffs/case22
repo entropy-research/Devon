@@ -1,0 +1,13 @@
+edit_file <<<
+--- sympy/solvers/polysys.py
++++ sympy/solvers/polysys.py
+@@ -240,7 +240,7 @@ def _solve_reduced_system(system, gens, entry=False):
+ 
+         univariate = list(filter(_is_univariate, basis))
+ 
+-        if len(univariate) == 1:
++        if len(univariate) == 1 and len(gens) == 1:
+             f = univariate.pop()
+         else:
+             raise NotImplementedError(filldedent('''
+>>>
