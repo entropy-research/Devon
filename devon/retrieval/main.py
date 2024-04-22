@@ -34,13 +34,18 @@ class FunctionTable:
         functions =  self.function_table.get(function_name, {})
         if len(functions) == 0:
             return {}
-
-        locations = [function.get("location", {}) for function in functions]
-        for location in locations:
-            # get rid of the temp_dir from the location
-            if location.get("file_path","").startswith(self.temp_dir):
-                location["file_path"] = location["file_path"][len(self.temp_dir):]
-        return locations
+        
+        results = []
+        for function in functions:
+            result = {}
+            result["location"] = function.get("location", {})
+            if result["location"].get("file_path","").startswith(self.temp_dir):
+                result["location"]["file_path"] = result["location"]["file_path"][len(self.temp_dir):]
+            result["code"] = function.get("code","")
+            if len(result["code"].split("/n")) > 20:
+                result["code"] = "\n".join(result["code"].split("/n")[:20]) + "\n..."
+            results.append(result)
+        return results
     
     def save_to_file(self, file_path):
         if not os.path.exists(os.path.dirname(file_path)):
