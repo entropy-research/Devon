@@ -1240,13 +1240,11 @@ EXAMPLES
         if len(failures) == 0:
             for result in successes:
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
-                # diff_logger.debug("<BEFORE>" + result[1] + "</BEFORE>")
                 old_editor_code = self.editor[result[0]]["lines"]
                 self.write_file(file_path=result[0], content=result[1])
                 new_editor_code = self.editor[result[0]]["lines"]
 
                 assert(old_editor_code != new_editor_code)
-                # diff_logger.debug("<AFTER>" + self.read_file(file_path=result[0]) + "</AFTER>")
 
             return "Successfully edited file"
 
@@ -1740,12 +1738,9 @@ EXAMPLES
         fn_name, args = self.parse_command(command_string)
         if fn_name in ["vim","nano"]:
             return "Interactive Commands are not allowed"
-        
+
         if fn_name == "python" and len(args) != 1:
             return "Interactive Commands are not allowed"
-
-        # print(f"EXECUTING COMMAND: {fn_name}")
-        # print(json.dumps(self.editor))
 
         funcs = [
             # self.list_files,

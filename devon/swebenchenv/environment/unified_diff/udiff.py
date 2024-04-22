@@ -301,6 +301,9 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
     
     begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
 
+    if len(begin_fence) < 2 or len(stop_fence) < 2:
+        raise Hallucination(not_enough_context_prompt)
+
     #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
     begin_matches = match_fence_all(stripped_file_lines, begin_fence)
     end_matches = match_fence_all(stripped_file_lines, stop_fence)
@@ -353,7 +356,7 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
     #if none throw error
     if not results:
         return None, None
-    
+
     return results[0]
 
 
@@ -445,7 +448,6 @@ def get_indent(line):
         return count
     else:
         return 0
-        
 
 def get_prefix_whitespace(line):
     
@@ -479,11 +481,25 @@ def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
     print(indented_new_lines)
     return indented_new_lines
 
-
 # single diff apply rules
 # 4. Try to match on lines -> if no match -> try again with more context = retry loop
 #     1. If match on lines doesn’t match the first 3 and last 3 bail
 # 5. Generate indent error -> auto fix indentation after match
+
+incorrect_context_prompt = """
+IncorrectContextLines:
+    It appears that the diff you provided could not be applied successfully because the deleted lines (starting with -) and the context lines did not match the content of the existing source file.
+
+    To resolve this issue, please only include context lines that match the original source code exactly.
+
+    To do this:
+    - First copy and paste the exact source code lines you are trying to target.
+    - Second, pay special attention to the differences, and then write the patch
+
+    The user's patch tool requires at minimum the first two and last two source lines to match in order apply the patch.
+
+    Keep in mind that even minor discrepancies between the context lines and the original code will prevent the diff from being applied correctly.
+"""
 
 not_enough_context_prompt = """
 NotEnoughContextError:
@@ -579,11 +595,12 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
             print(src_start, src_end)
 
             if not (src_start is not None and src_end is not None):
-                #Raise hallucination due to not matching full src lines
-                raise Hallucination(not_enough_context_prompt)
+                #Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
+                raise Hallucination(incorrect_context_prompt)
 
             if src_end - src_start > len(old_lines) + 5:
-                raise Hallucination(not_enough_context_prompt)
+                #Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
+                raise Hallucination(incorrect_context_prompt)
 
             applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
 
