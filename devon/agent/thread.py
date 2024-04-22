@@ -55,9 +55,10 @@ class Agent:
         page = v["page"]
         content_lines = v["lines"].splitlines()
 
-        last_idx = len(content_lines) // self.PAGE_SIZE
+        all_lines_len = len(content_lines)
+        last_idx = all_lines_len // self.PAGE_SIZE
         if page == last_idx:
-            content_len = content_lines % self.PAGE_SIZE
+            content_len = all_lines_len % self.PAGE_SIZE
         else:
             content_len = self.PAGE_SIZE
 
@@ -65,7 +66,7 @@ class Agent:
         window_lines = "\n".join(content_lines[start_idx:start_idx+content_len])
 
         return f"""
-************ FILE: {path}, WINDOW STARTLINE: {start_idx}, TOTAL FILE LINES: {len(content_lines)} ************
+************ FILE: {path}, WINDOW STARTLINE: {start_idx}, TOTAL FILE LINES: {all_lines_len} ************
 {window_lines}
 ************************************
 """

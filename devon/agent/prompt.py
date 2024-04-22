@@ -462,6 +462,7 @@ Write and run scripts instead (e.g. 'python script.py')
 - Use files currently open in editor for information
 - Locate code elements with 'find_class' or 'find_function', not 'search'
 - 'no_op' command available to allow for more thinking time 
+- The title or first line of the issue describes the issue succintly
 </CONSTRAINTS>
 <RESPONSE FORMAT>
 <THOUGHT>
@@ -477,6 +478,7 @@ Single executable command here
 <PROBLEM SOLVING APPROACH>
 - Identify the root cause and specific failure case triggering the issue
 - Recognize the issue as a logic problem within the provided codebase
+- Identify the data structures and types involved in the failing code path
 - Focus on fixing the underlying logic bug in the library code
 - Steps:
   1. Pinpoint the exact error and conditions causing it
@@ -497,12 +499,17 @@ Single executable command here
 - **User-defined code referenced in issue is unavailable**
 - Focus on library code, not user code
 - You do not need additional user code to solve this issue! You have all information needed provided to you in the issue!
+- Adjust the library code to fix the error, even if it is related to user examples and code.
+- DO NOT WORRY ABOUT CHANGING CORE PARTS OF THE CODEBASE YOU ARE ON A BRANCH
 </PROBLEM SCOPE>
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
 - Focus on matching the source lines precisely
-- scroll to the target lines first using the scroll commands
-</EDITING TIPS>"""
+</EDITING TIPS>
+<TESTING_TIPS>
+- When writing test code, always create a new file
+- NEVER write NEW tests in a file that already exists
+</TESTING_TIPS>"""
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]

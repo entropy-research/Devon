@@ -691,7 +691,8 @@ class SWEEnv(gym.Env):
         file_tree_dict = {}
         for file_path in all_files:
             add_to_tree(file_path, file_tree_dict)  # Adds to file tree
-            add_to_tree(file_path, directory_tree)  # Additionally, adds to directory tree for a broader structure
+            add_to_tree(os.path.dirname(file_path), directory_tree)  # Additionally, adds to directory tree for a broader structure
+            
             if file_path in files:
                 # Read file content from container
                 result = self.communicate(f"cat '{file_path}'")
@@ -725,11 +726,14 @@ class SWEEnv(gym.Env):
             file_path (str): The path of the file to open.
         """
         try:
+            abs_path = self.make_abs_path(file_path)
+
             cwd = self.get_cwd().strip()
-            if file_path.startswith(cwd):
-                abs_path = self.make_abs_path(file_path)
+            if abs_path.startswith(cwd):
+                abs_path = self.make_abs_path(abs_path)
             else:
-                abs_path = self.make_abs_path(cwd + "/" +  file_path)
+                abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+
             if abs_path in self.editor:
                 raise Exception(f"File {abs_path} already open in editor")
             exists = self.file_exists(abs_path)
@@ -784,11 +788,13 @@ class SWEEnv(gym.Env):
 
     SCROLL_DOWN(1)         April 2024         SCROLL_DOWN(1)
     """
+        abs_path = self.make_abs_path(file_path)
+
         cwd = self.get_cwd().strip()
-        if file_path.startswith(cwd):
-            abs_path = self.make_abs_path(file_path)
+        if abs_path.startswith(cwd):
+            abs_path = self.make_abs_path(abs_path)
         else:
-            abs_path = self.make_abs_path(cwd + "/" +  file_path)
+            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
         
         exists = self.file_exists(abs_path)
         if not exists:
@@ -847,11 +853,13 @@ class SWEEnv(gym.Env):
 
     SCROLL_UP(1)         April 2024         SCROLL_UP(1)
     """
+        abs_path = self.make_abs_path(file_path)
+
         cwd = self.get_cwd().strip()
-        if file_path.startswith(cwd):
-            abs_path = self.make_abs_path(file_path)
+        if abs_path.startswith(cwd):
+            abs_path = self.make_abs_path(abs_path)
         else:
-            abs_path = self.make_abs_path(cwd + "/" +  file_path)
+            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
         
         exists = self.file_exists(abs_path)
         if not exists:
@@ -910,11 +918,13 @@ class SWEEnv(gym.Env):
 
         SCROLL_TO_LINE(1)         April 2024         SCROLL_TO_LINE(1)
         """
+        abs_path = self.make_abs_path(file_path)
+
         cwd = self.get_cwd().strip()
-        if file_path.startswith(cwd):
-            abs_path = self.make_abs_path(file_path)
+        if abs_path.startswith(cwd):
+            abs_path = self.make_abs_path(abs_path)
         else:
-            abs_path = self.make_abs_path(cwd + "/" + file_path)
+            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
 
         exists = self.file_exists(abs_path)
         if not exists:
@@ -946,10 +956,13 @@ class SWEEnv(gym.Env):
         Returns:
             bool: True if the file was successfully deleted, False otherwise.
         """
-        if file_path.startswith(self.get_cwd()):
-            abs_path = self.make_abs_path(file_path)
+        abs_path = self.make_abs_path(file_path)
+
+        cwd = self.get_cwd().strip()
+        if abs_path.startswith(cwd):
+            abs_path = self.make_abs_path(abs_path)
         else:
-            abs_path = self.make_abs_path(self.get_cwd() + file_path)
+            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
 
         if abs_path in self.editor:
             del self.editor[abs_path]
@@ -962,6 +975,13 @@ class SWEEnv(gym.Env):
         try:
             # Check if file doesnt already exists to avoid overwriting
             abs_path = self.make_abs_path(file_path)
+            
+            cwd = self.get_cwd().strip()
+            if abs_path.startswith(cwd):
+                abs_path = self.make_abs_path(abs_path)
+            else:
+                abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+
             exists = self.file_exists(abs_path)
             if not exists:
                 raise Exception(f"Could not write to file, file does not exist: {abs_path}")
@@ -987,6 +1007,13 @@ class SWEEnv(gym.Env):
         try:
             # Check if file already exists to avoid overwriting
             abs_path = self.make_abs_path(file_path)
+
+            cwd = self.get_cwd().strip()
+            if abs_path.startswith(cwd):
+                abs_path = self.make_abs_path(abs_path)
+            else:
+                abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+
             exists = self.file_exists(abs_path)
             if not exists:
                 raise Exception(f"Could not delete file, file does not exist: {abs_path}")
@@ -1058,13 +1085,20 @@ CREATE_FILE(1)                        April 2024                         CREATE_
         try:
             # Check if file already exists to avoid overwriting
             abs_path = self.make_abs_path(file_path)
+
+            cwd = self.get_cwd().strip()
+            if abs_path.startswith(cwd):
+                abs_path = self.make_abs_path(abs_path)
+            else:
+                abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+
             exists = self.file_exists(abs_path)
             if exists:
                 raise Exception(f"Could not create file, file already exists: {abs_path}")
 
             # Creating the file with initial content
 
-            create_command = f"cat << 'EOF' > '{abs_path}' \n" + content + "\nEOF"
+            create_command = f"cat << 'DELIM' > '{abs_path}' \n" + content + "\nDELIM"
             result = self.communicate(input=create_command)
 
             # copy_file_to_container(self.container_obj, contents=content, container_path=file_path)
@@ -1157,14 +1191,17 @@ EXAMPLES
 
             # diff_logger.debug("Applying diff to: %s, %s", src_file_abs, tgt_file_abs)
             cwd = self.get_cwd().strip()
+
             if tgt_file_abs.startswith(cwd):
                 tgt_file_abs = self.make_abs_path(tgt_file_abs)
             else:
-                tgt_file_abs = self.make_abs_path(cwd + "/" +  file_path)
+                tgt_file_abs = self.make_abs_path(os.path.join(cwd, tgt_file_abs))
+
             if src_file_abs.startswith(cwd):
                 src_file_abs = self.make_abs_path(src_file_abs)
             else:
-                src_file_abs = self.make_abs_path(cwd + "/" +  file_path)
+                src_file_abs = self.make_abs_path(os.path.join(cwd, src_file_abs))
+
             if not src_file_exists:
                 raise Exception(f"Failed to write diff with source file: {src_file}, {src_file_abs} not open")
 
@@ -1366,6 +1403,46 @@ DESCRIPTION
 submit"""
         return self.communicate(command)
 
+    def find_file(self, file_path: str):
+        """
+        FIND_FILE(1)        General Commands Manual        FIND_FILE(1)
+
+        NAME
+            find_file - search for a file by name within the file system
+
+        SYNOPSIS
+            find_file FILE_PATH
+
+        DESCRIPTION
+            The find_file command searches for a file by its name within the file
+            system starting from the root directory specified by self.file_root.
+            It returns the paths of all files that match the specified filename.
+
+        OPTIONS
+            FILE_PATH
+                The path of the file to search for. The function extracts the
+                filename from the provided path.
+
+        RETURN VALUE
+            The find_file command returns a string containing the paths of all
+            files that match the specified filename, separated by newline
+            characters. If no matching files are found, an empty string is
+            returned.
+
+        EXAMPLES
+            To search for a file named "example.txt" within the file system:
+
+                find_file "/path/to/example.txt"
+
+        SEE ALSO
+            ls(1), locate(1)
+
+        FIND_FILE(1)         April 2024         FIND_FILE(1)
+        """
+        filename = os.path.basename(file_path)
+        command = f"find {self.file_root} -type f -name '{filename}'"
+        result = self.communicate(command)
+        return result
 
     def search_dir(self, search_term: str, dir: str = "./"):
         """NAME
@@ -1465,12 +1542,14 @@ EXAMPLES
              search_file "world" "/path/to/file.txt"
         """
 
+        abs_path = self.make_abs_path(file_path)
+
         cwd = self.get_cwd().strip()
-        if file_path.startswith(cwd):
-            abs_path = self.make_abs_path(file_path)
+        if abs_path.startswith(cwd):
+            abs_path = self.make_abs_path(abs_path)
         else:
-            abs_path = self.make_abs_path(cwd + "/" +  file_path)
-        
+            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+
         if not (abs_path in self.editor):
             raise Exception(f"Could not find in file, file is not open: {abs_path}")
 
@@ -1618,6 +1697,7 @@ EXAMPLES
             self.scroll_up,
             self.scroll_down,
             self.scroll_to_line,
+            self.find_file,
         ]
 
         docs = {}
@@ -1656,10 +1736,11 @@ EXAMPLES
 
     def parse_command_to_function(self, command_string, thought: str):
 
-
-
         fn_name, args = self.parse_command(command_string)
-        if fn_name in ["python","vim","nano"]:
+        if fn_name in ["vim","nano"]:
+            return "Interactive Commands are not allowed"
+        
+        if fn_name == "python" and len(args) != 1:
             return "Interactive Commands are not allowed"
 
         # print(f"EXECUTING COMMAND: {fn_name}")
@@ -1685,6 +1766,7 @@ EXAMPLES
             self.scroll_up,
             self.scroll_down,
             self.scroll_to_line,
+            self.find_file,
         ]
 
         fn_names = [fn.__name__ for fn in funcs]

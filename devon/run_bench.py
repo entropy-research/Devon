@@ -128,6 +128,7 @@ def main(args: ScriptArguments):
                 )
             except Exception as e:
                 logger.error(f"Error running agent: {e}")
+                traceback.print_exc()
                 continue
             save_predictions(traj_dir, instance_id, info)
 
@@ -208,14 +209,14 @@ if __name__ == "__main__":
     tasks = [x.strip() for x in tasks]
 
     issues = [
-    "sympy__sympy-16988",
-#    "astropy__astropy-12907",
-    "django__django-13230",
+    # "sympy__sympy-16988",
+    # "astropy__astropy-12907",
+    # "django__django-13230",
     "django__django-17051",
     "django__django-11049",
     "pytest__pytest-7373",
     "pytest__pytest-5221",
-    "django__django-12700",
+    # "django__django-12700",
     "sympy__sympy-12481",
 #    "matplotlib__matplotlib-25079",
     "django__django-12856",
@@ -227,7 +228,8 @@ if __name__ == "__main__":
 #    "matplotlib__matplotlib-24334",
     "pytest__pytest-7432",
 #    "astropy__astropy-12907",
-    "psf__requests-2674",
+    # "psf__requests-2674",
+    "psf__requests-2317",
 ]
 
     defaults = ScriptArguments(
@@ -239,7 +241,12 @@ if __name__ == "__main__":
             verbose=True,
             container_name="swe-agent",
             install_environment=True,
-            specific_issues="django__django-14915"
+            # django-14787
+            # django-16046
+            # django-13447
+            # django-11583
+            # "pytest__pytest-7373"
+            specific_issues=["pytest-dev__pytest-7373"]
         ),
         skip_existing=True,
     )
