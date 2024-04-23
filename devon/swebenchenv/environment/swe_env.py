@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from git import Repo
 from openai import OpenAI
 from rich.logging import RichHandler
-from simple_parsing.helpers import FrozenSerializable
+from simple_parsing.helpers import Serializable
 from devon.retrieval.main import ClassTable, FunctionTable, get_class_defn, get_function_defn, initialize_repository
 from devon.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 from devon.swebenchenv.environment.unified_diff.udiff import DATA_LOGGER_NAME, Hallucination, create_recover_prompt, log_failed_diff, log_successful_diff
@@ -84,8 +84,8 @@ class TableCache():
         return os.path.exists(os.path.join(self.dir, f"function_table_{issue_id}.json")) and os.path.exists(os.path.join(self.dir, f"class_table_{issue_id}.json"))
 
 
-@dataclass(frozen=True)
-class EnvironmentArguments(FrozenSerializable):
+@dataclass(frozen=False)
+class EnvironmentArguments(Serializable):
     data_path: str
     image_name: str
     split: str = "dev"

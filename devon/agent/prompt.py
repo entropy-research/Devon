@@ -7,6 +7,7 @@
 # Thought
 # Action
 
+import json
 from typing import Dict, List, Union
 
 def commands_to_command_docs(commands: List[Dict]):
@@ -254,7 +255,7 @@ def history_to_bash_history(history):
     bash_history = ""
     for entry in history:
         if entry["role"] == "user":
-            bash_history += f"{entry['content']}\n"
+            bash_history += json.loads(entry["content"]) if entry["content"] else "" + "\n"
         elif entry["role"] == "assistant":
             bash_history += f"""
 (thought: {entry['thought']})

@@ -32,10 +32,15 @@ logging.getLogger("simple_parsing").setLevel(logging.WARNING)
 
 @dataclass(frozen=True)
 class ScriptArguments(FlattenedAccess, FrozenSerializable):
+    exp_name: str
     environment: EnvironmentArguments
     instance_filter: str = ".*"  # Only run instances that completely match this regex
     skip_existing: bool = True  # Skip instances with existing trajectories
     suffix: str = ""
+    tasklist_path: str = "tasklist"
+    model: str = "claude-opus"
+    temperature: float = 0
+    batch_size: int = 3
 
     @property
     def run_name(self):
@@ -62,85 +67,98 @@ def main(args: ScriptArguments):
 
     print(args.__dict__)
 
-    env = SWEEnv(args.environment)
+    if args.tasklist_path:
+        with open(args.tasklist_path, "r") as f:
+            tasks = f.readlines()
+        tasks = [x.strip() for x in tasks]
 
-    agent = Agent("primary")
+    batch_size = args.batch_size
+    # divide tasks into batches of size batch_size
+    batches = [tasks[i:i+batch_size] for i in range(0, len(tasks), batch_size)]
 
-    traj_dir = Path("trajectories") / Path(getuser()) / Path("_".join([agent.default_model.args.model_name, str(agent.default_model.args.temperature)]))
+
+    for tasks in batches:
+        args.environment.specific_issues = tasks
+
+        env = SWEEnv(args.environment)
+
+        agent = Agent("primary",args.model, args.temperature)
+        print("EXPERIMENT_NAME: ", args.exp_name)
+        traj_dir = Path("trajectories") / Path(args.exp_name) / Path("_".join([agent.default_model.args.model_name, str(agent.default_model.args.temperature)]))
 
 
-    for index in range(len(env.data)):
-        try:
-            # Reset environment
-            instance_id = env.data[index]["instance_id"]
-            if should_skip(args, traj_dir, instance_id):
-                continue
-            logger.info("▶️  Beginning task " + str(index))
+        for index in range(len(env.data)):
             try:
-                observation, info = env.reset(index)
+                # Reset environment
+                instance_id = env.data[index]["instance_id"]
+                if should_skip(args, traj_dir, instance_id):
+                    continue
+                logger.info("▶️  Beginning task " + str(index))
+                try:
+                    observation, info = env.reset(index)
+                except Exception as e:
+                    logger.error(f"Error resetting environment: {e}")
+                    env.reset_container()
+                    continue
+                if info is None:
+                    continue
+
+                agent = Agent("primary", args.model, args.temperature)
+
+                # Get info, patch information
+                issue = getattr(env, "query", None)
+                files = []
+                if "patch" in env.record:
+                    files = "\n".join(
+                        [f"- {x.path}" for x in PatchSet(env.record["patch"]).modified_files]
+                    )
+                # Get test files, F2P tests information
+                test_files = []
+                if "test_patch" in env.record:
+                    test_patch_obj = PatchSet(env.record["test_patch"])
+                    test_files = "\n".join(
+                        [f"- {x.path}" for x in test_patch_obj.modified_files + test_patch_obj.added_files]
+                    )
+                tests = ""
+                if "FAIL_TO_PASS" in env.record:
+                    tests = "\n".join([f"- {x}" for x in env.record["FAIL_TO_PASS"]])
+
+                setup_args = {
+                    "issue": issue,
+                    "files": files,
+                    "test_files": test_files,
+                    "tests": tests
+                }
+                print(agent.default_model.args.model_name)
+
+
+                os.makedirs(traj_dir, exist_ok=True)
+                save_arguments(traj_dir, args)
+
+                try:
+                    
+                    info = agent.run(
+                        setup_args=setup_args,
+                        env=env,
+                        observation=observation,
+                        traj_dir=traj_dir,
+                        return_type="info",
+                    )
+                except Exception as e:
+                    logger.error(f"Error running agent: {e}")
+                    traceback.print_exc()
+                    continue
+                save_predictions(traj_dir, instance_id, info)
+
+            except KeyboardInterrupt:
+                logger.info("Exiting InterCode environment...")
+                env.close()
+                break
             except Exception as e:
-                logger.error(f"Error resetting environment: {e}")
+                traceback.print_exc()
+                logger.warning(f"❌ Failed on {env.record['instance_id']}: {e}")
                 env.reset_container()
                 continue
-            if info is None:
-                continue
-
-            agent = Agent("primary")
-
-            # Get info, patch information
-            issue = getattr(env, "query", None)
-            files = []
-            if "patch" in env.record:
-                files = "\n".join(
-                    [f"- {x.path}" for x in PatchSet(env.record["patch"]).modified_files]
-                )
-            # Get test files, F2P tests information
-            test_files = []
-            if "test_patch" in env.record:
-                test_patch_obj = PatchSet(env.record["test_patch"])
-                test_files = "\n".join(
-                    [f"- {x.path}" for x in test_patch_obj.modified_files + test_patch_obj.added_files]
-                )
-            tests = ""
-            if "FAIL_TO_PASS" in env.record:
-                tests = "\n".join([f"- {x}" for x in env.record["FAIL_TO_PASS"]])
-
-            setup_args = {
-                "issue": issue,
-                "files": files,
-                "test_files": test_files,
-                "tests": tests
-            }
-            print(agent.default_model.args.model_name)
-
-
-            os.makedirs(traj_dir, exist_ok=True)
-            save_arguments(traj_dir, args)
-
-            try:
-                
-                info = agent.run(
-                    setup_args=setup_args,
-                    env=env,
-                    observation=observation,
-                    traj_dir=traj_dir,
-                    return_type="info",
-                )
-            except Exception as e:
-                logger.error(f"Error running agent: {e}")
-                traceback.print_exc()
-                continue
-            save_predictions(traj_dir, instance_id, info)
-
-        except KeyboardInterrupt:
-            logger.info("Exiting InterCode environment...")
-            env.close()
-            break
-        except Exception as e:
-            traceback.print_exc()
-            logger.warning(f"❌ Failed on {env.record['instance_id']}: {e}")
-            env.reset_container()
-            continue
 
 
 def save_arguments(traj_dir, args):
@@ -204,147 +222,162 @@ def save_predictions(traj_dir, instance_id, info):
 
 if __name__ == "__main__":
 
-    with open ("tasklist", "r") as f:
-        tasks = f.readlines()
-    tasks = [x.strip() for x in tasks]
+    import argparse
 
-    issues = [
-        "astropy__astropy-14995",
-        "django__django-10914",
-        "django__django-11039",
-        "django__django-11049",
-        "django__django-11099",
-        "django__django-11133",
-        "django__django-11815",
-        "django__django-12286",
-        "django__django-12453",
-        "django__django-12700",
-        "django__django-12983",
-        "django__django-13028",
-        "django__django-13315",
-        "django__django-13590",
-        "django__django-13658",
-        "django__django-13660",
-        "django__django-13710",
-        "django__django-13925",
-        "django__django-13964",
-        "django__django-14382",
-        "django__django-14608",
-        "django__django-14672",
-        "django__django-14752",
-        "django__django-14855",
-        "django__django-14915",
-        "django__django-15498",
-        "django__django-15789",
-        "django__django-15814",
-        "django__django-15851",
-        "django__django-16041",
-        "django__django-16046",
-        "django__django-16139",
-        "django__django-16255",
-        "django__django-16379",
-        "django__django-16527",
-        "django__django-16595",
-        "django__django-16873",
-        "matplotlib__matplotlib-26020",
-        "psf__requests-3362",
-        "psf__requests-863",
-        "pydata__xarray-5131",
-        "pytest-dev__pytest-11143",
-        "pytest-dev__pytest-5227",
-        "pytest-dev__pytest-5692",
-        "pytest-dev__pytest-7373",
-        "scikit-learn__scikit-learn-13496",
-        "scikit-learn__scikit-learn-13497",
-        "scikit-learn__scikit-learn-13584",
-        "scikit-learn__scikit-learn-14894",
-        "sympy__sympy-13480",
-        "sympy__sympy-13647",
-        "sympy__sympy-13971",
-        "sympy__sympy-14774",
-        "sympy__sympy-16988",
-        "sympy__sympy-18532",
-        "sympy__sympy-20212",
-        "sympy__sympy-21847",
-        "sympy__sympy-22005",
-        "sympy__sympy-23117",
-        "sympy__sympy-24152",
-        "sympy__sympy-24213"
-    "astropy__astropy-14995",
-    "pytest-dev__pytest-5692",
-    "psf__requests-2317",
-    "django__django-13230",
-    "pytest-dev__pytest-5227",
-    "django__django-12286",
-    "django__django-16873",
-    "scikit-learn__scikit-learn-14894",
-    "scikit-learn__scikit-learn-10297",
-    "pylint-dev__pylint-5859",
-    "django__django-14382",
-    "django__django-16255",
-    "sphinx-doc__sphinx-8713",
-    "django__django-16595",
-    "sympy__sympy-24152",
-    "sympy__sympy-23262",
-    "sympy__sympy-13971",
-    "django__django-11583",
-    "scikit-learn__scikit-learn-15535",
-    "sympy__sympy-13647",
-    "django__django-13658",
-    "django__django-10914",
-    "django__django-15814",
-    "django__django-12983",
-    "django__django-14915",
-    "sympy__sympy-13480",
-    "sympy__sympy-24213",
-    "django__django-11133",
-    "matplotlib__matplotlib-23964",
-    "matplotlib__matplotlib-26020",
-    "django__django-13401",
-    "django__django-11099",
-    "django__django-16046",
-    "django__django-16527",
-    "pytest-dev__pytest-11143",
-    "django__django-15347",
-    "django__django-12453",
-    "django__django-14787",
-    "django__django-16379",
-    "django__django-13447",
-    "sympy__sympy-14774",
-    "psf__requests-2674",
-    "scikit-learn__scikit-learn-13584",
-    "matplotlib__matplotlib-26011",
-    "django__django-14999",
-    "django__django-15213",
-    "django__django-14752",
-    "django__django-16139",
-    "django__django-14672",
-    "sympy__sympy-16988",
-    "mwaskom__seaborn-3010",
-    "django__django-11039",
-    "django__django-14855",
-    "django__django-14238"
-    "sympy__sympy-16988",
-#    "astropy__astropy-12907",
-    "django__django-13230",
-    "django__django-17051",
-    "django__django-11049",
-    "pytest__pytest-7373",
-    "pytest__pytest-5221",
-    "django__django-12700",
-    "sympy__sympy-12481",
-#    "matplotlib__matplotlib-25079",
-    "django__django-12856",
-    "django__django-16229",
-    "django__django-11283",
-    "sympy__sympy-14817",
-    "sympy__sympy-16106",
-    "scikit-learn__scikit-learn-14817",
-#    "matplotlib__matplotlib-24334",
-    "pytest__pytest-7432",
-#    "astropy__astropy-12907",
-    "psf__requests-2674",
-]
+    parser = argparse.ArgumentParser(description="Run benchmark with specified parameters.")
+    parser.add_argument("--exp_name", type=str, required=True, help="Experiment name.")
+    parser.add_argument("--task_list_path", type=str, default="tasklist", help="Path to the task list file.")
+    parser.add_argument("--model", type=str, default="opus", help="Model to use for the experiment.")
+    parser.add_argument("--temperature", type=float, default=0, help="Temperature setting for the model.")
+
+    args = parser.parse_args()
+
+    exp_name = args.exp_name
+    task_list_path = args.task_list_path
+    model = args.model
+    temperature = args.temperature
+
+#     with open ("tasklist", "r") as f:
+#         tasks = f.readlines()
+#     tasks = [x.strip() for x in tasks]
+
+#     issues = [
+#         "astropy__astropy-14995",
+#         "django__django-10914",
+#         "django__django-11039",
+#         "django__django-11049",
+#         "django__django-11099",
+#         "django__django-11133",
+#         "django__django-11815",
+#         "django__django-12286",
+#         "django__django-12453",
+#         "django__django-12700",
+#         "django__django-12983",
+#         "django__django-13028",
+#         "django__django-13315",
+#         "django__django-13590",
+#         "django__django-13658",
+#         "django__django-13660",
+#         "django__django-13710",
+#         "django__django-13925",
+#         "django__django-13964",
+#         "django__django-14382",
+#         "django__django-14608",
+#         "django__django-14672",
+#         "django__django-14752",
+#         "django__django-14855",
+#         "django__django-14915",
+#         "django__django-15498",
+#         "django__django-15789",
+#         "django__django-15814",
+#         "django__django-15851",
+#         "django__django-16041",
+#         "django__django-16046",
+#         "django__django-16139",
+#         "django__django-16255",
+#         "django__django-16379",
+#         "django__django-16527",
+#         "django__django-16595",
+#         "django__django-16873",
+#         "matplotlib__matplotlib-26020",
+#         "psf__requests-3362",
+#         "psf__requests-863",
+#         "pydata__xarray-5131",
+#         "pytest-dev__pytest-11143",
+#         "pytest-dev__pytest-5227",
+#         "pytest-dev__pytest-5692",
+#         "pytest-dev__pytest-7373",
+#         "scikit-learn__scikit-learn-13496",
+#         "scikit-learn__scikit-learn-13497",
+#         "scikit-learn__scikit-learn-13584",
+#         "scikit-learn__scikit-learn-14894",
+#         "sympy__sympy-13480",
+#         "sympy__sympy-13647",
+#         "sympy__sympy-13971",
+#         "sympy__sympy-14774",
+#         "sympy__sympy-16988",
+#         "sympy__sympy-18532",
+#         "sympy__sympy-20212",
+#         "sympy__sympy-21847",
+#         "sympy__sympy-22005",
+#         "sympy__sympy-23117",
+#         "sympy__sympy-24152",
+#         "sympy__sympy-24213"
+#     "astropy__astropy-14995",
+#     "pytest-dev__pytest-5692",
+#     "psf__requests-2317",
+#     "django__django-13230",
+#     "pytest-dev__pytest-5227",
+#     "django__django-12286",
+#     "django__django-16873",
+#     "scikit-learn__scikit-learn-14894",
+#     "scikit-learn__scikit-learn-10297",
+#     "pylint-dev__pylint-5859",
+#     "django__django-14382",
+#     "django__django-16255",
+#     "sphinx-doc__sphinx-8713",
+#     "django__django-16595",
+#     "sympy__sympy-24152",
+#     "sympy__sympy-23262",
+#     "sympy__sympy-13971",
+#     "django__django-11583",
+#     "scikit-learn__scikit-learn-15535",
+#     "sympy__sympy-13647",
+#     "django__django-13658",
+#     "django__django-10914",
+#     "django__django-15814",
+#     "django__django-12983",
+#     "django__django-14915",
+#     "sympy__sympy-13480",
+#     "sympy__sympy-24213",
+#     "django__django-11133",
+#     "matplotlib__matplotlib-23964",
+#     "matplotlib__matplotlib-26020",
+#     "django__django-13401",
+#     "django__django-11099",
+#     "django__django-16046",
+#     "django__django-16527",
+#     "pytest-dev__pytest-11143",
+#     "django__django-15347",
+#     "django__django-12453",
+#     "django__django-14787",
+#     "django__django-16379",
+#     "django__django-13447",
+#     "sympy__sympy-14774",
+#     "psf__requests-2674",
+#     "scikit-learn__scikit-learn-13584",
+#     "matplotlib__matplotlib-26011",
+#     "django__django-14999",
+#     "django__django-15213",
+#     "django__django-14752",
+#     "django__django-16139",
+#     "django__django-14672",
+#     "sympy__sympy-16988",
+#     "mwaskom__seaborn-3010",
+#     "django__django-11039",
+#     "django__django-14855",
+#     "django__django-14238"
+#     "sympy__sympy-16988",
+# #    "astropy__astropy-12907",
+#     "django__django-13230",
+#     "django__django-17051",
+#     "django__django-11049",
+#     "pytest__pytest-7373",
+#     "pytest__pytest-5221",
+#     "django__django-12700",
+#     "sympy__sympy-12481",
+# #    "matplotlib__matplotlib-25079",
+#     "django__django-12856",
+#     "django__django-16229",
+#     "django__django-11283",
+#     "sympy__sympy-14817",
+#     "sympy__sympy-16106",
+#     "scikit-learn__scikit-learn-14817",
+# #    "matplotlib__matplotlib-24334",
+#     "pytest__pytest-7432",
+# #    "astropy__astropy-12907",
+#     "psf__requests-2674",
+# ]
 
     defaults = ScriptArguments(
         suffix="",
@@ -360,9 +393,12 @@ if __name__ == "__main__":
             # django-13447
             # django-11583
             # "pytest__pytest-7373"
-            specific_issues=["django__django-14915"]
+            # specific_issues=["django__django-14915"]
         ),
         skip_existing=True,
+        model=model,
+        temperature=temperature,
+        exp_name=exp_name
     )
 
     main(defaults)

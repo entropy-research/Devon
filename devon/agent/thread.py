@@ -27,12 +27,12 @@ logger = logging.getLogger(LOGGER_NAME)
 
 
 class Agent:
-    def __init__(self, name="Devon", args=None):
+    def __init__(self, name="Devon", args=None, model="claude-opus", temperature=0):
         # self.sonnet: AnthropicModel = AnthropicModel(
         #     args=ModelArguments(model_name="claude-sonnet", temperature=0.5)
         # )
         self.opus: AnthropicModel = AnthropicModel(
-            args=ModelArguments(model_name="claude-opus", temperature=0.0)
+            args=ModelArguments(model_name="claude-opus", temperature=temperature)
         )
         self.default_model = self.opus
         self.current_model = self.opus
@@ -47,7 +47,7 @@ class Agent:
 
         self.name = name
         self.history = []
-        self.max_steps = 15
+        self.max_steps = 10
 
     def _format_editor_entry(self, k, v):
 
