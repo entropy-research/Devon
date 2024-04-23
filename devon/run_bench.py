@@ -1,11 +1,14 @@
 
 
+import asyncio
 import json
 import logging
 import os
 import re
 import traceback
 import yaml
+
+import concurrent.futures
 
 from dataclasses import dataclass
 from getpass import getuser
@@ -60,6 +63,90 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
             + f"__c-{per_instance_cost_limit:.2f}__install-{int(install_env)}"
             + (f"__{self.suffix}" if self.suffix else "")
         )
+    
+def process_batch(batch,args):
+    print(batch)
+    # args.environment.specific_issues = batch
+
+    env = SWEEnv(args.environment,batch)
+    print("gadsvevfa")
+    agent = Agent("primary",args.model, args.temperature)
+    print("EXPERIMENT_NAME: ", args.exp_name)
+    traj_dir = Path("trajectories") / Path(args.exp_name) / Path("_".join([agent.default_model.args.model_name, str(agent.default_model.args.temperature)]))
+
+
+    for index in range(len(env.data)):
+        try:
+            # Reset environment
+            instance_id = env.data[index]["instance_id"]
+            if should_skip(args, traj_dir, instance_id):
+                continue
+            logger.info("▶️  Beginning task " + str(index))
+            try:
+                observation, info = env.reset(index)
+            except Exception as e:
+                logger.error(f"Error resetting environment: {e}")
+                env.reset_container()
+                continue
+            if info is None:
+                continue
+
+            agent = Agent("primary", args.model, args.temperature)
+
+            # Get info, patch information
+            issue = getattr(env, "query", None)
+            files = []
+            if "patch" in env.record:
+                files = "\n".join(
+                    [f"- {x.path}" for x in PatchSet(env.record["patch"]).modified_files]
+                )
+            # Get test files, F2P tests information
+            test_files = []
+            if "test_patch" in env.record:
+                test_patch_obj = PatchSet(env.record["test_patch"])
+                test_files = "\n".join(
+                    [f"- {x.path}" for x in test_patch_obj.modified_files + test_patch_obj.added_files]
+                )
+            tests = ""
+            if "FAIL_TO_PASS" in env.record:
+                tests = "\n".join([f"- {x}" for x in env.record["FAIL_TO_PASS"]])
+
+            setup_args = {
+                "issue": issue,
+                "files": files,
+                "test_files": test_files,
+                "tests": tests
+            }
+            print(agent.default_model.args.model_name)
+
+
+            os.makedirs(traj_dir, exist_ok=True)
+            save_arguments(traj_dir, args)
+
+            try:
+                
+                info = agent.run(
+                    setup_args=setup_args,
+                    env=env,
+                    observation=observation,
+                    traj_dir=traj_dir,
+                    return_type="info",
+                )
+            except Exception as e:
+                logger.error(f"Error running agent: {e}")
+                traceback.print_exc()
+                continue
+            save_predictions(traj_dir, instance_id, info)
+
+        except KeyboardInterrupt:
+            logger.info("Exiting InterCode environment...")
+            env.close()
+            break
+        except Exception as e:
+            traceback.print_exc()
+            logger.warning(f"❌ Failed on {env.record['instance_id']}: {e}")
+            env.reset_container()
+            continue
 
 
 def main(args: ScriptArguments):
@@ -76,89 +163,23 @@ def main(args: ScriptArguments):
     # divide tasks into batches of size batch_size
     batches = [tasks[i:i+batch_size] for i in range(0, len(tasks), batch_size)]
 
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for batch in batches:
+            print(batch)
+            future = executor.submit(process_batch, list(batch), args)
+            futures.append(future)
 
-    for tasks in batches:
-        args.environment.specific_issues = tasks
-
-        env = SWEEnv(args.environment)
-
-        agent = Agent("primary",args.model, args.temperature)
-        print("EXPERIMENT_NAME: ", args.exp_name)
-        traj_dir = Path("trajectories") / Path(args.exp_name) / Path("_".join([agent.default_model.args.model_name, str(agent.default_model.args.temperature)]))
-
-
-        for index in range(len(env.data)):
+        for future in concurrent.futures.as_completed(futures):
             try:
-                # Reset environment
-                instance_id = env.data[index]["instance_id"]
-                if should_skip(args, traj_dir, instance_id):
-                    continue
-                logger.info("▶️  Beginning task " + str(index))
-                try:
-                    observation, info = env.reset(index)
-                except Exception as e:
-                    logger.error(f"Error resetting environment: {e}")
-                    env.reset_container()
-                    continue
-                if info is None:
-                    continue
-
-                agent = Agent("primary", args.model, args.temperature)
-
-                # Get info, patch information
-                issue = getattr(env, "query", None)
-                files = []
-                if "patch" in env.record:
-                    files = "\n".join(
-                        [f"- {x.path}" for x in PatchSet(env.record["patch"]).modified_files]
-                    )
-                # Get test files, F2P tests information
-                test_files = []
-                if "test_patch" in env.record:
-                    test_patch_obj = PatchSet(env.record["test_patch"])
-                    test_files = "\n".join(
-                        [f"- {x.path}" for x in test_patch_obj.modified_files + test_patch_obj.added_files]
-                    )
-                tests = ""
-                if "FAIL_TO_PASS" in env.record:
-                    tests = "\n".join([f"- {x}" for x in env.record["FAIL_TO_PASS"]])
-
-                setup_args = {
-                    "issue": issue,
-                    "files": files,
-                    "test_files": test_files,
-                    "tests": tests
-                }
-                print(agent.default_model.args.model_name)
-
-
-                os.makedirs(traj_dir, exist_ok=True)
-                save_arguments(traj_dir, args)
-
-                try:
-                    
-                    info = agent.run(
-                        setup_args=setup_args,
-                        env=env,
-                        observation=observation,
-                        traj_dir=traj_dir,
-                        return_type="info",
-                    )
-                except Exception as e:
-                    logger.error(f"Error running agent: {e}")
-                    traceback.print_exc()
-                    continue
-                save_predictions(traj_dir, instance_id, info)
-
-            except KeyboardInterrupt:
-                logger.info("Exiting InterCode environment...")
-                env.close()
-                break
+                result = future.result()
+                # Process the result if needed
             except Exception as e:
-                traceback.print_exc()
-                logger.warning(f"❌ Failed on {env.record['instance_id']}: {e}")
-                env.reset_container()
-                continue
+                # Handle the exception
+                print(f"An exception occurred: {e}")
+
+        
+    
 
 
 def save_arguments(traj_dir, args):

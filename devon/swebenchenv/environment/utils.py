@@ -161,6 +161,7 @@ def get_background_pids(container_obj):
 
 
 def _get_non_persistent_container(ctr_name: str, image_name: str) -> Tuple[subprocess.Popen, set]:
+    print("gello")
     startup_cmd = [
         "docker",
         "run",
@@ -170,8 +171,8 @@ def _get_non_persistent_container(ctr_name: str, image_name: str) -> Tuple[subpr
         ctr_name,
         image_name,
         "/bin/bash",
-        "-l",
-        "-m",
+        # "-l",
+        # "-m",
     ]
     container = subprocess.Popen(
         startup_cmd,
@@ -183,13 +184,11 @@ def _get_non_persistent_container(ctr_name: str, image_name: str) -> Tuple[subpr
     )
     time.sleep(START_UP_DELAY)
     # try to read output from container setup (usually an error), timeout if no output
-    try:
-        with timeout(seconds=2):
-            output = container.stdout.read()
-            if output:
-                logger.error(f"Unexpected container setup output: {output}")
-    except TimeoutError:
-        pass
+    ready, _, _ = select.select([container.stdout], [], [], 2)
+    if ready:
+        output = container.stdout.readline().strip()
+        if output:
+            logger.error(f"Unexpected container setup output: {output}")
     return container, {"1", }  # bash PID is always 1 for non-persistent containers
 
 
@@ -203,6 +202,7 @@ def get_archive(path,ctr_name: str):
 
 def _get_persistent_container(ctr_name: str, image_name: str, persistent: bool = False) -> Tuple[subprocess.Popen, set]:
     client = docker.from_env()
+    print("testst")
     containers = client.containers.list(all=True, filters={"name": ctr_name})
     if ctr_name in [c.name for c in containers]:
         container_obj = client.containers.get(ctr_name)
@@ -246,13 +246,11 @@ def _get_persistent_container(ctr_name: str, image_name: str, persistent: bool =
     )
     time.sleep(START_UP_DELAY)
     # try to read output from container setup (usually an error), timeout if no output
-    try:
-        with timeout(seconds=2):
-            output = container.stdout.read()
-            if output:
-                logger.error(f"Unexpected container setup output: {output}")
-    except TimeoutError:
-        pass
+    ready, _, _ = select.select([container.stdout], [], [], 2)
+    if ready:
+        output = container.stdout.readline().strip()
+        if output:
+            logger.error(f"Unexpected container setup output: {output}")
     # Get the process IDs of the container
     # There should be at least a head process and possibly one child bash process
     bash_pids, other_pids = get_background_pids(container_obj)
@@ -278,6 +276,7 @@ def get_container(ctr_name: str, image_name: str, persistent: bool = False) -> s
     if persistent:
         return _get_persistent_container(ctr_name, image_name)
     else:
+        print("non persisten")
         return _get_non_persistent_container(ctr_name, image_name)
 
 

@@ -103,7 +103,7 @@ class SWEEnv(gym.Env):
 
     name = "swe_main"
 
-    def __init__(self, args: EnvironmentArguments):
+    def __init__(self, args: EnvironmentArguments,specific_issues: Optional[List[str]] = None):
         super().__init__()
         print("SWEEnv init")
         self.args = args
@@ -149,16 +149,16 @@ class SWEEnv(gym.Env):
 
         # Load Task Instances
         self.data_path = self.args.data_path
-        self.data = get_instances(self.data_path, self.args.base_commit, self.args.split, token=self.token,specific_issues=self.args.specific_issues) #Load data from path
+        self.data = get_instances(self.data_path, self.args.base_commit, self.args.split, token=self.token,specific_issues=specific_issues) #Load data from path
         self.logger.info(f"💽 Loaded dataset from {self.data_path}")
-        self.issues = self.args.specific_issues
+        self.issues = specific_issues
 
         # Establish connection with execution container
         self.image_name = args.image_name
-
+        print("image name")
         # uses mutation to add container to self. WHY??? Academic ass code
         self._reset_container()
-
+        print("container")
         # Set timeout
         self.timeout = self.args.timeout
         self.idx = 1
@@ -437,13 +437,17 @@ class SWEEnv(gym.Env):
 
     def _reset_container(self) -> None: 
         # why has attr?
+        print("reset container")
         if hasattr(self, "container"):
             try:
                 self.container.terminate()
+                print("terminaeted")
             except KeyboardInterrupt:
                 raise
             except:
+                print("terminate")
                 pass
+        print("djbcsvijbhvdafs")
         self._init_container() 
         self._init_scripts()
 
@@ -466,16 +470,19 @@ class SWEEnv(gym.Env):
         # this code seems ai written
         # docker.containers.get -> assumes container exists? raises error if not exist
         if self.container_name is None:
+            print("no name")
             process_id = str(os.getpid())
             current_time = str(datetime.datetime.now())
             unique_string = current_time + process_id
             hash_object = hashlib.sha256(unique_string.encode())
             self.container_name = f"{self.image_name}-{hash_object.hexdigest()[:10]}"
-        
+        print("container name")
         # this is what creates the actual container
         self.container, self.parent_pids = get_container(
             self.container_name, self.image_name, persistent=self.persistent
         )
+        print("hello")
+        print("container")
         
         try:
             client = docker.from_env()
@@ -484,7 +491,8 @@ class SWEEnv(gym.Env):
                 raise RuntimeError(
                     "Docker is not runninsg. Please start Docker and try again."
                 ) from e
-        
+            raise e
+        print("wevcew")
         # ... why does this need to exist. the container already exists above...
         self.container_obj = client.containers.get(self.container_name)
         self.logger.info("🌱 Environment Initialized")
