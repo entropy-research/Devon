@@ -455,13 +455,6 @@ Write and run scripts instead (e.g. 'python script.py')
 </CONSTRAINTS>
 <RESPONSE FORMAT>
 <THOUGHT>
-**Here is my current plan**
-
-**What information do I have? What files does the issue mention?**
-
-**What information do I still need?**
-
-**What do I need to do to get to the end goal?**
 
 **Am I overthinking?**
 Yes, I am overthinking, I should just make the change that fixes all cases of this type.
@@ -491,6 +484,9 @@ Single executable command here
 - Use 'no_op' periodically to pause and think
 - Focus on matching the source lines precisely
 - Make sure the lines you want to edit are visible in the editor window
+- If making a one line change, only include that line
+- Only make one change at a time
+- When changing functions, always make sure to search for and update references
 </EDITING TIPS>
 <TESTING_TIPS>
 - When writing test code, always write tests in a file called reproduce.py

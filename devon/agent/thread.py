@@ -128,7 +128,7 @@ class Agent:
             self.current_model.args.temperature+= 0.2 if self.current_model.args.temperature < 0.8 else 0
         else:
             history = history_to_bash_history(self.history)
-        print("HISTORY: ", history)
+        # print("HISTORY: ", history)
         last_user_prompt = last_user_prompt_template_v3(
             issue, history, editor, working_dir
         )
