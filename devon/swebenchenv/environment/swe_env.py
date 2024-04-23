@@ -618,7 +618,7 @@ class SWEEnv(gym.Env):
 
         self.refresh_editor()
 
-        return {"editor": self.editor, "cwd": self.get_cwd()}
+        return {"editor": self.editor, "cwd": self.get_cwd(), "file_root": self.file_root}
 
     # Used for mission critical commands (mostly setup) to make sure that we bail from this task if there is a command failure
     def communicate_with_handling(
@@ -710,19 +710,27 @@ class SWEEnv(gym.Env):
 
         return {"directory_tree": directory_tree, "file_tree": file_tree, "files_content": files_content}
 
-    def list_dirs_recursive(self, files: list[str]) -> dict:
+    def list_dirs_recursive(self, file_path: str) -> dict:
         """
         Returns the entire directory tree in its entirety from the file system.
 
         Args:
-            files (`list[str]`): List of file paths within the container to return in their entirety.
+            path: the path to list the folder subtree from.
 
         Returns:
             dict: A dictionary with two keys: 'file_tree' containing a list of all files in the tree,
                 and 'files_content' containing a dictionary of specified files and their content.
         """
 
-        return json.dumps(self._list_files_recursive(files)["directory_tree"])
+        abs_path = self.make_abs_path(file_path)
+
+        cwd = self.get_cwd().strip()
+        if abs_path.startswith(cwd):
+            abs_path = self.make_abs_path(abs_path)
+        else:
+            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+
+        return json.dumps(self._list_files_recursive([abs_path])["directory_tree"])
 
     #TOOL FUNCTIONS
 

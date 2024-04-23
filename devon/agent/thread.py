@@ -95,7 +95,7 @@ class Agent:
         issue, editor, working_dir = (
             state["issue"],
             self._convert_editor_to_view(state["editor"]),
-            state["cwd"],
+            state["file_root"],
         )
 
         self.history.append(

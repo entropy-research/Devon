@@ -453,6 +453,7 @@ Write and run scripts instead (e.g. 'python script.py')
 - Locate code elements with 'find_class' or 'find_function', not 'search'
 - 'no_op' command available to allow for more thinking time 
 - The title or first line of the issue describes the issue succintly
+- You only have access to code contained in {working_dir}
 </CONSTRAINTS>
 <RESPONSE FORMAT>
 <THOUGHT>
@@ -484,7 +485,7 @@ Single executable command here
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
 - Focus on matching the source lines precisely
-- Make sure the lines you want to edit are visible in the editor window
+- Always scroll to the lines you want to change
 - If making a one line change, only include that line
 - Only make one change at a time
 - When changing functions, always make sure to search for and update references
