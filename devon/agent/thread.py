@@ -227,6 +227,7 @@ class Agent:
         return_type: Optional[str] = "info",
         init_model_stats=None,
     ):
+        print("Running agent")
         available_actions = env.get_available_actions()
         commanddoc = env.generate_command_docs()
         self.history = []

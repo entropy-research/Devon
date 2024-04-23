@@ -161,7 +161,6 @@ def get_background_pids(container_obj):
 
 
 def _get_non_persistent_container(ctr_name: str, image_name: str) -> Tuple[subprocess.Popen, set]:
-    print("gello")
     startup_cmd = [
         "docker",
         "run",
@@ -171,7 +170,8 @@ def _get_non_persistent_container(ctr_name: str, image_name: str) -> Tuple[subpr
         ctr_name,
         image_name,
         "/bin/bash",
-        # "-l",
+        # "-e", "DEBIAN_FRONTEND=noninteractive",
+        "-l",
         # "-m",
     ]
     container = subprocess.Popen(
@@ -202,7 +202,6 @@ def get_archive(path,ctr_name: str):
 
 def _get_persistent_container(ctr_name: str, image_name: str, persistent: bool = False) -> Tuple[subprocess.Popen, set]:
     client = docker.from_env()
-    print("testst")
     containers = client.containers.list(all=True, filters={"name": ctr_name})
     if ctr_name in [c.name for c in containers]:
         container_obj = client.containers.get(ctr_name)
@@ -276,7 +275,6 @@ def get_container(ctr_name: str, image_name: str, persistent: bool = False) -> s
     if persistent:
         return _get_persistent_container(ctr_name, image_name)
     else:
-        print("non persisten")
         return _get_non_persistent_container(ctr_name, image_name)
 
 
