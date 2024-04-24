@@ -440,14 +440,6 @@ Submit changes with 'submit' command when ready
 Interactive session commands (e.g. python, vim) NOT supported
 Write and run scripts instead (e.g. 'python script.py')
 </SETTING>
-<WORKSPACE>
-<EDITOR>
-{editor}
-</EDITOR>
-</WORKSPACE>
-<HISTORY>
-{history}
-</HISTORY>
 
 <CONSTRAINTS>
 - Execute ONLY ONE command at a time
@@ -489,7 +481,7 @@ Single executable command here
 </PROBLEM SOLVING APPROACH>
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
-- Focus on matching the source lines precisely, to do this make sure you copy and paste the desired source lines first
+- Focus on matching the source lines precisely, to do this make sure you identify the desired source lines first
 - Always scroll to the lines you want to change
 - If making a one line change, only include that line
 - Only make one change at a time
@@ -499,7 +491,15 @@ Single executable command here
 - When writing test code, ALWAYS write tests in a file called reproduce.py
 - Make sure your tests are runnable with python reproduce.py
 - Run your tests
-</TESTING_TIPS>"""
+</TESTING_TIPS>
+<WORKSPACE>
+<EDITOR>
+{editor}
+</EDITOR>
+</WORKSPACE>
+<HISTORY>
+{history}
+</HISTORY>"""
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]

@@ -134,8 +134,8 @@ class Agent:
         )
 
         messages = [{"role": "user", "content": last_user_prompt}]
-        print(system_prompt)
-        print(last_user_prompt)
+        # print(system_prompt)
+        # print(last_user_prompt)
 
         output = self.current_model.query(messages, system_message=system_prompt)
 
