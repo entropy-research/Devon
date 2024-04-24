@@ -15,6 +15,7 @@ import subprocess
 import traceback
 import time
 
+from pyflakes.api import check
 from dataclasses import dataclass
 from git import Repo
 from openai import OpenAI
@@ -64,6 +65,99 @@ data_handler = logging.FileHandler('udiff_data.log')
 
 diff_logger.setLevel(logging.DEBUG)
 diff_logger.addHandler(data_handler)
+
+
+class CustomLintReporter:
+    """
+    Formats the results of pyflakes checks to users.
+    """
+
+    def __init__(self, warningStream=io.StringIO(), errorStream=io.StringIO()):
+        """
+        Construct a L{Reporter}.
+
+        @param warningStream: A file-like object where warnings will be
+            written to.  The stream's C{write} method must accept unicode.
+            C{sys.stdout} is a good value.
+        @param errorStream: A file-like object where error output will be
+            written to.  The stream's C{write} method must accept unicode.
+            C{sys.stderr} is a good value.
+        """
+        self.errors = []
+        self.warnings = []
+        self._stdout = warningStream
+        self._stderr = errorStream
+
+    def unexpectedError(self, filename, msg):
+        """
+        An unexpected error occurred trying to process C{filename}.
+
+        @param filename: The path to a file that we could not process.
+        @ptype filename: C{unicode}
+        @param msg: A message explaining the problem.
+        @ptype msg: C{unicode}
+        """
+        self.errors.append((filename,msg))
+        self._stderr.write(f"{filename}: {msg}\n")
+
+    def syntaxError(self, filename, msg, lineno, offset, text):
+        """
+        There was a syntax error in C{filename}.
+
+        @param filename: The path to the file with the syntax error.
+        @ptype filename: C{unicode}
+        @param msg: An explanation of the syntax error.
+        @ptype msg: C{unicode}
+        @param lineno: The line number where the syntax error occurred.
+        @ptype lineno: C{int}
+        @param offset: The column on which the syntax error occurred, or None.
+        @ptype offset: C{int}
+        @param text: The source code containing the syntax error.
+        @ptype text: C{unicode}
+        """
+        if text is None:
+            line = None
+        else:
+            line = text.splitlines()[-1]
+
+        # lineno might be None if the error was during tokenization
+        # lineno might be 0 if the error came from stdin
+        lineno = max(lineno or 0, 1)
+
+        error = ""
+
+        if offset is not None:
+            # some versions of python emit an offset of -1 for certain encoding errors
+            offset = max(offset, 1)
+            error+=('%d:%d: %s\n' %
+                               (lineno, offset, msg))
+            self._stderr.write('%s:%d:%d: %s\n' %
+                               (filename, lineno, offset, msg))
+        else:
+            error+=(filename,('%d: %s\n' % (lineno, msg)))
+            self._stderr.write('%s:%d: %s\n' % (filename, lineno, msg))
+
+        if line is not None:
+            error+=line + "\n"
+            self._stderr.write(line)
+            self._stderr.write('\n')
+            if offset is not None:
+                error+=re.sub(r'\S', ' ', line[:offset - 1]) + "^\n"
+                self._stderr.write(re.sub(r'\S', ' ', line[:offset - 1]) +
+                                   "^\n")
+        self.errors.append(error)
+
+    def flake(self, message):
+        """
+        pyflakes found something wrong with the code.
+
+        @param: A L{pyflakes.messages.Message}.
+        """
+        print(message)
+        self.errors.append(("",str(message)))
+        self._stdout.write(str(message))
+        self._stdout.write('\n')
+
 
 class TableCache():
 
@@ -699,6 +793,15 @@ class SWEEnv(gym.Env):
 
         return {"directory_tree": directory_tree, "file_tree": file_tree, "files_content": files_content}
 
+    def check_lint(seld,code_string : str,file_path: str):
+
+        reporter = CustomLintReporter()
+
+        check(code_string,file_path, reporter=reporter)
+
+        return (reporter.errors,reporter.warnings)
+
+
     def list_dirs_recursive(self, file_path: str) -> dict:
         """
         Returns the entire directory tree in its entirety from the file system.
@@ -1229,7 +1332,6 @@ EXAMPLES
         all_diffs, _ = extract_all_diffs(diff_code)
         results = self.apply_diff(all_diffs, self.file_root)
 
-        #TODO: This needs to be fixed so that it actually works for multi file diffs
         failures = []
         successes = []
         for result in results:
@@ -1246,12 +1348,31 @@ EXAMPLES
             for result in successes:
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
                 old_editor_code = self.editor[result[0]]["lines"]
+
+                initial_errors,initial_warnings = self.check_lint(old_editor_code,result[0])
                 self.write_file(file_path=result[0], content=result[1])
                 new_editor_code = self.editor[result[0]]["lines"]
-
                 assert(old_editor_code != new_editor_code)
 
-            return "Successfully edited file"
+                final_errors,final_warnings = self.check_lint(result[2],result[0])
+                
+                resulting_errors,resulting_warnings = [],[]
+                for error in initial_errors:
+                    if error not in final_errors:
+                        resulting_errors.append(error)
+                for warning in initial_warnings:
+                    if warning not in final_warnings:
+                        resulting_warnings.append(warning)
+                print(resulting_errors,resulting_warnings)
+            if resulting_warnings or resulting_errors:
+                error_str=""
+                for error in resulting_errors:
+                    error_str += "ERROR: " + error + "\n"
+                for warning in resulting_warnings:
+                    error_str += "WARNING: " + warning + "\n"
+                return "Successfully edited file. However, your changes resulted in the following linting errors and warnings:\n" + error_str
+            else:
+                return "Successfully edited file."
 
         return "\n".join(["Failed to edit file"] + [f[1].args[0] for f in failures])
 

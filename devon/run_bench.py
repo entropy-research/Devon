@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import re
+import time
 import traceback
 import yaml
 
@@ -43,7 +44,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     tasklist_path: str = "tasklist"
     model: str = "claude-opus"
     temperature: float = 0
-    batch_size: int = 3
+    max_workers: int = 4
 
     @property
     def run_name(self):
@@ -154,19 +155,20 @@ def main(args: ScriptArguments):
     if args.tasklist_path:
         with open(args.tasklist_path, "r") as f:
             tasks = f.readlines()
-        tasks = [x.strip() for x in tasks]
+        tasks = sorted(list(set([x.strip() for x in tasks])))[:25]
 
-    batch_size = args.batch_size
-    tasks = sorted(tasks)
+    batch_size = len(tasks) // args.max_workers
     # divide tasks into batches of size batch_size
     batches = [tasks[i:i+batch_size] for i in range(0, len(tasks), batch_size)]
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    delay = 60 
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_workers) as executor:
         futures = []
         for batch in batches:
             print(batch)
             future = executor.submit(process_batch, list(batch), args)
             futures.append(future)
+            time.sleep(delay)
+
 
         for future in concurrent.futures.as_completed(futures):
             try:
@@ -417,7 +419,8 @@ if __name__ == "__main__":
         skip_existing=True,
         model=model,
         temperature=temperature,
-        exp_name=exp_name
+        exp_name=exp_name,
+        max_workers=1,
     )
 
     main(defaults)
