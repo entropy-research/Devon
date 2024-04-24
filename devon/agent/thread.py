@@ -47,7 +47,7 @@ class Agent:
 
         self.name = name
         self.history = []
-        self.max_steps = 10
+        self.max_steps = 15
 
     def _format_editor_entry(self, k, v):
 
@@ -63,7 +63,8 @@ class Agent:
             content_len = self.PAGE_SIZE
 
         start_idx = page * self.PAGE_SIZE
-        window_lines = "\n".join(content_lines[start_idx:start_idx+content_len])
+        lines = content_lines[start_idx:start_idx+content_len]
+        window_lines = "\n".join([str(i + start_idx) + line for i, line in enumerate(lines)])
 
         return f"""
 ************ FILE: {path}, WINDOW STARTLINE: {start_idx}, WINDOW ENDLINE: {start_idx+content_len}, TOTAL FILE LINES: {all_lines_len} ************
@@ -116,7 +117,6 @@ class Agent:
 
         system_prompt = system_prompt_template_v3(commands + command_docs)
 
-
         last_observation = None
         second_last_observation = None
         if len(self.history) > 2:
@@ -134,6 +134,8 @@ class Agent:
         )
 
         messages = [{"role": "user", "content": last_user_prompt}]
+        print(system_prompt)
+        print(last_user_prompt)
 
         output = self.current_model.query(messages, system_message=system_prompt)
 

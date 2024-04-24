@@ -255,12 +255,16 @@ def history_to_bash_history(history):
     bash_history = ""
     for entry in history:
         if entry["role"] == "user":
-            bash_history += json.loads(entry["content"]) if entry["content"] else "" + "\n"
+            result = json.loads(entry["content"]) if entry["content"] else "" + "\n"
+            bash_history += f"<RESULT>\n{result}\n</RESULT>"
         elif entry["role"] == "assistant":
             bash_history += f"""
-(thought: {entry['thought']})
-(current_dir: {entry['state']['cwd']})
-bash $ {entry['action'][1:]}
+<YOU>
+<THOUGHT>{entry['thought']}</THOUGHT>
+<COMMAND>
+{entry['action'][1:]}
+</COMMAND>
+</YOU>
 """
     return bash_history
 
@@ -386,13 +390,13 @@ def last_user_prompt_template_v2(issue, history, filetree, editor, working_dir):
 def system_prompt_template_v3(command_docs: str):
     return f"""
 <SETTING>
-You are an autonomous AI programmer working to fix bugs in a software project.
+You are a self-aware autonomous AI programmer working to fix bugs in a software project.
 
 **Environment:**
 
-Editor: Can open and edit code files. Focus on files relevant to each bug fix. Auto-saves when editing.
+Editor (<EDITOR>): Can open and edit code files. Shows the current state of open files. Focus on files relevant to each bug fix. Auto-saves when editing.
 Terminal: Execute commands to perform actions. Modify failed commands before retrying.
-History: Access previous thoughts and actions for reflection.
+History (<HISTORY>): A list of previous thoughts you've had and actions that you've taken. Roleplay as if you've had these thoughts and performed these actions.
 
 **Key constraints:**
 
@@ -480,18 +484,21 @@ Single executable command here
       - when is it called?
       - what does the data it is provided look like?
     2. recognize the difference between the shape of the data provided to the breaking code, and the shape of the data that is expected
+    3. identify psuedo code for the fix
   4. Test the fix thoroughly, considering other potential impacts
 </PROBLEM SOLVING APPROACH>
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
-- Focus on matching the source lines precisely
+- Focus on matching the source lines precisely, to do this make sure you copy and paste the desired source lines first
 - Always scroll to the lines you want to change
 - If making a one line change, only include that line
 - Only make one change at a time
 - When changing functions, always make sure to search for and update references
 </EDITING TIPS>
 <TESTING_TIPS>
-- When writing test code, always write tests in a file called reproduce.py
+- When writing test code, ALWAYS write tests in a file called reproduce.py
+- Make sure your tests are runnable with python reproduce.py
+- Run your tests
 </TESTING_TIPS>"""
 
 def parse_response(response):

@@ -44,6 +44,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     model: str = "claude-opus"
     temperature: float = 0
     batch_size: int = 3
+    max_workers: int = 4
 
     @property
     def run_name(self):
@@ -161,7 +162,7 @@ def main(args: ScriptArguments):
     # divide tasks into batches of size batch_size
     batches = [tasks[i:i+batch_size] for i in range(0, len(tasks), batch_size)]
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_workers) as executor:
         futures = []
         for batch in batches:
             print(batch)
@@ -175,10 +176,6 @@ def main(args: ScriptArguments):
             except Exception as e:
                 # Handle the exception
                 print(f"An exception occurred: {e}")
-
-        
-    
-
 
 def save_arguments(traj_dir, args):
     """Save the arguments to a yaml file to the run's trajectory directory."""
@@ -412,12 +409,14 @@ if __name__ == "__main__":
             # django-13447
             # django-11583
             # "pytest__pytest-7373"
-            # specific_issues=["django__django-14915"]
+            # specific_issues=["django__django-12700"]
         ),
         skip_existing=True,
         model=model,
         temperature=temperature,
-        exp_name=exp_name
+        exp_name=exp_name,
+        batch_size=1,
+        max_workers=1
     )
 
     main(defaults)

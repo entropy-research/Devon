@@ -634,6 +634,7 @@ class SWEEnv(gym.Env):
             str: The absolute path of the file.
         """
 
+        fpath = fpath.strip("'").strip('"')
         base = fpath.split("/")[0]
 
         if f"/{base}" == self.file_root:
@@ -756,7 +757,7 @@ class SWEEnv(gym.Env):
             self.logger.error(f"Failed to open file: {abs_path}. Error: {str(e)}")
             return f"Failed to open file: {abs_path}. Error: {str(e)}"
 
-    PAGE_SIZE = 500
+    PAGE_SIZE = 200
 
     def scroll_down(self, file_path: str):
         """
@@ -1222,6 +1223,14 @@ EXAMPLES
 
         return results
 
+
+    def check_path_for_tests(self, file_path):
+        if "/tests/" in file_path:
+            return True
+        else:
+            return False
+
+
     def real_write_diff(self, diff, thought):
 
         diff_code = diff
@@ -1243,15 +1252,27 @@ EXAMPLES
                     log_successful_diff(diff=diff_code, file_content=success[2], src_file=success[0], tgt_file=success[0])
 
         if len(failures) == 0:
+            file_paths = []
             for result in successes:
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
-                old_editor_code = self.editor[result[0]]["lines"]
+
+                try:
+                    compile(result[1], "<string>", "exec")
+                except Exception as e:
+                    return "Error applying diff: \n" + repr(e)
+
+                if self.check_path_for_tests(result[0]):
+                    return "Error applying diff: tried to edit tests. Please remember to create a reproduce.py file if you would like to write tests."
+
+                old_editor_code = "\n".join(self.editor[result[0]]["lines"])
                 self.write_file(file_path=result[0], content=result[1])
-                new_editor_code = self.editor[result[0]]["lines"]
+                file_paths.append(result[0])
+                new_editor_code = "\n".join(self.editor[result[0]]["lines"])
 
                 assert(old_editor_code != new_editor_code)
 
-            return "Successfully edited file"
+            paths = ", ".join(file_paths)
+            return f"Successfully edited file(s): {paths}. Please review the new contents of the files."
 
         return "\n".join(["Failed to edit file"] + [f[1].args[0] for f in failures])
 
