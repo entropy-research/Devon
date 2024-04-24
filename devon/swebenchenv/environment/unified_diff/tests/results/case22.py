@@ -238,22 +238,12 @@ def solve_generic(polys, opt):
             else:
                 return None
 
-<<<<<<< HEAD
         univariate = list(filter(_is_univariate, basis))
 
         if len(univariate) == 1 and len(gens) == 1:
             f = univariate.pop()
         else:
             raise NotImplementedError(filldedent('''
-=======
-        
-                univariate = list(filter(_is_univariate, basis))
-        
-                if len(univariate) == 1 and len(gens) == 1:
-                    f = univariate.pop()
-                else:
-                    raise NotImplementedError(filldedent('''
->>>>>>> 4ccbd36 (test)
                 only zero-dimensional systems supported
                 (finite number of solutions)
                 '''))

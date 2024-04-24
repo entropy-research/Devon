@@ -728,6 +728,7 @@ class SWEEnv(gym.Env):
             str: The absolute path of the file.
         """
 
+        fpath = fpath.strip("'").strip('"')
         base = fpath.split("/")[0]
 
         if f"/{base}" == self.file_root:
@@ -859,7 +860,7 @@ class SWEEnv(gym.Env):
             self.logger.error(f"Failed to open file: {abs_path}. Error: {str(e)}")
             return f"Failed to open file: {abs_path}. Error: {str(e)}"
 
-    PAGE_SIZE = 500
+    PAGE_SIZE = 200
 
     def scroll_down(self, file_path: str):
         """
@@ -1325,6 +1326,14 @@ EXAMPLES
 
         return results
 
+
+    def check_path_for_tests(self, file_path):
+        if "/tests/" in file_path:
+            return True
+        else:
+            return False
+
+
     def real_write_diff(self, diff, thought):
 
         diff_code = diff
@@ -1345,34 +1354,27 @@ EXAMPLES
                     log_successful_diff(diff=diff_code, file_content=success[2], src_file=success[0], tgt_file=success[0])
 
         if len(failures) == 0:
+            file_paths = []
             for result in successes:
                 #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
-                old_editor_code = self.editor[result[0]]["lines"]
 
-                initial_errors,initial_warnings = self.check_lint(old_editor_code,result[0])
+                try:
+                    compile(result[1], "<string>", "exec")
+                except Exception as e:
+                    return "Error applying diff: \n" + repr(e)
+
+                if self.check_path_for_tests(result[0]):
+                    return "Error applying diff: tried to edit tests. Please remember to create a reproduce.py file if you would like to write tests."
+
+                old_editor_code = "\n".join(self.editor[result[0]]["lines"])
                 self.write_file(file_path=result[0], content=result[1])
-                new_editor_code = self.editor[result[0]]["lines"]
+                file_paths.append(result[0])
+                new_editor_code = "\n".join(self.editor[result[0]]["lines"])
+
                 assert(old_editor_code != new_editor_code)
 
-                final_errors,final_warnings = self.check_lint(result[2],result[0])
-                
-                resulting_errors,resulting_warnings = [],[]
-                for error in initial_errors:
-                    if error not in final_errors:
-                        resulting_errors.append(error)
-                for warning in initial_warnings:
-                    if warning not in final_warnings:
-                        resulting_warnings.append(warning)
-                print(resulting_errors,resulting_warnings)
-            if resulting_warnings or resulting_errors:
-                error_str=""
-                for error in resulting_errors:
-                    error_str += "ERROR: " + error + "\n"
-                for warning in resulting_warnings:
-                    error_str += "WARNING: " + warning + "\n"
-                return "Successfully edited file. However, your changes resulted in the following linting errors and warnings:\n" + error_str
-            else:
-                return "Successfully edited file."
+            paths = ", ".join(file_paths)
+            return f"Successfully edited file(s): {paths}. Please review the new contents of the files."
 
         return "\n".join(["Failed to edit file"] + [f[1].args[0] for f in failures])
 

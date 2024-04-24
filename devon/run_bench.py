@@ -44,6 +44,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     tasklist_path: str = "tasklist"
     model: str = "claude-opus"
     temperature: float = 0
+    batch_size: int = 3
     max_workers: int = 4
 
     @property
@@ -177,10 +178,6 @@ def main(args: ScriptArguments):
             except Exception as e:
                 # Handle the exception
                 print(f"An exception occurred: {e}")
-
-        
-    
-
 
 def save_arguments(traj_dir, args):
     """Save the arguments to a yaml file to the run's trajectory directory."""
@@ -414,7 +411,7 @@ if __name__ == "__main__":
             # django-13447
             # django-11583
             # "pytest__pytest-7373"
-            # specific_issues=["django__django-14915"]
+            # specific_issues=["django__django-12700"]
         ),
         skip_existing=True,
         model=model,
