@@ -64,7 +64,7 @@ class Agent:
 
         start_idx = page * self.PAGE_SIZE
         lines = content_lines[start_idx:start_idx+content_len]
-        window_lines = "\n".join([str(i + start_idx) + line for i, line in enumerate(lines)])
+        window_lines = "\n".join([str(i + start_idx).zfill(4) + line for i, line in enumerate(lines)])
 
         return f"""
 ************ FILE: {path}, WINDOW STARTLINE: {start_idx}, WINDOW ENDLINE: {start_idx+content_len}, TOTAL FILE LINES: {all_lines_len} ************
