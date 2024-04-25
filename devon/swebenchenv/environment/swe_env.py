@@ -793,20 +793,24 @@ class SWEEnv(gym.Env):
         return {"directory_tree": directory_tree, "file_tree": file_tree, "files_content": files_content}
 
     def check_lint(seld,code_string : str,file_path: str):
+
+        # example json
+        # [{'type': 'error', 'module': 'tmp5cpif150', 'obj': 'ModelFormMetaclass.__new__', 'line': 224, 'column': 20, 'endLine': 224, 'endColumn': 60, 'path': '/tmp/tmp5cpif150', 'symbol': 'too-many-function-args', 'message': 'Too many positional arguments for classmethod call', 'message-id': 'E1121'}, {'type': 'error', 'module': 'tmp5cpif150', 'obj': 'ModelForm', 'line': 477, 'column': 0, 'endLine': 477, 'endColumn': 15, 'path': '/tmp/tmp5cpif150', 'symbol': 'invalid-metaclass', 'message': "Invalid metaclass 'ModelFormMetaclass' used", 'message-id': 'E1139'}, {'type': 'error', 'module': 'tmp5cpif150', 'obj': 'ModelChoiceField.__deepcopy__', 'line': 1250, 'column': 17, 'endLine': 1250, 'endColumn': 41, 'path': '/tmp/tmp5cpif150', 'symbol': 'bad-super-call', 'message': "Bad first argument 'ChoiceField' given to super()", 'message-id': 'E1003'}]
         from pylint.reporters.json_reporter import JSONReporter 
         from pylint.lint import Run
 
         pylint_output = io.StringIO()  # Custom open stream
         reporter = JSONReporter(pylint_output)
-        print(pylint_output.getvalue())
 
-        with tempfile.TemporaryFile(mode="w+") as f:
+        with tempfile.NamedTemporaryFile(mode="w+") as f:
             f.write(code_string)
             f.seek(0)
             print(f.name)
             Run(args=["--disable=W,R,C,E0401",f.name], reporter=reporter, exit=False)
         
-        print(json.loads(pylint_output.getvalue()))
+        results = json.loads(pylint_output.getvalue())
+
+        return results
 
     #     reporter = CustomLintReporter()
 
@@ -1379,7 +1383,13 @@ EXAMPLES
 
                 if self.check_path_for_tests(result[0]):
                     return "Error applying diff: tried to edit tests. Please remember to create a reproduce.py file if you would like to write tests."
-                self.check_lint(result[1],result[0])
+                before_results = self.check_lint(result[1],result[0])
+                after_results = self.check_lint(result[1],result[0])
+
+                diff_results = [x for x in after_results if x not in before_results]
+
+
+
                 old_editor_code = "\n".join(self.editor[result[0]]["lines"])
                 self.write_file(file_path=result[0], content=result[1])
                 file_paths.append(result[0])
@@ -1388,6 +1398,15 @@ EXAMPLES
                 assert(old_editor_code != new_editor_code)
 
             paths = ", ".join(file_paths)
+
+            if diff_results:
+
+                lint_error_message =""
+                for rst in diff_results:
+                    lint_error_message += f"{rst['type']}: {rst['message']} on line {rst['line']} column {rst['column']}. Line {result[1][int(rst['line'])-1]} \n"
+
+                return f"Successfully edited file(s): {paths}. Please review the new contents of the files. Your change introduced the following linting errors. Please address them before you submit. \n{lint_error_message}"
+            
             return f"Successfully edited file(s): {paths}. Please review the new contents of the files."
 
         return "\n".join(["Failed to edit file"] + [f[1].args[0] for f in failures])

@@ -541,7 +541,8 @@ def get_relative_indents(lines):
     
     gcd = math.gcd(*spaces)
 
-    spaces = [(space // gcd)  for space in spaces]
+    if gcd != 0:
+        spaces = [(space // gcd)  for space in spaces]
     min_indent = min(spaces)
 
 

@@ -156,7 +156,7 @@ def main(args: ScriptArguments):
     if args.tasklist_path:
         with open(args.tasklist_path, "r") as f:
             tasks = f.readlines()
-        tasks = sorted(list(set([x.strip() for x in tasks])))[26:]
+        tasks = sorted(list(set([x.strip() for x in tasks])))
     print(len(tasks))
     batch_size = len(tasks) // args.max_workers
     # divide tasks into batches of size batch_size

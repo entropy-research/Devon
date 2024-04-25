@@ -28,9 +28,9 @@ logger = logging.getLogger(LOGGER_NAME)
 
 class Agent:
     def __init__(self, name="Devon", args=None, model="claude-opus", temperature=0.0):
-        # self.sonnet: AnthropicModel = AnthropicModel(
-        #     args=ModelArguments(model_name="claude-sonnet", temperature=0.5)
-        # )
+        self.sonnet: AnthropicModel = AnthropicModel(
+            args=ModelArguments(model_name="claude-sonnet", temperature=1)
+        )
         self.opus: AnthropicModel = AnthropicModel(
             args=ModelArguments(model_name="claude-opus", temperature=temperature)
         )
@@ -277,7 +277,7 @@ class Agent:
                 done = True
 
             if action == "no_op" and self.current_model == self.sonnet:
-                self.current_model = self.opus
+                self.current_model = self.current_model
             else:
                 self.current_model = self.default_model
 
