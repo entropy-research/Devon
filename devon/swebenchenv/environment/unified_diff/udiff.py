@@ -413,8 +413,8 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
     return file_diffs, changed_lines
 
 
-def get_indent(line):
-    base_indent = "    "
+def get_indent(line,indent_size):
+    base_indent = " " * indent_size
     if line.startswith(base_indent):
         # find multiple of base_indent present as prefix in line
         count = 0
@@ -539,29 +539,128 @@ def get_relative_indents(lines):
         space = get_prefix_whitespace(line)
         spaces.append(space)
     
-    lcm = spaces[0]
-    for space in spaces[1:]:
-        lcm = (lcm * space) // math.gcd(lcm, space)
+    gcd = math.gcd(*spaces)
 
-    spaces = [space / lcm for space in spaces]
+    spaces = [(space // gcd)  for space in spaces]
+    min_indent = min(spaces)
 
-    return spaces,lcm
 
-def apply_indent(src_lines,new_lines,code_fence_start,code_fence_end,src_start,src_end):
+    return [space - min_indent for space in spaces],gcd
+
+def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end,stop_code_fence_start,stop_code_fence_end):
     """
     STEPS
     1. Get indentation of matched src lines
     2. Get relative indents of diff lines
     3. Apply 
     """
-    print("*" * 10)
-    print(src_lines)
-    print(new_lines)
-    print(code_fence_start)
-    print(code_fence_end)
-    print(src_start)
-    print(src_end)
-    print("*" * 10)
+    # print("*" * 10)
+    # print(start_code_fence_start)
+    # print(start_code_fence_end)
+    # print(stop_code_fence_start)
+    # print(stop_code_fence_end)
+
+
+    start_code_fence = src_lines[start_code_fence_start:start_code_fence_end + 1]
+    stop_code_fence = src_lines[stop_code_fence_start:stop_code_fence_end + 1]
+
+
+    relative_indents,indent_size = get_relative_indents(new_lines)
+
+    # print(start_code_fence)
+    # print(stop_code_fence)
+
+    start_indents = [get_indent(line[1],indent_size) for line in start_code_fence]
+    stop_indents = [get_indent(line[1],indent_size) for line in stop_code_fence]
+    # print(start_indents)
+    # print(stop_indents)
+    # print(new_lines)
+
+    new_indents = [get_indent(line,indent_size) for line in new_lines]
+    # print(new_indents)
+    
+
+    # print(relative_indents)
+    base = start_indents[0] - new_indents[0]
+
+
+    line_no_base = start_code_fence_start
+
+
+    base = None
+    for i,line in enumerate(new_lines):
+        current_line_no = line_no_base + i
+        # print(current_line_no,start_code_fence_start,start_code_fence_end,current_line_no >= start_code_fence_start, current_line_no <= start_code_fence_end)
+        if current_line_no >= start_code_fence_start and current_line_no <= start_code_fence_end:
+            if src_lines[current_line_no][1].strip() == line.strip():
+                # print(base,relative_indents[i],start_indents[i])
+                if base and base  + relative_indents[i] != start_indents[i]:
+                    print(i)
+                    print(relative_indents)
+                    print(start_indents)
+                    print(base,relative_indents[i],start_indents[i])
+                    raise Exception(f"Indentation does not match for line {current_line_no-1}.Make sure you specify the exact indents to make an edit. Line: " + src_lines[current_line_no-1][1])
+                base = start_indents[0] - relative_indents[0]
+                # print("base",current_line_no,base)
+            # start fence processing
+        elif current_line_no >= stop_code_fence_start and current_line_no <= stop_code_fence_end:
+            # print(src_lines[current_line_no][1].strip(),line.strip())
+            if src_lines[current_line_no][1].strip() != line.strip():
+                pass
+            # stop fence processing
+        if base is None:
+            new_lines[i] = " " * indent_size * new_indents[i] + new_lines[i].strip()
+            continue
+        # print("Indent:",(base + relative_indents[i]))
+        new_lines[i] = " " * indent_size * (base + relative_indents[i]) + new_lines[i].strip()
+        # print(new_lines[i])
+        # print(src_lines[current_line_no][1])
+
+
+
+
+
+        
+
+
+    # for i,indent in enumerate(new_indents[:start_code_fence_end - start_code_fence_start]):
+    #     new_indent = base + indent
+    #     if new_indent != start_indents[i]:
+    #         raise Exception(f"Indentation does not match for line {start_code_fence_start + i}")
+        
+    #     new_lines[i] = "    " * new_indent + new_lines[i].strip()
+    #     print(new_lines[i])
+    #     print(src_lines[start_code_fence_start + i][1])
+
+    # for i,line in enumerate(new_lines):
+    #     if i <len(start_indents):
+    #         continue
+    #     if i > len(new_lines) - len(stop_indents):
+    #         continue
+
+    #     new_indent = base + new_indents[i]
+    #     new_lines[i] = "    " * new_indent + new_lines[i].strip()
+    #     print(new_lines[i])
+        
+    # for i,indent in enumerate(new_indents[-1:-len(stop_indents) - 1:-1]):
+    #     new_indent = base + indent
+    #     if new_indent != stop_indents[len(stop_indents) - i - 1]:
+    #         raise Exception(f"Indentation does not match for line {stop_code_fence_end - i}")
+        
+        
+        # new_lines[len(new_lines) - i - 1] = "    " * new_indent + new_lines[len(new_lines) - i - 1].strip()
+        # print(new_lines[len(new_lines) - i - 1])
+        # print(src_lines[stop_code_fence_end - i][1])
+        # assert new_lines[len(new_lines) - i - 1] == src_lines[stop_code_fence_end - i][1]
+        
+
+
+
+
+    # print("*" * 10)
+
+
+    
 
     return new_lines
 
@@ -594,7 +693,7 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
             new_lines = strip_new_lines_from_ends(new_lines)
 
-            print(src_start, src_end)
+            # print(src_start, src_end)
 
             if not (src_start is not None and src_end is not None):
                 #Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
@@ -605,7 +704,7 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
                 raise Hallucination(incorrect_context_prompt)
 
 
-            applied_code = apply_indent(src_lines,new_lines,begin_fence,end_fence,src_start,src_end)
+            applied_code = apply_indent(src_lines,new_lines,src_start,begin_end,stop_start,src_end)
             # applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
             # applied_code = new_lines
 
