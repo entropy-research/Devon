@@ -1,4 +1,5 @@
 import logging
+import math
 import re
 import traceback
 from typing import List, Optional
@@ -432,14 +433,7 @@ def get_prefix_whitespace(line):
         line = line[1:]
     return count
 
-def get_relative_indents(lines):
-    assert type(lines) == list
-    assert all(type(line) == str for line in lines)
-    spaces = []
-    for line in lines:
-        space = get_prefix_whitespace(line)
-        spaces.append(space)
-    return spaces
+
 
 def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
     base_indent_match = get_indent(src_lines[src_start][1])
@@ -535,6 +529,35 @@ ExcessiveChangedLinesInRecoveryAttempt:
 
     Please remember to follow the guidelines for creating diffs.
 """
+
+
+def get_relative_indents(lines):
+    assert type(lines) == list
+    assert all(type(line) == str for line in lines)
+    spaces = []
+    for line in lines:
+        space = get_prefix_whitespace(line)
+        spaces.append(space)
+    
+    lcm = spaces[0]
+    for space in spaces[1:]:
+        lcm = (lcm * space) // math.gcd(lcm, space)
+
+    spaces = [space / lcm for space in spaces]
+
+    return spaces,lcm
+
+def apply_indent(src_lines,tgt_lines,code_fence_start,code_fence_end,src_start,src_end):
+    """
+    STEPS
+    1. Get indentation of matched src lines
+    2. Get relative indents of diff lines
+    3. Apply 
+    """
+
+
+
+
 
 def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 

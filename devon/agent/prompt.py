@@ -440,15 +440,6 @@ Submit changes with 'submit' command when ready
 Interactive session commands (e.g. python, vim) NOT supported
 Write and run scripts instead (e.g. 'python script.py')
 </SETTING>
-<WORKSPACE>
-<EDITOR>
-{editor}
-</EDITOR>
-</WORKSPACE>
-<HISTORY>
-{history}
-</HISTORY>
-
 <CONSTRAINTS>
 - Execute ONLY ONE command at a time
 - Wait for feedback after each command
@@ -470,6 +461,14 @@ Yes, I am overthinking, I should just make the change that fixes all cases of th
 Single executable command here
 </COMMAND>
 </RESPONSE FORMAT>
+<WORKSPACE>
+<EDITOR>
+{editor}
+</EDITOR>
+</WORKSPACE>
+<HISTORY>
+{history}
+</HISTORY>
 <PROBLEM SOLVING APPROACH>
 - Identify the root cause and specific failure case triggering the issue
 - Identify the data structures and types involved in the failing code path
@@ -499,7 +498,8 @@ Single executable command here
 - When writing test code, ALWAYS write tests in a file called reproduce.py
 - Make sure your tests are runnable with python reproduce.py
 - Run your tests
-</TESTING_TIPS>"""
+</TESTING_TIPS>
+"""
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
