@@ -137,8 +137,9 @@ class Agent:
         # print(system_prompt)
         # print(last_user_prompt)
 
+        print("requesting model")
         output = self.current_model.query(messages, system_message=system_prompt)
-
+        print("received model output")
         logger.debug("<MODEL_OUT>" + json.dumps({
             "step": step, 
             "input": messages[0],

@@ -76,7 +76,7 @@ class AnthropicModel:
                 max_tokens=self.model_metadata["max_tokens"],
                 model=self.api_model,
                 temperature=self.args.temperature,
-                top_p=self.args.top_p,
+                # top_p=self.args.top_p,
                 system=system_message,
             )
             .content[0]
