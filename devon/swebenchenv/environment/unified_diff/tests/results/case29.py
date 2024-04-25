@@ -1170,9 +1170,9 @@ class ModelChoiceIteratorValue:
         if isinstance(other, ModelChoiceIteratorValue):
             other = other.value
         return self.value == other
-
-    def __hash__(self):
-        return hash(self.value)
+ 
+     def __hash__(self):
+         return hash(self.value)
 
 
 class ModelChoiceIterator:

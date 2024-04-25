@@ -420,7 +420,6 @@ def get_indent(line,indent_size):
     if line.startswith(base_indent):
         # find multiple of base_indent present as prefix in line
         count = 0
-        print(line)
         while line.startswith(base_indent):
             count += 1
             line = line[len(base_indent):]
