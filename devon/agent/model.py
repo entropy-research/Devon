@@ -78,12 +78,13 @@ class AnthropicModel:
                 temperature=self.args.temperature,
                 top_p=self.args.top_p,
                 system=system_message,
+                stop_sequences=["</COMMAND>"]
             )
             .content[0]
             .text
         )
 
-        return response
+        return response + "</COMMAND>"
 
 
 # Simple shim for providing commands
