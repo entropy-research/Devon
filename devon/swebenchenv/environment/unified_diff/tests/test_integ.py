@@ -65,7 +65,7 @@ def test_diff_backoff_matching():
 
 def test_syntax_check():
 
-    cases = ["case24"]
+    cases = ["case24", "case29"]
 
     current_file = __file__
     current_dir = os.path.dirname(current_file)
