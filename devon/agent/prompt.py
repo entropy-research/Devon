@@ -488,7 +488,7 @@ Single executable command here
 </PROBLEM SOLVING APPROACH>
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
-- Focus on matching the source lines precisely, to do this make sure you copy and paste the desired source lines first
+- Focus on matching the source lines precisely, to do this make sure you identify the desired source lines first
 - Always scroll to the lines you want to change
 - If making a one line change, only include that line
 - Only make one change at a time

@@ -277,7 +277,7 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
         if len(stripped_old_lines) == 1 and len(begin_matches) > 1:
             raise Hallucination(not_enough_context_prompt)
         else:
-            return [begin_matches[0][:2]]
+            return [list(begin_matches[0][:2]) + [begin_fence, stop_fence]]
 
     else:
         begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
@@ -291,11 +291,11 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
     for begin_start, begin_end, src_idx in begin_matches:
         for stop_start, stop_end, end_idx in end_matches:
             #TODO: add a line count error here
-            
+
             if src_idx <= end_idx and (end_idx - src_idx + fence_len) == len(stripped_old_lines):
-                valid_pairs.append((begin_start, stop_end))
+                valid_pairs.append((begin_start, stop_end, begin_fence, stop_fence))
                 break
-    
+
     return valid_pairs
 
 
@@ -331,7 +331,7 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
 
     #if none throw error
     if not results:
-        return None, None
+        return None, None, None, None
 
     return results[0]
 
@@ -580,7 +580,7 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
                 # if either version is none, raise error
                 raise Hallucination(unable_to_parse_old_or_new_lines)
 
-            src_start, src_end = match_stripped_lines_context(stripped_src_lines, old_lines)
+            src_start, src_end, begin_fence, end_fence = match_stripped_lines_context(stripped_src_lines, old_lines)
 
             new_lines = strip_new_lines_from_ends(new_lines)
 
@@ -594,8 +594,8 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
                 #Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
                 raise Hallucination(incorrect_context_prompt)
 
-            # applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
-            applied_code = new_lines
+            applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
+            # applied_code = new_lines
 
             # insert lines
             i = 0
