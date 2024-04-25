@@ -140,6 +140,9 @@ class Agent:
         print("requesting model")
         output = self.current_model.query(messages, system_message=system_prompt)
         print("received model output")
+
+        print(output)
+
         logger.debug("<MODEL_OUT>" + json.dumps({
             "step": step, 
             "input": messages[0],
@@ -301,7 +304,7 @@ class Agent:
                     "action": action,
                     "observation": observation,
                     "response": output,
-                    "state": state,
+                    "state": repr(state),
                     "thought": thought,
                 }
             )
@@ -332,4 +335,3 @@ OBSERVATION: {observation}
 
         logger.debug(info)
         return info
-

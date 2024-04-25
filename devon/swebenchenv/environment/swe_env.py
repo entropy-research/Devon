@@ -918,11 +918,11 @@ class SWEEnv(gym.Env):
             abs_path = self.make_abs_path(abs_path)
         else:
             abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
-        
+
         exists = self.file_exists(abs_path)
         if not exists:
             raise Exception(f"Could not scroll in file, file does not exist: {abs_path}")
-        
+
         if not (abs_path in self.editor):
             raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
 
@@ -940,7 +940,7 @@ class SWEEnv(gym.Env):
         self.editor[abs_path]["page"] = new_page_number
 
         return f"Scrolled down in file {abs_path} to line {self.PAGE_SIZE * new_page_number}"
-    
+
     def scroll_up(self, file_path: str):
         """
     SCROLL_UP(1)        General Commands Manual        SCROLL_UP(1)
@@ -1618,12 +1618,20 @@ EXAMPLES
         if search_term.startswith("--"):
             search_term = "\"" + search_term + "\""
 
-        command = f"find {dir} -type f ! -path '*/.*' -exec grep -nIH '{search_term}' {{}} + | cut -d: -f1 | sort | uniq -c"
+        abs_path = self.make_abs_path(dir)
+
+        cwd = self.get_cwd().strip()
+        if abs_path.startswith(cwd):
+            abs_path = self.make_abs_path(abs_path)
+        else:
+            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+
+        command = f"find {abs_path} -type f ! -path '*/.*' -exec grep -nIH '{search_term}' {{}} + | cut -d: -f1 | sort | uniq -c"
         result = self.communicate(command)
 
         matches = result.strip()
         if not matches:
-            return f"No matches found for \"{search_term}\" in {dir}"
+            return f"No matches found for \"{search_term}\" in {abs_path}"
         print(matches)
         try:
             num_matches = sum(int(line.split()[0]) for line in matches.split('\n'))
@@ -1632,9 +1640,9 @@ EXAMPLES
         num_files = matches.count('\n') + 1
 
         if num_files > 100:
-            return f"More than {num_files} files matched for \"{search_term}\" in {dir}. Please narrow your search."
+            return f"More than {num_files} files matched for \"{search_term}\" in {abs_path}. Please narrow your search."
 
-        result = f"Found {num_matches} matches for \"{search_term}\" in {dir}:\n{matches}"
+        result = f"Found {num_matches} matches for \"{search_term}\" in {abs_path}:\n{matches}"
         return result.replace('\n', '\n    ')
 
     def _capture_window(self, lines, index, window_size):
