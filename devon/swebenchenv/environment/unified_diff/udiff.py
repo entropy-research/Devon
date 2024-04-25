@@ -547,13 +547,23 @@ def get_relative_indents(lines):
 
     return spaces,lcm
 
-def apply_indent(src_lines,tgt_lines,code_fence_start,code_fence_end,src_start,src_end):
+def apply_indent(src_lines,new_lines,code_fence_start,code_fence_end,src_start,src_end):
     """
     STEPS
     1. Get indentation of matched src lines
     2. Get relative indents of diff lines
     3. Apply 
     """
+    print("*" * 10)
+    print(src_lines)
+    print(new_lines)
+    print(code_fence_start)
+    print(code_fence_end)
+    print(src_start)
+    print(src_end)
+    print("*" * 10)
+
+    return new_lines
 
 
 
@@ -594,7 +604,9 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
                 #Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
                 raise Hallucination(incorrect_context_prompt)
 
-            applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
+
+            applied_code = apply_indent(src_lines,new_lines,begin_fence,end_fence,src_start,src_end)
+            # applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
             # applied_code = new_lines
 
             # insert lines
