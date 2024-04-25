@@ -260,7 +260,7 @@ def strip_comment_from_line(line):
     
     # If '#' is not found, return the original line (stripped of leading/trailing whitespace)
     return line.strip()
-        
+
 
 def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines, fence_len):
     #create code fence based on lines. i.e. first N content lines
@@ -276,7 +276,7 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
         if len(stripped_old_lines) == 1 and len(begin_matches) > 1:
             raise Hallucination(not_enough_context_prompt)
         else:
-            return [list(begin_matches[0][:2]) + [begin_fence, stop_fence]]
+            return [list(begin_matches[0][:2]) + list(begin_matches[0][:2])]
 
     else:
         begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
@@ -292,7 +292,7 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
             #TODO: add a line count error here
 
             if src_idx <= end_idx and (end_idx - src_idx + fence_len) == len(stripped_old_lines):
-                valid_pairs.append((begin_start, stop_end, begin_fence, stop_fence))
+                valid_pairs.append((begin_start, stop_end, stop_start, begin_end))
                 break
 
     return valid_pairs
@@ -557,7 +557,7 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
                 # if either version is none, raise error
                 raise Hallucination(unable_to_parse_old_or_new_lines)
 
-            src_start, src_end, begin_fence, end_fence = match_stripped_lines_context(stripped_src_lines, old_lines)
+            src_start, src_end, stop_start, begin_end = match_stripped_lines_context(stripped_src_lines, old_lines)
 
             new_lines = strip_new_lines_from_ends(new_lines)
 
