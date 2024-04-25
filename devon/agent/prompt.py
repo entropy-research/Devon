@@ -448,8 +448,11 @@ Write and run scripts instead (e.g. 'python script.py')
 - Locate code elements with 'find_class' or 'find_function', not 'search'
 - 'no_op' command available to allow for more thinking time 
 - The title or first line of the issue describes the issue succintly
-- You only have access to code contained in {working_dir}
 </CONSTRAINTS>
+<TESTING_TIPS>
+- When writing test code, ALWAYS write tests in a file called reproduce.py
+- Make sure your tests are runnable with python reproduce.py
+</TESTING_TIPS>
 <RESPONSE FORMAT>
 <THOUGHT>
 
@@ -485,6 +488,7 @@ Single executable command here
     2. recognize the difference between the shape of the data provided to the breaking code, and the shape of the data that is expected
     3. identify psuedo code for the fix
   4. Test the fix thoroughly, considering other potential impacts
+    - Make sure you run your tests!
 </PROBLEM SOLVING APPROACH>
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
@@ -493,13 +497,8 @@ Single executable command here
 - If making a one line change, only include that line
 - Only make one change at a time
 - When changing functions, always make sure to search for and update references
-</EDITING TIPS>
-<TESTING_TIPS>
-- When writing test code, ALWAYS write tests in a file called reproduce.py
-- Make sure your tests are runnable with python reproduce.py
-- Run your tests
-</TESTING_TIPS>
-"""
+- You only have access to code contained in {working_dir}
+</EDITING TIPS>"""
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]

@@ -15,7 +15,6 @@ import subprocess
 import traceback
 import time
 
-from pyflakes.api import check
 from dataclasses import dataclass
 from git import Repo
 from openai import OpenAI
@@ -794,13 +793,13 @@ class SWEEnv(gym.Env):
 
         return {"directory_tree": directory_tree, "file_tree": file_tree, "files_content": files_content}
 
-    def check_lint(seld,code_string : str,file_path: str):
+    # def check_lint(seld,code_string : str,file_path: str):
 
-        reporter = CustomLintReporter()
+    #     reporter = CustomLintReporter()
 
-        check(code_string,file_path, reporter=reporter)
+    #     check(code_string,file_path, reporter=reporter)
 
-        return (reporter.errors,reporter.warnings)
+    #     return (reporter.errors,reporter.warnings)
 
 
     def list_dirs_recursive(self, file_path: str) -> dict:
