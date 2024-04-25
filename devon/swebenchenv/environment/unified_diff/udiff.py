@@ -555,8 +555,8 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
     3. Apply 
     """
     # print("*" * 10)
-    # print(start_code_fence_start)
-    # print(start_code_fence_end)
+    print(start_code_fence_start)
+    print(start_code_fence_end)
     # print(stop_code_fence_start)
     # print(stop_code_fence_end)
 
@@ -567,8 +567,8 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
 
     relative_indents,indent_size = get_relative_indents(new_lines)
 
-    # print(start_code_fence)
-    # print(stop_code_fence)
+    print(start_code_fence)
+    print(stop_code_fence)
 
     start_indents = [get_indent(line[1],indent_size) for line in start_code_fence]
     stop_indents = [get_indent(line[1],indent_size) for line in stop_code_fence]
@@ -594,7 +594,7 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
         if current_line_no >= start_code_fence_start and current_line_no <= start_code_fence_end:
             if src_lines[current_line_no][1].strip() == line.strip():
                 # print(base,relative_indents[i],start_indents[i])
-                if base and base  + relative_indents[i] != start_indents[i]:
+                if base and base  + relative_indents[i] != start_indents[i] and src_lines[current_line_no][1].strip():
                     print(i)
                     print(relative_indents)
                     print(start_indents)
