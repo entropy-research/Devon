@@ -1,0 +1,10 @@
+edit_file <<<                                                                                                                                                  
+--- /django__django/django/forms/models.py                                                                                                                     
++++ /django__django/django/forms/models.py                                                                                                                     
+@@ -1171,2 +1171,5 @@                                                                                                                                          
+            other = other.value                                                                                                                               
+        return self.value == other
++
++    def __hash__(self):                                                                                                                                       
++        return hash(self.value)
+>>>
