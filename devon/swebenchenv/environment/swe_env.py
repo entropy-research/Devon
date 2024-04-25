@@ -17,7 +17,6 @@ import time
 
 from dataclasses import dataclass
 from git import Repo
-from openai import OpenAI
 from rich.logging import RichHandler
 from simple_parsing.helpers import Serializable
 from devon.retrieval.main import ClassTable, FunctionTable, get_class_defn, get_function_defn, initialize_repository
@@ -793,13 +792,29 @@ class SWEEnv(gym.Env):
 
         return {"directory_tree": directory_tree, "file_tree": file_tree, "files_content": files_content}
 
-    # def check_lint(seld,code_string : str,file_path: str):
+    def check_lint(seld,code_string : str,file_path: str):
+        from pylint.reporters.json_reporter import JSONReporter 
+        from pylint.lint import Run
+
+        pylint_output = io.StringIO()  # Custom open stream
+        reporter = JSONReporter(pylint_output)
+        print(pylint_output.getvalue())
+
+        with tempfile.TemporaryFile(mode="w+") as f:
+            f.write(code_string)
+            f.seek(0)
+            print(f.name)
+            Run(args=["--disable=W,R,C,E0401",f.name], reporter=reporter, exit=False)
+        
+        print(json.loads(pylint_output.getvalue()))
 
     #     reporter = CustomLintReporter()
 
     #     check(code_string,file_path, reporter=reporter)
 
     #     return (reporter.errors,reporter.warnings)
+
+
 
 
     def list_dirs_recursive(self, file_path: str) -> dict:
@@ -1364,7 +1379,7 @@ EXAMPLES
 
                 if self.check_path_for_tests(result[0]):
                     return "Error applying diff: tried to edit tests. Please remember to create a reproduce.py file if you would like to write tests."
-
+                self.check_lint(result[1],result[0])
                 old_editor_code = "\n".join(self.editor[result[0]]["lines"])
                 self.write_file(file_path=result[0], content=result[1])
                 file_paths.append(result[0])
