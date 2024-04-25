@@ -1358,7 +1358,7 @@ EXAMPLES
 
         all_diffs, _ = extract_all_diffs(diff_code)
         results = self.apply_diff(all_diffs, self.file_root)
-
+        print("diff applied")
         failures = []
         successes = []
         for result in results:
@@ -1385,7 +1385,8 @@ EXAMPLES
                     return "Error applying diff: tried to edit tests. Please remember to create a reproduce.py file if you would like to write tests."
                 before_results = self.check_lint(result[1],result[0])
                 after_results = self.check_lint(result[1],result[0])
-
+                print("before results: ", before_results)
+                print("after results: ", after_results)
                 diff_results = [x for x in after_results if x not in before_results]
 
 
@@ -1403,7 +1404,7 @@ EXAMPLES
 
                 lint_error_message =""
                 for rst in diff_results:
-                    lint_error_message += f"{rst['type']}: {rst['message']} on line {rst['line']} column {rst['column']}. Line {result[1][int(rst['line'])-1]} \n"
+                    lint_error_message += f"{rst['type']}: {rst['message']} on line {rst['line']} column {rst['column']}. Line {result[1].splitlines()[int(rst['line'])-1]} \n"
 
                 return f"Successfully edited file(s): {paths}. Please review the new contents of the files. Your change introduced the following linting errors. Please address them before you submit. \n{lint_error_message}"
             

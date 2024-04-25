@@ -414,10 +414,13 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
 
 
 def get_indent(line,indent_size):
+    if indent_size == 0:
+        return 0
     base_indent = " " * indent_size
     if line.startswith(base_indent):
         # find multiple of base_indent present as prefix in line
         count = 0
+        print(line)
         while line.startswith(base_indent):
             count += 1
             line = line[len(base_indent):]
@@ -556,8 +559,8 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
     3. Apply 
     """
     # print("*" * 10)
-    print(start_code_fence_start)
-    print(start_code_fence_end)
+    # print(start_code_fence_start)
+    # print(start_code_fence_end)
     # print(stop_code_fence_start)
     # print(stop_code_fence_end)
 
@@ -568,8 +571,8 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
 
     relative_indents,indent_size = get_relative_indents(new_lines)
 
-    print(start_code_fence)
-    print(stop_code_fence)
+    # print(start_code_fence)
+    # print(stop_code_fence)
 
     start_indents = [get_indent(line[1],indent_size) for line in start_code_fence]
     stop_indents = [get_indent(line[1],indent_size) for line in stop_code_fence]
@@ -589,6 +592,7 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
 
 
     base = None
+    print("before change")
     for i,line in enumerate(new_lines):
         current_line_no = line_no_base + i
         # print(current_line_no,start_code_fence_start,start_code_fence_end,current_line_no >= start_code_fence_start, current_line_no <= start_code_fence_end)
@@ -600,7 +604,7 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
                     print(relative_indents)
                     print(start_indents)
                     print(base,relative_indents[i],start_indents[i])
-                    raise Exception(f"Indentation does not match for line {current_line_no-1}.Make sure you specify the exact indents to make an edit. Line: " + src_lines[current_line_no-1][1])
+                    raise Hallucination(f"Indentation does not match for line {current_line_no-1}.Make sure you specify the exact indents to make an edit. Line: " + src_lines[current_line_no-1][1])
                 base = start_indents[0] - relative_indents[0]
                 # print("base",current_line_no,base)
             # start fence processing
@@ -660,7 +664,7 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
 
     # print("*" * 10)
 
-
+    print(new_lines)
     
 
     return new_lines
