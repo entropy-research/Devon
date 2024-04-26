@@ -488,7 +488,7 @@ Single executable command here
     2. recognize the difference between the shape of the data provided to the breaking code, and the shape of the data that is expected
     3. identify psuedo code for the fix
   4. Test the fix thoroughly, considering other potential impacts
-    - Make sure you run your tests!
+    - Always make sure you run your tests!
 </PROBLEM SOLVING APPROACH>
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think

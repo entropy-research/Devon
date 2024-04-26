@@ -1909,7 +1909,7 @@ EXAMPLES
         if fn_name in ["vim","nano"]:
             return "Interactive Commands are not allowed"
 
-        if fn_name == "python" and len(args) != 1:
+        if fn_name == "python" and len([line for line in command_string.splitlines() if line]) != 1:
             return "Interactive Commands are not allowed"
 
         funcs = [
