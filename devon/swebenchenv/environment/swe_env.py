@@ -805,8 +805,7 @@ class SWEEnv(gym.Env):
         with tempfile.NamedTemporaryFile(mode="w+") as f:
             f.write(code_string)
             f.seek(0)
-            print(f.name)
-            Run(args=["--disable=W,R,C,E0401",f.name], reporter=reporter, exit=False)
+            Run(args=["--disable=all", "--enable=E0602,E1101",f.name], reporter=reporter, exit=False)
         
         results = json.loads(pylint_output.getvalue())
 
