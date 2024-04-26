@@ -417,7 +417,7 @@ if __name__ == "__main__":
         model=model,
         temperature=temperature,
         exp_name=exp_name,
-        max_workers=3,
+        max_workers=1,
     )
 
     main(defaults)

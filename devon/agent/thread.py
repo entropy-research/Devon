@@ -47,7 +47,7 @@ class Agent:
 
         self.name = name
         self.history = []
-        self.max_steps = 15
+        self.max_steps = 0
 
     def _format_editor_entry(self, k, v):
 
@@ -322,6 +322,9 @@ ACTION: {action}
 OBSERVATION: {observation}
 \n\n****************\n\n\n\n"""
             )
+
+        if self.max_steps == 0:
+            _,_,done,info = env.step("submit","im done")
 
         if not done:
             # sumbit the last thing

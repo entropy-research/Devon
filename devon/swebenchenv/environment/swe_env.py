@@ -332,6 +332,7 @@ class SWEEnv(gym.Env):
                 input=cmd,
                 error_msg="Failed to clean repository",
             )
+        print(self.communicate("git status"))
         # print(self.get_cwd())
         self.table_cache.function_table = self.function_table
         self.table_cache.class_table = self.class_table
@@ -366,6 +367,8 @@ class SWEEnv(gym.Env):
             error_msg="Failed to source conda",
         )
 
+        print(self.communicate("git status"))
+
         # Extract arch information
         system = self.communicate("uname -s").strip().lower()
         arch = self.communicate("uname -m").strip().lower()
@@ -391,6 +394,7 @@ class SWEEnv(gym.Env):
             f"pip install flake8",
             error_msg="Failed to install flake8 (lint library)"
         )
+        print(self.communicate("git status"))
 
         # Apply test patch for oracle setting
         if apply_test_patch:
@@ -1553,6 +1557,7 @@ DESCRIPTION
         git apply -R < "/root/test.patch"
     fi
 
+    echo "\nbuild" >> .gitignore
     git add -A
     git diff --cached > model.patch
     echo "<<SUBMISSION||"
