@@ -274,10 +274,12 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
         begin_matches = match_fence_all(stripped_file_lines, begin_fence)
 
         # If we allowed a single line match, but the match is not unique, bail
-        if len(stripped_old_lines) == 1 and len(begin_matches) > 1:
+        if (len(stripped_old_lines) == 1 and len(begin_matches) > 1):
             raise Hallucination(not_enough_context_prompt)
-        else:
+        elif len(begin_matches) == 1:
             return [list(begin_matches[0][:2]) + list(begin_matches[0][:2])]
+        else:
+            raise Hallucination(incorrect_context_prompt)
 
     else:
         begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
