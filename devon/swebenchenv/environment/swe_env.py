@@ -1,4 +1,5 @@
 import datetime
+import difflib
 import inspect
 import io
 import json
@@ -14,6 +15,7 @@ import re
 import subprocess
 import traceback
 import time
+
 
 from dataclasses import dataclass
 from git import Repo
@@ -718,6 +720,18 @@ class SWEEnv(gym.Env):
             self.close()
             raise RuntimeError(f"{error_msg}: {logs}")
 
+    def normalize_path(self, path, specified_path):
+        if path == os.sep:
+            return specified_path
+        elif os.path.isabs(path):
+            if path.startswith(specified_path):
+                return path
+            else:
+                path_components = path.strip(os.sep).split(os.sep)
+                path_components[0] = specified_path.strip(os.sep)
+                return os.sep + os.path.join(*path_components)
+        else:
+            return os.path.join(specified_path, path)
 
     def make_abs_path(self, fpath: str) -> str:
         """
@@ -730,13 +744,25 @@ class SWEEnv(gym.Env):
             str: The absolute path of the file.
         """
 
-        fpath = fpath.strip("'").strip('"')
-        base = fpath.split("/")[0]
+        # fpath = fpath.strip("'").strip('"')
+        # base = fpath.split("/")[0]
 
-        if f"/{base}" == self.file_root:
-            return "/" + fpath.lstrip("/")
+        # print("FILE_ROOT: ", self.file_root)
+        # print(fpath)
+        # print("BASE: ", base)
+
+        # if fpath.startswith(self.file_root):
+        #     return os.path.abspath(fpath)
+        # else:
+        #     return os.path.join("/", self.file_root.strip("/"), fpath.strip("/"))
+
+        return self.normalize_path(fpath, self.file_root)
+
+    def cwd_normalize_path(self, path):
+        if os.path.isabs(path):
+            return self.make_abs_path(path)
         else:
-            return os.path.join("/", self.file_root, fpath)
+            return self.make_abs_path(os.path.join(self.get_cwd(), path))
     
 
     def file_exists(self, fpath):
@@ -767,34 +793,34 @@ class SWEEnv(gym.Env):
 
 
     def _list_files_recursive(self, files: list[str]) -> dict:
-        file_tree = []
-        files_content = {}
-
-        # Execute command in container to list all files
         result = self.communicate(f"find /{self.record['repo'].replace('/', '__')} -type f")
         all_files = result.split('\n')
 
         # Generate file tree as a nested dictionary and read specified files
         def add_to_tree(path, tree):
             parts = path.strip('/').split('/')
-            for part in parts[:-1]:
-                tree = tree.setdefault(part, {})
-            tree[parts[-1]] = {}
+            current = tree
+            for part in parts:
+                if part not in current:
+                    current[part] = {}
+                current = current[part]
 
         directory_tree = {}
-        file_tree_dict = {}
+        file_tree = {}
+        files_content = {}
+
         for file_path in all_files:
-            add_to_tree(file_path, file_tree_dict)  # Adds to file tree
-            add_to_tree(os.path.dirname(file_path), directory_tree)  # Additionally, adds to directory tree for a broader structure
-            
+            # Add to directory tree
+            directory_path = os.path.dirname(file_path)
+            add_to_tree(directory_path, directory_tree)
+            add_to_tree(file_path, file_tree)
+
             if file_path in files:
                 # Read file content from container
                 result = self.communicate(f"cat '{file_path}'")
                 files_content[file_path] = result
 
-        file_tree = file_tree_dict
-
-        return {"directory_tree": directory_tree, "file_tree": file_tree, "files_content": files_content}
+        return {"directory_tree": directory_tree, "file_tree": file_tree,"files_content": files_content}
 
     def check_lint(seld,code_string : str,file_path: str):
 
@@ -836,13 +862,7 @@ class SWEEnv(gym.Env):
                 and 'files_content' containing a dictionary of specified files and their content.
         """
 
-        abs_path = self.make_abs_path(file_path)
-
-        cwd = self.get_cwd().strip()
-        if abs_path.startswith(cwd):
-            abs_path = self.make_abs_path(abs_path)
-        else:
-            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+        abs_path = self.cwd_normalize_path(file_path)
 
         return json.dumps(self._list_files_recursive([abs_path])["directory_tree"])
 
@@ -856,13 +876,8 @@ class SWEEnv(gym.Env):
             file_path (str): The path of the file to open.
         """
         try:
-            abs_path = self.make_abs_path(file_path)
 
-            cwd = self.get_cwd().strip()
-            if abs_path.startswith(cwd):
-                abs_path = self.make_abs_path(abs_path)
-            else:
-                abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+            abs_path = self.cwd_normalize_path(file_path)
 
             if abs_path in self.editor:
                 raise Exception(f"File {abs_path} already open in editor")
@@ -918,13 +933,8 @@ class SWEEnv(gym.Env):
 
     SCROLL_DOWN(1)         April 2024         SCROLL_DOWN(1)
     """
-        abs_path = self.make_abs_path(file_path)
-
-        cwd = self.get_cwd().strip()
-        if abs_path.startswith(cwd):
-            abs_path = self.make_abs_path(abs_path)
-        else:
-            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+        
+        abs_path = self.cwd_normalize_path(file_path)
 
         exists = self.file_exists(abs_path)
         if not exists:
@@ -983,13 +993,7 @@ class SWEEnv(gym.Env):
 
     SCROLL_UP(1)         April 2024         SCROLL_UP(1)
     """
-        abs_path = self.make_abs_path(file_path)
-
-        cwd = self.get_cwd().strip()
-        if abs_path.startswith(cwd):
-            abs_path = self.make_abs_path(abs_path)
-        else:
-            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+        abs_path = self.cwd_normalize_path(file_path)
         
         exists = self.file_exists(abs_path)
         if not exists:
@@ -1048,13 +1052,7 @@ class SWEEnv(gym.Env):
 
         SCROLL_TO_LINE(1)         April 2024         SCROLL_TO_LINE(1)
         """
-        abs_path = self.make_abs_path(file_path)
-
-        cwd = self.get_cwd().strip()
-        if abs_path.startswith(cwd):
-            abs_path = self.make_abs_path(abs_path)
-        else:
-            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+        abs_path = self.cwd_normalize_path(file_path)
 
         exists = self.file_exists(abs_path)
         if not exists:
@@ -1086,13 +1084,7 @@ class SWEEnv(gym.Env):
         Returns:
             bool: True if the file was successfully deleted, False otherwise.
         """
-        abs_path = self.make_abs_path(file_path)
-
-        cwd = self.get_cwd().strip()
-        if abs_path.startswith(cwd):
-            abs_path = self.make_abs_path(abs_path)
-        else:
-            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+        abs_path = self.cwd_normalize_path(file_path)
 
         if abs_path in self.editor:
             del self.editor[abs_path]
@@ -1105,12 +1097,6 @@ class SWEEnv(gym.Env):
         try:
             # Check if file doesnt already exists to avoid overwriting
             abs_path = self.make_abs_path(file_path)
-            
-            cwd = self.get_cwd().strip()
-            if abs_path.startswith(cwd):
-                abs_path = self.make_abs_path(abs_path)
-            else:
-                abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
 
             exists = self.file_exists(abs_path)
             if not exists:
@@ -1137,12 +1123,6 @@ class SWEEnv(gym.Env):
         try:
             # Check if file already exists to avoid overwriting
             abs_path = self.make_abs_path(file_path)
-
-            cwd = self.get_cwd().strip()
-            if abs_path.startswith(cwd):
-                abs_path = self.make_abs_path(abs_path)
-            else:
-                abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
 
             exists = self.file_exists(abs_path)
             if not exists:
@@ -1214,17 +1194,15 @@ CREATE_FILE(1)                        April 2024                         CREATE_
         """
         try:
             # Check if file already exists to avoid overwriting
-            abs_path = self.make_abs_path(file_path)
-
-            cwd = self.get_cwd().strip()
-            if abs_path.startswith(cwd):
-                abs_path = self.make_abs_path(abs_path)
-            else:
-                abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+            abs_path = self.cwd_normalize_path(file_path)
+            print(abs_path)
 
             exists = self.file_exists(abs_path)
             if exists:
                 raise Exception(f"Could not create file, file already exists: {abs_path}")
+            
+            if self.check_path_for_tests(abs_path):
+                raise Exception(f"Could not create file, the tests directory is read only, please create your testing file elsewhere. './reproduce.py' is usually a good option.")
 
             # Creating the file with initial content
 
@@ -1354,6 +1332,28 @@ EXAMPLES
         else:
             return False
 
+    def check_lint_entry_equal(self, a, b):
+        if (
+            a["obj"] == b["obj"] 
+            and a["column"] == b["column"] 
+            and a["endColumn"] == b["endColumn"] 
+            and a["message"] == b["message"] 
+            and a["message-id"] == b["message-id"]
+        ):
+            print("Success, these are equal")
+            return True
+        else:
+            return False
+
+    def check_lint_entry_in_list(self, a, b_set):
+
+        for entry in b_set:
+            if self.check_lint_entry_equal(a, entry):
+                return True
+            else:
+                print("Didn't match")
+        
+        return False
 
     def real_write_diff(self, diff, thought):
 
@@ -1384,22 +1384,23 @@ EXAMPLES
                 except Exception as e:
                     return "Error applying diff: \n" + repr(e)
 
-                if self.check_path_for_tests(result[0]):
+                target_path = result[0]
+
+                if self.check_path_for_tests(target_path):
                     return "Error applying diff: tried to edit tests. Please remember to create a reproduce.py file if you would like to write tests."
-                before_results = self.check_lint(result[1],result[0])
-                after_results = self.check_lint(result[1],result[0])
-                print("before results: ", before_results)
-                print("after results: ", after_results)
-                diff_results = [x for x in after_results if x not in before_results]
 
+                old_editor_code = "\n".join(self.editor[target_path]["lines"])
+                before_results = self.check_lint(self.read_file(target_path),target_path)
 
+                self.write_file(file_path=target_path, content=result[1])
+                file_paths.append(target_path)
 
-                old_editor_code = "\n".join(self.editor[result[0]]["lines"])
-                self.write_file(file_path=result[0], content=result[1])
-                file_paths.append(result[0])
-                new_editor_code = "\n".join(self.editor[result[0]]["lines"])
+                new_editor_code = "\n".join(self.editor[target_path]["lines"])
+                after_results = self.check_lint(result[1],target_path)
 
                 assert(old_editor_code != new_editor_code)
+
+                diff_results = [x for x in after_results if not self.check_lint_entry_in_list(x, before_results)]
 
             paths = ", ".join(file_paths)
 
@@ -1642,13 +1643,7 @@ EXAMPLES
         if search_term.startswith("--"):
             search_term = "\"" + search_term + "\""
 
-        abs_path = self.make_abs_path(dir)
-
-        cwd = self.get_cwd().strip()
-        if abs_path.startswith(cwd):
-            abs_path = self.make_abs_path(abs_path)
-        else:
-            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+        abs_path = self.cwd_normalize_path(dir)
 
         command = f"find {abs_path} -type f ! -path '*/.*' -exec grep -nIH '{search_term}' {{}} + | cut -d: -f1 | sort | uniq -c"
         result = self.communicate(command)
@@ -1714,13 +1709,7 @@ EXAMPLES
              search_file "world" "/path/to/file.txt"
         """
 
-        abs_path = self.make_abs_path(file_path)
-
-        cwd = self.get_cwd().strip()
-        if abs_path.startswith(cwd):
-            abs_path = self.make_abs_path(abs_path)
-        else:
-            abs_path = self.make_abs_path(os.path.join(cwd, abs_path))
+        abs_path = self.cwd_normalize_path(file_path)
 
         if not (abs_path in self.editor):
             raise Exception(f"Could not find in file, file is not open: {abs_path}")
@@ -1817,7 +1806,9 @@ EXAMPLES
              list_files "/path/to/directory"
         """
 
-        command = f"grep -rl '' {folder_path}"
+        abs_path = self.cwd_normalize_path(folder_path)
+
+        command = f"grep -rl '' {abs_path}"
         result = self.communicate(command)
 
         # file_paths = result.split('\n')
@@ -1836,15 +1827,15 @@ EXAMPLES
 
         # logger.info(f"CWD {result}")
         
-        return result
-    
+        return result.strip()
+
     def no_op(self) -> str:
         """
         Lets you think! This allows you to take a brief moment to think and synthesize what you know about the current state of the system.
 
         Make sure you think step by step!
         """
-        
+
         return "No Action Taken"
 
     def generate_command_docs(self):
