@@ -16,7 +16,7 @@ class HumanModel:
         self.api_key = os.environ.get("ANTHROPIC_API_KEY")
         self.model = Anthropic(api_key=self.api_key)
 
-    def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
+    def query(self, messages: list[dict[str, str]], systems_message: str = "") -> str:
         thought = ""
         print(messages[-1])
         command = input("enter your command here")

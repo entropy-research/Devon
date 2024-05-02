@@ -404,7 +404,7 @@ if __name__ == "__main__":
             data_path="princeton-nlp/SWE-bench_Lite",
             split="test",
             verbose=True,
-            # container_name="swe-agent4",
+            container_name="swe-agent4",
             install_environment=True,
             # django-14787
             # django-16046

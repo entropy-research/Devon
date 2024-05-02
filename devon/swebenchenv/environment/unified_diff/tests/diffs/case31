@@ -1,0 +1,13 @@
+edit_file <<<
+--- /django__django/django/db/models/sql/compiler.py
++++ /django__django/django/db/models/sql/compiler.py
+@@ -1128,6 +1128,7 @@
+                 raise DatabaseError('ORDER BY term does not match any column in the result set.')
+             sql, params = self.compile(resolved)
+-            without_ordering = self.ordering_parts.search(sql).group(1)
++            sql_oneline = ' '.join(sql.split('\n'))
++            without_ordering = self.ordering_parts.search(sql_oneline).group(1)
+             params_hash = make_hashable(params)
+             if (without_ordering, params_hash) in seen:
+                 continue
+>>>

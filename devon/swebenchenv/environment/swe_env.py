@@ -784,7 +784,7 @@ class SWEEnv(gym.Env):
         """
         result = self.communicate(f"cat '{file_path}'")
         return result
-    
+
 
     def load_file_to_editor(self, file_path):
         abs_path = self.make_abs_path(file_path)
@@ -850,21 +850,21 @@ class SWEEnv(gym.Env):
 
 
 
-    def list_dirs_recursive(self, file_path: str) -> dict:
-        """
-        Returns the entire directory tree in its entirety from the file system.
+    # def list_dirs_recursive(self, file_path: str) -> dict:
+    #     """
+    #     Returns the entire directory tree in its entirety from the file system.
 
-        Args:
-            path: the path to list the folder subtree from.
+    #     Args:
+    #         path: the path to list the folder subtree from.
 
-        Returns:
-            dict: A dictionary with two keys: 'file_tree' containing a list of all files in the tree,
-                and 'files_content' containing a dictionary of specified files and their content.
-        """
+    #     Returns:
+    #         dict: A dictionary with two keys: 'file_tree' containing a list of all files in the tree,
+    #             and 'files_content' containing a dictionary of specified files and their content.
+    #     """
 
-        abs_path = self.cwd_normalize_path(file_path)
+    #     abs_path = self.cwd_normalize_path(file_path)
 
-        return json.dumps(self._list_files_recursive([abs_path])["directory_tree"])
+    #     return json.dumps(self._list_files_recursive([abs_path])["directory_tree"])
 
     #TOOL FUNCTIONS
 
@@ -900,8 +900,6 @@ class SWEEnv(gym.Env):
 
     def scroll_down(self, file_path: str):
         """
-    SCROLL_DOWN(1)        General Commands Manual        SCROLL_DOWN(1)
-
     NAME
         scroll_down - scroll down by one window of size 500 in the specified file
 
@@ -930,10 +928,8 @@ class SWEEnv(gym.Env):
 
     SEE ALSO
         scroll_up(1), open_file(1), close_file(1)
-
-    SCROLL_DOWN(1)         April 2024         SCROLL_DOWN(1)
     """
-        
+
         abs_path = self.cwd_normalize_path(file_path)
 
         exists = self.file_exists(abs_path)
@@ -953,15 +949,13 @@ class SWEEnv(gym.Env):
             new_page_number = last_page_idx
         else:
             new_page_number = old_page_number + 1
-        
+
         self.editor[abs_path]["page"] = new_page_number
 
         return f"Scrolled down in file {abs_path} to line {self.PAGE_SIZE * new_page_number}"
 
     def scroll_up(self, file_path: str):
         """
-    SCROLL_UP(1)        General Commands Manual        SCROLL_UP(1)
-
     NAME
         scroll_up - scroll up by one page in the specified file
 
@@ -987,18 +981,13 @@ class SWEEnv(gym.Env):
         To scroll up by one page in the file "/path/to/file.txt":
 
             scroll_up "/path/to/file.txt"
-
-    SEE ALSO
-        scroll_down(1), open_file(1), close_file(1)
-
-    SCROLL_UP(1)         April 2024         SCROLL_UP(1)
     """
         abs_path = self.cwd_normalize_path(file_path)
-        
+
         exists = self.file_exists(abs_path)
         if not exists:
             raise Exception(f"Could not scroll in file, file does not exist: {abs_path}")
-        
+
         if not (abs_path in self.editor):
             raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
 
@@ -1017,8 +1006,6 @@ class SWEEnv(gym.Env):
 
     def scroll_to_line(self, file_path: str, line_number: str):
         """
-        SCROLL_TO_LINE(1)        General Commands Manual        SCROLL_TO_LINE(1)
-
         NAME
             scroll_to_line - scroll to the window containing the specified line in the file
 
@@ -1049,8 +1036,6 @@ class SWEEnv(gym.Env):
 
         SEE ALSO
             scroll_up(1), scroll_down(1), open_file(1), close_file(1)
-
-        SCROLL_TO_LINE(1)         April 2024         SCROLL_TO_LINE(1)
         """
         abs_path = self.cwd_normalize_path(file_path)
 
@@ -1059,16 +1044,17 @@ class SWEEnv(gym.Env):
             raise Exception(f"Could not scroll in file, file does not exist: {abs_path}")
 
         if not (abs_path in self.editor):
-            raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
+            # raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
+            self.open_file(abs_path)
 
         lines = self.editor[abs_path]["lines"].splitlines()
         total_lines = len(lines)
         line_number = int(line_number)
 
-        if line_number < 1 or line_number > total_lines:
+        if line_number < 0 or line_number > total_lines:
             raise Exception(f"Invalid line number: {line_number}. Line number should be between 1 and {total_lines}.")
 
-        window_number = (line_number - 1) // self.PAGE_SIZE
+        window_number = (line_number) // self.PAGE_SIZE
         self.editor[abs_path]["page"] = window_number
 
         window_start_line = window_number * self.PAGE_SIZE + 1
@@ -1141,8 +1127,6 @@ class SWEEnv(gym.Env):
 
     def create_file(self, file_path: str, content: str = "") -> bool:
         """
-CREATE_FILE(1)                   General Commands Manual                  CREATE_FILE(1)
-
 NAME
        create_file - create a new file at the target path with optional initial content
 
@@ -1186,24 +1170,19 @@ EXAMPLES
               import os
               import asyncio
               >>>
-
-SEE ALSO
-       touch(1), echo(1)
-
-CREATE_FILE(1)                        April 2024                         CREATE_FILE(1)
         """
         try:
             # Check if file already exists to avoid overwriting
             abs_path = self.cwd_normalize_path(file_path)
             print(abs_path)
 
+            if self.check_path_for_tests(abs_path):
+                raise Exception(f"Could not create file, the tests directory is read only, please create your testing file elsewhere. './reproduce.py' is usually a good option.")
+
             exists = self.file_exists(abs_path)
             if exists:
                 raise Exception(f"Could not create file, file already exists: {abs_path}")
             
-            if self.check_path_for_tests(abs_path):
-                raise Exception(f"Could not create file, the tests directory is read only, please create your testing file elsewhere. './reproduce.py' is usually a good option.")
-
             # Creating the file with initial content
 
             create_command = f"cat << 'DELIM' > '{abs_path}' \n" + content + "\nDELIM"
@@ -1570,8 +1549,6 @@ submit"""
 
     def find_file(self, file_path: str):
         """
-        FIND_FILE(1)        General Commands Manual        FIND_FILE(1)
-
         NAME
             find_file - search for a file by name within the file system
 
@@ -1598,18 +1575,13 @@ submit"""
             To search for a file named "example.txt" within the file system:
 
                 find_file "/path/to/example.txt"
-
-        SEE ALSO
-            ls(1), locate(1)
-
-        FIND_FILE(1)         April 2024         FIND_FILE(1)
         """
         filename = os.path.basename(file_path)
         command = f"find {self.file_root} -type f -name '{filename}'"
         result = self.communicate(command)
         return result
 
-    def search_dir(self, search_term: str, dir: str = "./"):
+    def search_dir(self, search_term: str, dir: str = ""):
         """NAME
       search_dir - search for a term in all files in a directory
 
@@ -1646,6 +1618,7 @@ EXAMPLES
         abs_path = self.cwd_normalize_path(dir)
 
         command = f"find {abs_path} -type f ! -path '*/.*' -exec grep -nIH '{search_term}' {{}} + | cut -d: -f1 | sort | uniq -c"
+
         result = self.communicate(command)
 
         matches = result.strip()
@@ -1727,8 +1700,10 @@ EXAMPLES
 
         num_matches = len(matches)
 
-        if num_matches > 10:
-            return f"More than {10} lines matched for \"{search_term}\" in {abs_path}. Please narrow your search."
+        max_matches = 20
+
+        if num_matches > max_matches:
+            return f"More than {max_matches} lines matched for \"{search_term}\" in {abs_path}. Please narrow your search."
 
         matches = '\n'.join(matches)
         result = f"Found {num_matches} matches for \"{search_term}\" in {abs_path}:\n {matches}"
@@ -1777,43 +1752,43 @@ EXAMPLES
 #         result = f"Found {num_matches} matches for \"{file_name}\" in {dir}:\n{matches}"
 #         return result.replace('\n', '\n    ')
 
-    def list_files(self, folder_path: str = ".") -> list:
-        """NAME
-      list_files - list all files in a specific folder
+#     def list_files(self, folder_path: str = ".") -> list:
+#         """NAME
+#       list_files - list all files in a specific folder
 
-SYNOPSIS
-      list_files [FOLDER_PATH]
+# SYNOPSIS
+#       list_files [FOLDER_PATH]
 
-DESCRIPTION
-      The list_files command lists all files in the specified FOLDER_PATH. If no
-      FOLDER_PATH is provided, it lists files in the current directory.
+# DESCRIPTION
+#       The list_files command lists all files in the specified FOLDER_PATH. If no
+#       FOLDER_PATH is provided, it lists files in the current directory.
 
-OPTIONS
-      FOLDER_PATH
-             The path of the folder to list files from. If not specified, the command
-             lists files in the current directory (".").
+# OPTIONS
+#       FOLDER_PATH
+#              The path of the folder to list files from. If not specified, the command
+#              lists files in the current directory (".").
 
-RETURN VALUE
-      The list_files command returns a list of file paths within the specified folder.
+# RETURN VALUE
+#       The list_files command returns a list of file paths within the specified folder.
 
-EXAMPLES
-      To list all files in the current directory:
+# EXAMPLES
+#       To list all files in the current directory:
 
-             list_files
+#              list_files
 
-      To list all files in the "/path/to/directory" directory:
+#       To list all files in the "/path/to/directory" directory:
 
-             list_files "/path/to/directory"
-        """
+#              list_files "/path/to/directory"
+#         """
 
-        abs_path = self.cwd_normalize_path(folder_path)
+#         abs_path = self.cwd_normalize_path(folder_path)
 
-        command = f"grep -rl '' {abs_path}"
-        result = self.communicate(command)
+#         command = f"grep -rl '' {abs_path}"
+#         result = self.communicate(command)
 
-        # file_paths = result.split('\n')
-        # print(file_paths)
-        return result
+#         # file_paths = result.split('\n')
+#         # print(file_paths)
+#         return result
 
     def get_cwd(self) -> str:
         """
@@ -1842,7 +1817,7 @@ EXAMPLES
 
         funcs = [
             # self.list_files,
-            self.list_dirs_recursive,
+            # self.list_dirs_recursive,
             self.close_file,
             self.create_file,
             self.open_file,
@@ -1874,6 +1849,29 @@ EXAMPLES
 
         return docs
 
+    # def parse_command(self, command: str) -> tuple:
+    #     """
+    #     Parses a command string into its function name and arguments.
+
+    #     Args:
+    #         command (str): The command string to parse.
+
+    #     Returns:
+    #         tuple: A tuple containing the function name (str) and a list of arguments (list).
+    #     """
+    #     print(command)
+
+    #     parts = re.findall(r'(?:"[^"]*"|\[[^]]*\]|<<<[^>]*>>>|[^"\s]+)', command)
+    #     fn_name = parts[0]
+    #     args = []
+    #     for arg in parts[1:]:
+    #         if arg.startswith('"') and arg.endswith('"'):
+    #             arg = arg[1:-1]
+    #         elif arg.startswith("<<<") and arg.endswith(">>>"):
+    #             arg = arg[3:-3]
+    #         args.append(arg)
+    #     return fn_name, args
+
     def parse_command(self, command: str) -> tuple:
         """
         Parses a command string into its function name and arguments.
@@ -1884,21 +1882,34 @@ EXAMPLES
         Returns:
             tuple: A tuple containing the function name (str) and a list of arguments (list).
         """
-        print(command)
-        parts = re.findall(r'(?:"[^"]*"|\[[^]]*\]|<<<[^>]*>>>|[^"\s]+)', command)
+        parts = command.split(None, 1)
         fn_name = parts[0]
         args = []
-        for arg in parts[1:]:
-            # if arg.startswith("[") and arg.endswith("]"):
-            #     arg = eval(arg)
-            if arg.startswith('"') and arg.endswith('"'):
-                arg = arg[1:-1]
-            elif arg.startswith("<<<") and arg.endswith(">>>"):
-                arg = arg[3:-3]
-            args.append(arg)
+
+        if len(parts) > 1:
+            arg_string = parts[1]
+
+            if "<<<" in arg_string and ">>>" in arg_string:
+                # Handle multiline arguments
+                before_multiline, multiline_arg = arg_string.split("<<<", 1)
+                multiline_arg, after_multiline = multiline_arg.split(">>>", 1)
+
+                if before_multiline:
+                    temp_pre = re.findall(r'(?:[^\s"]+|"[^"]*")+', before_multiline)
+                    args.extend([arg.strip('"').strip("'") for arg in temp_pre])
+
+                args.append(multiline_arg.strip())
+
+                if after_multiline:
+                    args.extend([arg.strip('"').strip("'") for arg in after_multiline.split()])
+            else:
+                # Handle single line arguments
+                temp_pre = re.findall(r'(?:[^\s"]+|"[^"]*")+', arg_string)
+                args = [arg.strip('"').strip("'") for arg in temp_pre]
+
         return fn_name, args
 
-    def parse_command_to_function(self, command_string, thought: str):
+    def parse_command_to_function(self, command_string: str, thought: str):
 
         fn_name, args = self.parse_command(command_string)
         if fn_name in ["vim","nano"]:
@@ -1909,7 +1920,7 @@ EXAMPLES
 
         funcs = [
             # self.list_files,
-            self.list_dirs_recursive,
+            # self.list_dirs_recursive,
             self.close_file,
             self.create_file,
             self.open_file,
@@ -1950,7 +1961,7 @@ EXAMPLES
                     return None
         except Exception as e:
             logger.error(traceback.print_exc())
-            return e.args[0]
+            return e.args[0] + "\n Remember to only use ONE command at a time."
 
     def get_available_actions(self) -> list[str]:
         """

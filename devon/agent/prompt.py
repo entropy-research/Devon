@@ -443,9 +443,8 @@ Write and run scripts instead (e.g. 'python script.py')
 <CONSTRAINTS>
 - Execute ONLY ONE command at a time
 - Wait for feedback after each command
-- Avoid repeating failed commands, reconsider approach instead
-- Use files currently open in editor for information
-- Locate code elements with 'find_class' or 'find_function', not 'search'
+- Locate classes and functions with 'find_class' or 'find_function', not 'search'
+- Locating classes and functions is more efficient than locating files
 - 'no_op' command available to allow for more thinking time 
 - The title or first line of the issue describes the issue succintly
 </CONSTRAINTS>
@@ -455,6 +454,8 @@ Write and run scripts instead (e.g. 'python script.py')
 </TESTING_TIPS>
 <RESPONSE FORMAT>
 <THOUGHT>
+
+Remember to reflect on what you did and what you still need to do.
 
 **Am I overthinking?**
 Yes, I am overthinking, I should just make the change that fixes all cases of this type.
@@ -473,15 +474,16 @@ Single executable command here
 {history}
 </HISTORY>
 <PROBLEM SOLVING APPROACH>
+- Identify code symbols and weight them equally compared to text when you see them
 - Identify the root cause and specific failure case triggering the issue
 - Identify the data structures and types involved in the failing code path
 - Focus on fixing the underlying logic bug in the library code. This bug is sinister and impacts more than is provided in the issue.
 - Steps:
-  1. Trace the error to its source in the library codebase
-  2. Identify the flawed logic or edge case handling
+  1. Trace the error to its source in the library codebase. Pay attention to stack traces.
+  2. Identify the flawed logic or edge case handling as close to the failure source as possible
   3. Devise a robust solution that addresses the core problem
     1. analyze the current code. Describe it in detail
-      - what does it do? 
+      - what does it do?
       - how does it relate to other functions? Related functions probably reveal fields or clues about the data shape that you can use.
       - when is it called?
       - what does the data it is provided look like?
@@ -495,8 +497,8 @@ Single executable command here
 - Focus on matching the source lines precisely, to do this make sure you identify the desired source lines first
 - Always scroll to the lines you want to change
 - If making a one line change, only include that line
-- Only make one change at a time
-- When changing functions, always make sure to search for and update references
+- ONLY make ONE change at a time
+- Finish your edits before running tests
 - You only have access to code contained in {working_dir}
 </EDITING TIPS>"""
 

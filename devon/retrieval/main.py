@@ -1,5 +1,6 @@
 # main.py
 
+from functools import reduce
 import json
 import os
 import tarfile
@@ -29,9 +30,10 @@ class FunctionTable:
             return result[0]
         else:
             return result
-    
+
     def get_function_with_location(self, function_name):
-        functions =  self.function_table.get(function_name, {})
+        # functions =  self.function_table.get(function_name, {})
+        functions = reduce(lambda a, b: a+b, [self.function_table.get(k, {}) for k in list(self.function_table.keys()) if k.lower() == function_name.lower()], [])
         if len(functions) == 0:
             return {}
         
@@ -77,11 +79,13 @@ class ClassTable:
         else:
             return result
     
-    def get_class_with_location(self, class_name):
-        classes =  self.class_table.get(class_name, {})
+    def get_class_with_location(self, class_name: str):
+        # classes = self.class_table.get(class_name, {})
+        classes = reduce(lambda a,b: a+b, [self.class_table.get(k, {}) for k in list(self.class_table.keys()) if k.lower() == class_name.lower()], [])
+
         if len(classes) == 0:
             return {}
-        
+
         results = []
         for _class in classes:
 
@@ -92,7 +96,6 @@ class ClassTable:
             result["code"] = _class["code"]
             results.append(result)
         return results
-    
 
     def save_to_file(self, file_path):
         if not os.path.exists(os.path.dirname(file_path)):

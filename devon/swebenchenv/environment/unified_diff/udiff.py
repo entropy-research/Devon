@@ -277,7 +277,7 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
         if (len(stripped_old_lines) == 1 and len(begin_matches) > 1):
             raise Hallucination(not_enough_context_prompt)
         elif len(begin_matches) == 1:
-            return [list(begin_matches[0][:2]) + list(begin_matches[0][:2])]
+            return [list(begin_matches[0][:2]) + list(begin_matches[0][:2])], begin_matches, begin_matches
         else:
             raise Hallucination(incorrect_context_prompt)
 
@@ -298,7 +298,7 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
                 valid_pairs.append((begin_start, stop_end, stop_start, begin_end))
                 break
 
-    return valid_pairs
+    return valid_pairs, begin_matches, end_matches
 
 
 def match_stripped_lines_context(stripped_file_lines, old_lines):
@@ -309,7 +309,7 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
     fence_len = 3
     results = []
     while not results and fence_len > 1:
-        results = match_stripped_lines_context_with_fence_len(
+        results, b, e = match_stripped_lines_context_with_fence_len(
             [(i, line) for i, line in [(i, line.strip()) for i, line in stripped_file_lines] if line != ""],
             [line for line in [line.strip() for line in stripped_old_lines] if line != ""],
             old_lines, 
@@ -319,7 +319,7 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
         if len(results) > 0:
             break
 
-        results = match_stripped_lines_context_with_fence_len(
+        results, b, e = match_stripped_lines_context_with_fence_len(
             [(i, line) for i, line in [(i, strip_comment_from_line(line)) for i, line in stripped_file_lines] if line != ""],
             [line for line in [strip_comment_from_line(line) for line in stripped_old_lines] if line != ""],
             old_lines, 
@@ -333,6 +333,11 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
 
     #if none throw error
     if not results:
+        if b and len(b) == 1:
+            return b[0][0], None, None, None
+        elif e and len(e) == 1:
+            return None, e[0][1], None, None
+
         return None, None, None, None
 
     return results[0]
@@ -547,8 +552,8 @@ def get_relative_indents(lines):
 
     if gcd != 0:
         spaces = [(space // gcd)  for space in spaces]
-    min_indent = min(spaces)
 
+    min_indent = min(spaces) if spaces else 0
 
     return [space - min_indent for space in spaces],gcd
 
@@ -568,7 +573,6 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
 
     start_code_fence = src_lines[start_code_fence_start:start_code_fence_end + 1]
     stop_code_fence = src_lines[stop_code_fence_start:stop_code_fence_end + 1]
-
 
     relative_indents,indent_size = get_relative_indents(new_lines)
 
@@ -604,7 +608,7 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
                     print(i)
                     print(relative_indents)
                     print(start_indents)
-                    print(base,relative_indents[i],start_indents[i])
+                    print(base,relative_indents[i],start_indents[i], indent_size)
                     raise Hallucination(f"Indentation does not match for line {current_line_no-1}.Make sure you specify the exact indents to make an edit. Line: " + src_lines[current_line_no-1][1])
                 base = start_indents[0] - relative_indents[0]
                 # print("base",current_line_no,base)
@@ -622,18 +626,11 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
         # print(new_lines[i])
         # print(src_lines[current_line_no][1])
 
-
-
-
-
-        
-
-
     # for i,indent in enumerate(new_indents[:start_code_fence_end - start_code_fence_start]):
     #     new_indent = base + indent
     #     if new_indent != start_indents[i]:
     #         raise Exception(f"Indentation does not match for line {start_code_fence_start + i}")
-        
+
     #     new_lines[i] = "    " * new_indent + new_lines[i].strip()
     #     print(new_lines[i])
     #     print(src_lines[start_code_fence_start + i][1])
@@ -647,32 +644,22 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
     #     new_indent = base + new_indents[i]
     #     new_lines[i] = "    " * new_indent + new_lines[i].strip()
     #     print(new_lines[i])
-        
+
     # for i,indent in enumerate(new_indents[-1:-len(stop_indents) - 1:-1]):
     #     new_indent = base + indent
     #     if new_indent != stop_indents[len(stop_indents) - i - 1]:
     #         raise Exception(f"Indentation does not match for line {stop_code_fence_end - i}")
-        
-        
+
         # new_lines[len(new_lines) - i - 1] = "    " * new_indent + new_lines[len(new_lines) - i - 1].strip()
         # print(new_lines[len(new_lines) - i - 1])
         # print(src_lines[stop_code_fence_end - i][1])
         # assert new_lines[len(new_lines) - i - 1] == src_lines[stop_code_fence_end - i][1]
-        
-
-
-
 
     # print("*" * 10)
 
-    print(new_lines)
-    
+    print(new_lines)    
 
     return new_lines
-
-
-
-
 
 def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
@@ -703,12 +690,23 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
             if not (src_start is not None and src_end is not None):
                 #Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
+
+                if src_start:
+                    real_start = max(0, src_start - 10)
+                    real_end = min(len(src_lines), src_start + 10)
+                    real = "\n".join([line for _, line in src_lines[real_start: real_end]])
+                    raise Hallucination("Incorrect source lines, the source lines you wrote were:\n" + "\n".join(old_lines) + "\nThe actual source lines are: \n" + real)
+                elif src_end:
+                    real_start = max(0, src_end - 10)
+                    real_end = min(len(src_lines), src_end + 10)
+                    real = "\n".join([line for _, line in src_lines[real_start: real_end]])
+                    raise Hallucination("Incorrect source lines, the source lines you wrote were:\n" + "\n".join(old_lines) + "\nThe actual source lines are: \n" + real)
+
                 raise Hallucination(incorrect_context_prompt)
 
             if src_end - src_start > len(old_lines) + 5:
                 #Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
                 raise Hallucination(incorrect_context_prompt)
-
 
             applied_code = apply_indent(src_lines,new_lines,src_start,begin_end,stop_start,src_end)
             # applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)

@@ -47,7 +47,7 @@ class Agent:
 
         self.name = name
         self.history = []
-        self.max_steps = 0
+        self.max_steps = 15
 
     def _format_editor_entry(self, k, v):
 
@@ -117,17 +117,7 @@ class Agent:
 
         system_prompt = system_prompt_template_v3(commands + command_docs)
 
-        last_observation = None
-        second_last_observation = None
-        if len(self.history) > 2:
-            last_observation = self.history[-1]["content"]
-            second_last_observation = self.history[-3]["content"]
-        if last_observation and second_last_observation and "Failed to edit file" in last_observation and "Failed to edit file" in second_last_observation:
-            self.history = self.history[:-6]
-            history = history_to_bash_history(self.history)
-            self.current_model.args.temperature+= 0.2 if self.current_model.args.temperature < 0.8 else 0
-        else:
-            history = history_to_bash_history(self.history)
+        history = history_to_bash_history(self.history)
         # print("HISTORY: ", history)
         last_user_prompt = last_user_prompt_template_v3(
             issue, history, editor, working_dir
@@ -149,7 +139,35 @@ class Agent:
             "output": output
         }) + "<MODEL_OUT>")
 
-        return output
+        try:
+            thought, action = parse_response(output)
+        except Exception:
+            raise ValueError(f"Multiple actions found in response: {output}")
+
+        last_observation = None
+        second_last_observation = None
+        if len(self.history) > 2:
+            last_observation = self.history[-1]["content"]
+            second_last_observation = self.history[-2]["content"]
+            third_last_observation = self.history[-3]["content"]
+        if last_observation and second_last_observation and "Failed to edit file" in last_observation and ("Failed to edit file" in second_last_observation or "Failed to edit file" in third_last_observation):
+            self.history = self.history[:-6]
+
+            thought = """
+I need to stop and consider why my edits are not applying. I think I may have incorrectly written out the source lines and that may be the cause of the failures.
+
+In order to move forward, I am going to look at the lines exactly, and then only make one change.
+I know that if I make more than one change at a time it might cause me to incorrectly read the lines and that will make the user's patch tool fail.
+
+I can also try to reduce the number of source lines I am changing so that I have an easier time matching them.
+
+I am only going to make one change at a time.
+
+I will take a deep breath and methodically make a sequence of changes.
+"""
+            action = "no_op"
+
+        return thought, action, output
 
     def forward_with_error_check(
         self,
@@ -160,7 +178,7 @@ class Agent:
         step: int
     ) -> Tuple[str, str, str]:
         try:
-            output = self.forward_model(
+            thought, action, output = self.forward_model(
                 observation, state, avaliable_actions, commanddoc, step
             )
         except KeyboardInterrupt:
@@ -179,11 +197,6 @@ class Agent:
                 "exit_api",
                 f"exit due to retry error: {e}",
             )
-
-        try:
-            thought, action = parse_response(output)
-        except Exception:
-            raise ValueError(f"Multiple actions found in response: {output}")
 
         return thought, action, output
 
