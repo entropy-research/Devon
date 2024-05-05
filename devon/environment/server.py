@@ -33,7 +33,7 @@ from sqlalchemy import create_engine, text
 
 DATABASE_PATH = "./devon_environment.db"
 DATABASE_URL = "sqlite:///" + DATABASE_PATH
-app  = fastapi.FastAPI()
+app = fastapi.FastAPI()
 
 origins = [
     "http://localhost:3000",
@@ -48,7 +48,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-sessions : Dict[str, Session] = {}
+sessions: Dict[str, Session] = {}
 
 sessions: Dict[str, Session] = {}
 
