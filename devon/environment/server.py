@@ -4,7 +4,7 @@ from time import sleep
 from typing import Dict
 import fastapi
 from fastapi.responses import StreamingResponse
-from devon.environment.agent import Agent
+from devon.environment.agent import Agent, TaskAgent
 from devon.environment.model import ModelArguments
 
 from devon.environment.session import Event, Session, SessionArguments
@@ -61,15 +61,16 @@ def read_session():
 @app.post("/session")
 def create_session(session: str, path: str):
 
-    agent = Agent(name="Devon", args=ModelArguments(model_name="claude-opus", temperature=0.0), model="claude-opus", temperature=0.0)
+    agent = TaskAgent(name="Devon", args=ModelArguments(model_name="claude-opus", temperature=0.0), model="claude-opus", temperature=0.0)
     sessions[session] = Session(SessionArguments(path,"opus",0.0,environment="local",user_input=lambda : get_user_input(session)),agent)
 
     return session
 
 @app.post("/session/{session}/start")
-def start_session(session: str):
+def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
     sessions[session].enter()
-    sessions[session].event_log.append(Event(type="task", content="ask user for what to do"))
+    sessions[session].event_log.append(Event(type="Task", content="ask user for what to do"))
+    background_tasks.add_task(sessions[session].step_event)
     return session
 
 @app.post("/session/{session}/response")

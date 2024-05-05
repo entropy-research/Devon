@@ -1308,8 +1308,9 @@ def ask_user(ctx, question):
     ask_user "question"
     Asks the user for their input
     """
-    user_response = input(question)
-    return user_response
+    pass
+    # user_response = input(question)
+    # return user_response
 
 
 

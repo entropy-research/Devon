@@ -107,6 +107,7 @@ class Session:
         
 
     def step_event(self):
+        print("START STEP EVENT")
 
         if self.event_index == len(self.event_log):
             return "No more events to process", True
@@ -122,7 +123,7 @@ class Session:
                     "identifier": self.agent.name
                 })
 
-            if action.strip() in ["exit","stop","submit"]:
+            elif action.strip() in ["exit","stop","submit"]:
                 self.event_log.append({
                     "type": "Stop",
                     "content": "Stopped task",
