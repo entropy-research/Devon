@@ -134,7 +134,11 @@ let serverProcess: any = null
 
 app.on('ready', () => {
   new AppUpdater()
-  serverProcess = spawn('poetry', ['run', 'python','../devon/environment/server.py'])
+  serverProcess = spawn('poetry', [
+    'run',
+    'python',
+    '../devon/environment/server.py',
+  ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   serverProcess.stdout.on('data', (data: any) => {

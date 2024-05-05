@@ -7,6 +7,8 @@ from typing import Dict
 import fastapi
 from devon.environment.agent import TaskAgent
 from devon.environment.session import Event, Session, SessionArguments
+from fastapi.middleware.cors import CORSMiddleware
+
 
 # persistence
 # sqlite
@@ -31,7 +33,22 @@ from sqlalchemy import create_engine, text
 
 DATABASE_PATH = "./devon_environment.db"
 DATABASE_URL = "sqlite:///" + DATABASE_PATH
+app  = fastapi.FastAPI()
 
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+sessions : Dict[str, Session] = {}
 
 sessions: Dict[str, Session] = {}
 
@@ -116,7 +133,7 @@ def read_root():
 
 @app.get("/session")
 def read_session():
-    return sessions.keys()
+    return list(sessions.keys())
 
 
 @app.post("/session")

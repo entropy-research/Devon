@@ -105,3 +105,9 @@
         display: none; /* For Chrome, Safari, and Opera */
     }
 }
+
+@layer components {
+    .smooth-hover {
+        @apply transition duration-200 hover:bg-gray-100 dark:hover:bg-night;
+    }
+}
