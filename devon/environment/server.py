@@ -8,6 +8,8 @@ from devon.environment.agent import Agent, TaskAgent
 from devon.environment.model import ModelArguments
 
 from devon.environment.session import Event, Session, SessionArguments
+from fastapi.middleware.cors import CORSMiddleware
+
 
 
 # API
@@ -25,8 +27,20 @@ from devon.environment.session import Event, Session, SessionArguments
 
 app  = fastapi.FastAPI()
 
-sessions : Dict[str, Session] = {}
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+sessions : Dict[str, Session] = {}
 
 session_buffers : Dict[str, str] = {}
 

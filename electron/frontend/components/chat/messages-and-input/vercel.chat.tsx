@@ -25,6 +25,7 @@ import {
 import { Chat } from '@/lib/chat.types'
 import { AI } from '@/lib/chat/chat.actions'
 import EventStream from '@/components/event-stream'
+import useCreateSession from '@/lib/services/use-create-session'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
     initialMessages?: Message[]
@@ -47,6 +48,10 @@ export function VercelChat({
     const { toast } = useToast()
 
     const [_, setNewChatId] = useLocalStorage('newChatId', id)
+
+    const { createSession, sessionId, loading, error } = useCreateSession()
+    const [sessionName, setSessionName] = useState('')
+    const [_path, setPath] = useState('')
 
     useEffect(() => {
         // getChats().then((res) => {
@@ -122,6 +127,13 @@ export function VercelChat({
         scrollToBottom,
     } = useScrollAnchor()
 
+    const handleSubmit = e => {
+        e.preventDefault()
+        setPath('/my-path')
+        console.log(sessionName, _path)
+        createSession('newsession', '/my-path')
+    }
+
     return (
         <div className="flex flex-col flex-2 relative h-full" ref={scrollRef}>
             <div className="flex-1">
@@ -156,6 +168,10 @@ export function VercelChat({
                 </div>
             )}
             <EventStream sessionId={'1'} />
+            <button onClick={handleSubmit} disabled={loading}>
+                Create
+            </button>
+            {_path}
         </div>
     )
 }
