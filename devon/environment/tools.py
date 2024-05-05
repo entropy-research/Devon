@@ -11,21 +11,19 @@ context:
     - task_agent
 """
 
-import inspect
 import io
 import json
 import os
-from pathlib import Path
 import re
 import tarfile
 import tempfile
-import traceback
+from pathlib import Path
+
 from devon.retrieval.main import (
     get_class_defn,
     get_function_defn,
     initialize_repository,
 )
-
 from devon.swebenchenv.environment.unified_diff.udiff import (
     Hallucination,
     apply_file_context_diffs,
@@ -49,7 +47,7 @@ def normalize_path(path, specified_path):
             path = Path(path)
             return path.absolute().as_posix()
     else:
-        path = Path(specified_path) / Path(path) 
+        path = Path(specified_path) / Path(path)
         return path.absolute().as_posix()
 
 
@@ -153,8 +151,8 @@ def check_lint(ctx, code_string: str, file_path: str):
     # example json
     # [{'type': 'error', 'module': 'tmp5cpif150', 'obj': 'ModelFormMetaclass.__new__', 'line': 224, 'column': 20, 'endLine': 224, 'endColumn': 60, 'path': '/tmp/tmp5cpif150', 'symbol': 'too-many-function-args', 'message': 'Too many positional arguments for classmethod call', 'message-id': 'E1121'}, {'type': 'error', 'module': 'tmp5cpif150', 'obj': 'ModelForm', 'line': 477, 'column': 0, 'endLine': 477, 'endColumn': 15, 'path': '/tmp/tmp5cpif150', 'symbol': 'invalid-metaclass', 'message': "Invalid metaclass 'ModelFormMetaclass' used", 'message-id': 'E1139'}, {'type': 'error', 'module': 'tmp5cpif150', 'obj': 'ModelChoiceField.__deepcopy__', 'line': 1250, 'column': 17, 'endLine': 1250, 'endColumn': 41, 'path': '/tmp/tmp5cpif150', 'symbol': 'bad-super-call', 'message': "Bad first argument 'ChoiceField' given to super()", 'message-id': 'E1003'}]
 
-    from pylint.reporters.json_reporter import JSONReporter
     from pylint.lint import Run
+    from pylint.reporters.json_reporter import JSONReporter
 
     pylint_output = io.StringIO()  # Custom open stream
     reporter = JSONReporter(pylint_output)
@@ -198,7 +196,6 @@ def open_file(ctx, file_path: str):
         file_path (str): The path of the file to open.
     """
     try:
-
         abs_path = make_abs_path(ctx, file_path)
 
         if abs_path in ctx.state.editor:
@@ -327,7 +324,7 @@ def scroll_up(ctx, file_path: str):
     if abs_path not in ctx.state.editor:
         raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
 
-    lines = ctx.state.editor[abs_path]["lines"].splitlines()
+    # lines = ctx.state.editor[abs_path]["lines"].splitlines()
 
     old_page_number = ctx.state.editor[abs_path]["page"]
 
@@ -454,7 +451,6 @@ def write_file(ctx, file_path: str, content: str = "") -> str:
 
 
 def delete_file(ctx, file_path: str) -> bool:
-
     try:
         # Check if file already exists to avoid overwriting
         abs_path = make_abs_path(file_path)
@@ -538,7 +534,11 @@ def create_file(ctx, file_path: str, content: str = "") -> bool:
 
         # Creating the file with initial content
 
-        create_command = f"mkdir -p $(dirname '{abs_path}') && cat << 'DELIM' > '{abs_path}' \n" + content + "\nDELIM"
+        create_command = (
+            f"mkdir -p $(dirname '{abs_path}') && cat << 'DELIM' > '{abs_path}' \n"
+            + content
+            + "\nDELIM"
+        )
         ctx.environment.communicate(input=create_command)
 
         # copy_file_to_container(self.container_obj, contents=content, container_path=file_path)
@@ -741,15 +741,13 @@ def real_write_diff(ctx, diff):
             target_path = result[0]
 
             old_editor_code = "\n".join(ctx.state.editor[target_path]["lines"])
-            before_results = check_lint(
-                ctx, read_file(ctx, target_path), target_path
-            )
+            before_results = check_lint(ctx, read_file(ctx, target_path), target_path)
 
             write_file(ctx, file_path=target_path, content=result[1])
             file_paths.append(target_path)
 
             new_editor_code = "\n".join(ctx.state.editor[target_path]["lines"])
-            after_results = check_lint(ctx,result[1], target_path)
+            after_results = check_lint(ctx, result[1], target_path)
 
             assert old_editor_code != new_editor_code
 
@@ -762,7 +760,6 @@ def real_write_diff(ctx, diff):
         paths = ", ".join(file_paths)
 
         if diff_results:
-
             lint_error_message = ""
             for rst in diff_results:
                 lint_error_message += f"{rst['type']}: {rst['message']} on line {rst['line']} column {rst['column']}. Line {result[1].splitlines()[int(rst['line'])-1]} \n"
@@ -925,20 +922,20 @@ def submit(ctx):
             The submit command submits your solution. It is used to indicate that you have resolved the issue and are ready to submit your
             solution.
     """
-#     command = (
-#         """submit() {
-# cd"""
-#         + ctx.base_path
-#         + """
-# git add -A
-# git diff --cached > model.patch
-# echo "<<SUBMISSION||"
-# cat model.patch
-# echo "||SUBMISSION>>"
-# }
-# submit"""
-#     )
-#     return ctx.environment.communicate(command)
+    #     command = (
+    #         """submit() {
+    # cd"""
+    #         + ctx.base_path
+    #         + """
+    # git add -A
+    # git diff --cached > model.patch
+    # echo "<<SUBMISSION||"
+    # cat model.patch
+    # echo "||SUBMISSION>>"
+    # }
+    # submit"""
+    #     )
+    #     return ctx.environment.communicate(command)
     return "Submitted"
 
 
@@ -1020,7 +1017,7 @@ def search_dir(ctx, search_term: str, dir: str = "./"):
     if search_term.startswith("--"):
         search_term = '"' + search_term + '"'
 
-    abs_path = cwd_normalize_path(ctx,dir)
+    abs_path = cwd_normalize_path(ctx, dir)
 
     command = f"find {abs_path} -type f ! -path '*/.*' -exec grep -nIH '{search_term}' {{}} + | cut -d: -f1 | sort | uniq -c"
     result = ctx.environment.communicate(command)
@@ -1048,7 +1045,6 @@ def search_dir(ctx, search_term: str, dir: str = "./"):
 
 
 def _capture_window(lines, index, window_size):
-
     start_line = index - window_size if index - window_size >= 0 else 0
     end_line = index + window_size if index + window_size <= len(lines) else len(lines)
 
@@ -1201,7 +1197,7 @@ def list_files(ctx, folder_path: str = ".") -> list:
     return result
 
 
-def get_cwd(self,ctx) -> str:
+def get_cwd(self, ctx) -> str:
     """
     Gets the current working directory of the container.
 
@@ -1260,9 +1256,6 @@ def extract_signature_and_docstring(function_code: str) -> tuple:
     return signature, docstring
 
 
-
-
-
 def parse_command(ctx, command: str) -> tuple:
     """
     Parses a command string into its function name and arguments.
@@ -1313,7 +1306,6 @@ def ask_user(ctx, question):
     # return user_response
 
 
-
 # Output is the submission observation?
 def get_submission(ctx, output: str) -> str:
     """
@@ -1334,7 +1326,6 @@ def get_submission(ctx, output: str) -> str:
     if match is None:
         return None
     return match.group(1)
-
 
 
 def exit(ctx):

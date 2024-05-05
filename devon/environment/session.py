@@ -1,12 +1,36 @@
-from dataclasses import dataclass
+import inspect
 import logging
-import time
+import traceback
+from dataclasses import dataclass
 from typing import Any, List, TypedDict
-from devon.environment.agent import Agent
 
+from devon.environment.agent import Agent
 from devon.environment.environment import LocalEnvironment
 from devon.environment.prompt import parse_response
-from devon.environment.tools import *
+from devon.environment.tools import (
+    ask_user,
+    close_file,
+    create_file,
+    delete_file,
+    edit_file,
+    exit,
+    extract_signature_and_docstring,
+    find_class,
+    find_file,
+    find_function,
+    get_cwd,
+    list_dirs_recursive,
+    no_op,
+    open_file,
+    parse_command,
+    real_write_diff,
+    scroll_down,
+    scroll_to_line,
+    scroll_up,
+    search_dir,
+    search_file,
+    submit,
+)
 from devon.environment.utils import DotDict
 
 
@@ -42,11 +66,8 @@ class Event(TypedDict):
 
 
 class Session:
-
     def __init__(self, args: SessionArguments, agent):
-
         logger = logging.getLogger(__name__)
-
 
         self.state = DotDict({})
         self.state.PAGE_SIZE = 200
@@ -97,27 +118,27 @@ class Session:
             "state": self.state.to_dict(),
             "cwd": self.environment.get_cwd(),
             "agent": {
-                "name" : self.agent.name,
-                "model" : self.agent.model,
-                "temperature" : self.agent.temperature,
-                "chat_history" : self.agent.chat_history,
-            }
+                "name": self.agent.name,
+                "model": self.agent.model,
+                "temperature": self.agent.temperature,
+                "chat_history": self.agent.chat_history,
+            },
         }
-    
+
     @classmethod
     def from_dict(cls, data):
-        instance =  cls(
-            args = SessionArguments(
-                path = data["path"],
-                environment = data["environment"],
-                user_input = data["user_input"],
+        instance = cls(
+            args=SessionArguments(
+                path=data["path"],
+                environment=data["environment"],
+                user_input=data["user_input"],
             ),
-            agent = Agent(
-                name = data["agent"]["name"],
-                model = data["agent"]["model"],
-                temperature = data["agent"]["temperature"],
-                chat_history = data["agent"]["chat_history"],
-            )
+            agent=Agent(
+                name=data["agent"]["name"],
+                model=data["agent"]["model"],
+                temperature=data["agent"]["temperature"],
+                chat_history=data["agent"]["chat_history"],
+            ),
         )
 
         instance.state = DotDict(data["state"])
@@ -126,10 +147,7 @@ class Session:
 
         return instance
 
-
-    
     def step(self, action: str, thought: str) -> tuple[str, bool]:
-
         # parse command
         # run command/tool
         # return reponse as observation
@@ -143,7 +161,6 @@ class Session:
             return e.args[0], False
 
     def step_event(self):
-
         if self.event_index == len(self.event_log):
             return "No more events to process", True
         event = self.event_log[self.event_index]
@@ -171,7 +188,6 @@ class Session:
 
             else:
                 try:
-
                     output, done = self.parse_command_to_function(command_string=action)
                 except Exception as e:
                     self.logger.error(traceback.print_exc())
@@ -310,7 +326,6 @@ class Session:
             return e.args[0], False
 
     def get_available_actions(self) -> list[str]:
-
         return [fn.__name__ for fn in self.tools]
 
     def generate_command_docs(self):

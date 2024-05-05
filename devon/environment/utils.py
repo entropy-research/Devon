@@ -12,7 +12,6 @@ logger.addHandler(stdout_handler)
 logger.setLevel(logging.DEBUG)
 
 
-
 class DotDict:
     """
     Wrapper class for accessing dictionary keys as attributes
@@ -23,6 +22,6 @@ class DotDict:
 
     def __getattr__(self, key):
         return self.data.get(key)
-    
+
     def to_dict(self):
         return self.data

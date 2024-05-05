@@ -1,19 +1,20 @@
-from abc import ABC
 import asyncio
-from dataclasses import dataclass
 import inspect
 import io
 import json
 import logging
 import os
-from pathlib import Path
 import re
 import subprocess
 import tarfile
 import tempfile
 import traceback
-from typing import Any, Dict, Protocol, Tuple, TypedDict
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Protocol, Tuple
+
 from devon.environment.utils import LOGGER_NAME
+
 # from devon.environment.agent import CodeIndex
 # from devon.environment.agent import TaskAgent
 # from devon.environment.agent import TaskAgent
@@ -24,7 +25,6 @@ from devon.retrieval.main import (
     get_function_defn,
     initialize_repository,
 )
-
 from devon.swebenchenv.environment.unified_diff.udiff import (
     Hallucination,
     apply_file_context_diffs,
@@ -34,36 +34,29 @@ from devon.swebenchenv.environment.unified_diff.udiff import (
 )
 
 
-
 @dataclass(frozen=False)
 class Environment(Protocol):
-    path : str
+    path: str
 
-    def enter(self):
-        ...
+    def enter(self): ...
 
-    def exit(self):
-        ...
+    def exit(self): ...
 
-    def __enter__(self):
-        ...
+    def __enter__(self): ...
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        ...
+    def __exit__(self, exc_type, exc_value, traceback): ...
 
-
-    def execute(self, input: str, timeout_duration=25):
-        ...
+    def execute(self, input: str, timeout_duration=25): ...
 
 
 @dataclass(frozen=False)
 class LocalEnvironment(Environment):
-    path : str
+    path: str
 
     def enter(self):
         self.old_dir = os.getcwd()
         os.chdir(self.path)
-        
+
     def exit(self):
         os.chdir(self.old_dir)
 
@@ -76,25 +69,28 @@ class LocalEnvironment(Environment):
     def execute(self, command: str, timeout_duration=25):
         completed_process = subprocess.run(
             command, shell=True, timeout=timeout_duration, capture_output=True
-            )
+        )
 
         if completed_process.returncode != 0:
-            return completed_process.stderr.decode("utf-8"), completed_process.returncode
-        
-        output = completed_process.stdout.decode("utf-8") if completed_process.stdout else ""
+            return completed_process.stderr.decode(
+                "utf-8"
+            ), completed_process.returncode
+
+        output = (
+            completed_process.stdout.decode("utf-8") if completed_process.stdout else ""
+        )
 
         return output, completed_process.returncode
 
-
     async def execute_async(self, command: str, timeout_duration=25):
         process = await asyncio.create_subprocess_shell(
-            command,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
 
         try:
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout_duration)
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(), timeout=timeout_duration
+            )
         except asyncio.TimeoutError:
             process.kill()
             await process.communicate()
@@ -105,16 +101,13 @@ class LocalEnvironment(Environment):
 
         output = stdout.decode("utf-8") if stdout else ""
         return output, process.returncode
-    
+
     def __enter__(self):
         self.enter()
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         self.exit()
-
-
-
 
 
 def extract_signature_and_docstring(function_code: str) -> tuple:
@@ -132,7 +125,11 @@ def extract_signature_and_docstring(function_code: str) -> tuple:
     if signature_match:
         fn_name = signature_match.group(1)
         args = signature_match.group(2).split(",")
-        args = [arg.strip().split(":")[0].split("=")[0] for arg in args if arg.strip() and arg.strip() != "self"]
+        args = [
+            arg.strip().split(":")[0].split("=")[0]
+            for arg in args
+            if arg.strip() and arg.strip() != "self"
+        ]
         signature = f"{fn_name} {' '.join(args)}"
     else:
         signature = ""
@@ -145,6 +142,7 @@ def extract_signature_and_docstring(function_code: str) -> tuple:
         docstring = ""
 
     return signature, docstring
+
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -165,14 +163,14 @@ Planning agent can stop task agent
 Planning agent can interrupt task agent
 """
 
-class CodeIndex:
 
+class CodeIndex:
     def __init__(self):
         self.class_table = ClassTable()
         self.function_table = FunctionTable()
 
-class TaskEnvironment:
 
+class TaskEnvironment:
     def __init__(self, base_path: str):
         self.base_path = base_path
         self.code_index = CodeIndex()
@@ -276,7 +274,6 @@ class TaskEnvironment:
         input: str,
         timeout_duration=25,
     ) -> Tuple[str, int]:
-
         # try:
         completed_process = subprocess.run(
             input, shell=True, timeout=timeout_duration, capture_output=True
@@ -286,9 +283,13 @@ class TaskEnvironment:
 
         # print(input,completed_process.returncode)
         if completed_process.returncode != 0:
-            return completed_process.stderr.decode("utf-8"), completed_process.returncode
-        
-        output = completed_process.stdout.decode("utf-8") if completed_process.stdout else ""
+            return completed_process.stderr.decode(
+                "utf-8"
+            ), completed_process.returncode
+
+        output = (
+            completed_process.stdout.decode("utf-8") if completed_process.stdout else ""
+        )
         # print(output)
         return output, completed_process.returncode
 
@@ -344,7 +345,7 @@ class TaskEnvironment:
             else:
                 path_components = path.strip(os.sep).split(os.sep)
                 path_components[0] = specified_path.strip(os.sep)
-                path =  os.sep + os.path.join(*path_components)
+                path = os.sep + os.path.join(*path_components)
                 path = Path(path)
                 return path.absolute().as_posix()
         else:
@@ -368,7 +369,7 @@ class TaskEnvironment:
         if os.path.isabs(path):
             return self.make_abs_path(path)
         else:
-            print(self.get_cwd(),path)
+            print(self.get_cwd(), path)
             return self.make_abs_path(os.path.join(self.get_cwd(), path))
 
     def file_exists(self, fpath):
@@ -385,7 +386,7 @@ class TaskEnvironment:
         Returns:
             str: The content of the file.
         """
-        result,_ = self.communicate(f"cat '{file_path}'")
+        result, _ = self.communicate(f"cat '{file_path}'")
         return result
 
     def load_file_to_editor(self, file_path):
@@ -437,8 +438,8 @@ class TaskEnvironment:
 
         # example json
         # [{'type': 'error', 'module': 'tmp5cpif150', 'obj': 'ModelFormMetaclass.__new__', 'line': 224, 'column': 20, 'endLine': 224, 'endColumn': 60, 'path': '/tmp/tmp5cpif150', 'symbol': 'too-many-function-args', 'message': 'Too many positional arguments for classmethod call', 'message-id': 'E1121'}, {'type': 'error', 'module': 'tmp5cpif150', 'obj': 'ModelForm', 'line': 477, 'column': 0, 'endLine': 477, 'endColumn': 15, 'path': '/tmp/tmp5cpif150', 'symbol': 'invalid-metaclass', 'message': "Invalid metaclass 'ModelFormMetaclass' used", 'message-id': 'E1139'}, {'type': 'error', 'module': 'tmp5cpif150', 'obj': 'ModelChoiceField.__deepcopy__', 'line': 1250, 'column': 17, 'endLine': 1250, 'endColumn': 41, 'path': '/tmp/tmp5cpif150', 'symbol': 'bad-super-call', 'message': "Bad first argument 'ChoiceField' given to super()", 'message-id': 'E1003'}]
-        from pylint.reporters.json_reporter import JSONReporter
         from pylint.lint import Run
+        from pylint.reporters.json_reporter import JSONReporter
 
         pylint_output = io.StringIO()  # Custom open stream
         reporter = JSONReporter(pylint_output)
@@ -482,7 +483,6 @@ class TaskEnvironment:
             file_path (str): The path of the file to open.
         """
         try:
-
             abs_path = self.cwd_normalize_path(file_path)
 
             if abs_path in self.editor:
@@ -738,7 +738,6 @@ class TaskEnvironment:
             raise Exception(f"Failed to write to file: {abs_path}. Error: {str(e)}")
 
     def delete_file(self, file_path: str) -> bool:
-
         try:
             # Check if file already exists to avoid overwriting
             abs_path = self.make_abs_path(file_path)
@@ -1050,7 +1049,6 @@ class TaskEnvironment:
             paths = ", ".join(file_paths)
 
             if diff_results:
-
                 lint_error_message = ""
                 for rst in diff_results:
                     lint_error_message += f"{rst['type']}: {rst['message']} on line {rst['line']} column {rst['column']}. Line {result[1].splitlines()[int(rst['line'])-1]} \n"
@@ -1324,7 +1322,6 @@ submit"""
         return result.replace("\n", "\n    ")
 
     def _capture_window(self, lines, index, window_size):
-
         start_line = index - window_size if index - window_size >= 0 else 0
         end_line = (
             index + window_size if index + window_size <= len(lines) else len(lines)
@@ -1525,7 +1522,7 @@ Match found on line: {index}
             self.scroll_down,
             self.scroll_to_line,
             self.find_file,
-            self.ask_user
+            self.ask_user,
         ]
 
         docs = {}
@@ -1562,14 +1559,13 @@ Match found on line: {index}
             args.append(arg)
         return fn_name, args
 
-    def ask_user(self,question):
+    def ask_user(self, question):
         """
         ask_user question
         Asks the user for their input
         """
         user_response = input(question)
         return user_response
-
 
     def parse_command_to_function(self, command_string):
         """
@@ -1607,7 +1603,7 @@ Match found on line: {index}
             self.scroll_down,
             self.scroll_to_line,
             self.find_file,
-            self.ask_user
+            self.ask_user,
         ]
 
         fn_names = [fn.__name__ for fn in funcs]
@@ -1668,11 +1664,10 @@ Match found on line: {index}
         if match is None:
             return None
         return match.group(1)
-    
 
     def get_state(self):
         return {
             "editor": self.editor,
             "cwd": self.get_cwd(),
-            "file_root": self.base_path
+            "file_root": self.base_path,
         }

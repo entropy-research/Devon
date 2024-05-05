@@ -1,16 +1,20 @@
 import asyncio
-from contextlib import asynccontextmanager
 import json
+from contextlib import asynccontextmanager
 from time import sleep
 from typing import Dict
-import fastapi
-from fastapi.responses import StreamingResponse
-import sqlalchemy
-from devon.environment.agent import Agent, TaskAgent
-from devon.environment.model import ModelArguments
 
+import fastapi
+from devon.environment.agent import TaskAgent
 from devon.environment.session import Event, Session, SessionArguments
 
+# persistence
+# sqlite
+# - sessions
+# - events
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from sqlalchemy import create_engine, text
 
 # API
 # SESSION
@@ -23,15 +27,6 @@ from devon.environment.session import Event, Session, SessionArguments
 # delete session
 # get session event history
 # get session event stream
-
-# persistence
-# sqlite
-# - sessions
-# - events
-from fastapi import Depends, FastAPI
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, declarative_base
-import os
 
 
 DATABASE_PATH = "./devon_environment.db"
@@ -61,7 +56,6 @@ SELECT * FROM sessions
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     engine = create_engine(DATABASE_URL, echo=True)
 
     # session table SQL DDL
@@ -98,7 +92,6 @@ session_buffers: Dict[str, str] = {}
 
 
 def get_user_input(session: str):
-
     if session not in session_buffers:
         while True:
             if session not in session_buffers:
@@ -128,10 +121,8 @@ def read_session():
 
 @app.post("/session")
 def create_session(session: str, path: str):
-
     agent = TaskAgent(
         name="Devon",
-        args=ModelArguments(model_name="claude-opus", temperature=0.0),
         model="claude-opus",
         temperature=0.0,
     )
@@ -192,7 +183,6 @@ def read_events(session: str):
 
 @app.get("/session/{session}/events/stream")
 async def read_events_stream(session: str):
-
     session_obj: Session = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
@@ -213,4 +203,5 @@ async def read_events_stream(session: str):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

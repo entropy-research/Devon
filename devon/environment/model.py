@@ -1,6 +1,7 @@
-from dataclasses import dataclass
-from anthropic import Anthropic
 import os
+from dataclasses import dataclass
+
+from anthropic import Anthropic
 
 
 @dataclass(frozen=False)
@@ -78,7 +79,7 @@ class AnthropicModel:
                 temperature=self.args.temperature,
                 # top_p=self.args.top_p,
                 system=system_message,
-                stop_sequences=["</COMMAND>"]
+                stop_sequences=["</COMMAND>"],
             )
             .content[0]
             .text

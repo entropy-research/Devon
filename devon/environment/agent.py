@@ -1,11 +1,7 @@
-
-from dataclasses import dataclass, field
 import json
 import logging
-import traceback
-from typing import Any, Dict, Tuple, Protocol
-
-from tenacity import RetryError
+from dataclasses import dataclass, field
+from typing import Tuple
 
 from devon.agent.model import AnthropicModel, ModelArguments
 from devon.environment.prompt import (
@@ -15,32 +11,29 @@ from devon.environment.prompt import (
     parse_response,
     system_prompt_template_v3,
 )
+from devon.environment.session import Session
 from devon.environment.utils import LOGGER_NAME
+from tenacity import RetryError
+
 # from devon.environment.cli import ChatEnvironment
 
-from devon.environment.session import Session
 
 logger = logging.getLogger(LOGGER_NAME)
 
+
 @dataclass(frozen=False)
-class Agent():
-    name : str
-    model : str
-    temperature : float = 0.0
-    chat_history : list[dict[str, str]] = field(default_factory=list)
-    interrupt : str = ""
+class Agent:
+    name: str
+    model: str
+    temperature: float = 0.0
+    chat_history: list[dict[str, str]] = field(default_factory=list)
+    interrupt: str = ""
 
-
-    def run(self,session: 'Session', observation: str = None):
-        ...
-
+    def run(self, session: "Session", observation: str = None): ...
 
 
 class TaskAgent(Agent):
-
-
     def _format_editor_entry(self, k, v, PAGE_SIZE=50):
-
         path = k
         page = v["page"]
         content_lines = v["lines"].splitlines()
@@ -65,22 +58,23 @@ class TaskAgent(Agent):
 """
 
     def _convert_editor_to_view(self, editor, PAGE_SIZE=50):
-
-        return "\n".join([self._format_editor_entry(k, v, PAGE_SIZE) for k, v in editor.items()])
+        return "\n".join(
+            [self._format_editor_entry(k, v, PAGE_SIZE) for k, v in editor.items()]
+        )
 
     def predict(
         self,
         task: str,
         observation: str,
-        session: 'Session',
-
+        session: "Session",
     ) -> Tuple[str, str, str]:
         self.current_model = AnthropicModel(
             args=ModelArguments(model_name=self.model, temperature=self.temperature)
         )
         try:
-
-            editor = self._convert_editor_to_view(session.state.editor,session.state.PAGE_SIZE)
+            editor = self._convert_editor_to_view(
+                session.state.editor, session.state.PAGE_SIZE
+            )
 
             self.chat_history.append(
                 {"role": "user", "content": observation, "agent": self.name}
@@ -88,13 +82,17 @@ class TaskAgent(Agent):
 
             commands = (
                 "Avaliable Custom Commands:\n"
-                + "\n".join([f"{command}" for command in session.get_available_actions()])
+                + "\n".join(
+                    [f"{command}" for command in session.get_available_actions()]
+                )
                 + "\n"
             )
 
             command_docs = (
                 "Custom Commands Documentation:\n"
-                + commands_to_command_docs(list(session.generate_command_docs().values()))
+                + commands_to_command_docs(
+                    list(session.generate_command_docs().values())
+                )
                 + "\n"
             )
 
@@ -176,6 +174,7 @@ OBSERVATION: {observation}
         except Exception as e:
             raise e
 
+
 #     def run(self,session: 'Session', observation: str = None):
 
 #         self.current_model = AnthropicModel(
@@ -218,7 +217,7 @@ OBSERVATION: {observation}
 
 #             logger.info(f"""
 # \n\n\n\n****************\n\n
-# NAME: {self.name}                        
+# NAME: {self.name}
 
 # THOUGHT: {thought}
 
@@ -228,31 +227,29 @@ OBSERVATION: {observation}
 # \n\n****************\n\n\n\n""")
 
 
-
-
 class PlanningAgent:
     def __init__(self, name="PlanningAgent", model="claude-opus", temperature=0.0):
         self.name = name
         self.current_model = AnthropicModel(
             args=ModelArguments(model_name="claude-haiku", temperature=temperature)
         )
-        self.history = [{
-            "role": "user",
-            "content": "Hey How are you?"
-        },{
-            "role": "assistant",
-            "content": """<THOUGHT>
+        self.history = [
+            {"role": "user", "content": "Hey How are you?"},
+            {
+                "role": "assistant",
+                "content": """<THOUGHT>
 I should ask the user what they want
 </THOUGHT>
 <COMMAND>
 ask_user "Hi, What can I help you with?"
 </COMMAND>
-"""
-        }]
+""",
+            },
+        ]
 
         self.interrupt = ""
 
-    def forward(self,observation,available_actions,env):
+    def forward(self, observation, available_actions, env):
         try:
             system_prompt_template = f"""You are a user-facing software engineer. Your job is to communicate with the user, understand user needs, plan and delegate. You may perform actions to acheive this.
 Actions:
@@ -268,22 +265,18 @@ You must respond in the following format:ONLY ONE COMMAND AT A TIME
 <COMMAND>
 </COMMAND>
 """
-            
-            user_prompt_template =f"""<OBSERVATION>
+
+            user_prompt_template = f"""<OBSERVATION>
         {observation}
         </OBSERVATION>"""
-            
 
-            self.history.append({"role":"user","content":user_prompt_template})
+            self.history.append({"role": "user", "content": user_prompt_template})
             logger.info(self.history[-1]["content"])
-            output = self.current_model.query(
-                self.history,
-                system_prompt_template
-            )
+            output = self.current_model.query(self.history, system_prompt_template)
 
             thought, action = parse_response(output)
 
-            self.history.append({"role":"assistant","content":output})
+            self.history.append({"role": "assistant", "content": output})
 
             return thought, action, output
 
@@ -304,41 +297,17 @@ You must respond in the following format:ONLY ONE COMMAND AT A TIME
         env,
         observation: str = None,
     ):
-        available_actions = env.get_available_actions()
-        commanddoc = env.generate_command_docs()
-
-        commands = (
-            "Avaliable Custom Commands:\n"
-            + "\n".join([f"{command}" for command in available_actions])
-            + "\n"
-        )
-        command_docs = (
-            "Custom Commands Documentation:\n"
-            + commands_to_command_docs(list(commanddoc.values()))
-            + "\n"
-        )
-
         # system_prompt = system_prompt_template_v3(commands + command_docs)
         # self.history.append({"role": "system", "content": system_prompt})
         info = {}
         done = False
         while not done:
-
-
-            state = {
-                "planner": env.planner
-            }
-
-
             if self.interrupt:
                 observation = self.interrupt
                 self.interrupt = ""
-            
 
             thought, action, output = self.forward(
-                observation,
-                env.get_available_actions(),
-                env
+                observation, env.get_available_actions(), env
             )
 
             observations = list()
@@ -365,6 +334,7 @@ You must respond in the following format:ONLY ONE COMMAND AT A TIME
             )
 
         return info
+
 
 # class TaskAgent:
 #     def __init__(self, name="Devon", args=None, model="claude-opus", temperature=0.0):
@@ -576,7 +546,7 @@ You must respond in the following format:ONLY ONE COMMAND AT A TIME
 #             if self.interrupt:
 #                 observation = self.interrupt
 #                 self.interrupt = ""
-            
+
 
 #             thought, action, output = self.forward(
 #                 task,
@@ -612,7 +582,7 @@ You must respond in the following format:ONLY ONE COMMAND AT A TIME
 
 #             logger.info(f"""
 # \n\n\n\n****************\n\n
-# NAME: {self.name}                        
+# NAME: {self.name}
 
 # THOUGHT: {thought}
 

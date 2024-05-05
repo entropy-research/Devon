@@ -7,8 +7,8 @@
 # Thought
 # Action
 
-import json
 from typing import Dict, List, Union
+
 
 def commands_to_command_docs(commands: List[Dict]):
     doc = """"""
@@ -20,14 +20,16 @@ def commands_to_command_docs(commands: List[Dict]):
       """
     return doc
 
+
 def editor_repr(editor):
     editorstring = ""
     for file in editor:
         editorstring += f"{file}:\n{editor[file]}\n\n"
     return editor
 
-def system_prompt_template_v1(command_docs : str):
-   return f"""
+
+def system_prompt_template_v1(command_docs: str):
+    return f"""
 <SETTING>
   You are an autonomous programmer, and you're working directly in the command line and a special workspace.
 
@@ -93,8 +95,9 @@ def system_prompt_template_v1(command_docs : str):
 </REPONSE FORMAT>
 """
 
-def last_user_prompt_template_v1(issue,history,filetree,editor,working_dir):
-   return f"""
+
+def last_user_prompt_template_v1(issue, history, filetree, editor, working_dir):
+    return f"""
   We're currently solving the following issue within our repository. Here's the issue text:
   <ISSUE>
   {issue}
@@ -164,6 +167,7 @@ def last_user_prompt_template_v1(issue,history,filetree,editor,working_dir):
   Try to use as much feedback information as possible.
   If you see a stack trace or a code symbol, make sure you note it down.
 """
+
 
 def system_prompt_template_v2(command_docs: str):
     return f"""
@@ -387,6 +391,7 @@ def last_user_prompt_template_v2(issue, history, filetree, editor, working_dir):
   I will tip you $200 if you solve it because there is a fix.
 """
 
+
 def system_prompt_template_v3(command_docs: str):
     return f"""
 <SETTING>
@@ -428,6 +433,7 @@ A single executable command goes here
 </COMMAND>
 </RESPONSE FORMAT>
 """
+
 
 def last_user_prompt_template_v3(issue, history, editor, working_dir):
     return f"""
@@ -478,6 +484,7 @@ Single executable command here
 - When changing functions, always make sure to search for and update references
 - You only have access to code contained in {working_dir}
 </EDITING TIPS>"""
+
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]

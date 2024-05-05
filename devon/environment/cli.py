@@ -1,20 +1,15 @@
-
-
-
-
-
-
 import inspect
+import logging
 import os
 import re
 import traceback
 from typing import Any, Dict
-from devon.environment.environment import  TaskEnvironment
-from devon.environment.agent import PlanningAgent, TaskAgent
-import logging
+
+from devon.environment.agent import TaskAgent
+from devon.environment.environment import TaskEnvironment
 from devon.environment.utils import LOGGER_NAME
 
-from devon.retrieval.main import ClassTable, FunctionTable
+
 def extract_signature_and_docstring(function_code: str) -> tuple:
     """
     Extracts the function signature and docstring from the given Python function code.
@@ -30,7 +25,11 @@ def extract_signature_and_docstring(function_code: str) -> tuple:
     if signature_match:
         fn_name = signature_match.group(1)
         args = signature_match.group(2).split(",")
-        args = [arg.strip().split(":")[0].split("=")[0] for arg in args if arg.strip() and arg.strip() != "self"]
+        args = [
+            arg.strip().split(":")[0].split("=")[0]
+            for arg in args
+            if arg.strip() and arg.strip() != "self"
+        ]
         signature = f"{fn_name} {' '.join(args)}"
     else:
         signature = ""
@@ -44,12 +43,11 @@ def extract_signature_and_docstring(function_code: str) -> tuple:
 
     return signature, docstring
 
+
 logger = logging.getLogger(LOGGER_NAME)
 
 
-
 class ChatEnvironment:
-
     # tools
     # delegate task agent
     # add task to planner
@@ -58,21 +56,20 @@ class ChatEnvironment:
     # get task agent state
     # get planner state
 
-    def __init__(self,base_path):
+    def __init__(self, base_path):
         self.planner: Dict[str, str] = {}
         self.task_agents: Dict[str, Any] = {}
         self.chat_history = []
         self.base_path = base_path
 
     def step(self, action: str, thought: str):
-
         self.chat_history.append({"role": "assistant", "content": thought})
 
         observation = ""
         try:
             # observation = self.communicate(input=action, timeout_duration=25)
             observation = self.parse_command_to_function(command_string=action)
-            return observation,False            # logger.info("RESULT: %s", observation)
+            return observation, False  # logger.info("RESULT: %s", observation)
         except TimeoutError:
             try:
                 observation += "\nEXECUTION TIMED OUT"
@@ -95,8 +92,6 @@ class ChatEnvironment:
             traceback.print_exc()
             observation += "\nEXECUTION FAILED OR COMMAND MALFORMED"
             raise e
-
-    
 
     def parse_command(self, command: str) -> tuple:
         """
@@ -137,7 +132,6 @@ class ChatEnvironment:
         """
         self.task_agents[task] = TaskAgent()
         try:
-
             task_environment = TaskEnvironment(base_path=self.base_path)
             self.task_agents[task].run(
                 task=self.planner[task], env=task_environment, observation=""
@@ -172,15 +166,14 @@ class ChatEnvironment:
         Gets the state of the planner.
         """
         return self.planner
-    
-    def ask_user(self,question):
+
+    def ask_user(self, question):
         """
         ask_user question
         Asks the user for their input
         """
         user_response = input(question)
         return user_response
-
 
     @property
     def tools(self):
@@ -190,7 +183,7 @@ class ChatEnvironment:
             self.stop_task_agent,
             self.interrupt_task_agent,
             self.get_task_agent_state,
-            self.ask_user
+            self.ask_user,
             # self.get_planner_state
         ]
 
@@ -223,7 +216,6 @@ class ChatEnvironment:
             return e.args[0]
 
     def generate_command_docs(self):
-
         funcs = self.tools
 
         docs = {}
@@ -239,13 +231,8 @@ class ChatEnvironment:
     def get_available_actions(self):
         return self.tools
 
-    
-    
 
-
-
-def run_cli(path,goal):
-    
+def run_cli(path, goal):
     anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     if not anthropic_api_key:
         anthropic_api_key = input("Please enter your Anthropic API key: ")
@@ -256,21 +243,25 @@ def run_cli(path,goal):
     # chat_env = ChatEnvironment(path)
 
     # planning_agent = PlanningAgent(name="PlanningAgent")
-    
+
     # planning_agent.run(chat_env,observation="I want to make a snake game")
 
     task_agent = TaskAgent()
-    task_agent.run(goal,task_env)
+    task_agent.run(goal, task_env)
 
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Run CLI with a specific goal for the task agent.")
-    parser.add_argument('--goal',required=True, type=str, help='The goal/task for the task agent to execute.')
+
+    parser = argparse.ArgumentParser(
+        description="Run CLI with a specific goal for the task agent."
+    )
+    parser.add_argument(
+        "--goal",
+        required=True,
+        type=str,
+        help="The goal/task for the task agent to execute.",
+    )
     args = parser.parse_args()
 
     run_cli(os.getcwd(), args.goal)
-    
-
-
-
