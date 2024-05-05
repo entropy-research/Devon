@@ -14,7 +14,7 @@ export default function Landing({ chatProps }) {
     const router = useRouter()
     const [folderPath, setFolderPath] = useState('')
     // const [_, setChatId] = useLocalStorage('chatId', '1')
-    const [initialized, setInitialized] = useState(false)
+    const [initialized, setInitialized] = useState(true)
 
     function handleStartChat() {
         // setChatId(nanoid())
