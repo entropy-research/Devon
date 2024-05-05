@@ -33,23 +33,13 @@ from sqlalchemy import create_engine, text
 
 DATABASE_PATH = "./devon_environment.db"
 DATABASE_URL = "sqlite:///" + DATABASE_PATH
-app = fastapi.FastAPI()
 
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 sessions: Dict[str, Session] = {}
-
 
 add_or_update_sessions_sql = """
 INSERT INTO sessions (name, JSON_STATE) VALUES (:name, :JSON_STATE)
@@ -111,6 +101,14 @@ async def lifespan(app: FastAPI):
 
 app = fastapi.FastAPI(
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 session_buffers: Dict[str, str] = {}
