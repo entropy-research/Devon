@@ -25,7 +25,6 @@ logger = logging.getLogger(LOGGER_NAME)
 @dataclass(frozen=False)
 class Agent():
     name : str
-    args : Any
     model : str
     temperature : float = 0.0
     chat_history : list[dict[str, str]] = field(default_factory=list)
@@ -39,14 +38,6 @@ class Agent():
 
 class TaskAgent(Agent):
 
-    def get_last_task(self):
-        for i in range(len(self.chat_history)-1, -1, -1):
-            if self.chat_history[i]["role"] == "task":
-                return self.chat_history[i]["content"]
-        return None
-
-    def interupt(self,message):
-        self.interrupt = message
 
     def _format_editor_entry(self, k, v, PAGE_SIZE=50):
 
@@ -77,7 +68,7 @@ class TaskAgent(Agent):
 
         return "\n".join([self._format_editor_entry(k, v, PAGE_SIZE) for k, v in editor.items()])
 
-    def forward(
+    def predict(
         self,
         task: str,
         observation: str,
@@ -185,56 +176,56 @@ OBSERVATION: {observation}
         except Exception as e:
             raise e
 
-    def run(self,session: 'Session', observation: str = None):
+#     def run(self,session: 'Session', observation: str = None):
 
-        self.current_model = AnthropicModel(
-            args=ModelArguments(model_name=self.model, temperature=self.temperature)
-        )
+#         self.current_model = AnthropicModel(
+#             args=ModelArguments(model_name=self.model, temperature=self.temperature)
+#         )
 
-        done = False
-        task = self.get_last_task() or "Task unspecified ask user to specify task"
+#         done = False
+#         task = self.get_last_task() or "Task unspecified ask user to specify task"
 
-        while not done:
+#         while not done:
 
-            if self.interrupt:
-                observation = self.interrupt
-                self.interrupt = ""
+#             if self.interrupt:
+#                 observation = self.interrupt
+#                 self.interrupt = ""
 
-            thought, action, output = self.forward(
-                task=task,
-                observation=observation,
-                session=session,
-            )
+#             thought, action, output = self.forward(
+#                 task=task,
+#                 observation=observation,
+#                 session=session,
+#             )
 
-            observations = list()
-            if action == "exit":
-                done = True
+#             observations = list()
+#             if action == "exit":
+#                 done = True
 
-            try:
-                obs,done = session.step(action, thought)
-            except AssertionError as e:
-                logger.error(traceback.format_exc())
-                obs = str(e)
+#             try:
+#                 obs,done = session.step(action, thought)
+#             except AssertionError as e:
+#                 logger.error(traceback.format_exc())
+#                 obs = str(e)
 
-            observations.append(obs)
+#             observations.append(obs)
 
-            if action.strip() == "submit":
-                done = True
+#             if action.strip() == "submit":
+#                 done = True
 
-            observation = "\n".join(
-                [json.dumps(obs) for obs in observations if obs is not None]
-            )
+#             observation = "\n".join(
+#                 [json.dumps(obs) for obs in observations if obs is not None]
+#             )
 
-            logger.info(f"""
-\n\n\n\n****************\n\n
-NAME: {self.name}                        
+#             logger.info(f"""
+# \n\n\n\n****************\n\n
+# NAME: {self.name}                        
 
-THOUGHT: {thought}
+# THOUGHT: {thought}
 
-ACTION: {action}
+# ACTION: {action}
 
-OBSERVATION: {observation}
-\n\n****************\n\n\n\n""")
+# OBSERVATION: {observation}
+# \n\n****************\n\n\n\n""")
 
 
 

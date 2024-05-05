@@ -34,6 +34,7 @@ pylint = "^3.1.0"
 textual = "^0.58.0"
 fastapi = "^0.110.3"
 uvicorn = "^0.29.0"
+sqlalchemy = "^2.0.30"
 
 [build-system]
 requires = ["poetry-core"]
