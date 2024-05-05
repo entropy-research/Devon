@@ -11,9 +11,14 @@ from devon.environment.prompt import (
     parse_response,
     system_prompt_template_v3,
 )
-from devon.environment.session import Session
+
 from devon.environment.utils import LOGGER_NAME
 from tenacity import RetryError
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from devon.environment.session import Session
 
 # from devon.environment.cli import ChatEnvironment
 

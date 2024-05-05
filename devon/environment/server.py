@@ -50,8 +50,6 @@ app.add_middleware(
 
 sessions: Dict[str, Session] = {}
 
-sessions: Dict[str, Session] = {}
-
 
 add_or_update_sessions_sql = """
 INSERT INTO sessions (name, JSON_STATE) VALUES (:name, :JSON_STATE)
@@ -73,15 +71,15 @@ SELECT * FROM sessions
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print("lifespan")
     engine = create_engine(DATABASE_URL, echo=True)
 
     # session table SQL DDL
     session_table_sql = """
+
     CREATE TABLE IF NOT EXISTS sessions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        JSON_STATE TEXT NOT NULL,
-        PRIMARY KEY (id)
+        name TEXT PRIMARY KEY,
+        JSON_STATE TEXT NOT NULL
     );
     """
 
@@ -91,19 +89,29 @@ async def lifespan(app: FastAPI):
 
     # get all sessions and load them into sessions dictionary
     with engine.connect() as conn:
-        sessions = conn.execute(text(get_sessions_sql)).fetchall()
-        for session in sessions:
-            sessions[session["name"]] = Session.from_dict(session["JSON_STATE"])
-
+        ses = conn.execute(text(get_sessions_sql)).fetchall()
+        for session in ses:
+            print(session)
+            state = json.loads(session[1])
+            state["user_input"] = lambda: get_user_input(session[0])
+            sessions[session[0]] = Session.from_dict(state)
+    print("statup done")
     yield
-
+    print("cleanup")
     session_states = [(name, session.to_dict()) for name, session in sessions.items()]
     with engine.connect() as conn:
         for name, state in session_states:
-            conn.execute(text(add_or_update_sessions_sql), name=name, JSON_STATE=state)
+            conn.execute(
+                text(add_or_update_sessions_sql),
+                {"name": name, "JSON_STATE": json.dumps(state)},
+            )
+        conn.commit()
+    print("cleanup done")
 
 
-app = fastapi.FastAPI()
+app = fastapi.FastAPI(
+    lifespan=lifespan,
+)
 
 session_buffers: Dict[str, str] = {}
 
@@ -221,4 +229,4 @@ async def read_events_stream(session: str):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)

@@ -347,7 +347,6 @@ class Session:
     # start
     def enter(self):
         self.environment.enter()
-        # self.agent.run(self,"")
 
     def exit(self):
         self.environment.exit()
