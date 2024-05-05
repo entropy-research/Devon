@@ -9,17 +9,16 @@ const useCreateSession = () => {
     const [error, setError] = useState(null)
     const [sessionId, setSessionId] = useState('')
 
-    const createSession = async (session, path) => {
+    const createSession = async path => {
         setLoading(true)
         setError(null)
-        setSessionId(nanoid())
-        session = 'mysession'
-        path = 'mypath'
+        const _id = nanoid()
+        setSessionId(_id)
         try {
-            const response = await axios.post(`${BACKEND_URL}/session`, {
-                session,
-                path,
-            })
+            const response = await axios.post(
+                `${BACKEND_URL}/session?session=${encodeURIComponent(_id)}&path=${encodeURIComponent(path)}`,
+                {}
+            )
             setSessionId(response.data)
         } catch (err) {
             setError(err.message || 'Unknown error')

@@ -70,7 +70,7 @@ def read_root():
 
 @app.get("/session")
 def read_session():
-    return sessions.keys()
+    return list(sessions.keys())
 
 @app.post("/session")
 def create_session(session: str, path: str):

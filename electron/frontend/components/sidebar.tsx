@@ -3,6 +3,8 @@ import { List, Settings, Bot, SquarePen, Trash } from 'lucide-react'
 import { useContext, createContext, useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { clearChatData } from '../lib/services/chatDataService'
+import useReadSessions from '@/lib/services/sessionService/use-read-sessions'
+// import { session } from 'electron'
 
 const defaultValue = {
     expanded: true,
@@ -39,7 +41,7 @@ const sidebarItems = [
 ]
 
 export default function Sidebar() {
-    const [expanded, setExpanded] = useState(false)
+    const [expanded, setExpanded] = useState(true)
     const timerRef = useRef<NodeJS.Timeout | null>(null)
 
     function handleMouseOver() {
@@ -86,7 +88,8 @@ export default function Sidebar() {
                                     <List className="text-primary" />
                                 </button>
                             )}
-                            {expanded && (
+
+                            {/* {expanded && (
                                 <button
                                     onClick={clearChatAndRefresh}
                                     className="flex p-3 gap-3 justify-center items-center"
@@ -94,13 +97,12 @@ export default function Sidebar() {
                                     <Trash size={16} /> Clear current chat
                                 </button>
                             )}
-                            {expanded && <ChatLogs />}
+                            */}
+                            {expanded && <SidebarChatLogs />}
                         </div>
-                        <div>
-                            {sidebarItems.map(item => (
-                                <SidebarItem key={item.text} {...item} />
-                            ))}
-                        </div>
+                        {sidebarItems.map(item => (
+                            <SidebarItem key={item.text} {...item} />
+                        ))}
                     </ul>
                 </SidebarContext.Provider>
             </nav>
@@ -140,15 +142,39 @@ const SidebarHeader = ({ expanded }: { expanded: boolean }) => {
     )
 }
 
-export function SidebarItem({
+const SidebarChatLogs = () => {
+    const { sessions, loading, error, refreshSessions } = useReadSessions()
+
+    useEffect(() => {
+        refreshSessions()
+    }, [])
+
+    return (
+        <div className="flex flex-col mt-2">
+            {loading && <div>Loading sessions...</div>}
+            {error && <div>Error loading sessions: {error}</div>}
+            {!loading &&
+                sessions &&
+                sessions.map((session, index) => (
+                    <button key={index} className="px-4 py-3 flex smooth-hover rounded-md">
+                        Session: {session}
+                    </button>
+                ))}
+        </div>
+    )
+}
+
+function SidebarItem({
     icon,
     text,
     active,
+    route,
     alert,
 }: {
     icon: JSX.Element
     text: string
     active: boolean
+    route: string
     alert: boolean
 }) {
     const { expanded } = useContext(SidebarContext)
@@ -161,7 +187,7 @@ export function SidebarItem({
         transition-colors group
     `}
         >
-            <Link href="/settings" className="flex">
+            <Link href={route} className="flex">
                 {icon}
                 <span
                     className={`overflow-hidden transition-all flex items-start ${
@@ -193,18 +219,6 @@ export function SidebarItem({
                     {text}
                 </div>
             )}
-        </div>
-    )
-}
-
-const ChatLogs = () => {
-    return (
-        <div>
-            {expandedChatTabs.map(item => (
-                <a key={item.text} href={item.route}>
-                    {item.text}
-                </a>
-            ))}
         </div>
     )
 }

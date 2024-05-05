@@ -71,7 +71,7 @@ export default function Input({
                     />
                     <button
                         onClick={toast}
-                        className="absolute left-[0.5rem] top-1/2 -translate-y-1/2 xl:left-[0.75rem] flex h-8 w-8 items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-night"
+                        className="absolute left-[0.5rem] top-1/2 -translate-y-1/2 xl:left-[0.75rem] flex h-8 w-8 items-center justify-center rounded-md smooth-hover"
                     >
                         <Paperclip
                             className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}

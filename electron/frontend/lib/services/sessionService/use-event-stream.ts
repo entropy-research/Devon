@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createEventSource } from './serverService'
+import { createEventSource } from './sessionService'
 
 type EventData = Record<string, any>
 
