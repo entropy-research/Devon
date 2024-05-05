@@ -15,7 +15,34 @@ import logging
 from devon.environment.utils import LOGGER_NAME
 
 from devon.retrieval.main import ClassTable, FunctionTable
-from devon.swebenchenv.environment.utils import extract_signature_and_docstring
+def extract_signature_and_docstring(function_code: str) -> tuple:
+    """
+    Extracts the function signature and docstring from the given Python function code.
+
+    Args:
+        function_code (str): The Python function code as a string.
+
+    Returns:
+        tuple: A tuple containing the function signature (str) and the docstring (str).
+    """
+    # Extract the function signature
+    signature_match = re.search(r"def\s+(\w+)\((.*?)\)", function_code)
+    if signature_match:
+        fn_name = signature_match.group(1)
+        args = signature_match.group(2).split(",")
+        args = [arg.strip().split(":")[0].split("=")[0] for arg in args if arg.strip() and arg.strip() != "self"]
+        signature = f"{fn_name} {' '.join(args)}"
+    else:
+        signature = ""
+
+    # Extract the docstring
+    docstring_match = re.search(r'"""(.*?)"""', function_code, re.DOTALL)
+    if docstring_match:
+        docstring = docstring_match.group(1).strip()
+    else:
+        docstring = ""
+
+    return signature, docstring
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -45,7 +72,7 @@ class ChatEnvironment:
         try:
             # observation = self.communicate(input=action, timeout_duration=25)
             observation = self.parse_command_to_function(command_string=action)
-            return observation,False            # print("RESULT: ", observation)
+            return observation,False            # logger.info("RESULT: %s", observation)
         except TimeoutError:
             try:
                 observation += "\nEXECUTION TIMED OUT"
@@ -81,7 +108,7 @@ class ChatEnvironment:
         Returns:
             tuple: A tuple containing the function name (str) and a list of arguments (list).
         """
-        print(command)
+        logger.info("Parsed command: %s", command)
         parts = re.findall(r'(?:"[^"]*"|\[[^]]*\]|<<<[^>]*>>>|[^"\s]+)', command)
         fn_name = parts[0]
         args = []
@@ -217,8 +244,13 @@ class ChatEnvironment:
 
 
 
-def run_cli(path):
+def run_cli(path,goal):
     
+    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not anthropic_api_key:
+        anthropic_api_key = input("Please enter your Anthropic API key: ")
+        if not anthropic_api_key:
+            raise ValueError("Anthropic API key is required to proceed.")
 
     task_env = TaskEnvironment(path)
     # chat_env = ChatEnvironment(path)
@@ -228,10 +260,17 @@ def run_cli(path):
     # planning_agent.run(chat_env,observation="I want to make a snake game")
 
     task_agent = TaskAgent()
-    task_agent.run("The snake pygame has some issues, the snake doesnt seem to grow when it eats food and sometimes the game crashes when it eats food. Write and run pygame tests to find the issues",task_env)
+    task_agent.run(goal,task_env)
 
 
 if __name__ == "__main__":
-    run_cli(os.getcwd())
+    import argparse
+    parser = argparse.ArgumentParser(description="Run CLI with a specific goal for the task agent.")
+    parser.add_argument('--goal',required=True, type=str, help='The goal/task for the task agent to execute.')
+    args = parser.parse_args()
+
+    run_cli(os.getcwd(), args.goal)
     
+
+
 

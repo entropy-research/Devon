@@ -668,6 +668,12 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
     #get stripped version of original file i.e. strip all lines then filter out empty lines
     stripped_src_lines = [t for t in [(i, line.strip()) for i, line in src_lines] if t[1] != ""]
+    # check if stripped_src_lines is empty and append file_diff hunks to it
+    if not stripped_src_lines or all([line[1] == "" for line in stripped_src_lines]):
+        old_lines, new_lines = construct_versions_from_diff_hunk(file_diff.hunks[0])
+        return "\n".join(new_lines), []
+        
+   
 
     tgt_lines = list(src_lines)
 

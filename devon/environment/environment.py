@@ -1,14 +1,18 @@
+from abc import ABC
+import asyncio
+from dataclasses import dataclass
 import inspect
 import io
 import json
 import logging
 import os
+from pathlib import Path
 import re
 import subprocess
 import tarfile
 import tempfile
 import traceback
-from typing import Any, Dict, Tuple, TypedDict
+from typing import Any, Dict, Protocol, Tuple, TypedDict
 from devon.environment.utils import LOGGER_NAME
 # from devon.environment.agent import CodeIndex
 # from devon.environment.agent import TaskAgent
@@ -28,8 +32,119 @@ from devon.swebenchenv.environment.unified_diff.udiff import (
     log_failed_diff,
     log_successful_diff,
 )
-from devon.swebenchenv.environment.utils import extract_signature_and_docstring
 
+
+
+@dataclass(frozen=False)
+class Environment(Protocol):
+    path : str
+
+    def enter(self):
+        ...
+
+    def exit(self):
+        ...
+
+    def __enter__(self):
+        ...
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        ...
+
+
+    def execute(self, input: str, timeout_duration=25):
+        ...
+
+
+@dataclass(frozen=False)
+class LocalEnvironment(Environment):
+    path : str
+
+    def enter(self):
+        self.old_dir = os.getcwd()
+        os.chdir(self.path)
+        
+    def exit(self):
+        os.chdir(self.old_dir)
+
+    def get_cwd(self):
+        return self.execute("pwd")[0]
+
+    def communicate(self, input: str, timeout_duration=25):
+        return self.execute(input, timeout_duration=timeout_duration)
+
+    def execute(self, command: str, timeout_duration=25):
+        completed_process = subprocess.run(
+            command, shell=True, timeout=timeout_duration, capture_output=True
+            )
+
+        if completed_process.returncode != 0:
+            return completed_process.stderr.decode("utf-8"), completed_process.returncode
+        
+        output = completed_process.stdout.decode("utf-8") if completed_process.stdout else ""
+
+        return output, completed_process.returncode
+
+
+    async def execute_async(self, command: str, timeout_duration=25):
+        process = await asyncio.create_subprocess_shell(
+            command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout_duration)
+        except asyncio.TimeoutError:
+            process.kill()
+            await process.communicate()
+            return "Command timed out", -1
+
+        if process.returncode != 0:
+            return stderr.decode("utf-8"), process.returncode
+
+        output = stdout.decode("utf-8") if stdout else ""
+        return output, process.returncode
+    
+    def __enter__(self):
+        self.enter()
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.exit()
+
+
+
+
+
+def extract_signature_and_docstring(function_code: str) -> tuple:
+    """
+    Extracts the function signature and docstring from the given Python function code.
+
+    Args:
+        function_code (str): The Python function code as a string.
+
+    Returns:
+        tuple: A tuple containing the function signature (str) and the docstring (str).
+    """
+    # Extract the function signature
+    signature_match = re.search(r"def\s+(\w+)\((.*?)\)", function_code)
+    if signature_match:
+        fn_name = signature_match.group(1)
+        args = signature_match.group(2).split(",")
+        args = [arg.strip().split(":")[0].split("=")[0] for arg in args if arg.strip() and arg.strip() != "self"]
+        signature = f"{fn_name} {' '.join(args)}"
+    else:
+        signature = ""
+
+    # Extract the docstring
+    docstring_match = re.search(r'"""(.*?)"""', function_code, re.DOTALL)
+    if docstring_match:
+        docstring = docstring_match.group(1).strip()
+    else:
+        docstring = ""
+
+    return signature, docstring
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -173,7 +288,7 @@ class TaskEnvironment:
         if completed_process.returncode != 0:
             return completed_process.stderr.decode("utf-8"), completed_process.returncode
         
-        output = completed_process.stdout.decode("utf-8") if completed_process.stdout else None
+        output = completed_process.stdout.decode("utf-8") if completed_process.stdout else ""
         # print(output)
         return output, completed_process.returncode
 
@@ -224,13 +339,17 @@ class TaskEnvironment:
             return specified_path
         elif os.path.isabs(path):
             if path.startswith(specified_path):
-                return path
+                path = Path(path)
+                return path.absolute().as_posix()
             else:
                 path_components = path.strip(os.sep).split(os.sep)
                 path_components[0] = specified_path.strip(os.sep)
-                return os.sep + os.path.join(*path_components)
+                path =  os.sep + os.path.join(*path_components)
+                path = Path(path)
+                return path.absolute().as_posix()
         else:
-            return os.path.join(specified_path, path)
+            path = Path(path)
+            return path.absolute().as_posix()
 
     def make_abs_path(self, fpath: str) -> str:
         """
@@ -1541,7 +1660,7 @@ Match found on line: {index}
         """
         if output is None:
             output = ""
-        # print(output)
+        print(output)
         assert isinstance(output, str), "Output must be a string"
         logger.info(output)
         pattern = r"\<\<SUBMISSION\|\|(.*)\|\|SUBMISSION\>\>"
