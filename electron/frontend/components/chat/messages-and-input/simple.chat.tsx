@@ -50,8 +50,7 @@ export function SimpleChat({
     const [_, setNewChatId] = useLocalStorage('newChatId', id)
 
     // Clean later
-    const [userRequested, setUserRequested] = useState(false);
-
+    const [userRequested, setUserRequested] = useState(false)
 
     // TODO: Actually use this to load chat from backend
     useEffect(() => {
@@ -67,7 +66,7 @@ export function SimpleChat({
         const fetchAndUpdateMessages = () => {
             fetchSessionEvents(id)
                 .then(data => {
-                    const parsedMessages = handleEvents(data, setUserRequested);
+                    const parsedMessages = handleEvents(data, setUserRequested)
                     setMessages(parsedMessages)
                 })
                 .catch(error => {
@@ -148,70 +147,79 @@ export function SimpleChat({
     )
 }
 
-
-
 type Event = {
-	type: "ModelResponse" | "ToolResponse" | "Task" | "Interrupt" | "UserRequest" | "Stop",
-	content: string,
-	identifier: string | null
+    type:
+        | 'ModelResponse'
+        | 'ToolResponse'
+        | 'Task'
+        | 'Interrupt'
+        | 'UserRequest'
+        | 'Stop'
+    content: string
+    identifier: string | null
 }
 
 type Message = {
-	text: string,
-	type: "user" | "agent" | "command" | "tool" | "task"
+    text: string
+    type: 'user' | 'agent' | 'command' | 'tool' | 'task'
 }
 
-
-const handleEvents = (events: Event[], setUserRequested: (value: boolean) => void) => {
-	const messages : Message[] = []
-	for (const event of events) {
+const handleEvents = (
+    events: Event[],
+    setUserRequested: (value: boolean) => void
+) => {
+    const messages: Message[] = []
+    for (const event of events) {
         const type = event.type
-		// console.log("EVENT", event["content"]);
-		if (type == "ModelResponse") {
-			// Model response content is in format <THOUGHT>{thought}</THOUGHT><COMMAND>{command}</COMMAND>
-			if (event.content) {
-			const thoughtMatch = event.content.split("<THOUGHT>")?.pop()?.split("</THOUGHT>")[0];
-			const commandMatch = event.content.split("<COMMAND>").pop()?.split("</COMMAND>")[0];
-			// console.log("THOUGHT", thoughtMatch);
-			// console.log("COMMAND", commandMatch);
-			const thought = thoughtMatch ? thoughtMatch : '';
-			const command = commandMatch ? commandMatch : '';
+        // console.log("EVENT", event["content"]);
+        if (type == 'ModelResponse') {
+            // Model response content is in format <THOUGHT>{thought}</THOUGHT><COMMAND>{command}</COMMAND>
+            if (event.content) {
+                const thoughtMatch = event.content
+                    .split('<THOUGHT>')
+                    ?.pop()
+                    ?.split('</THOUGHT>')[0]
+                const commandMatch = event.content
+                    .split('<COMMAND>')
+                    .pop()
+                    ?.split('</COMMAND>')[0]
+                // console.log("THOUGHT", thoughtMatch);
+                // console.log("COMMAND", commandMatch);
+                const thought = thoughtMatch ? thoughtMatch : ''
+                const command = commandMatch ? commandMatch : ''
 
+                // split command by space
 
-			
-			// split command by space
-			
-			let command_split = command?.split(' ') ?? ["",""];
-			let command_name = command_split[0];
-			let command_args = command_split.slice(1).join(' ');
+                let command_split = command?.split(' ') ?? ['', '']
+                console.log(command_split)
+                let command_name = command_split[0].trim()
+                let command_args = command_split.slice(1).join(' ')
+                let trimmedStr = command_args.replace(/^['"]+|['"]+$/g, '')
 
-			if (command_name == "ask_user") {
-				messages.push({text: command_args, type: "agent"});
-			}
-			else {
-				messages.push({text: thought ?? "", type: "agent"});
-				messages.push({text: command ?? "", type: "command"});
-			}
+                if (command_name == 'ask_user') {
+                    messages.push({ text: trimmedStr, type: 'agent' })
+                } else {
+                    messages.push({ text: thought ?? '', type: 'agent' })
+                    messages.push({ text: command ?? '', type: 'command' })
+                }
+            }
+        }
 
-		}
-	}
+        if (type == 'ToolResponse') {
+            messages.push({ text: event.content, type: 'tool' })
+        }
 
-		if (type == "ToolResponse") {
-			messages.push({text: event.content, type: "tool"});
-		}
+        if (type == 'Task') {
+            messages.push({ text: event.content, type: 'task' })
+        }
 
-		if (type == "Task") {
-			messages.push({text: event.content, type: "task"});
-		}
+        if (type == 'Interrupt') {
+            messages.push({ text: event.content, type: 'user' })
+        }
 
-		if (type == "Interrupt") {
-			messages.push({text: event.content, type: "user"});
-		}
-
-		if (type == "UserRequest") {
-			setUserRequested(true);
-		}
- 
-	}
-	return messages
+        if (type == 'UserRequest') {
+            setUserRequested(true)
+        }
+    }
+    return messages
 }

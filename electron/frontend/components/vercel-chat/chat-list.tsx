@@ -131,6 +131,9 @@ Task
 
  */
 const DisplayedChatMessage = ({ message }) => {
+    if (message.type === 'command') {
+        // console.log(message)
+    }
     return (
         <div className="mb-8">
             {message.type === 'agent' ? (
