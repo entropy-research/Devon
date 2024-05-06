@@ -109,7 +109,7 @@ const handleEvents = (events: Event[], setUserRequested: (value: boolean) => voi
 			// split command by space
 			
 			let command_split = command?.split(' ') ?? ["",""];
-			let command_name = command_split[0];
+			let command_name = command_split[0].trim();
 			let command_args = command_split.slice(1).join(' ');
 
 			if (command_name == "ask_user") {

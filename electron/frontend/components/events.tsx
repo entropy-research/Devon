@@ -18,13 +18,12 @@ const SessionEventsDisplay = ({ sessionId, setMessages }) => {
             console.error('Error loading session events:', error)
         }
         if (events) {
-            console.log('Session events:', events)
             setMessages(events)
         }
     }, [isLoading, error])
 
-    if (isLoading) return <div>Loading events...</div>
-    if (isError) return <div>Error loading events: {error.message}</div>
+    if (isLoading) return <div className="px-10">Loading events...</div>
+    if (isError) return <div className="px-10">Error loading events: {error.message}</div>
 
     return <></>
 }

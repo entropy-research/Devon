@@ -2,6 +2,7 @@
 import { LayoutGrid } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useState } from 'react'
+import { useComingSoonToast } from '@/components/ui/use-toast'
 
 const AgentWorkspaceHeader = ({
     toggleViewMode,
@@ -9,8 +10,12 @@ const AgentWorkspaceHeader = ({
     toggleViewMode: () => void
 }) => {
     const [value, setValue] = useState(true)
+    const toast = useComingSoonToast()
 
     const onChange = () => {
+        if (!value) {
+            toast()
+        }
         setValue(!value)
     }
     return (

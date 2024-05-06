@@ -15,7 +15,6 @@ import SelectProjectDirectoryModal from '@/components/modals/select-project-dire
 // import { session } from 'electron'
 import { useRouter } from 'next/navigation'
 
-
 const defaultValue = {
     expanded: true,
 }
@@ -40,7 +39,7 @@ const expandedChatTabs: {
     // },
 ]
 
-const sidebarItems = [
+const bottomSidebarItems = [
     {
         icon: <Settings className="text-primary" />,
         text: 'Settings',
@@ -95,7 +94,7 @@ export default function Sidebar() {
                             )}
                             {expanded && <SidebarChatLogs />}
                         </div>
-                        {sidebarItems.map(item => (
+                        {bottomSidebarItems.map(item => (
                             <SidebarItem key={item.text} {...item} />
                         ))}
                     </ul>
@@ -143,7 +142,6 @@ const SidebarChatLogs = () => {
     const { sessions, loading, error, refreshSessions } = useReadSessions()
     const { deleteSession } = useDeleteSession()
     const router = useRouter()
-    
 
     useEffect(() => {
         refreshSessions()
@@ -164,16 +162,9 @@ const SidebarChatLogs = () => {
         }
     }
 
-    function handleNavigate(sessionId: string) {
-        // Because dynamic routes don't work, I'm pushing the session ID to the query string and forcing refresh
-        // TODO: Fix dynamic routes so this isn't necessary - hard part is that it creates static build
-        window.history.replaceState({}, '', `?chat=${sessionId}`)
-        window.location.reload()
-    }
-
     return (
         <div className="flex flex-col mt-2">
-            {loading && <div className="px-2 py-2">Loading sessions...</div>}
+            {loading && <div className="px-2 py-2">Loading chats...</div>}
             {error && (
                 <div className="px-2 py-2 text-red-400">
                     Error loading: {error}
@@ -181,14 +172,17 @@ const SidebarChatLogs = () => {
             )}
             {!loading &&
                 sessions &&
-                sessions.map((session: string, index: number) => (
+                sessions.reverse().map((chatId: string, index: number) => (
                     <div
-                        key={index}
+                        key={chatId}
                         className="flex relative justify-between w-full group items-center smooth-hover rounded-md"
                     >
-                        <button className="relative px-4 py-3 flex w-full" onClick={() => handleNavigate(session)}>
+                        <button
+                            className="relative px-4 py-3 flex w-full"
+                            onClick={() => handleNavigate(chatId)}
+                        >
                             <span className="text-ellipsis">
-                                {session ? session : '(Unnamed chat)'}
+                                {chatId ? chatId : '(Unnamed chat)'}
                             </span>
                         </button>
 
@@ -200,7 +194,7 @@ const SidebarChatLogs = () => {
                             </PopoverTrigger>
                             <PopoverContent className="bg-night w-fit p-0">
                                 <button
-                                    onClick={() => deleteChat(session)}
+                                    onClick={() => deleteChat(chatId)}
                                     className="flex gap-2 justify-start items-center min-w-[180px] p-4"
                                 >
                                     <Trash size={16} /> Delete chat
@@ -255,4 +249,11 @@ function SidebarItem({
             )}
         </div>
     )
+}
+
+export function handleNavigate(sessionId: string) {
+    // Because dynamic routes don't work, I'm pushing the session ID to the query string and forcing refresh
+    // TODO: Fix dynamic routes so this isn't necessary - hard part is that it creates static build
+    window.history.replaceState({}, '', `?chat=${sessionId}`)
+    window.location.reload()
 }

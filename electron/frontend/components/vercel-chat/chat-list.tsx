@@ -8,6 +8,7 @@ import {
     BotMessage,
 } from '@/components/vercel-chat/message'
 import { SpinnerMessage, UserMessage } from '@/components/vercel-chat/message'
+import Chat from '../chat/chat'
 
 export interface ChatList {
     messages: UIState
@@ -103,14 +104,70 @@ export function ChatList2({ messages, session, isShared }: ChatList2) {
     )
 }
 
+/**
+ModelResponse
+- Content: Response by the model (currently in the format <THOUGHT></THOUGHT><ACTION></ACTION>)
+- Next: The action is parsed and the right tool is chosen or user response is requested
+
+ToolResponse
+- Content: Response from the tool
+- Next: The model is called with the reponse as the observation
+
+UserRequest
+- Content: User input
+- Next: The output is sent as ToolRequest
+
+Interrupt
+- Content: The interrupt message
+- Next: ModelResponse, the model is interrupted
+
+Stop
+- Content: None
+- Next: None
+
+Task
+- Content: The next task/object the agent has to complete
+- Next: ModelResponse
+
+ */
 const DisplayedChatMessage = ({ message }) => {
     return (
-        <div className="mb-8">
-            {message.type === 'Task' ? (
-                <BotMessage content={message.content} />
-            ) : (
-                <UserMessage>{message.content}</UserMessage>
-            )}
-        </div>
+        message.type && (
+            <div className="mb-8">
+                {message.type === 'agent' ? (
+                    <BotMessage content={message.text}></BotMessage>
+                ) : message.type === 'command' ? (
+                    <ChatTypeWrapper type="Command">
+                        {message.text}
+                    </ChatTypeWrapper>
+                ) : message.type === 'tool' ? (
+                    <ChatTypeWrapper type="Tool Response">
+                        {message.text}
+                    </ChatTypeWrapper>
+                ) : message.type === 'user' ? (
+                    <UserMessage>{message.content}</UserMessage>
+                ) : message.type === 'task' ? (
+                    <div className="border border-2 border-gray p-2 px-4 rounded-md">
+                        <ChatTypeWrapper type="Task" className="text-gray-400 italic">
+                            {message.text}
+                        </ChatTypeWrapper>
+                    </div>
+                ) : (
+                    // <ChatTypeWrapper type="(Type not found)">
+                    //     {message.content}
+                    // </ChatTypeWrapper>
+                    <></>
+                )}
+            </div>
+        )
+    )
+}
+
+const ChatTypeWrapper = ({ type, children, className }: { type: string, children: any, className?: string}) => {
+    return (
+        <p className={className}>
+            <span className="font-bold mr-2">{type}:</span>
+            {children}
+        </p>
     )
 }

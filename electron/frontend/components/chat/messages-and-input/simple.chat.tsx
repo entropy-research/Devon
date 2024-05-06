@@ -18,7 +18,9 @@ import { Chat } from '@/lib/chat.types'
 import { AI } from '@/lib/chat/chat.actions'
 import EventStream from '@/components/event-stream'
 import useCreateSession from '@/lib/services/sessionService/use-create-session'
-import useFetchSessionEvents from '@/lib/services/sessionService/use-fetch-session-events'
+import useFetchSessionEvents, {
+    fetchSessionEvents,
+} from '@/lib/services/sessionService/use-fetch-session-events'
 import SessionEventsDisplay from '@/components/events'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -35,11 +37,8 @@ export function SimpleChat({
     session,
     missingKeys,
 }: { viewOnly: boolean } & ChatProps) {
-    const router = useRouter()
     const path = usePathname()
     const [messages, setMessages] = useState<Message[]>([])
-    // const [messages] = useUIState()
-    // const [aiState, setAIState] = useAIState()
     const {
         messagesRef,
         scrollRef,
@@ -48,18 +47,10 @@ export function SimpleChat({
         scrollToBottom,
     } = useScrollAnchor()
     const { toast } = useToast()
-
     const [_, setNewChatId] = useLocalStorage('newChatId', id)
 
-    const { createSession, sessionId, loading, error } = useCreateSession()
-    const [_path, setPath] = useState('')
-
-    const {
-        data: events,
-        isLoading,
-        isError,
-        error: fetchError,
-    } = useFetchSessionEvents(sessionId)
+    // Clean later
+    const [userRequested, setUserRequested] = useState(false)
 
     // TODO: Actually use this to load chat from backend
     useEffect(() => {
@@ -71,15 +62,24 @@ export function SimpleChat({
     }, [id, path, session?.user, messages])
 
     useEffect(() => {
-        setMessages(events)
-    }, [events])
+        if (!id) return
+        const fetchAndUpdateMessages = () => {
+            fetchSessionEvents(id)
+                .then(data => {
+                    const parsedMessages = handleEvents(data, setUserRequested)
+                    setMessages(parsedMessages)
+                })
+                .catch(error => {
+                    console.error('Error fetching session events:', error)
+                })
+        }
 
-    // useEffect(() => {
-    //     const messagesLength = aiState.messages?.length
-    //     if (messagesLength === 2) {
-    //         router.refresh()
-    //     }
-    // }, [aiState.messages, router])
+        const intervalId = setInterval(fetchAndUpdateMessages, 2000)
+
+        return () => {
+            clearInterval(intervalId)
+        }
+    }, [id, messages])
 
     useEffect(() => {
         setNewChatId(id)
@@ -92,13 +92,6 @@ export function SimpleChat({
             })
         })
     }, [toast, missingKeys])
-
-    const handleSubmit = e => {
-        e.preventDefault()
-        const projectPath = '/Users/josh/Documents/cs/entropy/Devon/examples'
-        setPath(projectPath)
-        createSession(projectPath)
-    }
 
     return (
         <div className="flex flex-col flex-2 relative h-full" ref={scrollRef}>
@@ -142,6 +135,7 @@ export function SimpleChat({
                         scrollToBottom={scrollToBottom}
                     /> */}
                         <RegularInput
+                            sessionId={id}
                             isAtBottom={isAtBottom}
                             scrollToBottom={scrollToBottom}
                         />
@@ -151,4 +145,78 @@ export function SimpleChat({
             {/* <EventStream sessionId={'1'} /> */}
         </div>
     )
+}
+
+type Event = {
+    type:
+        | 'ModelResponse'
+        | 'ToolResponse'
+        | 'Task'
+        | 'Interrupt'
+        | 'UserRequest'
+        | 'Stop'
+    content: string
+    identifier: string | null
+}
+
+type Message = {
+    text: string
+    type: 'user' | 'agent' | 'command' | 'tool' | 'task'
+}
+
+const handleEvents = (
+    events: Event[],
+    setUserRequested: (value: boolean) => void
+) => {
+    const messages: Message[] = []
+    for (const event of events) {
+        const type = event.type
+        // console.log("EVENT", event["content"]);
+        if (type == 'ModelResponse') {
+            // Model response content is in format <THOUGHT>{thought}</THOUGHT><COMMAND>{command}</COMMAND>
+            if (event.content) {
+                const thoughtMatch = event.content
+                    .split('<THOUGHT>')
+                    ?.pop()
+                    ?.split('</THOUGHT>')[0]
+                const commandMatch = event.content
+                    .split('<COMMAND>')
+                    .pop()
+                    ?.split('</COMMAND>')[0]
+                const thought = thoughtMatch ? thoughtMatch : ''
+                const command = commandMatch ? commandMatch : ''
+
+                // split command by space
+
+                let command_split = command?.split(' ') ?? ['', '']
+                let command_name = command_split[0].trim()
+                let command_args = command_split.slice(1).join(' ')
+                let trimmedStr = command_args.trim().replace(/^['"]+|['"]+$/g, '')
+
+                if (command_name == 'ask_user') {
+                    messages.push({ text: trimmedStr, type: 'agent' })
+                } else {
+                    messages.push({ text: thought ?? '', type: 'agent' })
+                    messages.push({ text: command ?? '', type: 'command' })
+                }
+            }
+        }
+
+        if (type == 'ToolResponse') {
+            messages.push({ text: event.content, type: 'tool' })
+        }
+
+        if (type == 'Task') {
+            messages.push({ text: event.content, type: 'task' })
+        }
+
+        if (type == 'Interrupt') {
+            messages.push({ text: event.content, type: 'user' })
+        }
+
+        if (type == 'UserRequest') {
+            setUserRequested(true)
+        }
+    }
+    return messages
 }
