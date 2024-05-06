@@ -39,7 +39,7 @@ const expandedChatTabs: {
     // },
 ]
 
-const sidebarItems = [
+const bottomSidebarItems = [
     {
         icon: <Settings className="text-primary" />,
         text: 'Settings',
@@ -94,7 +94,7 @@ export default function Sidebar() {
                             )}
                             {expanded && <SidebarChatLogs />}
                         </div>
-                        {sidebarItems.map(item => (
+                        {bottomSidebarItems.map(item => (
                             <SidebarItem key={item.text} {...item} />
                         ))}
                     </ul>
