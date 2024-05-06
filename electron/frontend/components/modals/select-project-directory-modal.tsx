@@ -25,22 +25,12 @@ const DialogContent = lazy(() =>
 const SelectProjectDirectoryModal = ({ trigger }) => {
     const [folderPath, setFolderPath] = useState('')
     const [open, setOpen] = useState(false)
-    const { createSession, sessionId, loading, error } = useCreateSession()
 
     function validate() {
         return folderPath !== ''
     }
 
-    function handleStartChat() {
-        async function session() {
-            try {
-                const newSessionId = await createSession(folderPath)
-                handleNavigate(newSessionId)
-            } catch (error) {
-                console.error('Error starting session:', error)
-            }
-        }
-        session()
+    function afterSubmit() {
         setOpen(false)
     }
 
@@ -55,7 +45,8 @@ const SelectProjectDirectoryModal = ({ trigger }) => {
                     />
                     <StartChatButton
                         disabled={!validate()}
-                        onClick={handleStartChat}
+                        onClick={afterSubmit}
+                        folderPath={folderPath}
                     />
                 </div>
             </DialogContent>
@@ -87,12 +78,27 @@ export const SelectProjectDirectoryComponent = ({
     )
 }
 
-export const StartChatButton = ({ onClick, disabled }) => {
+export const StartChatButton = ({ onClick, disabled, folderPath }) => {
+    const { createSession, sessionId, loading, error } = useCreateSession()
+
+    function handleStartChat() {
+        async function session() {
+            try {
+                const newSessionId = await createSession(folderPath)
+                handleNavigate(newSessionId)
+            } catch (error) {
+                console.error('Error starting session:', error)
+            }
+        }
+        session()
+        onClick()
+    }
+
     return (
         <Button
             disabled={disabled}
             className="bg-primary text-white p-2 rounded-md mt-10 w-full"
-            onClick={onClick}
+            onClick={handleStartChat}
         >
             Start Chat
         </Button>

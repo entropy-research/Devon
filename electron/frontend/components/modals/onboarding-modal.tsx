@@ -32,8 +32,7 @@ const OnboardingModal = ({
     const [isChecked, setIsChecked] = useState(false)
     const [apiKey, setApiKey] = useState('')
 
-    function handleStartChat() {
-        // setChatId(nanoid())
+    function afterSubmit() {
         setInitialized(true)
     }
 
@@ -102,7 +101,8 @@ const OnboardingModal = ({
                         </DisabledWrapper>
                         <StartChatButton
                             disabled={!validateFields()}
-                            onClick={handleStartChat}
+                            onClick={afterSubmit}
+                            folderPath={folderPath}
                         />
                     </div>
                 </DialogContent>

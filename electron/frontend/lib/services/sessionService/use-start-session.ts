@@ -23,13 +23,13 @@ const useStartSession = () => {
                 setSessionStarted(true)
                 return 'Session already running'
             }
+            setError(err.message || 'Unknown error')
+            setSessionStarted(false)
             throw new Error(
                 err.response
                     ? err.response.data.detail
                     : 'An unknown error occurred'
             )
-            setError(err.message || 'Unknown error')
-            setSessionStarted(false)
         } finally {
             setLoading(false)
         }

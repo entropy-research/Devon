@@ -17,7 +17,7 @@ import { getChatById, getChats, createChat } from '@/lib/services/chatService'
 import { Chat } from '@/lib/chat.types'
 import { AI } from '@/lib/chat/chat.actions'
 import EventStream from '@/components/event-stream'
-import useCreateSession from '@/lib/services/sessionService/use-create-session'
+// import useCreateSession from '@/lib/services/sessionService/use-create-session'
 import useFetchSessionEvents, {
     fetchSessionEvents,
 } from '@/lib/services/sessionService/use-fetch-session-events'

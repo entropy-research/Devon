@@ -12,15 +12,23 @@ import Home from './home'
 import OnboardingModal from '@/components/modals/onboarding-modal'
 import useStartSession from '@/lib/services/sessionService/use-start-session'
 // import useFetchSessionEvents from '@/lib/services/sessionService/use-fetch-session-events'
+import useCreateSession from '@/lib/services/sessionService/use-create-session'
+
 
 export default function Landing({ chatProps }) {
     const searchParams = useSearchParams()
 
     const chatId = searchParams.get('chat')
     const [folderPath, setFolderPath] = useState('')
-    // const [_, setChatId] = useLocalStorage('chatId', '1')
-    const [initialized, setInitialized] = useState(true)
+    // const [_, setChatId] = useLocalStorage('chatId', chatId)
+    const [hasAcceptedCheckbox, setHasAcceptedCheckbox] = useLocalStorage(
+        'hasAcceptedCheckbox',
+        false
+    )
+    // const [initialized, setInitialized] = useState(true)
     const { startSession, sessionStarted, error, loading } = useStartSession()
+    const { createSession, sessionId, loading: createSessionLoading, error: createSessionError } = useCreateSession()
+
     // const { data: events, isLoading, isError, error } = useFetchSessionEvents(sessionId);
 
     useEffect(() => {
@@ -36,22 +44,19 @@ export default function Landing({ chatProps }) {
             return
         }
         // If not, start it
+        if (!chatId) {
+            return
+        }
         startSession(chatId)
         chatProps.id = chatId
-    }, [chatId, sessionStarted])
-
-    function handleStartChat() {
-        // setChatId(nanoid())
-        setInitialized(true)
-    }
+    }, [loading, chatId, sessionStarted])
 
     return (
         <>
             <Home chatProps={chatProps} />
-            {/* {router} */}
             <OnboardingModal
-                initialized={initialized}
-                setInitialized={setInitialized}
+                initialized={hasAcceptedCheckbox}
+                setInitialized={setHasAcceptedCheckbox}
             />
         </>
     )
