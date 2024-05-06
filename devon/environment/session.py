@@ -1,4 +1,5 @@
 import inspect
+import json
 import logging
 import traceback
 from dataclasses import dataclass
@@ -30,7 +31,7 @@ from devon.environment.tools import (
     search_file,
     submit,
 )
-from devon.environment.utils import DotDict
+from devon.environment.utils import DotDict, Event
 
 
 @dataclass(frozen=False)
@@ -104,10 +105,10 @@ stateDiagram
 # event log can be mapped to an agent chat history
 
 
-class Event(TypedDict):
-    type: str  # types: ModelResponse, ToolResponse, UserRequest, Interrupt, Stop
-    content: str
-    identifier: str | None
+
+
+
+    
 
 
 class Session:
@@ -117,7 +118,7 @@ class Session:
         self.state = DotDict({})
         self.state.PAGE_SIZE = 200
         self.logger = logger
-        self.agent = agent
+        self.agent : TaskAgent = agent
         self.base_path = args.path
         self.event_log: List[Event] = []
         self.event_index = 0
@@ -205,66 +206,129 @@ class Session:
             return self.parse_command_to_function(command_string=action)
         except Exception as e:
             return e.args[0], False
+        
+    def get_last_task(self):
+        for event in self.event_log[::-1]:
+            if event["type"] == "Task":
+                return event["content"]
+        return "Task unspecified ask user to specify task"
 
     def step_event(self):
         if self.event_index == len(self.event_log):
             return "No more events to process", True
         event = self.event_log[self.event_index]
         self.logger.info(f"Event: {event}")
-        if event["type"] == "ModelResponse":
-            thought, action = parse_response(event["content"])
 
-            if "ask_user" in action:
+
+        if event["type"] == "ModelRequest":
+            thought,action,output =  self.agent.predict(self.get_last_task(),event["content"], self)
+            self.event_log.append({
+                "type": "ModelResponse",
+                "content": json.dumps({
+                    "thought": thought,
+                    "action": action,
+                    "output": output
+                }),
+                "producer": self.agent.name,
+                "consumer": event["producer"],
+            })
+
+        if event["type"] == "ToolRequest":
+            tool_name,args = parse_command(self, event["content"])
+
+            if tool_name == "ask_user":
                 self.event_log.append(
                     {
                         "type": "UserRequest",
-                        "content": action.split("ask_user")[1],
-                        "identifier": self.agent.name,
+                        "content": args[0],
+                        "producer": event["producer"],
+                        "consumer": "user",
                     }
                 )
-
-            elif action.strip() in ["exit", "stop", "submit"]:
+            elif tool_name in ["submit", "exit", "stop"]:
                 self.event_log.append(
                     {
                         "type": "Stop",
                         "content": "Stopped task",
-                        "identifier": self.agent.name,
+                        "producer": event["producer"],
+                        "consumer": "user",
+                    }
+                )
+            elif tool_name == "set_task":
+                self.event_log.append(
+                    {
+                        "type": "Task",
+                        "content": args[0],
+                        "producer": event["producer"],
+                        "consumer": self.agent.name,
+                    }
+                )
+            elif tool_name == "send_message":
+                self.event_log.append(
+                    {
+                        "type": "ModelRequest",
+                        "content": args[1],
+                        "producer": event["producer"],
+                        "consumer": args[0],
                     }
                 )
 
             else:
-                try:
-                    output, done = self.parse_command_to_function(command_string=action)
-                except Exception as e:
-                    self.logger.error(traceback.print_exc())
-                    output = str(e)
-
+                output, done = self.parse_command_to_function(command_string=event["content"])
+                self.event_log.append(
+                    {
+                        "type": "EnvironmentRequest",
+                        "content": event["content"],
+                        "producer": event["producer"],
+                        "consumer": self.environment.__class__.__name__,
+                    }
+                )
+                self.event_log.append(
+                    {
+                        "type": "EnvironmentResponse",
+                        "content": output,
+                        "producer": self.environment.__class__.__name__,
+                        "consumer": event["consumer"],
+                    }
+                )
                 self.event_log.append(
                     {
                         "type": "ToolResponse",
                         "content": output,
-                        "identifier": self.environment.__class__.__name__,
+                        "producer": self.environment.__class__.__name__,
+                        "consumer": event["consumer"],
                     }
                 )
 
+        if event["type"] == "EnvironmentRequest":
+            pass
+
+        if event["type"] == "EnvironmentResponse":
+            pass
+
         if event["type"] == "ToolResponse":
-            #  get last event of type task
-            task = None
-            for e in self.event_log[::-1]:
-                if e["type"] == "Task":
-                    task = e["content"]
-                    break
-            if task is None:
-                task = "Task unspecified ask user to specify task"
-            print("OBERVATION", event["content"])
-            thought, action, output = self.agent.predict(task, event["content"], self)
+
             self.event_log.append(
                 {
-                    "type": "ModelResponse",
-                    "content": output,
-                    "identifier": self.agent.name,
+                    "type": "ModelRequest",
+                    "content": event["content"],
+                    "producer": event["producer"],
+                    "consumer": event["consumer"],
                 }
             )
+
+        if event["type"] == "ModelResponse":
+
+            content = json.loads(event["content"])["action"]
+            self.event_log.append(
+                {
+                    "type": "ToolRequest",
+                    "content": content,
+                    "producer": event["producer"],
+                    "consumer": event["consumer"],
+                }
+            )
+        
 
         if event["type"] == "UserRequest":
             user_input = self.get_user_input()
@@ -274,36 +338,29 @@ class Session:
                     {
                         "type": "Stop",
                         "content": "No user input provided",
-                        "identifier": None,
+                        "producer": "user",
+                        "consumer": event["consumer"],
                     }
                 )
                 return "No user input provided", True
+            
+            self.event_log.append({
+                "type": "UserResponse",
+                "content": user_input,
+                "producer": "user",
+                "consumer": event["producer"],
+            })
             self.event_log.append(
-                {"type": "ToolResponse", "content": user_input, "identifier": "user"}
+                {"type": "ToolResponse", "content": user_input, "producer": "user", "consumer": event["producer"]}
             )
 
         if event["type"] == "Interrupt":
-            task = None
-            for event in self.event_log[::-1]:
-                if event["type"] == "Task":
-                    task = event["content"]
-                    break
-            if task is None:
-                task = "Task unspecified ask user to specify task"
-
-            thought, action, output = self.agent.predict(
-                task,
-                "You have been interrupted, pay attention to this message "
-                + event["content"],
-                self,
-            )
-            self.event_log.append(
-                {
-                    "type": "ModelResponse",
-                    "content": output,
-                    "identifier": self.agent.name,
-                }
-            )
+            self.event_log.append({
+                "type": "ModelRequest",
+                "content": "You have been interrupted, pay attention to this message " + event["content"],
+                "producer": event["producer"],
+                "consumer": self.agent.name,
+            })
 
         if event["type"] == "Stop":
             return "Stopped task", True
@@ -314,14 +371,14 @@ class Session:
             if task is None:
                 task = "Task unspecified ask user to specify task"
 
-            thought, action, output = self.agent.predict(task, "", self)
-            self.event_log.append(
-                {
-                    "type": "ModelResponse",
-                    "content": output,
-                    "identifier": self.agent.name,
-                }
-            )
+            self.event_log.append({
+                "type": "ModelRequest",
+                "content": "",
+                "producer": event["producer"],
+                "consumer": event["consumer"],
+            })
+
+        
         self.event_index += 1
         return self.step_event()
 

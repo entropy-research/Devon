@@ -33,6 +33,18 @@ from devon.swebenchenv.environment.unified_diff.udiff import (
 )
 
 
+class ToolManager:
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    def run_tool_event(self, tool_name, args):
+        tool_function = getattr(self, tool_name)
+        response = tool_function(args)
+        return Event(
+            
+        )
+
+
 def normalize_path(path, specified_path):
     if path == os.sep:
         return specified_path

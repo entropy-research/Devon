@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import Any, TypedDict
 
 LOGGER_NAME = "devon"
 
@@ -25,3 +26,10 @@ class DotDict:
 
     def to_dict(self):
         return self.data
+
+
+class Event(TypedDict):
+    type: str  # types: ModelResponse, ToolResponse, UserRequest, Interrupt, Stop
+    content: Any
+    producer: str | None
+    consumer: str | None

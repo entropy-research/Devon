@@ -79,7 +79,7 @@ const sendInterrupt = async (res: string) => {
 }
 
 type Event = {
-	type: "ModelResponse" | "ToolResponse" | "Task" | "Interrupt" | "UserRequest" | "Stop",
+	type: "ModelResponse" | "ToolResponse" | "Task" | "Interrupt" | "UserRequest" | "Stop" | "EnvironmentRequest" | "EnvironmentResponse" | "ModelRequest" | "ToolRequest" | "UserResponse",
 	content: string,
 	identifier: string | null
 }
@@ -92,41 +92,25 @@ type Message = {
 
 const handleEvents = (events: Event[], setUserRequested: (value: boolean) => void) => {
 	const messages : Message[] = []
+	let user_request = false;
+
 	for (const event of events) {
 		// console.log("EVENT", event["content"]);
 		if (event.type == "ModelResponse") {
-			// Model response content is in format <THOUGHT>{thought}</THOUGHT><COMMAND>{command}</COMMAND>
-			if (event.content) {
-			const thoughtMatch = event.content.split("<THOUGHT>")?.pop()?.split("</THOUGHT>")[0];
-			const commandMatch = event.content.split("<COMMAND>").pop()?.split("</COMMAND>")[0];
-			// console.log("THOUGHT", thoughtMatch);
-			// console.log("COMMAND", commandMatch);
-			const thought = thoughtMatch ? thoughtMatch : '';
-			const command = commandMatch ? commandMatch : '';
-
-
 			
-			// split command by space
-			
-			let command_split = command?.split(' ') ?? ["",""];
-			let command_name = command_split[0].trim();
-			let command_args = command_split.slice(1).join(' ');
+			let content  = JSON.parse(event.content);
 
-			if (command_name == "ask_user") {
-				messages.push({text: command_args, type: "agent"});
-			}
-			else {
-				messages.push({text: thought ?? "", type: "agent"});
-				messages.push({text: command ?? "", type: "command"});
-			}
-
-		}
-	}
-
-		if (event.type == "ToolResponse") {
-			messages.push({text: event.content, type: "tool"});
+			messages.push({text: content.thought, type: "agent"});
 		}
 
+		if (event.type == "EnvironmentRequest") {
+			messages.push({text: "Running command: " + event.content, type: "tool"});
+		}
+
+		if (event.type == "EnvironmentResponse") {
+			messages.push({text: "> " + event.content, type: "tool"});
+		}
+	
 		if (event.type == "Task") {
 			messages.push({text: event.content, type: "task"});
 		}
@@ -136,11 +120,18 @@ const handleEvents = (events: Event[], setUserRequested: (value: boolean) => voi
 			messages.push({text: event.content, type: "user"});
 		}
 
+		if (event.type == "UserResponse") {
+			messages.push({text: event.content, type: "user"});
+			user_request = false
+		}
+
 		if (event.type == "UserRequest") {
-			setUserRequested(true);
+			messages.push({text: event.content, type: "agent"});
+			user_request = true
 		}
  
 	}
+	setUserRequested(user_request);
 	return messages
 }
 

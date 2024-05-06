@@ -174,7 +174,7 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
 
     sessions[session].enter()
     sessions[session].event_log.append(
-        Event(type="Task", content="ask user for what to do")
+        Event(type="Task", content="ask user for what to do", producer="system", consumer="devon")
     )
     background_tasks.add_task(sessions[session].step_event)
     running_sessions.append(session)
