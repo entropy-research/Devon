@@ -1,6 +1,7 @@
 import asyncio
 import json
 from contextlib import asynccontextmanager
+import os
 from time import sleep
 from typing import Dict
 
@@ -144,6 +145,10 @@ def read_session():
 
 @app.post("/session")
 def create_session(session: str, path: str):
+
+    if not os.path.exists(path):
+        raise fastapi.HTTPException(status_code=404, detail="Path not found")
+
     agent = TaskAgent(
         name="Devon",
         model="claude-opus",
@@ -161,6 +166,9 @@ def create_session(session: str, path: str):
 
 @app.post("/session/{session}/start")
 def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404,detail="Session not found" )
+
     sessions[session].enter()
     sessions[session].event_log.append(
         Event(type="Task", content="ask user for what to do")
@@ -171,12 +179,16 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
 
 @app.post("/session/{session}/response")
 def create_response(session: str, response: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
     session_buffers[session] = response
     return session_buffers[session]
 
 
 @app.post("/session/{session}/interrupt")
 def interrup_session(session: str, message: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
@@ -186,6 +198,8 @@ def interrup_session(session: str, message: str):
 
 @app.post("/session/{session}/stop")
 def stop_session(session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
@@ -195,17 +209,23 @@ def stop_session(session: str):
 
 @app.delete("/session")
 def delete_session(session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
     del sessions[session]
     return session
 
 
 @app.get("/session/{session}/events")
 def read_events(session: str):
-    return sessions.get(session,None).event_log
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    return sessions.get(session, None).event_log
 
 
 @app.get("/session/{session}/events/stream")
 async def read_events_stream(session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
     session_obj: Session = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
