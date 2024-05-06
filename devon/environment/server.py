@@ -1,6 +1,6 @@
 import asyncio
 import json
-from contextlib import asynccontextmanager
+# from contextlib import asynccontextmanager
 import os
 from time import sleep
 from typing import Dict, List
@@ -15,9 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 # sqlite
 # - sessions
 # - events
-from fastapi import FastAPI
+# from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
-from sqlalchemy import create_engine, text
+# from sqlalchemy import create_engine, text
 
 # API
 # SESSION
@@ -32,8 +32,8 @@ from sqlalchemy import create_engine, text
 # get session event stream
 
 
-DATABASE_PATH = "./devon_environment.db"
-DATABASE_URL = "sqlite:///" + DATABASE_PATH
+# DATABASE_PATH = "./devon_environment.db"
+# DATABASE_URL = "sqlite:///" + DATABASE_PATH
 
 origins = [
     "http://localhost:3000",
@@ -60,48 +60,48 @@ SELECT * FROM sessions
 """
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("lifespan")
-    engine = create_engine(DATABASE_URL, echo=True)
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     print("lifespan")
+#     engine = create_engine(DATABASE_URL, echo=True)
 
-    # session table SQL DDL
-    session_table_sql = """
+#     # session table SQL DDL
+#     session_table_sql = """
 
-    CREATE TABLE IF NOT EXISTS sessions (
-        name TEXT PRIMARY KEY,
-        JSON_STATE TEXT NOT NULL
-    );
-    """
+#     CREATE TABLE IF NOT EXISTS sessions (
+#         name TEXT PRIMARY KEY,
+#         JSON_STATE TEXT NOT NULL
+#     );
+#     """
 
-    # run the SQL DDL statement
-    with engine.connect() as conn:
-        conn.execute(text(session_table_sql))
+#     # run the SQL DDL statement
+#     with engine.connect() as conn:
+#         conn.execute(text(session_table_sql))
 
-    # get all sessions and load them into sessions dictionary
-    with engine.connect() as conn:
-        ses = conn.execute(text(get_sessions_sql)).fetchall()
-        for session in ses:
-            print(session)
-            state = json.loads(session[1])
-            state["user_input"] = lambda: get_user_input(session[0])
-            sessions[session[0]] = Session.from_dict(state)
-    print("statup done")
-    yield
-    print("cleanup")
-    session_states = [(name, session.to_dict()) for name, session in sessions.items()]
-    with engine.connect() as conn:
-        for name, state in session_states:
-            conn.execute(
-                text(add_or_update_sessions_sql),
-                {"name": name, "JSON_STATE": json.dumps(state)},
-            )
-        conn.commit()
-    print("cleanup done")
+#     # get all sessions and load them into sessions dictionary
+#     with engine.connect() as conn:
+#         ses = conn.execute(text(get_sessions_sql)).fetchall()
+#         for session in ses:
+#             print(session)
+#             state = json.loads(session[1])
+#             state["user_input"] = lambda: get_user_input(session[0])
+#             sessions[session[0]] = Session.from_dict(state)
+#     print("statup done")
+#     yield
+#     print("cleanup")
+#     session_states = [(name, session.to_dict()) for name, session in sessions.items()]
+#     with engine.connect() as conn:
+#         for name, state in session_states:
+#             conn.execute(
+#                 text(add_or_update_sessions_sql),
+#                 {"name": name, "JSON_STATE": json.dumps(state)},
+#             )
+#         conn.commit()
+#     print("cleanup done")
 
 
 app = fastapi.FastAPI(
-    lifespan=lifespan,
+    # lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -191,7 +191,7 @@ def create_response(session: str, response: str):
 
 
 @app.post("/session/{session}/interrupt")
-def interrup_session(session: str, message: str):
+def interrupt_session(session: str, message: str):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
     session_obj = sessions.get(session)

@@ -3,8 +3,19 @@ import {  Box, Text, useInput, useApp } from 'ink';
 import TextInput from 'ink-text-input';
 import childProcess from 'node:child_process';
 import axios from 'axios';
+import fs from 'fs';
 
+const LOG_FILE = "./devon-tui.log"
 
+const fd = fs.openSync(LOG_FILE, 'a');
+
+const writeLogLine = (line: string) => {
+    try {
+        fs.appendFileSync(fd, line + "\n");
+    } catch (error) {
+        console.error("Failed to write to log file:", error);
+    }
+}
 
 const createSession = async (path:string) => {
   let success = false;
@@ -51,6 +62,16 @@ const fetchEvents = async () => {
 const giveUserReponse = async (res: string) => {
 	try {
 		const response = await axios.post('http://localhost:8000/session/cli/response?response=' + res);
+		return response.data;
+	} catch (error: any) {
+		console.error('Error:', error.message);
+	}
+}
+
+const sendInterrupt = async (res: string) => {
+	try {
+		writeLogLine("interrupt: " + res)
+		const response = await axios.post('http://localhost:8000/session/cli/interrupt?message=' + res);
 		return response.data;
 	} catch (error: any) {
 		console.error('Error:', error.message);
@@ -111,6 +132,7 @@ const handleEvents = (events: Event[], setUserRequested: (value: boolean) => voi
 		}
 
 		if (event.type == "Interrupt") {
+			writeLogLine("interrupt: " + event.content)	
 			messages.push({text: event.content, type: "user"});
 		}
 
@@ -140,10 +162,10 @@ export const App = () => {
 		'/Users/mihirchintawar/agent/devon/environment/server.py',
 	]);
 
-	// subProcess.stdout.on('data', (newOutput: Buffer) => {
-	// 	console.log(newOutput.toString('utf8'));
+	subProcess.stdout.on('data', (newOutput: Buffer) => {
+		writeLogLine(newOutput.toString('utf8')); 
 
-	// });
+	});
 
 	subProcess.stderr.on('data', (newOutput: Buffer) => {
 		console.error(newOutput.toString('utf8'));
@@ -199,13 +221,9 @@ export const App = () => {
 		giveUserReponse(inputValue);
         setUserRequested(false);
       }
-      // Send the user's message to the LLM agent and get the response
-      // You can replace this with your actual LLM agent integration
-      const agentResponse = getAgentResponse(inputValue);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: agentResponse, type: "agent" },
-      ]);
+	  else {
+		sendInterrupt(inputValue);
+      }
     }
   };
 
@@ -257,12 +275,6 @@ export const App = () => {
       </Box>
     </Box>
   );
-};
-
-const getAgentResponse = (userMessage : string) => {
-  // Placeholder function to simulate agent response
-  // Replace this with your actual LLM agent integration
-  return `Agent response to: "${userMessage}"`;
 };
 
 // render(<ChatInterface />);
