@@ -116,6 +116,11 @@
     }
 
     .hover-opacity {
-        @apply hover:opacity-70 transition duration-200
+        @apply hover:opacity-70 transition duration-200;
+    }
+
+    .bg-fade-bottom-to-top {
+        /* TODO don't hardcode color */
+        background-image: linear-gradient(to top, #2e2e2e 0%, transparent 100%);
     }
 }

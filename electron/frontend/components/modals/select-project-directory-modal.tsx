@@ -1,6 +1,7 @@
 import FolderPicker from '@/components/ui/folder-picker'
 import { useState, lazy } from 'react'
 import { Button } from '@/components/ui/button'
+import useCreateSession from '@/lib/services/sessionService/use-create-session'
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -23,9 +24,16 @@ const DialogContent = lazy(() =>
 const SelectProjectDirectoryModal = ({ trigger }) => {
     const [folderPath, setFolderPath] = useState('')
     const [open, setOpen] = useState(false)
+    const { createSession, sessionId, loading, error } = useCreateSession()
 
     function validate() {
         return folderPath !== ''
+    }
+
+    function handleStartChat() {
+        setOpen(false)
+        const projectPath = '/Users/josh/Documents/cs/entropy/Devon/examples'
+        createSession(projectPath)
     }
 
     return (
@@ -39,7 +47,7 @@ const SelectProjectDirectoryModal = ({ trigger }) => {
                     />
                     <StartChatButton
                         disabled={!validate()}
-                        onClick={() => setOpen(false)}
+                        onClick={handleStartChat}
                     />
                 </div>
             </DialogContent>

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  output: 'export', // Commented out before because it wasn't working well with dynamic routes "[id]/page.tsx"
   trailingSlash: true,
   distDir: 'build',
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',

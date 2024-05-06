@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/popover'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 // import { session } from 'electron'
+import { useRouter } from 'next/navigation'
+
 
 const defaultValue = {
     expanded: true,
@@ -140,6 +142,8 @@ const SidebarHeader = ({ expanded }: { expanded: boolean }) => {
 const SidebarChatLogs = () => {
     const { sessions, loading, error, refreshSessions } = useReadSessions()
     const { deleteSession } = useDeleteSession()
+    const router = useRouter()
+    
 
     useEffect(() => {
         refreshSessions()
@@ -160,6 +164,13 @@ const SidebarChatLogs = () => {
         }
     }
 
+    function handleNavigate(sessionId: string) {
+        // Because dynamic routes don't work, I'm pushing the session ID to the query string and forcing refresh
+        // TODO: Fix dynamic routes so this isn't necessary - hard part is that it creates static build
+        window.history.replaceState({}, '', `?chat=${sessionId}`)
+        window.location.reload()
+    }
+
     return (
         <div className="flex flex-col mt-2">
             {loading && <div className="px-2 py-2">Loading sessions...</div>}
@@ -175,7 +186,7 @@ const SidebarChatLogs = () => {
                         key={index}
                         className="flex relative justify-between w-full group items-center smooth-hover rounded-md"
                     >
-                        <button className="relative px-4 py-3 flex w-full">
+                        <button className="relative px-4 py-3 flex w-full" onClick={() => handleNavigate(session)}>
                             <span className="text-ellipsis">
                                 {session ? session : '(Unnamed chat)'}
                             </span>

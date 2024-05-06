@@ -2,39 +2,6 @@
 
 #### 📂 Structure
 
-```
-.
-├── assets
-│   ├── icon.icns
-│   ├── icon.ico
-│   └── icon.png
-├── backend
-│   ├── main.ts
-│   ├── preload.ts
-│   ├── README.md
-│   ├── tsconfig.json
-│   └── .eslintrc.json
-├── frontend
-│   ├── app
-│   │   ├── assets
-│   |   │   ├── edit.svg
-│   |   │   └── menhera.png
-│   │   ├── favicon.ico
-│   │   ├── globals.css
-│   │   ├── layout.tsx
-│   │   ├── page.module.css
-│   │   └── page.tsx
-│   ├── context.d.ts
-│   ├── .eslintrc.json
-│   └── tsconfig.json
-├── next.config.js
-├── electron-builder.yml
-├── package.json
-├── README.md
-└── yarn.lock
-
-```
-
 - `assets/`: Contains app icons used during run and build times.
 - `backend/`: This is where your electron main processes reside.
 - `frontend/`: This is where your NextJS app lives.
@@ -46,6 +13,8 @@ There's more information about `frontend` and `backend` parts in the README file
 &nbsp;
 
 #### 💻 Scripts
+
+> Using yarn because electron-builder highly recommends it
 
 First `yarn install` then:
 

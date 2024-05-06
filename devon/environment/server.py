@@ -145,7 +145,7 @@ def read_session():
 
 @app.post("/session")
 def create_session(session: str, path: str):
-
+    print('PATH', path)
     if not os.path.exists(path):
         raise fastapi.HTTPException(status_code=404, detail="Path not found")
 

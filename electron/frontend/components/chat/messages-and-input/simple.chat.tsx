@@ -1,31 +1,25 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { ChatList } from '@/components/vercel-chat/chat-list'
+import { ChatList, ChatList2 } from '@/components/vercel-chat/chat-list'
 import { useLocalStorage } from '@/lib/hooks/chat.use-local-storage'
 import { useEffect, useState } from 'react'
-import { useUIState, useAIState } from 'ai/rsc'
+// import { useUIState, useAIState } from 'ai/rsc'
 import { Session } from '@/lib/chat.types'
 import { usePathname, useRouter } from 'next/navigation'
 import { Message } from '@/lib/chat/chat.actions'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
 import SuggestionContainer from './suggestion-container'
-import Input from './input'
+import { VercelInput, RegularInput } from './input'
 import { useToast } from '@/components/ui/use-toast'
 import { ButtonScrollToBottom } from './button-scroll-to-bottom'
 import { getChatById, getChats, createChat } from '@/lib/services/chatService'
-import {
-    createAI,
-    createStreamableUI,
-    getMutableAIState,
-    getAIState,
-    render,
-    createStreamableValue,
-} from 'ai/rsc'
 import { Chat } from '@/lib/chat.types'
 import { AI } from '@/lib/chat/chat.actions'
 import EventStream from '@/components/event-stream'
 import useCreateSession from '@/lib/services/sessionService/use-create-session'
+import useFetchSessionEvents from '@/lib/services/sessionService/use-fetch-session-events'
+import SessionEventsDisplay from '@/components/events'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
     initialMessages?: Message[]
@@ -34,7 +28,7 @@ export interface ChatProps extends React.ComponentProps<'div'> {
     missingKeys?: string[]
 }
 
-export function VercelChat({
+export function SimpleChat({
     viewOnly,
     id,
     className,
@@ -43,8 +37,9 @@ export function VercelChat({
 }: { viewOnly: boolean } & ChatProps) {
     const router = useRouter()
     const path = usePathname()
-    const [messages] = useUIState()
-    const [aiState, setAIState] = useAIState()
+    const [messages, setMessages] = useState<Message[]>([])
+    // const [messages] = useUIState()
+    // const [aiState, setAIState] = useAIState()
     const {
         messagesRef,
         scrollRef,
@@ -59,45 +54,12 @@ export function VercelChat({
     const { createSession, sessionId, loading, error } = useCreateSession()
     const [_path, setPath] = useState('')
 
-    // TODO: DELETE THIS
-    useEffect(() => {
-        // getChats().then((res) => {
-        //     console.log('chats', res)
-        // }
-        // )
-        const chat = getChatById('1').then(res => {
-            console.log('chat', res)
-            const userId = '1'
-            const chatId = '1'
-            if (res === null) {
-                // If chat does not exist, create it
-                const chat: Chat = {
-                    id: chatId,
-                    title: 'title',
-                    createdAt: new Date(),
-                    userId: userId,
-                    path: './',
-                    messages: [],
-                    // sharePath: 'sharePath',
-                }
-                createChat(chat)
-                // const aiState = getMutableAIState<typeof AI>()
-
-                // aiState.update({
-                //     ...aiState.get(),
-                //     messages: [
-                //         ...aiState.get().messages
-                //     ],
-                // })
-            } else {
-                setAIState({
-                    ...aiState,
-                    chatId: res.id,
-                    messages: res.messages,
-                })
-            }
-        })
-    }, [])
+    const {
+        data: events,
+        isLoading,
+        isError,
+        error: fetchError,
+    } = useFetchSessionEvents(sessionId)
 
     // TODO: Actually use this to load chat from backend
     useEffect(() => {
@@ -109,11 +71,15 @@ export function VercelChat({
     }, [id, path, session?.user, messages])
 
     useEffect(() => {
-        const messagesLength = aiState.messages?.length
-        if (messagesLength === 2) {
-            router.refresh()
-        }
-    }, [aiState.messages, router])
+        setMessages(events)
+    }, [events])
+
+    // useEffect(() => {
+    //     const messagesLength = aiState.messages?.length
+    //     if (messagesLength === 2) {
+    //         router.refresh()
+    //     }
+    // }, [aiState.messages, router])
 
     useEffect(() => {
         setNewChatId(id)
@@ -129,8 +95,8 @@ export function VercelChat({
 
     const handleSubmit = e => {
         e.preventDefault()
-        const projectPath = '/my-path'
-        setPath(projectPath) // TODO
+        const projectPath = '/Users/josh/Documents/cs/entropy/Devon/examples'
+        setPath(projectPath)
         createSession(projectPath)
     }
 
@@ -141,8 +107,17 @@ export function VercelChat({
                     className={cn('pt-4 md:pt-10', className)}
                     ref={messagesRef}
                 >
-                    {messages.length ? (
-                        <ChatList
+                    <SessionEventsDisplay
+                        sessionId={id}
+                        setMessages={setMessages}
+                    />
+                    {messages?.length ? (
+                        // <ChatList
+                        //     messages={messages}
+                        //     isShared={false}
+                        //     session={session}
+                        // />
+                        <ChatList2
                             messages={messages}
                             isShared={false}
                             session={session}
@@ -156,22 +131,24 @@ export function VercelChat({
             </div>
             {!viewOnly && (
                 <div className="sticky bottom-0 w-full">
-                    {!(messages?.length > 0) && <SuggestionContainer />}
-                    <ButtonScrollToBottom
+                    <div className="bg-fade-bottom-to-top pt-20 overflow-hidden rounded-xl -mb-[1px]">
+                        {!(messages?.length > 0) && <SuggestionContainer />}
+                        <ButtonScrollToBottom
+                            isAtBottom={isAtBottom}
+                            scrollToBottom={scrollToBottom}
+                        />
+                        {/* <VercelInput
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
-                    />
-                    <Input
-                        isAtBottom={isAtBottom}
-                        scrollToBottom={scrollToBottom}
-                    />
+                    /> */}
+                        <RegularInput
+                            isAtBottom={isAtBottom}
+                            scrollToBottom={scrollToBottom}
+                        />
+                    </div>
                 </div>
             )}
             {/* <EventStream sessionId={'1'} /> */}
-            <button onClick={handleSubmit} disabled={loading}>
-                Create
-            </button>
-            {_path}
         </div>
     )
 }
