@@ -3,7 +3,7 @@ import json
 from contextlib import asynccontextmanager
 import os
 from time import sleep
-from typing import Dict
+from typing import Dict, List
 
 import fastapi
 from devon.environment.agent import TaskAgent
@@ -113,6 +113,7 @@ app.add_middleware(
 )
 
 session_buffers: Dict[str, str] = {}
+running_sessions: List[str] = []
 
 
 def get_user_input(session: str):
@@ -168,12 +169,16 @@ def create_session(session: str, path: str):
 def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404,detail="Session not found" )
+    
+    if session in running_sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session already running")
 
     sessions[session].enter()
     sessions[session].event_log.append(
         Event(type="Task", content="ask user for what to do")
     )
     background_tasks.add_task(sessions[session].step_event)
+    running_sessions.append(session)
     return session
 
 

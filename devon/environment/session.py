@@ -70,6 +70,21 @@ Task
 - Content: The next task/object the agent has to complete
 - Next: ModelResponse
 
+Event Transitions
+```
+stateDiagram
+    [*] --> ModelResponse
+    ModelResponse --> ToolResponse: Action parsed, tool chosen
+    ModelResponse --> UserRequest: User response requested
+    ToolResponse --> ModelResponse: Tool response as observation
+    UserRequest --> ModelResponse: User input as ToolRequest
+    Interrupt --> ModelResponse: Model interrupted
+    ModelResponse --> Task: Next task/object to complete
+    Task --> ModelResponse
+    User --> Interrupt
+    User --> UserRequest
+    ModelResponse --> [*]: Stop
+```
 
 """
 
@@ -94,7 +109,6 @@ class Event(TypedDict):
     type: str  # types: ModelResponse, ToolResponse, UserRequest, Interrupt, Stop
     content: str
     identifier: str | None
-    user_input: Any
 
 
 class Session:
