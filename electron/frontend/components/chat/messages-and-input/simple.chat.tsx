@@ -153,6 +153,7 @@ export function SimpleChat({
                         scrollToBottom={scrollToBottom}
                     /> */}
                         <RegularInput
+                            sessionId={id}
                             isAtBottom={isAtBottom}
                             scrollToBottom={scrollToBottom}
                         />

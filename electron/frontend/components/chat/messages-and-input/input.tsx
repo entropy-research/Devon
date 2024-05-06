@@ -7,6 +7,7 @@ import { useComingSoonToast } from '@/components/ui/use-toast'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import { nanoid } from 'nanoid'
 import { UserMessage } from '@/components/vercel-chat/message'
+import useCreateResponse from '@/lib/services/sessionService/use-create-response'
 
 export function VercelInput({
     isAtBottom,
@@ -91,13 +92,14 @@ export function VercelInput({
     )
 }
 
-
 export function RegularInput({
     isAtBottom,
     scrollToBottom,
+    sessionId,
 }: {
     isAtBottom: boolean
     scrollToBottom: () => void
+    sessionId: string
 }) {
     const [focused, setFocused] = useState(false)
     const toast = useComingSoonToast()
@@ -107,12 +109,10 @@ export function RegularInput({
     // const [_, setMessages] = useUIState<typeof AI>()
     const [messages, setMessages] = useState<any[]>([])
     // const { submitUserMessage } = useActions()
+    const { createResponse, responseData, loading, error } = useCreateResponse()
 
-    function submitUserMessage(value: string) {
-        return {
-            id: nanoid(),
-            display: <UserMessage>{value}</UserMessage>,
-        }
+    async function submitUserMessage(value: string) {
+        return createResponse(sessionId, value)
     }
 
     return (
