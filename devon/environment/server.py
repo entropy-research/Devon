@@ -201,7 +201,7 @@ def delete_session(session: str):
 
 @app.get("/session/{session}/events")
 def read_events(session: str):
-    return sessions[session].event_log
+    return sessions.get(session,None).event_log
 
 
 @app.get("/session/{session}/events/stream")
