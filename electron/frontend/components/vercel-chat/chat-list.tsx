@@ -133,20 +133,22 @@ Task
 const DisplayedChatMessage = ({ message }) => {
     return (
         <div className="mb-8">
-            {message.type === 'ModelResponse' ? (
-                <BotMessage content={`Model: ${message.content}`} />
-            ) : message.type === 'ToolResponse' ? (
-                <ChatTypeWrapper type="Tool Response">{message.content}</ChatTypeWrapper>
-            ) : message.type === 'UserRequest' ? (
+            {message.type === 'agent' ? (
+                <BotMessage content={message.text}></BotMessage>
+            ) : message.type === 'command' ? (
+                <ChatTypeWrapper type="Command">{message.text}</ChatTypeWrapper>
+            ) : message.type === 'tool' ? (
+                <ChatTypeWrapper type="Tool Response">
+                    {message.text}
+                </ChatTypeWrapper>
+            ) : message.type === 'user' ? (
                 <UserMessage>{message.content}</UserMessage>
-            ) : message.type === 'Interrupt' ? (
-                <ChatTypeWrapper type="Interrupt">{message.content}</ChatTypeWrapper>
-            ) : message.type === 'Stop' ? (
-                <ChatTypeWrapper type="Stop">{message.content}</ChatTypeWrapper>
-            ) : message.type === 'Task' ? (
-                <ChatTypeWrapper type="Task">{message.content}</ChatTypeWrapper>
+            ) : message.type === 'task' ? (
+                <ChatTypeWrapper type="Task">{message.text}</ChatTypeWrapper>
             ) : (
-                <ChatTypeWrapper type="(Type not found)">{message.content}</ChatTypeWrapper>
+                <ChatTypeWrapper type="(Type not found)">
+                    {message.content}
+                </ChatTypeWrapper>
             )}
         </div>
     )
@@ -154,9 +156,9 @@ const DisplayedChatMessage = ({ message }) => {
 
 const ChatTypeWrapper = ({ type, children }) => {
     return (
-        <span className="flex">
-            <p className="font-bold mr-2">{type}:</p>
+        <p>
+            <span className="font-bold mr-2">{type}:</span>
             {children}
-        </span>
+        </p>
     )
 }

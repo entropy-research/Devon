@@ -33,10 +33,12 @@ const SelectProjectDirectoryModal = ({ trigger }) => {
 
     function handleStartChat() {
         async function session() {
-            const projectPath =
-                '/Users/josh/Documents/cs/entropy/Devon/examples'
-            const newSessionId = await createSession(projectPath)
-            handleNavigate(newSessionId)
+            try {
+                const newSessionId = await createSession(folderPath)
+                handleNavigate(newSessionId)
+            } catch (error) {
+                console.error('Error starting session:', error)
+            }
         }
         session()
         setOpen(false)

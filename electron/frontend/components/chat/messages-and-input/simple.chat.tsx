@@ -37,11 +37,8 @@ export function SimpleChat({
     session,
     missingKeys,
 }: { viewOnly: boolean } & ChatProps) {
-    const router = useRouter()
     const path = usePathname()
     const [messages, setMessages] = useState<Message[]>([])
-    // const [messages] = useUIState()
-    // const [aiState, setAIState] = useAIState()
     const {
         messagesRef,
         scrollRef,
@@ -50,11 +47,11 @@ export function SimpleChat({
         scrollToBottom,
     } = useScrollAnchor()
     const { toast } = useToast()
-
     const [_, setNewChatId] = useLocalStorage('newChatId', id)
 
-    // const { createSession, sessionId, loading, error } = useCreateSession()
-    // const [_path, setPath] = useState('')
+    // Clean later
+    const [userRequested, setUserRequested] = useState(false);
+
 
     // TODO: Actually use this to load chat from backend
     useEffect(() => {
@@ -68,29 +65,22 @@ export function SimpleChat({
     useEffect(() => {
         if (!id) return
         const fetchAndUpdateMessages = () => {
-            console.log('Fetching session events...')
             fetchSessionEvents(id)
                 .then(data => {
-                    setMessages(data)
+                    const parsedMessages = handleEvents(data, setUserRequested);
+                    setMessages(parsedMessages)
                 })
                 .catch(error => {
                     console.error('Error fetching session events:', error)
                 })
         }
 
-        const intervalId = setInterval(fetchAndUpdateMessages, 5000)
+        const intervalId = setInterval(fetchAndUpdateMessages, 2000)
 
         return () => {
             clearInterval(intervalId)
         }
     }, [id, messages])
-
-    // useEffect(() => {
-    //     const messagesLength = aiState.messages?.length
-    //     if (messagesLength === 2) {
-    //         router.refresh()
-    //     }
-    // }, [aiState.messages, router])
 
     useEffect(() => {
         setNewChatId(id)
@@ -103,13 +93,6 @@ export function SimpleChat({
             })
         })
     }, [toast, missingKeys])
-
-    // const handleSubmit = e => {
-    //     e.preventDefault()
-    //     const projectPath = '/Users/josh/Documents/cs/entropy/Devon/examples'
-    //     setPath(projectPath)
-    //     createSession(projectPath)
-    // }
 
     return (
         <div className="flex flex-col flex-2 relative h-full" ref={scrollRef}>
@@ -163,4 +146,72 @@ export function SimpleChat({
             {/* <EventStream sessionId={'1'} /> */}
         </div>
     )
+}
+
+
+
+type Event = {
+	type: "ModelResponse" | "ToolResponse" | "Task" | "Interrupt" | "UserRequest" | "Stop",
+	content: string,
+	identifier: string | null
+}
+
+type Message = {
+	text: string,
+	type: "user" | "agent" | "command" | "tool" | "task"
+}
+
+
+const handleEvents = (events: Event[], setUserRequested: (value: boolean) => void) => {
+	const messages : Message[] = []
+	for (const event of events) {
+        const type = event.type
+		// console.log("EVENT", event["content"]);
+		if (type == "ModelResponse") {
+			// Model response content is in format <THOUGHT>{thought}</THOUGHT><COMMAND>{command}</COMMAND>
+			if (event.content) {
+			const thoughtMatch = event.content.split("<THOUGHT>")?.pop()?.split("</THOUGHT>")[0];
+			const commandMatch = event.content.split("<COMMAND>").pop()?.split("</COMMAND>")[0];
+			// console.log("THOUGHT", thoughtMatch);
+			// console.log("COMMAND", commandMatch);
+			const thought = thoughtMatch ? thoughtMatch : '';
+			const command = commandMatch ? commandMatch : '';
+
+
+			
+			// split command by space
+			
+			let command_split = command?.split(' ') ?? ["",""];
+			let command_name = command_split[0];
+			let command_args = command_split.slice(1).join(' ');
+
+			if (command_name == "ask_user") {
+				messages.push({text: command_args, type: "agent"});
+			}
+			else {
+				messages.push({text: thought ?? "", type: "agent"});
+				messages.push({text: command ?? "", type: "command"});
+			}
+
+		}
+	}
+
+		if (type == "ToolResponse") {
+			messages.push({text: event.content, type: "tool"});
+		}
+
+		if (type == "Task") {
+			messages.push({text: event.content, type: "task"});
+		}
+
+		if (type == "Interrupt") {
+			messages.push({text: event.content, type: "user"});
+		}
+
+		if (type == "UserRequest") {
+			setUserRequested(true);
+		}
+ 
+	}
+	return messages
 }

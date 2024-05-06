@@ -18,7 +18,6 @@ const SessionEventsDisplay = ({ sessionId, setMessages }) => {
             console.error('Error loading session events:', error)
         }
         if (events) {
-            console.log('Session events:', events)
             setMessages(events)
         }
     }, [isLoading, error])

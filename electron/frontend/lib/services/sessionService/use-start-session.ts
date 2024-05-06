@@ -13,12 +13,21 @@ const useStartSession = () => {
         setError(null)
         try {
             if (!sessionId) throw new Error('Session ID is required')
-            // If a session is already started, it will return a 404
+            // If a session is already started, it will return a 304
             const response = await axios.post(
                 `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/start`
             )
-            setSessionStarted(true) // Assuming you might want to know if the session was started successfully
+            setSessionStarted(true)
         } catch (err) {
+            if (err.response && err.response.status === 304) {
+                setSessionStarted(true)
+                return 'Session already running'
+            }
+            throw new Error(
+                err.response
+                    ? err.response.data.detail
+                    : 'An unknown error occurred'
+            )
             setError(err.message || 'Unknown error')
             setSessionStarted(false)
         } finally {

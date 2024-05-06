@@ -255,5 +255,5 @@ export function handleNavigate(sessionId: string) {
     // Because dynamic routes don't work, I'm pushing the session ID to the query string and forcing refresh
     // TODO: Fix dynamic routes so this isn't necessary - hard part is that it creates static build
     window.history.replaceState({}, '', `?chat=${sessionId}`)
-    // window.location.reload()
+    window.location.reload()
 }
