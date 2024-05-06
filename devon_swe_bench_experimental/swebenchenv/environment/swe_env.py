@@ -41,7 +41,7 @@ from swebench import (
 )
 from typing import List, Optional, Tuple
 
-from devon_agent.agent.clients.client import GPT4, ClaudeSonnet, Message
+from devon_agent.agent.clients.client import GPT4, ClaudeSonnet, Message, ClaudeOpus
 
 LONG_TIMEOUT = 500
 PATH_TO_REQS = "/root/requirements.txt"
@@ -65,8 +65,6 @@ data_handler = logging.FileHandler('udiff_data.log')
 
 diff_logger.setLevel(logging.DEBUG)
 diff_logger.addHandler(data_handler)
-
-
 
 class TableCache():
 
@@ -122,10 +120,9 @@ class SWEEnv(gym.Env):
         self.class_table = ClassTable()
         self.function_table = FunctionTable()
         self.table_cache = TableCache(dir="table_cache", function_table=self.function_table, class_table=self.class_table)
+        self.TESTING_TIPS = None
 
         print(self.container_name)
-        anth_api_key=os.environ.get("ANTHROPIC_API_KEY")
-        anthrpoic_client = Anthropic(api_key=anth_api_key)
         
         # self.diff_model = ClaudeSonnet(client=anthrpoic_client, system_message=UnifiedDiffPrompts.main_system_v2, max_tokens=4096)
 
@@ -776,6 +773,50 @@ class SWEEnv(gym.Env):
     #     return json.dumps(self._list_files_recursive([abs_path])["directory_tree"])
 
     #TOOL FUNCTIONS
+
+#     def get_testing_instructions(self):
+#         """
+#     DESCRIPTION
+#         The get_testing_instructions command defines instructions REQURIED for running tests.
+#         ALWAYS call this before creating reproduce.py
+#         """
+#         if not self.TESTING_TIPS:
+#             anth_api_key=os.environ.get("ANTHROPIC_API_KEY")
+#             anthropic_client = Anthropic(api_key=anth_api_key)
+
+#             model = ClaudeOpus(client=anthropic_client, system_message="""
+# You are an expert open source developer and a helpful assistant to the user.
+
+# The user will ask for help with testing, your job is to respond with pseudo code for the simplest generic way to test in the code base
+
+# Make sure you cover ALL setup steps AND required imports
+
+# The user will write their code in a file called reproduce.py and will run it with `python reproduce.py`. The ONLY command the user will run is python reproduce.py
+# """, max_tokens=4096)
+
+#             res = model.chat(
+#                 messages=[
+#                     # Message(
+#                     #     role="user",
+#                     #     content=f"I am new to programming and I need help with writing tests for the following github issue ({self.record['instance_id']}) so that I can test it {self.record['problem_statement']} please succinctly describe a generic approach for writing the test code in this repo."
+#                     # ),
+#                     Message(
+#                         role="user",
+#                         content=f"""I am new to programming and I need help with writing tests for the following github issue ({self.record['instance_id']}) so that I can test it
+
+# Please describe a generic approach for writing the test code in this repo.
+
+# Make sure it covers all set up steps. I will only write code in reproduce.py. This is the ONLY file I have access to.
+
+# I am writing my test code in a file called reproduce.py and will run it with `python reproduce.py`"""
+#                     )
+#                 ]
+#             )
+
+#             self.TESTING_TIPS = res
+
+#         return self.TESTING_TIPS
+
 
     def open_file(self, file_path: str):
         """
@@ -1730,6 +1771,7 @@ EXAMPLES
             self.close_file,
             self.create_file,
             self.open_file,
+            # self.get_testing_instructions,
             # self.view_open_files,
             self.search_dir,
             self.find_function,
@@ -1813,14 +1855,21 @@ EXAMPLES
                     args.extend([arg.strip('"').strip("'") for arg in after_multiline.split()])
             else:
                 # Handle single line arguments
+                lines = command.strip().splitlines()
+                if len(lines) > 1:
+                    raise Exception("Env Error: More than one command found")
                 temp_pre = re.findall(r'(?:[^\s"]+|"[^"]*")+', arg_string)
                 args = [arg.strip('"').strip("'") for arg in temp_pre]
 
         return fn_name, args
 
     def parse_command_to_function(self, command_string: str, thought: str):
+        try:
+            fn_name, args = self.parse_command(command_string)
+        except Exception as e:
+            logger.error(traceback.print_exc())
+            return e.args[0] + "\n Remember to only use ONE command at a time."
 
-        fn_name, args = self.parse_command(command_string)
         if fn_name in ["vim","nano"]:
             return "Interactive Commands are not allowed"
 
@@ -1833,6 +1882,7 @@ EXAMPLES
             self.close_file,
             self.create_file,
             self.open_file,
+            # self.get_testing_instructions,
             # self.view_open_files,
             self.search_dir,
             self.find_function,
