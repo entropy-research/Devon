@@ -4,7 +4,7 @@ import traceback
 from dataclasses import dataclass
 from typing import Any, List, TypedDict
 
-from devon.environment.agent import Agent
+from devon.environment.agent import Agent, TaskAgent
 from devon.environment.environment import LocalEnvironment
 from devon.environment.prompt import parse_response
 from devon.environment.tools import (
@@ -179,7 +179,7 @@ class Session:
                 environment=data["environment"],
                 user_input=data["user_input"],
             ),
-            agent=Agent(
+            agent=TaskAgent(
                 name=data["agent"]["name"],
                 model=data["agent"]["model"],
                 temperature=data["agent"]["temperature"],
@@ -188,6 +188,7 @@ class Session:
         )
 
         instance.state = DotDict(data["state"])
+        instance.state.editor = {}
         instance.event_log = data["event_history"]
         instance.environment.communicate("cd " + data["cwd"])
 
