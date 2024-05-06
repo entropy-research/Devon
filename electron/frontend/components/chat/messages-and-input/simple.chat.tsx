@@ -18,7 +18,9 @@ import { Chat } from '@/lib/chat.types'
 import { AI } from '@/lib/chat/chat.actions'
 import EventStream from '@/components/event-stream'
 import useCreateSession from '@/lib/services/sessionService/use-create-session'
-import useFetchSessionEvents from '@/lib/services/sessionService/use-fetch-session-events'
+import useFetchSessionEvents, {
+    fetchSessionEvents,
+} from '@/lib/services/sessionService/use-fetch-session-events'
 import SessionEventsDisplay from '@/components/events'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -51,15 +53,8 @@ export function SimpleChat({
 
     const [_, setNewChatId] = useLocalStorage('newChatId', id)
 
-    const { createSession, sessionId, loading, error } = useCreateSession()
-    const [_path, setPath] = useState('')
-
-    const {
-        data: events,
-        isLoading,
-        isError,
-        error: fetchError,
-    } = useFetchSessionEvents(sessionId)
+    // const { createSession, sessionId, loading, error } = useCreateSession()
+    // const [_path, setPath] = useState('')
 
     // TODO: Actually use this to load chat from backend
     useEffect(() => {
@@ -71,8 +66,24 @@ export function SimpleChat({
     }, [id, path, session?.user, messages])
 
     useEffect(() => {
-        setMessages(events)
-    }, [events])
+        if (!id) return
+        const fetchAndUpdateMessages = () => {
+            console.log('Fetching session events...')
+            fetchSessionEvents(id)
+                .then(data => {
+                    setMessages(data)
+                })
+                .catch(error => {
+                    console.error('Error fetching session events:', error)
+                })
+        }
+
+        const intervalId = setInterval(fetchAndUpdateMessages, 5000)
+
+        return () => {
+            clearInterval(intervalId)
+        }
+    }, [id, messages])
 
     // useEffect(() => {
     //     const messagesLength = aiState.messages?.length
@@ -93,12 +104,12 @@ export function SimpleChat({
         })
     }, [toast, missingKeys])
 
-    const handleSubmit = e => {
-        e.preventDefault()
-        const projectPath = '/Users/josh/Documents/cs/entropy/Devon/examples'
-        setPath(projectPath)
-        createSession(projectPath)
-    }
+    // const handleSubmit = e => {
+    //     e.preventDefault()
+    //     const projectPath = '/Users/josh/Documents/cs/entropy/Devon/examples'
+    //     setPath(projectPath)
+    //     createSession(projectPath)
+    // }
 
     return (
         <div className="flex flex-col flex-2 relative h-full" ref={scrollRef}>

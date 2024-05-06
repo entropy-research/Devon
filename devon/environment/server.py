@@ -171,7 +171,7 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
         raise fastapi.HTTPException(status_code=404,detail="Session not found" )
     
     if session in running_sessions:
-        raise fastapi.HTTPException(status_code=404, detail="Session already running")
+        raise fastapi.HTTPException(status_code=304, detail="Session already running")
 
     sessions[session].enter()
     sessions[session].event_log.append(

@@ -2,6 +2,7 @@ import FolderPicker from '@/components/ui/folder-picker'
 import { useState, lazy } from 'react'
 import { Button } from '@/components/ui/button'
 import useCreateSession from '@/lib/services/sessionService/use-create-session'
+import { handleNavigate } from '@/components/sidebar'
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -31,9 +32,14 @@ const SelectProjectDirectoryModal = ({ trigger }) => {
     }
 
     function handleStartChat() {
+        async function session() {
+            const projectPath =
+                '/Users/josh/Documents/cs/entropy/Devon/examples'
+            const newSessionId = await createSession(projectPath)
+            handleNavigate(newSessionId)
+        }
+        session()
         setOpen(false)
-        const projectPath = '/Users/josh/Documents/cs/entropy/Devon/examples'
-        createSession(projectPath)
     }
 
     return (

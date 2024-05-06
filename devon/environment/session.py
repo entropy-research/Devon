@@ -3,8 +3,7 @@ import logging
 import traceback
 from dataclasses import dataclass
 from typing import Any, List, TypedDict
-
-from devon.environment.agent import Agent, TaskAgent
+from devon.environment.agent import TaskAgent
 from devon.environment.environment import LocalEnvironment
 from devon.environment.prompt import parse_response
 from devon.environment.tools import (

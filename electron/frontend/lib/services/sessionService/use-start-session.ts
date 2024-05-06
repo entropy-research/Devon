@@ -13,6 +13,7 @@ const useStartSession = () => {
         setError(null)
         try {
             if (!sessionId) throw new Error('Session ID is required')
+            // If a session is already started, it will return a 404
             const response = await axios.post(
                 `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/start`
             )

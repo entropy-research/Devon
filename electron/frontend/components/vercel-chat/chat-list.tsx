@@ -8,6 +8,7 @@ import {
     BotMessage,
 } from '@/components/vercel-chat/message'
 import { SpinnerMessage, UserMessage } from '@/components/vercel-chat/message'
+import Chat from '../chat/chat'
 
 export interface ChatList {
     messages: UIState
@@ -103,14 +104,59 @@ export function ChatList2({ messages, session, isShared }: ChatList2) {
     )
 }
 
+/**
+ModelResponse
+- Content: Response by the model (currently in the format <THOUGHT></THOUGHT><ACTION></ACTION>)
+- Next: The action is parsed and the right tool is chosen or user response is requested
+
+ToolResponse
+- Content: Response from the tool
+- Next: The model is called with the reponse as the observation
+
+UserRequest
+- Content: User input
+- Next: The output is sent as ToolRequest
+
+Interrupt
+- Content: The interrupt message
+- Next: ModelResponse, the model is interrupted
+
+Stop
+- Content: None
+- Next: None
+
+Task
+- Content: The next task/object the agent has to complete
+- Next: ModelResponse
+
+ */
 const DisplayedChatMessage = ({ message }) => {
     return (
         <div className="mb-8">
-            {message.type === 'Task' ? (
-                <BotMessage content={message.content} />
-            ) : (
+            {message.type === 'ModelResponse' ? (
+                <BotMessage content={`Model: ${message.content}`} />
+            ) : message.type === 'ToolResponse' ? (
+                <ChatTypeWrapper type="Tool Response">{message.content}</ChatTypeWrapper>
+            ) : message.type === 'UserRequest' ? (
                 <UserMessage>{message.content}</UserMessage>
+            ) : message.type === 'Interrupt' ? (
+                <ChatTypeWrapper type="Interrupt">{message.content}</ChatTypeWrapper>
+            ) : message.type === 'Stop' ? (
+                <ChatTypeWrapper type="Stop">{message.content}</ChatTypeWrapper>
+            ) : message.type === 'Task' ? (
+                <ChatTypeWrapper type="Task">{message.content}</ChatTypeWrapper>
+            ) : (
+                <ChatTypeWrapper type="(Type not found)">{message.content}</ChatTypeWrapper>
             )}
         </div>
+    )
+}
+
+const ChatTypeWrapper = ({ type, children }) => {
+    return (
+        <span className="flex">
+            <p className="font-bold mr-2">{type}:</p>
+            {children}
+        </span>
     )
 }
