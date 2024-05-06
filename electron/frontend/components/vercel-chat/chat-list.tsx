@@ -131,35 +131,41 @@ Task
 
  */
 const DisplayedChatMessage = ({ message }) => {
-    if (message.type === 'command') {
-        // console.log(message)
-    }
     return (
-        <div className="mb-8">
-            {message.type === 'agent' ? (
-                <BotMessage content={message.text}></BotMessage>
-            ) : message.type === 'command' ? (
-                <ChatTypeWrapper type="Command">{message.text}</ChatTypeWrapper>
-            ) : message.type === 'tool' ? (
-                <ChatTypeWrapper type="Tool Response">
-                    {message.text}
-                </ChatTypeWrapper>
-            ) : message.type === 'user' ? (
-                <UserMessage>{message.content}</UserMessage>
-            ) : message.type === 'task' ? (
-                <ChatTypeWrapper type="Task">{message.text}</ChatTypeWrapper>
-            ) : (
-                <ChatTypeWrapper type="(Type not found)">
-                    {message.content}
-                </ChatTypeWrapper>
-            )}
-        </div>
+        message.type && (
+            <div className="mb-8">
+                {message.type === 'agent' ? (
+                    <BotMessage content={message.text}></BotMessage>
+                ) : message.type === 'command' ? (
+                    <ChatTypeWrapper type="Command">
+                        {message.text}
+                    </ChatTypeWrapper>
+                ) : message.type === 'tool' ? (
+                    <ChatTypeWrapper type="Tool Response">
+                        {message.text}
+                    </ChatTypeWrapper>
+                ) : message.type === 'user' ? (
+                    <UserMessage>{message.content}</UserMessage>
+                ) : message.type === 'task' ? (
+                    <div className="border border-2 border-gray p-2 px-4 rounded-md">
+                        <ChatTypeWrapper type="Task" className="text-gray-400 italic">
+                            {message.text}
+                        </ChatTypeWrapper>
+                    </div>
+                ) : (
+                    // <ChatTypeWrapper type="(Type not found)">
+                    //     {message.content}
+                    // </ChatTypeWrapper>
+                    <></>
+                )}
+            </div>
+        )
     )
 }
 
-const ChatTypeWrapper = ({ type, children }) => {
+const ChatTypeWrapper = ({ type, children, className }: { type: string, children: any, className?: string}) => {
     return (
-        <p>
+        <p className={className}>
             <span className="font-bold mr-2">{type}:</span>
             {children}
         </p>

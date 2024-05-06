@@ -183,18 +183,15 @@ const handleEvents = (
                     .split('<COMMAND>')
                     .pop()
                     ?.split('</COMMAND>')[0]
-                // console.log("THOUGHT", thoughtMatch);
-                // console.log("COMMAND", commandMatch);
                 const thought = thoughtMatch ? thoughtMatch : ''
                 const command = commandMatch ? commandMatch : ''
 
                 // split command by space
 
                 let command_split = command?.split(' ') ?? ['', '']
-                console.log(command_split)
                 let command_name = command_split[0].trim()
                 let command_args = command_split.slice(1).join(' ')
-                let trimmedStr = command_args.replace(/^['"]+|['"]+$/g, '')
+                let trimmedStr = command_args.trim().replace(/^['"]+|['"]+$/g, '')
 
                 if (command_name == 'ask_user') {
                     messages.push({ text: trimmedStr, type: 'agent' })
