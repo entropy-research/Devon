@@ -152,10 +152,10 @@ const SidebarChatLogs = () => {
 
     async function deleteChat(sessionId: string) {
         try {
-            await deleteSession(sessionId);  // Wait for the delete operation to complete
-            await refreshSessions();  // Then refresh the list of sessions
+            await deleteSession(sessionId) // Wait for the delete operation to complete
+            await refreshSessions() // Then refresh the list of sessions
         } catch (error) {
-            console.error('Failed to delete or refresh sessions:', error);
+            console.error('Failed to delete or refresh sessions:', error)
             // TODO: Optionally set an error state here and show it in the UI
         }
     }
@@ -187,10 +187,10 @@ const SidebarChatLogs = () => {
                                     <Ellipsis size={24} className="pt-1" />
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent className="bg-night w-fit min-w-[180px]">
+                            <PopoverContent className="bg-night w-fit p-0">
                                 <button
                                     onClick={() => deleteChat(session)}
-                                    className="flex gap-2 justify-center items-center px-1"
+                                    className="flex gap-2 justify-start items-center min-w-[180px] p-4"
                                 >
                                     <Trash size={16} /> Delete chat
                                 </button>
