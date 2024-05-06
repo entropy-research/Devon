@@ -8,6 +8,8 @@ import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import { nanoid } from 'nanoid'
 import { UserMessage } from '@/components/vercel-chat/message'
 import useCreateResponse from '@/lib/services/sessionService/use-create-response'
+import { useSearchParams } from 'next/navigation'
+import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 
 export function VercelInput({
     isAtBottom,
@@ -23,6 +25,11 @@ export function VercelInput({
     const [input, setInput] = useState('')
     const [_, setMessages] = useUIState<typeof AI>()
     const { submitUserMessage } = useActions()
+
+    function handleFocus() {
+        setFocused(true)
+        console.log('focus')
+    }
 
     return (
         <div className="relative grid align-middle px-5 pb-7 mt-8">
@@ -63,7 +70,7 @@ export function VercelInput({
                     <AutoresizeTextarea
                         ref={inputRef}
                         placeholder="Give Devon a task to work on ..."
-                        onFocus={() => setFocused(true)}
+                        onFocus={handleFocus}
                         onBlur={() => setFocused(false)}
                         rows={1}
                         onKeyDown={onKeyDown}
@@ -111,8 +118,21 @@ export function RegularInput({
     // const { submitUserMessage } = useActions()
     const { createResponse, responseData, loading, error } = useCreateResponse()
 
+    // For blocking user with modal
+    const searchParams = useSearchParams()
+    const [openProjectModal, setOpenProjectModal] = useState(false)
+
     async function submitUserMessage(value: string) {
         return createResponse(sessionId, value)
+    }
+
+    function handleFocus() {
+        setFocused(true)
+        const chatId = searchParams.get('chat')
+        // If it's a new chat, open the project modal
+        if (chatId && chatId === 'New') {
+            setOpenProjectModal(true)
+        }
     }
 
     return (
@@ -154,7 +174,7 @@ export function RegularInput({
                     <AutoresizeTextarea
                         ref={inputRef}
                         placeholder="Give Devon a task to work on ..."
-                        onFocus={() => setFocused(true)}
+                        onFocus={handleFocus}
                         onBlur={() => setFocused(false)}
                         rows={1}
                         onKeyDown={onKeyDown}
@@ -179,6 +199,10 @@ export function RegularInput({
                     </button>
                 </div>
             </form>
+            <SelectProjectDirectoryModal
+                openProjectModal={openProjectModal}
+                setOpenProjectModal={setOpenProjectModal}
+            />
         </div>
     )
 }

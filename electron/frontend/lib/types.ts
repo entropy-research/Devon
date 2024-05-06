@@ -3,4 +3,8 @@ enum ViewMode {
     Grid,
 }
 
-export { ViewMode }
+enum LocalStorageKey {
+    'hasAcceptedCheckbox' = 'hasAcceptedCheckbox',
+}
+
+export { ViewMode, LocalStorageKey }

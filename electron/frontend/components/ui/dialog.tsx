@@ -44,6 +44,11 @@ const DialogContent = React.forwardRef<
                 className
             )}
             {...props}
+            onInteractOutside={e => {
+                if (props.hideclose === 'true') {
+                    e.preventDefault()
+                }
+            }}
         >
             {children}
             {props.hideclose === 'true' ? null : (

@@ -117,23 +117,30 @@ export default function Sidebar() {
 }
 
 const SidebarHeader = ({ expanded }: { expanded: boolean }) => {
+    const handleClick = e => {
+        e.preventDefault()
+        window.location.href = '/?chat=New' // Change the location
+        // window.location.reload() // Force a reload
+    }
     return (
         <div
             className={`flex flex-row ${expanded && 'border-b border-outline-day dark:border-outline-night mx-2'} pb-4 items-center justify-between`}
         >
-            <Link href="/" className="flex">
-                <Bot className="text-primary" />
-                {expanded && (
-                    <h1 className="text-lg font-semibold mx-3">Devon</h1>
-                )}
-            </Link>
-            <SelectProjectDirectoryModal
-                trigger={
-                    <button className={expanded ? 'visible' : 'hidden'}>
-                        <SquarePen size={20} className="text-primary" />
-                    </button>
-                }
-            />
+            <>
+                <a href="/?chat=New" onClick={handleClick} className="flex">
+                    <Bot className="text-primary" />
+                    {expanded && (
+                        <h1 className="text-lg font-semibold mx-3">Devon</h1>
+                    )}
+                </a>
+                <SelectProjectDirectoryModal
+                    trigger={
+                        <button className={expanded ? 'visible' : 'hidden'}>
+                            <SquarePen size={20} className="text-primary" />
+                        </button>
+                    }
+                />
+            </>
         </div>
     )
 }
@@ -252,8 +259,24 @@ function SidebarItem({
 }
 
 export function handleNavigate(sessionId: string) {
-    // Because dynamic routes don't work, I'm pushing the session ID to the query string and forcing refresh
-    // TODO: Fix dynamic routes so this isn't necessary - hard part is that it creates static build
-    window.history.replaceState({}, '', `?chat=${sessionId}`)
-    window.location.reload()
+    const currentUrl = window.location.href
+    const pathname = window.location.pathname
+    const search = window.location.search
+
+    // Determine if the current URL is the root or specifically the chat query
+    const isRootOrChat =
+        pathname === '/' && (!search || search === `?chat=${sessionId}`)
+
+    if (isRootOrChat) {
+        // If we're already at the root and the session ID in the query matches or there's no query, just reload
+        window.location.reload()
+    } else {
+        // Otherwise, replace the state to include `?chat={sessionId}` and reload
+        window.history.replaceState(
+            {},
+            '',
+            `/${search ? `?chat=${sessionId}` : ''}`
+        )
+        window.location.reload()
+    }
 }

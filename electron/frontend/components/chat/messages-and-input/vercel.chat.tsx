@@ -10,7 +10,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Message } from '@/lib/chat/chat.actions'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
 import SuggestionContainer from './suggestion-container'
-import Input from './input'
+import { VercelInput } from './input'
 import { useToast } from '@/components/ui/use-toast'
 import { ButtonScrollToBottom } from './button-scroll-to-bottom'
 import { getChatById, getChats, createChat } from '@/lib/services/chatService'
@@ -161,7 +161,7 @@ export function VercelChat({
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                     />
-                    <Input
+                    <VercelInput
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                     />
