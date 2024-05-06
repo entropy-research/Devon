@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/hooks/chat.use-local-storage'
 import { nanoid } from '@/lib/chat.utils'
 import Home from './home'
-import OnboardingModal from '@/components/onboarding-modal'
+import OnboardingModal from '@/components/modals/onboarding-modal'
 
 export default function Landing({ chatProps }) {
     const router = useRouter()

@@ -45,6 +45,13 @@ export function VercelChat({
     const path = usePathname()
     const [messages] = useUIState()
     const [aiState, setAIState] = useAIState()
+    const {
+        messagesRef,
+        scrollRef,
+        visibilityRef,
+        isAtBottom,
+        scrollToBottom,
+    } = useScrollAnchor()
     const { toast } = useToast()
 
     const [_, setNewChatId] = useLocalStorage('newChatId', id)
@@ -52,6 +59,7 @@ export function VercelChat({
     const { createSession, sessionId, loading, error } = useCreateSession()
     const [_path, setPath] = useState('')
 
+    // TODO: DELETE THIS
     useEffect(() => {
         // getChats().then((res) => {
         //     console.log('chats', res)
@@ -91,6 +99,7 @@ export function VercelChat({
         })
     }, [])
 
+    // TODO: Actually use this to load chat from backend
     useEffect(() => {
         if (session?.user) {
             if (!path.includes('chat') && messages.length === 1) {
@@ -117,14 +126,6 @@ export function VercelChat({
             })
         })
     }, [toast, missingKeys])
-
-    const {
-        messagesRef,
-        scrollRef,
-        visibilityRef,
-        isAtBottom,
-        scrollToBottom,
-    } = useScrollAnchor()
 
     const handleSubmit = e => {
         e.preventDefault()

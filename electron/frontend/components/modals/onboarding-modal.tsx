@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, Suspense, lazy, Dispatch, SetStateAction } from 'react'
-import { Key } from 'lucide-react'
-import FolderPicker from '@/components/ui/folder-picker'
-import { Button } from '@/components/ui/button'
+// import { Key } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import DisabledWrapper from '@/components/ui/disabled-wrapper'
+import {
+    SelectProjectDirectoryComponent,
+    StartChatButton,
+} from '@/components/modals/select-project-directory-modal'
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -70,16 +72,14 @@ const OnboardingModal = ({
                                 Cognition Labs&apos;s Devin
                             </label>
                         </div>
-                        <DisabledWrapper disabled={!isChecked}>
-                            <div className="flex flex-col mt-10">
-                                <p className="text-xl font-bold mb-4">
-                                    Select your project directory
-                                </p>
-                                <FolderPicker
-                                    folderPath={folderPath}
-                                    setFolderPath={setFolderPath}
-                                />
-                            </div>
+                        <DisabledWrapper
+                            disabled={!isChecked}
+                            className="mt-10"
+                        >
+                            <SelectProjectDirectoryComponent
+                                folderPath={folderPath}
+                                setFolderPath={setFolderPath}
+                            />
                         </DisabledWrapper>
                         <DisabledWrapper
                             disabled={!isChecked}
@@ -100,13 +100,10 @@ const OnboardingModal = ({
                                 />
                             </div>
                         </DisabledWrapper>
-                        <Button
+                        <StartChatButton
                             disabled={!validateFields()}
-                            className="bg-primary text-white p-2 rounded-md mt-10 w-full"
                             onClick={handleStartChat}
-                        >
-                            Start Chat
-                        </Button>
+                        />
                     </div>
                 </DialogContent>
             </Dialog>

@@ -196,7 +196,7 @@ def stop_session(session: str):
 @app.delete("/session")
 def delete_session(session: str):
     del sessions[session]
-    return sessions
+    return session
 
 
 @app.get("/session/{session}/events")
@@ -227,4 +227,4 @@ async def read_events_stream(session: str):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

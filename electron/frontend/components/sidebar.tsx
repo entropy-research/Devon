@@ -2,8 +2,16 @@
 import { List, Settings, Bot, SquarePen, Trash } from 'lucide-react'
 import { useContext, createContext, useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { Ellipsis } from 'lucide-react'
 import { clearChatData } from '../lib/services/chatDataService'
 import useReadSessions from '@/lib/services/sessionService/use-read-sessions'
+import useDeleteSession from '@/lib/services/sessionService/use-delete-session'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
+import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 // import { session } from 'electron'
 
 const defaultValue = {
@@ -41,7 +49,7 @@ const sidebarItems = [
 ]
 
 export default function Sidebar() {
-    const [expanded, setExpanded] = useState(true)
+    const [expanded, setExpanded] = useState(false)
     const timerRef = useRef<NodeJS.Timeout | null>(null)
 
     function handleMouseOver() {
@@ -62,15 +70,10 @@ export default function Sidebar() {
         }, 300)
     }
 
-    function clearChatAndRefresh() {
-        clearChatData()
-        location.reload()
-    }
-
     return (
         <aside className="h-full flex flex-row">
             <nav
-                className="h-full flex flex-col bg-shade rounded-lg py-6"
+                className="h-full flex flex-col bg-shade rounded-lg py-6 max-w-[280px] w-full"
                 onMouseOver={handleMouseOver}
                 onMouseOut={handleMouseOut}
             >
@@ -88,16 +91,6 @@ export default function Sidebar() {
                                     <List className="text-primary" />
                                 </button>
                             )}
-
-                            {/* {expanded && (
-                                <button
-                                    onClick={clearChatAndRefresh}
-                                    className="flex p-3 gap-3 justify-center items-center"
-                                >
-                                    <Trash size={16} /> Clear current chat
-                                </button>
-                            )}
-                            */}
                             {expanded && <SidebarChatLogs />}
                         </div>
                         {sidebarItems.map(item => (
@@ -133,32 +126,77 @@ const SidebarHeader = ({ expanded }: { expanded: boolean }) => {
                     <h1 className="text-lg font-semibold mx-3">Devon</h1>
                 )}
             </Link>
-            {expanded && (
-                <button>
-                    <SquarePen size={20} className="text-primary" />
-                </button>
-            )}
+            <SelectProjectDirectoryModal
+                trigger={
+                    <button className={expanded ? 'visible' : 'hidden'}>
+                        <SquarePen size={20} className="text-primary" />
+                    </button>
+                }
+            />
         </div>
     )
 }
 
 const SidebarChatLogs = () => {
     const { sessions, loading, error, refreshSessions } = useReadSessions()
+    const { deleteSession } = useDeleteSession()
 
     useEffect(() => {
         refreshSessions()
     }, [])
 
+    // function clearChatAndRefresh() {
+    //     clearChatData()
+    //     location.reload()
+    // }
+
+    async function deleteChat(sessionId: string) {
+        try {
+            await deleteSession(sessionId);  // Wait for the delete operation to complete
+            await refreshSessions();  // Then refresh the list of sessions
+        } catch (error) {
+            console.error('Failed to delete or refresh sessions:', error);
+            // TODO: Optionally set an error state here and show it in the UI
+        }
+    }
+
     return (
         <div className="flex flex-col mt-2">
-            {loading && <div>Loading sessions...</div>}
-            {error && <div>Error loading sessions: {error}</div>}
+            {loading && <div className="px-2 py-2">Loading sessions...</div>}
+            {error && (
+                <div className="px-2 py-2 text-red-400">
+                    Error loading: {error}
+                </div>
+            )}
             {!loading &&
                 sessions &&
-                sessions.map((session, index) => (
-                    <button key={index} className="px-4 py-3 flex smooth-hover rounded-md">
-                        Session: {session}
-                    </button>
+                sessions.map((session: string, index: number) => (
+                    <div
+                        key={index}
+                        className="flex relative justify-between w-full group items-center smooth-hover rounded-md"
+                    >
+                        <button className="relative px-4 py-3 flex w-full">
+                            <span className="text-ellipsis">
+                                {session ? session : '(Unnamed chat)'}
+                            </span>
+                        </button>
+
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <button className="opacity-0 group-hover:opacity-100 right-0 px-1 pl-1 pr-3 group-hover:hover-opacity">
+                                    <Ellipsis size={24} className="pt-1" />
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="bg-night w-fit min-w-[180px]">
+                                <button
+                                    onClick={() => deleteChat(session)}
+                                    className="flex gap-2 justify-center items-center px-1"
+                                >
+                                    <Trash size={16} /> Delete chat
+                                </button>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 ))}
         </div>
     )
@@ -203,21 +241,6 @@ function SidebarItem({
                         expanded ? '' : 'top-2'
                     }`}
                 />
-            )}
-
-            {!expanded && (
-                <div
-                    className={`
-          absolute left-full rounded-md px-2 py-1 ml-6
-          bg-night text-sm
-          invisible opacity-20 -translate-x-3 transition-all
-          group-hover:visible group-hover:opacity-100 group-hover:translate-x-0
-          z-10
-          border border-outline-night
-      `}
-                >
-                    {text}
-                </div>
             )}
         </div>
     )

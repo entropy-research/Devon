@@ -110,4 +110,12 @@
     .smooth-hover {
         @apply transition duration-200 hover:bg-gray-100 dark:hover:bg-night;
     }
+
+    .text-ellipsis {
+        @apply overflow-hidden whitespace-nowrap overflow-ellipsis;
+    }
+
+    .hover-opacity {
+        @apply hover:opacity-70 transition duration-200
+    }
 }
