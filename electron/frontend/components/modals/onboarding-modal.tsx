@@ -78,6 +78,7 @@ const OnboardingModal = ({
                             <SelectProjectDirectoryComponent
                                 folderPath={folderPath}
                                 setFolderPath={setFolderPath}
+                                disabled={!isChecked}
                             />
                         </DisabledWrapper>
                         <DisabledWrapper
@@ -96,6 +97,7 @@ const OnboardingModal = ({
                                     type="password"
                                     value={apiKey}
                                     onChange={handleApiKeyInputChange}
+                                    disabled={!isChecked}
                                 />
                             </div>
                         </DisabledWrapper>

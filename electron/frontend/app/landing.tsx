@@ -10,7 +10,6 @@ import SelectProjectDirectoryModal from '@/components/modals/select-project-dire
 
 export default function Landing({ chatProps }) {
     const searchParams = useSearchParams()
-    const chatId = searchParams.get('chat')
     const [hasAcceptedCheckbox, setHasAcceptedCheckbox] =
         useLocalStorage<boolean>(LocalStorageKey.hasAcceptedCheckbox, false)
     const { startSession, sessionStarted, error, loading } = useStartSession()
@@ -18,12 +17,9 @@ export default function Landing({ chatProps }) {
 
     // Basically listens for change
     useEffect(() => {
+        const chatId = searchParams.get('chat')
         // Handle when the chatId is 'New', which means the session hasn't been made yet, and we should prompt the select project modal
         if (chatId && chatId === 'New') {
-            // window.history.replaceState({}, '', '/')
-
-            // window.location.reload()
-            // setOpenProjectModal(true)
             return
         }
         if (loading) {
@@ -43,7 +39,17 @@ export default function Landing({ chatProps }) {
         }
         startSession(chatId)
         chatProps.id = chatId
-    }, [loading, chatId, sessionStarted])
+    }, [loading, sessionStarted])
+
+    useEffect(() => {
+        const chatId = searchParams.get('chat')
+        if (chatId) return
+        if (hasAcceptedCheckbox) {
+            setOpenProjectModal(true)
+            window.history.replaceState({}, '', '/?chat=New')
+            
+        }
+    }, [hasAcceptedCheckbox])
 
     return (
         <>

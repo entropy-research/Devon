@@ -1,7 +1,7 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-const FolderPicker = ({ folderPath, setFolderPath }) => {
+const FolderPicker = ({ folderPath, setFolderPath, disabled }) => {
     const handleDirectoryPicker = e => {
         window.api.send('get-file-path')
     }
@@ -31,8 +31,9 @@ const FolderPicker = ({ folderPath, setFolderPath }) => {
                     className="w-[300px]"
                     value={folderPath}
                     onChange={handleInputChange}
+                    disabled={disabled}
                 />
-                <Button className="" onClick={handleDirectoryPicker}>
+                <Button className="" onClick={handleDirectoryPicker} disabled={disabled}>
                     Choose...
                 </Button>
             </div>

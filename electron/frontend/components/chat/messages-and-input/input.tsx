@@ -28,7 +28,6 @@ export function VercelInput({
 
     function handleFocus() {
         setFocused(true)
-        console.log('focus')
     }
 
     return (
@@ -126,13 +125,17 @@ export function RegularInput({
         return createResponse(sessionId, value)
     }
 
-    function handleFocus() {
-        setFocused(true)
+    function checkShouldOpenModal() {
         const chatId = searchParams.get('chat')
         // If it's a new chat, open the project modal
         if (chatId && chatId === 'New') {
             setOpenProjectModal(true)
         }
+    }
+
+    function handleFocus() {
+        setFocused(true)
+        checkShouldOpenModal()
     }
 
     return (
@@ -141,6 +144,8 @@ export function RegularInput({
                 ref={formRef}
                 onSubmit={async (e: any) => {
                     e.preventDefault()
+
+                    checkShouldOpenModal()
 
                     // Blur focus on mobile
                     if (window.innerWidth < 600) {

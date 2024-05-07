@@ -81,10 +81,12 @@ export default SelectProjectDirectoryModal
 export const SelectProjectDirectoryComponent = ({
     folderPath,
     setFolderPath,
+    disabled = false,
     className,
 }: {
     folderPath: string
     setFolderPath: (path: string) => void
+    disabled?: boolean
     className?: string
 }) => {
     return (
@@ -95,6 +97,7 @@ export const SelectProjectDirectoryComponent = ({
             <FolderPicker
                 folderPath={folderPath}
                 setFolderPath={setFolderPath}
+                disabled={disabled}
             />
         </div>
     )
