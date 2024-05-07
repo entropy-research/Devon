@@ -8,6 +8,7 @@ import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import { nanoid } from 'nanoid'
 import { UserMessage } from '@/components/vercel-chat/message'
 import useCreateResponse from '@/lib/services/sessionService/use-create-response'
+import useInterruptSession from '@/lib/services/sessionService/use-interrupt-session'
 import { useSearchParams } from 'next/navigation'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 
@@ -120,14 +121,18 @@ export function RegularInput({
     const [messages, setMessages] = useState<any[]>([])
     // const { submitUserMessage } = useActions()
     const { createResponse, responseData, loading, error } = useCreateResponse()
-
+    const { interruptSession } = useInterruptSession()
     // For blocking user with modal
     const searchParams = useSearchParams()
     const [openProjectModal, setOpenProjectModal] = useState(false)
 
     async function submitUserMessage(value: string) {
-        setUserRequested(false)
-        return createResponse(sessionId, value)
+        // Distinguish between user request vs interrupt
+        if (userRequested) {
+            setUserRequested(false)
+            return createResponse(sessionId, value)
+        }
+        return interruptSession(sessionId, value)
     }
 
     function checkShouldOpenModal() {
