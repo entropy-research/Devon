@@ -3,25 +3,32 @@ import '@xterm/xterm/css/xterm.css'
 import React, { useEffect, useRef, useState } from 'react'
 
 // import socket from "../socket/socket";
-import useFetchSessionEvents from '@/lib/services/sessionService/use-fetch-session-events'
+import { fetchSessionEvents } from '@/lib/services/sessionService/use-fetch-session-events'
 import { useSearchParams } from 'next/navigation'
 
 export default function ShellWidget() {
     const searchParams = useSearchParams()
     const chatId = searchParams.get('chat')
-    const {
-        data: events,
-        isLoading,
-        isError,
-        error,
-    } = useFetchSessionEvents(chatId === 'New' ? '' : chatId)
 
     const [messages, setMessages] = useState([])
     useEffect(() => {
-        if (events) {
-            setMessages(getOnlyToolResponse(events))
+        if (!chatId || chatId === 'New') return
+        const fetchAndUpdateMessages = () => {
+            fetchSessionEvents(chatId)
+                .then(data => {
+                    setMessages(getOnlyToolResponse(data))
+                })
+                .catch(error => {
+                    console.error('Error fetching session events:', error)
+                })
         }
-    }, [events])
+        const intervalId = setInterval(fetchAndUpdateMessages, 2000)
+
+        return () => {
+            clearInterval(intervalId)
+        }
+    }, [chatId])
+
     return <Terminal messages={messages} />
 }
 
@@ -140,7 +147,10 @@ function Terminal({ messages }): JSX.Element {
                 default
             </div>
             <div className="h-full bg-black rounded-lg">
-                <div ref={terminalRef} className="w-full px-3 pt-3 h-full overflow-scroll" />
+                <div
+                    ref={terminalRef}
+                    className="w-full px-3 pt-3 h-full overflow-scroll"
+                />
             </div>
         </div>
     )
