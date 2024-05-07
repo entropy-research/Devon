@@ -110,6 +110,11 @@ export function SimpleChat({
                         sessionId={id}
                         setMessages={setMessages}
                     />
+                    Hello
+                    {messages.length}
+                    {session}
+                    <br></br>
+                    {id}
                     {messages?.length ? (
                         // <ChatList
                         //     messages={messages}

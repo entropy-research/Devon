@@ -38,6 +38,7 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                 <AgentWorkspace
                     viewMode={viewMode}
                     toggleViewMode={toggleViewMode}
+                    chatProps={chatProps}
                 />
             )}
         </>
