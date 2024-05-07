@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from 'react'
 // import socket from "../socket/socket";
 import { fetchSessionEvents } from '@/lib/services/sessionService/use-fetch-session-events'
 import { useSearchParams } from 'next/navigation'
+import FileTabs from '@/components/file-tabs/file-tabs'
 
 export default function ShellWidget() {
     const searchParams = useSearchParams()
@@ -143,10 +144,18 @@ function Terminal({ messages }): JSX.Element {
 
     return (
         <div className="h-full flex flex-col">
-            <div className="text-sm px-4 py-2 text-lg border-b border-border">
-                default
+            <div className="flex items-center justify-start">
+            {[{ id: 1, name: 'default' }].map(file => (
+                <button
+                    key={file.id}
+                    className={`bg-black px-5 py-3 text-md border-t-4 min-w-[150px] ${file.id === 1 ? 'border-t-aqua outline outline-gray-500 outline-[1.5px] rounded-t-lg' : 'border-transparent'}`}
+                    // onClick={() => updateSelectedFile(file)}
+                >
+                    {file.name}
+                </button>
+            ))}
             </div>
-            <div className="h-full bg-black rounded-lg">
+            <div className="h-full bg-black rounded-b-lg">
                 <div
                     ref={terminalRef}
                     className="w-full px-3 pt-3 h-full overflow-scroll"
