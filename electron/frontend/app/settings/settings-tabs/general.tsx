@@ -6,23 +6,25 @@ import {
     CardDescription,
     CardHeader,
     CardContent,
-    CardFooter,
     Card,
 } from '@/components/ui/card'
 import { useLocalStorage } from '@/lib/hooks/chat.use-local-storage'
 import { LocalStorageKey } from '@/lib/types'
 import { useToast } from '@/components/ui/use-toast'
 import { useSafeStorage } from '@/lib/services/safeStorageService'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
+import { CircleHelp } from 'lucide-react'
+import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
 
 const General = () => {
     const [hasAcceptedCheckbox, setHasAcceptedCheckbox, clearKey] =
         useLocalStorage<boolean>(LocalStorageKey.hasAcceptedCheckbox, false)
     const { toast } = useToast()
-    const {
-        saveData,
-        deleteData,
-        checkHasEncryptedData,
-    } = useSafeStorage()
+    const { saveData, deleteData, checkHasEncryptedData } = useSafeStorage()
     const [key, setKey] = useState('')
     const [hasEncryptedData, setHasEncryptedData] = useState(false)
 
@@ -39,9 +41,26 @@ const General = () => {
         <div className="grid gap-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Anthropic API Key</CardTitle>
+                    <div className="flex items-center">
+                        <CardTitle>Anthropic API Key</CardTitle>
+                        <Popover >
+                            <PopoverTrigger className="ml-2 mb-2">
+                                <CircleHelp size={20} />
+                            </PopoverTrigger>
+                            {hasEncryptedData ? (
+                                <PopoverContent
+                                    side="top"
+                                    className="bg-night w-fit p-2"
+                                >
+                                    To edit, go to settings
+                                </PopoverContent>
+                            ) : (
+                                <SafeStoragePopoverContent />
+                            )}
+                        </Popover>
+                    </div>
                     {!hasEncryptedData && (
-                        <CardDescription>Enter your API key.</CardDescription>
+                        <CardDescription>Enter your API key</CardDescription>
                     )}
                 </CardHeader>
                 <CardContent>
@@ -58,7 +77,7 @@ const General = () => {
                         <div className="flex gap-4 pb-2">
                             <Input
                                 placeholder="API Key"
-                                type='password'
+                                type="password"
                                 value={key}
                                 onChange={e => setKey(e.target.value)}
                             />
