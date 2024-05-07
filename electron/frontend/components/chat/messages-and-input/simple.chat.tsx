@@ -147,6 +147,7 @@ export function SimpleChat({
                             scrollToBottom={scrollToBottom}
                             setUserRequested={setUserRequested}
                             userRequested={userRequested}
+                            modelLoading={modelLoading}
                         />
                     </div>
                 </div>
