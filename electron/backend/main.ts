@@ -1,5 +1,6 @@
 import path from 'node:path'
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import fs from 'fs'
+import { app, BrowserWindow, ipcMain, dialog, safeStorage } from 'electron'
 import log from 'electron-log'
 import electronUpdater from 'electron-updater'
 import electronIsDev from 'electron-is-dev'
@@ -8,7 +9,7 @@ import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import { Message, StoreSchema } from './types.js'
 import {
-  addMessageToHistory,
+  // addMessageToHistory,
   getConversationHistory,
 } from './electronStoreUtils.js'
 import { readFile, writeFile } from 'fs/promises'
@@ -134,6 +135,16 @@ let serverProcess: any = null
 
 app.on('ready', () => {
   new AppUpdater()
+
+  // For safeStorage of secrets
+  if (safeStorage.isEncryptionAvailable()) {
+    console.log('Encryption is available and can be used.')
+  } else {
+    console.log(
+      'Encryption is not available. Fallback mechanisms might be required.'
+    )
+  }
+
   serverProcess = spawn('poetry', [
     'run',
     'python',
@@ -316,5 +327,91 @@ ipcMain.handle('get-chat-by-id', async (event, id) => {
       return { success: false, error: error.message }
     }
     return { success: false, error: 'An unknown error occurred' }
+  }
+})
+
+// IPC handlers for encrypting and decrypting data
+ipcMain.handle('encrypt-data', async (event, plainText) => {
+  try {
+    const encrypted = safeStorage.encryptString(plainText)
+    return encrypted.toString('hex') // send as string to render process
+  } catch (error) {
+    console.error('Encryption failed:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('decrypt-data', async (event, encryptedHex) => {
+  try {
+    const encryptedBuffer = Buffer.from(encryptedHex, 'hex')
+    const decrypted = safeStorage.decryptString(encryptedBuffer)
+    return decrypted
+  } catch (error) {
+    console.error('Decryption failed:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('save-data', async (event, plainText) => {
+  if (safeStorage.isEncryptionAvailable()) {
+    const encrypted = safeStorage.encryptString(plainText)
+    const filePath = path.join(app.getPath('userData'), 'secureData.bin')
+    try {
+      fs.writeFileSync(filePath, encrypted)
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to save encrypted data:', error)
+      return { success: false, message: 'Failed to save encrypted data' }
+    }
+  } else {
+    return { success: false, message: 'Encryption not available' }
+  }
+})
+
+ipcMain.handle('load-data', async event => {
+  const filePath = path.join(app.getPath('userData'), 'secureData.bin')
+  try {
+    const encryptedData = fs.readFileSync(filePath)
+    if (safeStorage.isEncryptionAvailable()) {
+      const decrypted = safeStorage.decryptString(encryptedData)
+      return { success: true, data: decrypted }
+    } else {
+      return { success: false, message: 'Decryption not available' }
+    }
+  } catch (error) {
+    console.error('Failed to read encrypted data:', error)
+    return { success: false, message: 'Failed to read encrypted data' }
+  }
+})
+
+ipcMain.handle('check-has-encrypted-data', async event => {
+  const filePath = path.join(app.getPath('userData'), 'secureData.bin')
+  try {
+    await fs.promises.access(filePath, fs.constants.F_OK)
+    if (safeStorage.isEncryptionAvailable()) {
+      return { success: true }
+    } else {
+      return { success: false, message: 'Data not available' }
+    }
+  } catch (error) {
+    // This just means the file doesn't exist
+    // console.error('Failed to get encrypted data:', error)
+    return { success: false, message: 'Failed to get encrypted data' }
+  }
+})
+
+ipcMain.handle('delete-encrypted-data', async event => {
+  const filePath = path.join(app.getPath('userData'), 'secureData.bin')
+  try {
+    // Check if file exists before attempting to delete
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath) // Delete the file
+      return { success: true, message: 'Encrypted data deleted successfully.' }
+    } else {
+      return { success: false, message: 'File does not exist.' }
+    }
+  } catch (error) {
+    console.error('Failed to delete encrypted data:', error)
+    return { success: false, message: 'Failed to delete encrypted data.' }
   }
 })

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -11,40 +12,68 @@ import {
 import { useLocalStorage } from '@/lib/hooks/chat.use-local-storage'
 import { LocalStorageKey } from '@/lib/types'
 import { useToast } from '@/components/ui/use-toast'
+import { useSafeStorage } from '@/lib/services/safeStorageService'
 
 const General = () => {
-    const [_, setHasAcceptedCheckbox, clearKey] = useLocalStorage<boolean>(
-        LocalStorageKey.hasAcceptedCheckbox,
-        false
-    )
+    const [hasAcceptedCheckbox, setHasAcceptedCheckbox, clearKey] =
+        useLocalStorage<boolean>(LocalStorageKey.hasAcceptedCheckbox, false)
     const { toast } = useToast()
+    const {
+        saveData,
+        deleteData,
+        checkHasEncryptedData,
+    } = useSafeStorage()
+    const [key, setKey] = useState('')
+    const [hasEncryptedData, setHasEncryptedData] = useState(false)
 
-    function handleLocalStorage() {
+    useEffect(() => {
+        checkHasEncryptedData().then(setHasEncryptedData)
+    }, [checkHasEncryptedData])
+
+    const handleLocalStorage = () => {
         clearKey()
-        toast({
-            title: 'Cleared!',
-        })
+        toast({ title: 'Local storage cleared!' })
     }
 
     return (
         <div className="grid gap-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>API Key</CardTitle>
-                    <CardDescription>Enter your API key.</CardDescription>
+                    <CardTitle>Anthropic API Key</CardTitle>
+                    {!hasEncryptedData && (
+                        <CardDescription>Enter your API key.</CardDescription>
+                    )}
                 </CardHeader>
                 <CardContent>
-                    <form className="flex flex-col gap-4">
-                        <Input placeholder="API Key" type="password" />
-                    </form>
+                    {hasEncryptedData ? (
+                        <div className="flex gap-4">
+                            <Input
+                                type="password"
+                                value="**********************"
+                                disabled
+                            />
+                            <Button onClick={deleteData}>Delete API Key</Button>
+                        </div>
+                    ) : (
+                        <div className="flex gap-4 pb-2">
+                            <Input
+                                placeholder="API Key"
+                                type='password'
+                                value={key}
+                                onChange={e => setKey(e.target.value)}
+                            />
+                            {key.length > 0 && (
+                                <Button onClick={() => saveData(key)}>
+                                    Save
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </CardContent>
-                <CardFooter className="border-t px-6 py-4">
-                    <Button>Save</Button>
-                </CardFooter>
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle>Misc</CardTitle>
+                    <CardTitle>Miscellaneous</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Button className="w-fit" onClick={handleLocalStorage}>
