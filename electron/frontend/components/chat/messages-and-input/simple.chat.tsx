@@ -64,7 +64,7 @@ export function SimpleChat({
     }, [id, path, session?.user, messages])
 
     useEffect(() => {
-        if (!id) return
+        if (!id || id === 'New') return
         const fetchAndUpdateMessages = () => {
             fetchSessionEvents(id)
                 .then(data => {
@@ -106,10 +106,10 @@ export function SimpleChat({
                     className={cn('pt-4 md:pt-10', className)}
                     ref={messagesRef}
                 >
-                    <SessionEventsDisplay
+                    {/* <SessionEventsDisplay
                         sessionId={id}
                         setMessages={setMessages}
-                    />
+                    /> */}
                     {messages?.length ? (
                         // <ChatList
                         //     messages={messages}

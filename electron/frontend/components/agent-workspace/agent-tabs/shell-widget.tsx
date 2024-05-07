@@ -1,7 +1,7 @@
 import { IDisposable, Terminal as XtermTerminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
 import React, { useEffect, useRef, useState } from 'react'
-import { FitAddon } from 'xterm-addon-fit'
+
 // import socket from "../socket/socket";
 import useFetchSessionEvents from '@/lib/services/sessionService/use-fetch-session-events'
 import { useSearchParams } from 'next/navigation'
@@ -14,7 +14,7 @@ export default function ShellWidget() {
         isLoading,
         isError,
         error,
-    } = useFetchSessionEvents(chatId)
+    } = useFetchSessionEvents(chatId === 'New' ? '' : chatId)
 
     const [messages, setMessages] = useState([])
     useEffect(() => {
@@ -79,6 +79,17 @@ function Terminal({ messages }): JSX.Element {
     const terminalInstanceRef = useRef<XtermTerminal | null>(null)
 
     useEffect(() => {
+        async function addOn() {
+            const { FitAddon } = await import('@xterm/addon-fit')
+            const fitAddon = new FitAddon()
+            terminal.loadAddon(fitAddon)
+            // Without this timeout, `fitAddon.fit()` throws the error
+            // "this._renderer.value is undefined"
+            setTimeout(() => {
+                fitAddon.fit()
+            }, 1)
+        }
+
         const bgColor = getComputedStyle(document.documentElement)
             .getPropertyValue('--bg-workspace')
             .trim()
@@ -97,18 +108,11 @@ function Terminal({ messages }): JSX.Element {
             cursorBlink: true,
         })
 
-        const fitAddon = new FitAddon()
-        terminal.loadAddon(fitAddon)
-
         terminal.open(terminalRef.current as HTMLDivElement)
         terminalInstanceRef.current = terminal // Store the terminal instance
         terminal.write('> ')
 
-        // Without this timeout, `fitAddon.fit()` throws the error
-        // "this._renderer.value is undefined"
-        setTimeout(() => {
-            fitAddon.fit()
-        }, 1)
+        addOn()
 
         // const jsonWebsocketAddon = new JsonWebsocketAddon(socket);
         // terminal.loadAddon(jsonWebsocketAddon);
