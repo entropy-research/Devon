@@ -23,9 +23,9 @@ class DotDict:
 
     def __getattr__(self, key):
         return self.data.get(key)
-
+    
     def to_dict(self):
-        return self.data
+        return self.__dict__
 
 
 class Event(TypedDict):

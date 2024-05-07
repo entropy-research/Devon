@@ -218,6 +218,7 @@ class Session:
             return "No more events to process", True
         event = self.event_log[self.event_index]
         self.logger.info(f"Event: {event}")
+        self.logger.info(f"State: {self.state.editor}")
 
 
         if event["type"] == "ModelRequest":
