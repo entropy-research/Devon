@@ -210,6 +210,15 @@ def stop_session(session: str):
     session_obj.event_log.append(Event(type="stop", content="stop"))
     return session_obj
 
+@app.post("/session/{session}/state")
+def continue_session(session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj = sessions.get(session)
+    if not session_obj:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    return session_obj.state.to_dict()
+
 
 @app.delete("/session")
 def delete_session(session: str):
