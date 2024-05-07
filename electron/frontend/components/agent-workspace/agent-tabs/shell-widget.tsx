@@ -139,8 +139,8 @@ function Terminal({ messages }): JSX.Element {
             <div className="text-sm px-4 py-2 text-lg border-b border-border">
                 default
             </div>
-            <div className="h-full pb-4 bg-black rounded-lg">
-                <div ref={terminalRef} className="w-full p-3" />
+            <div className="h-full bg-black rounded-lg">
+                <div ref={terminalRef} className="w-full px-3 pt-3 h-full overflow-scroll" />
             </div>
         </div>
     )

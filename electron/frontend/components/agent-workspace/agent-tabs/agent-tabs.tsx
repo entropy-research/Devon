@@ -115,7 +115,7 @@ export default function AgentWorkspaceTabs({
 }
 
 const PanelView = () => (
-    <Tabs defaultValue="shell" className="flex grow flex-col">
+    <Tabs defaultValue="shell" className="flex flex-col h-full">
         <TabsList className="gap-1 justify-start">
             {tabs.map(({ id, title }) => (
                 <TabsTrigger key={id} value={id}>

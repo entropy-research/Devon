@@ -19,8 +19,8 @@ function Browser(): JSX.Element {
             : `data:image/png;base64,${screenshotSrc || ''}`
 
     return (
-        <div className="h-full m-2">
-            <div className="p-2 flex items-center pb-2">
+        <div className="h-full m-2 w-full flex items-start flex-col">
+            <div className="p-2 flex items-center pb-2 w-full">
                 <div className="flex space-x-2 ml-2 mr-4">
                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
@@ -41,7 +41,7 @@ function Browser(): JSX.Element {
                     style={{ maxWidth: '100%', height: 'auto' }}
                 />
             ) : (
-                <p className="text-lg flex justify-center items-center h-full">
+                <p className="text-lg flex justify-center items-center h-full w-full">
                     Coming soon!
                 </p>
             )}
