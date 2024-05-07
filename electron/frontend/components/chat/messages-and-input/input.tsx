@@ -106,6 +106,7 @@ export function RegularInput({
     setUserRequested,
     userRequested,
     modelLoading,
+    viewOnly,
 }: {
     isAtBottom: boolean
     scrollToBottom: () => void
@@ -113,6 +114,7 @@ export function RegularInput({
     setUserRequested: (value: boolean) => void
     userRequested: boolean
     modelLoading: boolean
+    viewOnly: boolean
 }) {
     const [focused, setFocused] = useState(false)
     const toast = useComingSoonToast()
@@ -151,81 +153,86 @@ export function RegularInput({
     }
 
     return (
-        <div className="relative grid align-middle px-5 pb-7 mt-8">
+        <div className={`relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}>
             {(modelLoading || userRequested) && (
                 <InformationBox
                     modelLoading={modelLoading}
                     userRequested={userRequested}
                 />
             )}
-            <form
-                ref={formRef}
-                onSubmit={async (e: any) => {
-                    e.preventDefault()
+            {!viewOnly && (
+                <>
+                    <form
+                        ref={formRef}
+                        onSubmit={async (e: any) => {
+                            e.preventDefault()
 
-                    checkShouldOpenModal()
+                            checkShouldOpenModal()
 
-                    // Blur focus on mobile
-                    if (window.innerWidth < 600) {
-                        e.target['message']?.blur()
-                    }
+                            // Blur focus on mobile
+                            if (window.innerWidth < 600) {
+                                e.target['message']?.blur()
+                            }
 
-                    const value = input.trim()
-                    setInput('')
-                    if (!value) return
+                            const value = input.trim()
+                            setInput('')
+                            if (!value) return
 
-                    // Optimistically add user message UI
-                    setMessages(currentMessages => [
-                        ...currentMessages,
-                        {
-                            id: nanoid(),
-                            display: <UserMessage>{value}</UserMessage>,
-                        },
-                    ])
+                            // Optimistically add user message UI
+                            setMessages(currentMessages => [
+                                ...currentMessages,
+                                {
+                                    id: nanoid(),
+                                    display: <UserMessage>{value}</UserMessage>,
+                                },
+                            ])
 
-                    // Submit and get response message
-                    const responseMessage = await submitUserMessage(value)
-                    setMessages(currentMessages => [
-                        ...currentMessages,
-                        responseMessage,
-                    ])
+                            // Submit and get response message
+                            const responseMessage =
+                                await submitUserMessage(value)
+                            setMessages(currentMessages => [
+                                ...currentMessages,
+                                responseMessage,
+                            ])
 
-                    scrollToBottom()
-                }}
-            >
-                <div className="relative">
-                    <AutoresizeTextarea
-                        ref={inputRef}
-                        placeholder="Give Devon a task to work on ..."
-                        onFocus={handleFocus}
-                        onBlur={() => setFocused(false)}
-                        rows={1}
-                        onKeyDown={onKeyDown}
-                        value={input}
-                        onChange={e => setInput(e.target.value)}
+                            scrollToBottom()
+                        }}
+                    >
+                        <div className="relative">
+                            <AutoresizeTextarea
+                                ref={inputRef}
+                                placeholder="Give Devon a task to work on ..."
+                                onFocus={handleFocus}
+                                onBlur={() => setFocused(false)}
+                                rows={1}
+                                onKeyDown={onKeyDown}
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                            />
+                            <button
+                                onClick={toast}
+                                className="absolute left-[0.5rem] top-1/2 -translate-y-1/2 xl:left-[0.75rem] flex h-8 w-8 items-center justify-center rounded-md smooth-hover"
+                            >
+                                <Paperclip
+                                    className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}
+                                />
+                            </button>
+                            <button
+                                className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 xl:right-4"
+                                type="submit"
+                            >
+                                <ArrowRight
+                                    className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}
+                                />
+                            </button>
+                        </div>
+                    </form>
+                    <SelectProjectDirectoryModal
+                        openProjectModal={openProjectModal}
+                        setOpenProjectModal={setOpenProjectModal}
                     />
-                    <button
-                        onClick={toast}
-                        className="absolute left-[0.5rem] top-1/2 -translate-y-1/2 xl:left-[0.75rem] flex h-8 w-8 items-center justify-center rounded-md smooth-hover"
-                    >
-                        <Paperclip
-                            className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}
-                        />
-                    </button>
-                    <button
-                        className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 xl:right-4"
-                        type="submit"
-                    >
-                        <ArrowRight
-                            className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}
-                        />
-                    </button>
-                </div>
-            </form>
-            <SelectProjectDirectoryModal
-                openProjectModal={openProjectModal}
-                setOpenProjectModal={setOpenProjectModal}
-            />
+                </>
+            )}
         </div>
     )
 }
@@ -243,7 +250,7 @@ const InformationBox = ({ modelLoading, userRequested }) => {
     }
 
     const currentType = modelLoading ? types.modelLoading : types.userRequested
-    
+
     return (
         <div className="bg-fade-bottom-to-top2 py-5 px-3">
             <div className="flex items-center gap-4">
@@ -255,9 +262,7 @@ const InformationBox = ({ modelLoading, userRequested }) => {
                         className={`absolute w-4 h-4 rounded-full ${currentType.color} opacity-50`}
                     ></div>
                 </div>
-                <p className="italic text-gray-400">
-                    {currentType.text}
-                </p>
+                <p className="italic text-gray-400">{currentType.text}</p>
             </div>
         </div>
     )
