@@ -52,6 +52,8 @@ export function SimpleChat({
     // Clean later
     const [userRequested, setUserRequested] = useState(false)
 
+    const [modelLoading, setModelLoading] = useState(false)
+
     // TODO: Actually use this to load chat from backend
     useEffect(() => {
         if (session?.user) {
@@ -66,7 +68,11 @@ export function SimpleChat({
         const fetchAndUpdateMessages = () => {
             fetchSessionEvents(id)
                 .then(data => {
-                    const parsedMessages = handleEvents(data, setUserRequested)
+                    const parsedMessages = handleEvents(
+                        data,
+                        setUserRequested,
+                        setModelLoading
+                    )
                     setMessages(parsedMessages)
                 })
                 .catch(error => {
@@ -114,6 +120,7 @@ export function SimpleChat({
                             messages={messages}
                             isShared={false}
                             session={session}
+                            spinning={modelLoading}
                         />
                     ) : (
                         <></>
@@ -138,6 +145,8 @@ export function SimpleChat({
                             sessionId={id}
                             isAtBottom={isAtBottom}
                             scrollToBottom={scrollToBottom}
+                            setUserRequested={setUserRequested}
+                            userRequested={userRequested}
                         />
                     </div>
                 </div>
@@ -155,6 +164,11 @@ type Event = {
         | 'Interrupt'
         | 'UserRequest'
         | 'Stop'
+        | 'EnvironmentRequest'
+        | 'EnvironmentResponse'
+        | 'ModelRequest'
+        | 'ToolRequest'
+        | 'UserResponse'
     content: string
     identifier: string | null
 }
@@ -166,59 +180,59 @@ type MessageType = {
 
 const handleEvents = (
     events: Event[],
-    setUserRequested: (value: boolean) => void
+    setUserRequested: (value: boolean) => void,
+    setModelLoading: (value: boolean) => void
 ) => {
     const messages: MessageType[] = []
+    let user_request = false
+    let model_loading = false
+    let tool_message = ''
+
     for (const event of events) {
-        const type = event.type
-        // console.log("EVENT", event["content"]);
-        if (type == 'ModelResponse') {
-            // Model response content is in format <THOUGHT>{thought}</THOUGHT><COMMAND>{command}</COMMAND>
-            if (event.content) {
-                const thoughtMatch = event.content
-                    .split('<THOUGHT>')
-                    ?.pop()
-                    ?.split('</THOUGHT>')[0]
-                const commandMatch = event.content
-                    .split('<COMMAND>')
-                    .pop()
-                    ?.split('</COMMAND>')[0]
-                const thought = thoughtMatch ? thoughtMatch : ''
-                const command = commandMatch ? commandMatch : ''
-
-                // split command by space
-
-                let command_split = command?.split(' ') ?? ['', '']
-                let command_name = command_split[0].trim()
-                let command_args = command_split.slice(1).join(' ')
-                let trimmedStr = command_args
-                    .trim()
-                    .replace(/^['"]+|['"]+$/g, '')
-
-                if (command_name == 'ask_user') {
-                    messages.push({ text: trimmedStr, type: 'agent' })
-                } else {
-                    messages.push({ text: thought ?? '', type: 'agent' })
-                    messages.push({ text: command ?? '', type: 'command' })
-                }
-            }
+        if (event.type == 'ModelRequest') {
+            model_loading = true
         }
 
-        if (type == 'ToolResponse') {
-            messages.push({ text: event.content, type: 'tool' })
+        if (event.type == 'ModelResponse') {
+            let content = JSON.parse(event.content)
+            model_loading = false
+            messages.push({ text: content.thought, type: 'agent' })
         }
 
-        if (type == 'Task') {
+        if (event.type == 'EnvironmentRequest') {
+            tool_message = 'Running command: ' + event.content
+        }
+
+        if (event.type == 'EnvironmentResponse') {
+            tool_message += '\n> ' + event.content
+            messages.push({ text: tool_message, type: 'tool' })
+            tool_message = ''
+        }
+
+        if (event.type == 'Task') {
             messages.push({ text: event.content, type: 'task' })
         }
 
-        if (type == 'Interrupt') {
+        if (event.type == 'Interrupt') {
+            // writeLogLine('interrupt: ' + event.content);
             messages.push({ text: event.content, type: 'user' })
         }
 
-        if (type == 'UserRequest') {
-            setUserRequested(true)
+        if (event.type == 'UserResponse') {
+            messages.push({ text: event.content, type: 'user' })
+            user_request = false
+        }
+
+        if (event.type == 'UserRequest') {
+            messages.push({ text: event.content, type: 'agent' })
+            user_request = true
+        }
+
+        if (event.type == 'Stop') {
+            // exit();
         }
     }
+    setUserRequested(user_request)
+    setModelLoading(model_loading)
     return messages
 }
