@@ -73,6 +73,10 @@ class TaskAgent(Agent):
         observation: str,
         session: "Session",
     ) -> Tuple[str, str, str]:
+        if self.interrupt:
+            observation = observation + ". also " + self.interrupt
+            self.interrupt = ""
+
         self.current_model = AnthropicModel(
             args=ModelArguments(model_name=self.model, temperature=self.temperature)
         )

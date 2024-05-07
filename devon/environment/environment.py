@@ -67,18 +67,21 @@ class LocalEnvironment(Environment):
         return self.execute(input, timeout_duration=timeout_duration)
 
     def execute(self, command: str, timeout_duration=25):
-        completed_process = subprocess.run(
-            command, shell=True, timeout=timeout_duration, capture_output=True
-        )
+        try:
+            completed_process = subprocess.run(
+                command, shell=True, timeout=timeout_duration, capture_output=True
+            )
 
-        if completed_process.returncode != 0:
-            return completed_process.stderr.decode(
-                "utf-8"
-            ), completed_process.returncode
+            if completed_process.returncode != 0:
+                return completed_process.stderr.decode(
+                    "utf-8"
+                ), completed_process.returncode
 
-        output = (
-            completed_process.stdout.decode("utf-8") if completed_process.stdout else ""
-        )
+            output = (
+                completed_process.stdout.decode("utf-8") if completed_process.stdout else ""
+            )
+        except Exception as e:
+            return str(e), -1
 
         return output, completed_process.returncode
 

@@ -1,5 +1,5 @@
 import FolderPicker from '@/components/ui/folder-picker'
-import { useState, lazy } from 'react'
+import { useState, lazy, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import useCreateSession from '@/lib/services/sessionService/use-create-session'
 import { handleNavigate } from '@/components/sidebar'
@@ -22,7 +22,17 @@ const DialogContent = lazy(() =>
     }))
 )
 
-const SelectProjectDirectoryModal = ({ trigger }) => {
+const SelectProjectDirectoryModal = ({
+    trigger,
+    openProjectModal,
+    setOpenProjectModal,
+    hideclose,
+}: {
+    trigger?: JSX.Element
+    openProjectModal?: boolean
+    setOpenProjectModal?: (open: boolean) => void
+    hideclose?: boolean
+}) => {
     const [folderPath, setFolderPath] = useState('')
     const [open, setOpen] = useState(false)
 
@@ -34,10 +44,22 @@ const SelectProjectDirectoryModal = ({ trigger }) => {
         setOpen(false)
     }
 
+    function handleOpenChange(open: boolean) {
+        setOpen(open)
+        if (setOpenProjectModal) setOpenProjectModal(open)
+    }
+
+    useEffect(() => {
+        if (openProjectModal === undefined) return
+        setOpen(openProjectModal)
+    }, [openProjectModal])
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>{trigger}</DialogTrigger>
-            <DialogContent>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+            {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+            <DialogContent
+                hideclose={hideclose ? true.toString() : false.toString()}
+            >
                 <div className="mx-8 my-4">
                     <SelectProjectDirectoryComponent
                         folderPath={folderPath}
@@ -59,10 +81,12 @@ export default SelectProjectDirectoryModal
 export const SelectProjectDirectoryComponent = ({
     folderPath,
     setFolderPath,
+    disabled = false,
     className,
 }: {
     folderPath: string
     setFolderPath: (path: string) => void
+    disabled?: boolean
     className?: string
 }) => {
     return (
@@ -73,6 +97,7 @@ export const SelectProjectDirectoryComponent = ({
             <FolderPicker
                 folderPath={folderPath}
                 setFolderPath={setFolderPath}
+                disabled={disabled}
             />
         </div>
     )

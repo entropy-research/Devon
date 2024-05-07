@@ -196,8 +196,8 @@ def interrupt_session(session: str, message: str):
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_obj.event_log.append(Event(type="interrupt", content=message))
-    return session_obj
+    session_obj.event_log.append(Event(type="Interrupt", content=message, producer="user", consumer="devon"))
+    return session
 
 
 @app.post("/session/{session}/stop")

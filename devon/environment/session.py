@@ -355,12 +355,11 @@ class Session:
             )
 
         if event["type"] == "Interrupt":
-            self.event_log.append({
-                "type": "ModelRequest",
-                "content": "You have been interrupted, pay attention to this message " + event["content"],
-                "producer": event["producer"],
-                "consumer": self.agent.name,
-            })
+
+            if self.agent.interrupt:
+                self.agent.interrupt +=  "You have been interrupted, pay attention to this message "  + event["content"]
+            else:
+                self.agent.interrupt =  event["content"]
 
         if event["type"] == "Stop":
             return "Stopped task", True

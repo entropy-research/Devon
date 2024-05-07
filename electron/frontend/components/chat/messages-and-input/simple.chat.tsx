@@ -47,7 +47,7 @@ export function SimpleChat({
         scrollToBottom,
     } = useScrollAnchor()
     const { toast } = useToast()
-    const [_, setNewChatId] = useLocalStorage('newChatId', id)
+    // const [_, setNewChatId] = useLocalStorage('newChatId', id) // TODO prob delete this later
 
     // Clean later
     const [userRequested, setUserRequested] = useState(false)
@@ -81,9 +81,9 @@ export function SimpleChat({
         }
     }, [id, messages])
 
-    useEffect(() => {
-        setNewChatId(id)
-    })
+    // useEffect(() => {
+    //     setNewChatId(id)
+    // })
 
     useEffect(() => {
         missingKeys?.map(key => {
@@ -159,7 +159,7 @@ type Event = {
     identifier: string | null
 }
 
-type Message = {
+type MessageType = {
     text: string
     type: 'user' | 'agent' | 'command' | 'tool' | 'task'
 }
@@ -168,7 +168,7 @@ const handleEvents = (
     events: Event[],
     setUserRequested: (value: boolean) => void
 ) => {
-    const messages: Message[] = []
+    const messages: MessageType[] = []
     for (const event of events) {
         const type = event.type
         // console.log("EVENT", event["content"]);
@@ -191,7 +191,9 @@ const handleEvents = (
                 let command_split = command?.split(' ') ?? ['', '']
                 let command_name = command_split[0].trim()
                 let command_args = command_split.slice(1).join(' ')
-                let trimmedStr = command_args.trim().replace(/^['"]+|['"]+$/g, '')
+                let trimmedStr = command_args
+                    .trim()
+                    .replace(/^['"]+|['"]+$/g, '')
 
                 if (command_name == 'ask_user') {
                     messages.push({ text: trimmedStr, type: 'agent' })
