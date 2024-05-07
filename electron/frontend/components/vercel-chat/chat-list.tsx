@@ -64,7 +64,12 @@ export interface ChatList2 {
     spinning: boolean
 }
 
-export function ChatList2({ messages, session, isShared, spinning }: ChatList2) {
+export function ChatList2({
+    messages,
+    session,
+    isShared,
+    spinning,
+}: ChatList2) {
     if (!messages.length) {
         return null
     }
@@ -143,14 +148,15 @@ const DisplayedChatMessage = ({ message }) => {
                         {message.text}
                     </ChatTypeWrapper>
                 ) : message.type === 'tool' ? (
-                    <ChatTypeWrapper type="Tool Response">
-                        {message.text}
-                    </ChatTypeWrapper>
+                    <ToolResponseMessage>{message.text}</ToolResponseMessage>
                 ) : message.type === 'user' ? (
                     <UserMessage>{message.text}</UserMessage>
                 ) : message.type === 'task' ? (
                     <div className="border border-2 border-gray p-2 px-4 rounded-md">
-                        <ChatTypeWrapper type="Task" className="text-gray-400 italic">
+                        <ChatTypeWrapper
+                            type="Task"
+                            className="text-gray-400 italic"
+                        >
                             {message.text}
                         </ChatTypeWrapper>
                     </div>
@@ -165,7 +171,19 @@ const DisplayedChatMessage = ({ message }) => {
     )
 }
 
-const ChatTypeWrapper = ({ type, children, className }: { type: string, children: any, className?: string}) => {
+const ToolResponseMessage = ({ children }) => {
+    return <div className="ml-[52px]"><p className="text-gray-400">{children}</p></div>
+}
+
+const ChatTypeWrapper = ({
+    type,
+    children,
+    className,
+}: {
+    type: string
+    children: any
+    className?: string
+}) => {
     return (
         <p className={className}>
             <span className="font-bold mr-2">{type}:</span>

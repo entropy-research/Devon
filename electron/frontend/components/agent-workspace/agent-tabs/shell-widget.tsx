@@ -1,11 +1,39 @@
 import { IDisposable, Terminal as XtermTerminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
-import React, { useEffect, useRef } from 'react'
-// import { FitAddon } from 'xterm-addon-fit'
+import React, { useEffect, useRef, useState } from 'react'
+
 // import socket from "../socket/socket";
+import { fetchSessionEvents } from '@/lib/services/sessionService/use-fetch-session-events'
+import { useSearchParams } from 'next/navigation'
 
 export default function ShellWidget() {
-    return <Terminal />
+    const searchParams = useSearchParams()
+    const chatId = searchParams.get('chat')
+
+    const [messages, setMessages] = useState([])
+    useEffect(() => {
+        if (!chatId || chatId === 'New') return
+        const fetchAndUpdateMessages = () => {
+            fetchSessionEvents(chatId)
+                .then(data => {
+                    setMessages(getOnlyToolResponse(data))
+                })
+                .catch(error => {
+                    console.error('Error fetching session events:', error)
+                })
+        }
+        const intervalId = setInterval(fetchAndUpdateMessages, 2000)
+
+        return () => {
+            clearInterval(intervalId)
+        }
+    }, [chatId])
+
+    return <Terminal messages={messages} />
+}
+
+function getOnlyToolResponse(messages) {
+    return messages?.filter(message => message.type === 'EnvironmentResponse')
 }
 
 // Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/Terminal.tsx
@@ -53,14 +81,25 @@ class JsonWebsocketAddon {
  * we keep the terminal persistently open as a child of <App /> and hidden when not in use.
  */
 
-function Terminal(): JSX.Element {
+function Terminal({ messages }): JSX.Element {
     const terminalRef = useRef<HTMLDivElement>(null)
+    const terminalInstanceRef = useRef<XtermTerminal | null>(null)
 
     useEffect(() => {
+        async function addOn() {
+            const { FitAddon } = await import('@xterm/addon-fit')
+            const fitAddon = new FitAddon()
+            terminal.loadAddon(fitAddon)
+            // Without this timeout, `fitAddon.fit()` throws the error
+            // "this._renderer.value is undefined"
+            setTimeout(() => {
+                fitAddon.fit()
+            }, 1)
+        }
+
         const bgColor = getComputedStyle(document.documentElement)
             .getPropertyValue('--bg-workspace')
             .trim()
-
         const terminal = new XtermTerminal({
             // This value is set to the appropriate value by the
             // `fitAddon.fit()` call below.
@@ -73,35 +112,45 @@ function Terminal(): JSX.Element {
             theme: {
                 // background: bgColor,
             },
+            cursorBlink: true,
         })
-        terminal.write('$ ')
-
-        // const fitAddon = new FitAddon()
-        // terminal.loadAddon(fitAddon)
 
         terminal.open(terminalRef.current as HTMLDivElement)
+        terminalInstanceRef.current = terminal // Store the terminal instance
+        terminal.write('> ')
 
-        // Without this timeout, `fitAddon.fit()` throws the error
-        // "this._renderer.value is undefined"
-        // setTimeout(() => {
-        //     fitAddon.fit()
-        // }, 1)
+        addOn()
 
         // const jsonWebsocketAddon = new JsonWebsocketAddon(socket);
         // terminal.loadAddon(jsonWebsocketAddon);
 
         return () => {
             terminal.dispose()
+            terminalInstanceRef.current = null
         }
     }, [])
+
+    useEffect(() => {
+        const terminal = terminalInstanceRef.current
+        if (terminal) {
+            terminal.clear() // Clear the existing content
+            messages.forEach(message => {
+                terminal.writeln(message.content)
+                terminal.write('\n> ') // Add prompt after each message
+            })
+        }
+    }, [messages])
 
     return (
         <div className="h-full flex flex-col">
             <div className="text-sm px-4 py-2 text-lg border-b border-border">
                 default
             </div>
-            <div className="h-full pb-4 bg-black rounded-lg">
-                <div ref={terminalRef} className="w-full p-3" />
+            <div className="h-full bg-black rounded-lg">
+                <div
+                    ref={terminalRef}
+                    className="w-full px-3 pt-3 h-full overflow-scroll"
+                />
             </div>
         </div>
     )

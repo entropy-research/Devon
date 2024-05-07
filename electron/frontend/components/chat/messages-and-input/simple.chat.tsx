@@ -64,7 +64,7 @@ export function SimpleChat({
     }, [id, path, session?.user, messages])
 
     useEffect(() => {
-        if (!id) return
+        if (!id || id === 'New') return
         const fetchAndUpdateMessages = () => {
             fetchSessionEvents(id)
                 .then(data => {
@@ -106,10 +106,10 @@ export function SimpleChat({
                     className={cn('pt-4 md:pt-10', className)}
                     ref={messagesRef}
                 >
-                    <SessionEventsDisplay
+                    {/* <SessionEventsDisplay
                         sessionId={id}
                         setMessages={setMessages}
-                    />
+                    /> */}
                     {messages?.length ? (
                         // <ChatList
                         //     messages={messages}
@@ -129,10 +129,10 @@ export function SimpleChat({
                     <div className="h-px w-full" ref={visibilityRef} />
                 </div>
             </div>
-            {!viewOnly && (
+            {/* {!viewOnly && ( */}
                 <div className="sticky bottom-0 w-full">
                     <div className="bg-fade-bottom-to-top pt-20 overflow-hidden rounded-xl -mb-[1px]">
-                        {!(messages?.length > 0) && <SuggestionContainer />}
+                        {!viewOnly && !(messages?.length > 0) && <SuggestionContainer />}
                         <ButtonScrollToBottom
                             isAtBottom={isAtBottom}
                             scrollToBottom={scrollToBottom}
@@ -147,10 +147,12 @@ export function SimpleChat({
                             scrollToBottom={scrollToBottom}
                             setUserRequested={setUserRequested}
                             userRequested={userRequested}
+                            modelLoading={modelLoading}
+                            viewOnly={viewOnly}
                         />
                     </div>
                 </div>
-            )}
+            {/* )} */}
             {/* <EventStream sessionId={'1'} /> */}
         </div>
     )

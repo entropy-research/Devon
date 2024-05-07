@@ -6,6 +6,8 @@ import PlannerWidget from './planner-widget'
 import Chat from '../../chat/chat'
 import { ViewMode } from '@/lib/types'
 import { CodeEditorContextProvider } from '@/contexts/CodeEditorContext'
+import { ChatProps } from '@/lib/chat.types'
+
 const files = [
     {
         id: 1,
@@ -69,7 +71,7 @@ const tabs = [
 const gridTabs = [
     {
         id: 'chat',
-        content: <Chat viewOnly />,
+        content: <></>,
     },
     {
         id: 'shell',
@@ -96,14 +98,24 @@ const gridTabs = [
 
 export default function AgentWorkspaceTabs({
     viewMode,
+    chatProps,
 }: {
     viewMode: ViewMode
+    chatProps: ChatProps
 }) {
-    return <>{viewMode === ViewMode.Panel ? <PanelView /> : <GridView />}</>
+    return (
+        <>
+            {viewMode === ViewMode.Panel ? (
+                <PanelView />
+            ) : (
+                <GridView chatProps={chatProps} />
+            )}
+        </>
+    )
 }
 
 const PanelView = () => (
-    <Tabs defaultValue="shell" className="flex grow flex-col">
+    <Tabs defaultValue="shell" className="flex flex-col h-full">
         <TabsList className="gap-1 justify-start">
             {tabs.map(({ id, title }) => (
                 <TabsTrigger key={id} value={id}>
@@ -119,11 +131,17 @@ const PanelView = () => (
     </Tabs>
 )
 
-const GridView = () => (
+const GridView = ({ chatProps }: { chatProps: ChatProps }) => (
     <div className="h-full w-full flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4 h-1/2">
             {gridTabs.slice(0, 2).map(({ id, content }) => (
-                <GridContentContainer key={id}>{content}</GridContentContainer>
+                <GridContentContainer key={id}>
+                    {id === 'chat' ? (
+                        <Chat viewOnly chatProps={chatProps} />
+                    ) : (
+                        content
+                    )}
+                </GridContentContainer>
             ))}
         </div>
         <div className="grid grid-cols-2 gap-4 h-1/2 block">

@@ -5,24 +5,25 @@ import {render} from 'ink';
 import {App} from './app.js';
 
 // TODO:
-// - [x] Fix interrupt
-// - [x] Add loading/ feedback for user
+
+// - [ ] anthropic key correctly
 // - [ ] Task managment
-// - [x] Start Loading Screen 
 // - [ ] Exit app on stop after user confirms
-// - [x] combine command and output into one
-// - [ ] provide headless mode
 // - [ ] slow down and smooth new message rendering
-// - [ ] paginate outputs
-// - [ ] deliniate between agent thoughts and agent questions
-// - [ ] handle error output 
-// - [ ] handle debug console
 // - [ ] choose open port automatically
 // - [ ] make output more compact
+// - [x] deliniate between agent thoughts and agent questions
+// - [x] Fix interrupt
+// - [x] Add loading/ feedback for user
+// - [x] Start Loading Screen 
+// - [x] combine command and output into one
+
+
+// - [ ] provide headless mode
+// - [ ] handle error output 
+// - [ ] handle debug console
 // - [ ] if window big show editor and cli
-// - [ ] anthropic key correctly
-
-
+// - [ ] paginate outputs
 
 // const cli = meow(
 // 	`

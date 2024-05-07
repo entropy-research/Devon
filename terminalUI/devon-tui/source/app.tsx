@@ -88,6 +88,18 @@ const sendInterrupt = async (res: string) => {
 	}
 };
 
+
+const getState = async () => {
+	try {
+		const response = await axios.get(
+			'http://localhost:8000/session/cli/state',
+		);
+		return response.data;
+	} catch (error: any) {
+		// console.error('Error:', error.message);
+	}
+};
+
 type Event = {
 	type:
 		| 'ModelResponse'
@@ -107,7 +119,7 @@ type Event = {
 
 type Message = {
 	text: string;
-	type: 'user' | 'agent' | 'command' | 'tool' | 'task';
+	type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought';
 };
 
 const handleEvents = (
@@ -130,7 +142,7 @@ const handleEvents = (
 		if (event.type == 'ModelResponse') {
 			let content = JSON.parse(event.content);
 			model_loading = false;
-			messages.push({text: content.thought, type: 'agent'});
+			messages.push({text: content.thought, type: 'thought'});
 		}
 
 		if (event.type == 'EnvironmentRequest') {
@@ -195,9 +207,9 @@ export const App = () => {
 			writeLogLine(newOutput.toString('utf8'));
 		});
 
-		// subProcess.stderr.on('data', (newOutput: Buffer) => {
-			// console.error(newOutput.toString('utf8'));
-		// });
+		subProcess.stderr.on('data', (newOutput: Buffer) => {
+			console.error(newOutput.toString('utf8'));
+		});
 
 		subProcess.on("error", (error) => {
 			console.error('Error:', error.message);
@@ -221,6 +233,9 @@ export const App = () => {
 			if (newEvents) {
 				const newMessages = handleEvents(newEvents, setUserRequested,setModelLoading,exit);
 				setMessages(newMessages);
+				const state = await getState();
+				// console.log("STATE", state);
+				setMessages((messages) => [...messages, {text: JSON.stringify(state), type: 'tool'}]);
 			}
 
 			// console.log("MESSAGES", messages);
@@ -274,16 +289,17 @@ export const App = () => {
 				{messages.map((message, index) => {
 					let displayText = message.text;
 					let borderColor = 'blue';
-					if (message.type == 'command') {
-						displayText = 'Command: ' + message.text;
-						borderColor = 'green';
+					if (message.type == 'thought') {
+						displayText = 'Thought: ' + message.text;
+						borderColor = 'red';
 					}
+
 					if (message.type == 'tool') {
 						displayText = 'Tool: ' + message.text;
 						borderColor = 'yellow';
 					}
 					if (message.type == 'task') {
-						displayText = 'Tasksfaf: ' + message.text;
+						displayText = 'Tasks: ' + message.text;
 						borderColor = 'red';
 					}
 					if (message.type == 'agent') {
@@ -315,7 +331,7 @@ export const App = () => {
 				{/* </Box> */}
 			</Box>
 			{/* <Box  borderStyle="round" borderTopColor="white"> */}
-			{/* <Box paddingX={2} paddingY={1} borderStyle="round" borderColor="white"> */}
+			<Box paddingX={3}>
 				<TextInput
 
 					value={inputValue}
@@ -323,7 +339,7 @@ export const App = () => {
 					onSubmit={handleSubmit}
 					placeholder="Type your message..."
 				/>
-			{/* </Box> */}
+			</Box>
 		 </Box>
 	);
 };

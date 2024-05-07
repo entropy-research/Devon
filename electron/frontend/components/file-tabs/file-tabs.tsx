@@ -28,7 +28,7 @@ const FileTabs = ({
                 {files.map((file: any) => (
                     <button
                         key={file.id}
-                        className={`px-5 py-3 text-md border-t-4 min-w-[150px] ${file.id === selectedFileId ? 'border-t-[#55c2f9] outline outline-gray-500 outline-[1.5px] rounded-t-lg' : 'border-transparent'}`}
+                        className={`px-5 py-3 text-md border-t-4 min-w-[150px] ${file.id === selectedFileId ? 'border-t-aqua outline outline-gray-500 outline-[1.5px] rounded-t-lg' : 'border-transparent'}`}
                         onClick={() => updateSelectedFile(file)}
                     >
                         {file.name}

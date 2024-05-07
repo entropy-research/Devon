@@ -28,6 +28,7 @@ const config: Config = {
           night: '#484848',
         },
         orange: '#c97f59',
+        aqua: '#55c2f9',
         // input: {
         //   dark: '#484848',
         // },
