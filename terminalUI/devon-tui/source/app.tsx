@@ -6,6 +6,7 @@ import axios from 'axios';
 import Spinner from 'ink-spinner';
 import fs from 'fs';
 
+
 const LOG_FILE = './devon-tui.log';
 
 const fd = fs.openSync(LOG_FILE, 'a');
@@ -89,16 +90,16 @@ const sendInterrupt = async (res: string) => {
 };
 
 
-const getState = async () => {
-	try {
-		const response = await axios.get(
-			'http://localhost:8000/session/cli/state',
-		);
-		return response.data;
-	} catch (error: any) {
-		// console.error('Error:', error.message);
-	}
-};
+// const getState = async () => {
+// 	try {
+// 		const response = await axios.get(
+// 			'http://localhost:8000/session/cli/state',
+// 		);
+// 		return response.data;
+// 	} catch (error: any) {
+// 		// console.error('Error:', error.message);
+// 	}
+// };
 
 type Event = {
 	type:
@@ -183,7 +184,7 @@ const handleEvents = (
 	return messages;
 };
 
-export const App = () => {
+export const App = ({port} : {port : number}) => {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [inputValue, setInputValue] = useState('');
 	const [userRequested, setUserRequested] = useState(false);
@@ -197,8 +198,11 @@ export const App = () => {
 	//   const [events, setEvents] = useState<Event[]>([]);
 
 	React.useEffect(() => {
+
+		console.log("PORT",port)
 		const subProcess = childProcess.spawn('python3', [
 			'/Users/mihirchintawar/agent/devon/environment/server.py',
+			port.toString(),
 		],{
 			signal: controller.signal
 		});
@@ -233,9 +237,9 @@ export const App = () => {
 			if (newEvents) {
 				const newMessages = handleEvents(newEvents, setUserRequested,setModelLoading,exit);
 				setMessages(newMessages);
-				const state = await getState();
+				// const state = await getState();
 				// console.log("STATE", state);
-				setMessages((messages) => [...messages, {text: JSON.stringify(state), type: 'tool'}]);
+				// setMessages((messages) => [...messages, {text: JSON.stringify(state), type: 'tool'}]);
 			}
 
 			// console.log("MESSAGES", messages);

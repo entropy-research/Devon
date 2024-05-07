@@ -3,7 +3,7 @@ import React from 'react';
 import {render} from 'ink';
 // import meow from 'meow';
 import {App} from './app.js';
-
+import portfinder from 'portfinder';
 // TODO:
 
 // - [ ] anthropic key correctly
@@ -46,8 +46,9 @@ import {App} from './app.js';
 // 		},
 // 	},
 // );
+portfinder.getPort(function (_ : any, port : number) {
 
-render(<App />,{
+render(<App port={port} />,{
 	exitOnCtrlC: true,
-});
-
+})
+})

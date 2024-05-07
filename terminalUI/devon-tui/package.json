@@ -22,6 +22,7 @@
 		"ink-spinner": "^5.0.0",
 		"ink-text-input": "^5.0.1",
 		"meow": "^11.0.0",
+		"portfinder": "^1.0.32",
 		"react": "^18.2.0"
 	},
 	"devDependencies": {
