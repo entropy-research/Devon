@@ -61,9 +61,10 @@ export interface ChatList2 {
     messages: any[]
     session?: Session
     isShared: boolean
+    spinning: boolean
 }
 
-export function ChatList2({ messages, session, isShared }: ChatList2) {
+export function ChatList2({ messages, session, isShared, spinning }: ChatList2) {
     if (!messages.length) {
         return null
     }
@@ -100,6 +101,7 @@ export function ChatList2({ messages, session, isShared }: ChatList2) {
                     message={message}
                 />
             ))}
+            {spinning && <SpinnerMessage />}
         </div>
     )
 }
@@ -145,7 +147,7 @@ const DisplayedChatMessage = ({ message }) => {
                         {message.text}
                     </ChatTypeWrapper>
                 ) : message.type === 'user' ? (
-                    <UserMessage>{message.content}</UserMessage>
+                    <UserMessage>{message.text}</UserMessage>
                 ) : message.type === 'task' ? (
                     <div className="border border-2 border-gray p-2 px-4 rounded-md">
                         <ChatTypeWrapper type="Task" className="text-gray-400 italic">

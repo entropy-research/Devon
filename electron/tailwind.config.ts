@@ -27,6 +27,7 @@ const config: Config = {
           day: '#f2f2f2',
           night: '#484848',
         },
+        orange: '#c97f59',
         // input: {
         //   dark: '#484848',
         // },

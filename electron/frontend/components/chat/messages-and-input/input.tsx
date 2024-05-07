@@ -102,10 +102,14 @@ export function RegularInput({
     isAtBottom,
     scrollToBottom,
     sessionId,
+    setUserRequested,
+    userRequested,
 }: {
     isAtBottom: boolean
     scrollToBottom: () => void
     sessionId: string
+    setUserRequested: (value: boolean) => void
+    userRequested: boolean
 }) {
     const [focused, setFocused] = useState(false)
     const toast = useComingSoonToast()
@@ -122,6 +126,7 @@ export function RegularInput({
     const [openProjectModal, setOpenProjectModal] = useState(false)
 
     async function submitUserMessage(value: string) {
+        setUserRequested(false)
         return createResponse(sessionId, value)
     }
 
@@ -140,6 +145,7 @@ export function RegularInput({
 
     return (
         <div className="relative grid align-middle px-5 pb-7 mt-8">
+            {userRequested && <InformationBox />}
             <form
                 ref={formRef}
                 onSubmit={async (e: any) => {
@@ -208,6 +214,22 @@ export function RegularInput({
                 openProjectModal={openProjectModal}
                 setOpenProjectModal={setOpenProjectModal}
             />
+        </div>
+    )
+}
+
+const InformationBox = () => {
+    return (
+        <div className="bg-fade-bottom-to-top2 py-5 px-3">
+            <div className="flex items-center gap-4">
+                <div className="relative flex justify-center items-center">
+                    <div className="w-7 h-7 rounded-full bg-orange animate-pulse"></div>
+                    <div className="absolute w-4 h-4 rounded-full bg-orange opacity-50"></div>
+                </div>
+                <p className="italic text-gray-400">
+                    Devon is awaiting your response.
+                </p>
+            </div>
         </div>
     )
 }
