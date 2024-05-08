@@ -179,7 +179,7 @@ type Event = {
 
 type MessageType = {
     text: string
-    type: 'user' | 'agent' | 'command' | 'tool' | 'task'
+    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought'
 }
 
 const handleEvents = (
@@ -238,5 +238,5 @@ const handleEvents = (
     }
     setUserRequested(user_request)
     setModelLoading(model_loading)
-    return messages
+    return messages.slice(2, messages.length)
 }
