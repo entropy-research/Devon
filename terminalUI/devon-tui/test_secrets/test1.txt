@@ -1,2 +1,0 @@
-This file contains a fake API key: abcdefghijklmnopqrstuvwxyz1234567890
-And a fake password: Str0ngP@ssw0rd!

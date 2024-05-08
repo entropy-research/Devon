@@ -1,13 +1,12 @@
 import asyncio
 import json
-# from contextlib import asynccontextmanager
 import os
 from time import sleep
 from typing import Dict, List
 
 import fastapi
-from devon.environment.agent import TaskAgent
-from devon.environment.session import Event, Session, SessionArguments
+from devon_swe_bench_experimental.environment.agent import TaskAgent
+from devon_swe_bench_experimental.environment.session import Event, Session, SessionArguments
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -268,5 +267,13 @@ if __name__ == "__main__":
             port = int(sys.argv[1])
         except ValueError:
             print("Warning: Invalid port number provided. Using default port 8000.")
+
+        try:
+            api_key = sys.argv[2]
+        except IndexError:
+            if os.environ.get("ANTHROPIC_API_KEY"):
+                api_key = os.environ.get("ANTHROPIC_API_KEY")
+            else:
+                raise ValueError("API key not provided.")
 
     uvicorn.run(app, host="0.0.0.0", port=port)

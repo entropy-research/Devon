@@ -1,7 +1,0 @@
-edit_file <<<
---- /django__django/django/utils/decorators.py
-+++ /django__django/django/utils/decorators.py
-@@ -39,1 +39,1 @@
--        bound_method = partial(method.__get__(self, type(self)))
-+        bound_method = method.__get__(self, type(self))
->>>

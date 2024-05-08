@@ -3,8 +3,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import Tuple
 
-from devon.agent.model import AnthropicModel, ModelArguments
-from devon.environment.prompt import (
+from devon_swe_bench_experimental.agent.model import AnthropicModel, ModelArguments
+from devon_swe_bench_experimental.environment.prompt import (
     commands_to_command_docs,
     history_to_bash_history,
     last_user_prompt_template_v3,
@@ -12,13 +12,13 @@ from devon.environment.prompt import (
     system_prompt_template_v3,
 )
 
-from devon.environment.utils import LOGGER_NAME, Event
+from devon_swe_bench_experimental.environment.utils import LOGGER_NAME, Event
 from tenacity import RetryError
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from devon.environment.session import Session
+    from devon_swe_bench_experimental.environment.session import Session
 
 # from devon.environment.cli import ChatEnvironment
 

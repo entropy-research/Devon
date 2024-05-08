@@ -13,19 +13,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, Tuple
 
-from devon.environment.utils import LOGGER_NAME
+from devon_swe_bench_experimental.environment.utils import LOGGER_NAME
 
 # from devon.environment.agent import CodeIndex
 # from devon.environment.agent import TaskAgent
 # from devon.environment.agent import TaskAgent
-from devon.retrieval.main import (
+from devon_swe_bench_experimental.retrieval.main import (
     ClassTable,
     FunctionTable,
     get_class_defn,
     get_function_defn,
     initialize_repository,
 )
-from devon.swebenchenv.environment.unified_diff.udiff import (
+from devon_swe_bench_experimental.swebenchenv.environment.unified_diff.udiff import (
     Hallucination,
     apply_file_context_diffs,
     extract_all_diffs,

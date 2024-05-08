@@ -6,8 +6,8 @@ from time import sleep
 from typing import Dict, List
 
 import fastapi
-from devon.environment.agent import TaskAgent
-from devon.environment.session import Event, Session, SessionArguments
+from devon_swe_bench_experimental.environment.agent import TaskAgent
+from devon_swe_bench_experimental.environment.session import Event, Session, SessionArguments
 from fastapi.middleware.cors import CORSMiddleware
 
 

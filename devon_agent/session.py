@@ -4,10 +4,10 @@ import logging
 import traceback
 from dataclasses import dataclass
 from typing import Any, List, TypedDict
-from devon.environment.agent import TaskAgent
-from devon.environment.environment import LocalEnvironment
-from devon.environment.prompt import parse_response
-from devon.environment.tools import (
+from devon_swe_bench_experimental.environment.agent import TaskAgent
+from devon_swe_bench_experimental.environment.environment import LocalEnvironment
+from devon_swe_bench_experimental.environment.prompt import parse_response
+from devon_swe_bench_experimental.environment.tools import (
     ask_user,
     close_file,
     create_file,
@@ -31,7 +31,7 @@ from devon.environment.tools import (
     search_file,
     submit,
 )
-from devon.environment.utils import DotDict, Event
+from devon_swe_bench_experimental.environment.utils import DotDict, Event
 
 
 @dataclass(frozen=False)

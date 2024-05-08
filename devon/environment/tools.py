@@ -19,12 +19,12 @@ import tarfile
 import tempfile
 from pathlib import Path
 
-from devon.retrieval.main import (
+from devon_swe_bench_experimental.retrieval.main import (
     get_class_defn,
     get_function_defn,
     initialize_repository,
 )
-from devon.swebenchenv.environment.unified_diff.udiff import (
+from devon_swe_bench_experimental.swebenchenv.environment.unified_diff.udiff import (
     Hallucination,
     apply_file_context_diffs,
     extract_all_diffs,
