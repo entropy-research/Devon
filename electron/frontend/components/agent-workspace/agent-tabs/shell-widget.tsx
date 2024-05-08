@@ -23,7 +23,7 @@ export default function ShellWidget() {
                     console.error('Error fetching session events:', error)
                 })
         }
-        const intervalId = setInterval(fetchAndUpdateMessages, 2000)
+        const intervalId = setInterval(fetchAndUpdateMessages, 4000)
 
         return () => {
             clearInterval(intervalId)
