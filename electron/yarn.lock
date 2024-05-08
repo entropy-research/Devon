@@ -6337,9 +6337,9 @@ electron-store@^8.1.0:
     type-fest "^2.17.0"
 
 electron-to-chromium@^1.4.668:
-  version "1.4.757"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.757.tgz#45f7c9341b538f8c4b9ca8af9692e0ed1a776a44"
-  integrity sha512-jftDaCknYSSt/+KKeXzH3LX5E2CvRLm75P3Hj+J/dv3CL0qUYcOt13d5FN1NiL5IJbbhzHrb3BomeG2tkSlZmw==
+  version "1.4.758"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.758.tgz#f39e530cae2ca4329a0f0e1840629d8d1da73156"
+  integrity sha512-/o9x6TCdrYZBMdGeTifAP3wlF/gVT+TtWJe3BSmtNh92Mw81U9hrYwW9OAGUh+sEOX/yz5e34sksqRruZbjYrw==
 
 electron-updater@6.1.8:
   version "6.1.8"
@@ -11958,7 +11958,6 @@ string-argv@0.3.2:
   integrity sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q==
 
 "string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
-  name string-width-cjs
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -12046,7 +12045,6 @@ string_decoder@~1.1.1:
     safe-buffer "~5.1.0"
 
 "strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
-  name strip-ansi-cjs
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
@@ -12170,9 +12168,9 @@ svg-parser@^2.0.4:
   integrity sha512-e4hG1hRwoOdRb37cIMSgzNsxyzKfayW6VOflrwvR+/bzrkyxY/31WkbgnQpgtrNp1SdpJvpUAGTa/ZoiPNDuRQ==
 
 svgo@^3.0.2:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/svgo/-/svgo-3.2.0.tgz#7a5dff2938d8c6096e00295c2390e8e652fa805d"
-  integrity sha512-4PP6CMW/V7l/GmKRKzsLR8xxjdHTV4IMvhTnpuHwwBazSIlw5W/5SmPjN8Dwyt7lKbSJrRDgp4t9ph0HgChFBQ==
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/svgo/-/svgo-3.3.0.tgz#26d0b220f44ae96819ed6d040573334366fffa9b"
+  integrity sha512-y350OL6eAmhDbWcASdukXoG0MbpdfJQPHwEUAaTW1HBNSO2VErJ35fs7uNLSWjzFDhfua517RcouBzjZoO1JFg==
   dependencies:
     "@trysound/sax" "0.2.0"
     commander "^7.2.0"
@@ -12463,9 +12461,9 @@ to-regex-range@^5.0.1:
     is-number "^7.0.0"
 
 tocbot@^4.20.1:
-  version "4.27.19"
-  resolved "https://registry.yarnpkg.com/tocbot/-/tocbot-4.27.19.tgz#e288dc2a81332e05cdeb68438d5aa859733f3dbd"
-  integrity sha512-0yu8k0L3gCQ1OVNZnKqpbZp+kLd6qtlNEBxsb+e0G/bS0EXMl2tWqWi1Oy9knRX8rTPYfOxd/sI/OzAj3JowGg==
+  version "4.27.20"
+  resolved "https://registry.yarnpkg.com/tocbot/-/tocbot-4.27.20.tgz#c7ba627585894fa306d65b08f53f624949becf19"
+  integrity sha512-6M78FT20+FA5edtx7KowLvhG3gbZ6GRcEkL/0b2TcPbn6Ba+1ayI3SEVxe25zjkWGs0jd04InImaO81Hd8Hukw==
 
 toidentifier@1.0.1:
   version "1.0.1"
@@ -13224,7 +13222,6 @@ wordwrap@^1.0.0:
   integrity sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==
 
 "wrap-ansi-cjs@npm:wrap-ansi@^7.0.0", wrap-ansi@^7.0.0:
-  name wrap-ansi-cjs
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
@@ -13372,9 +13369,9 @@ zod-to-json-schema@3.22.5:
   integrity sha512-+akaPo6a0zpVCCseDed504KBJUQpEW5QZw7RMneNmKw+fGaML1Z9tUNLnHHAC8x6dzVRO1eB2oEMyZRnuBZg7Q==
 
 zod@^3.23.4:
-  version "3.23.6"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.23.6.tgz#c08a977e2255dab1fdba933651584a05fcbf19e1"
-  integrity sha512-RTHJlZhsRbuA8Hmp/iNL7jnfc4nZishjsanDAfEY1QpDQZCahUp3xDzl+zfweE9BklxMUcgBgS1b7Lvie/ZVwA==
+  version "3.23.7"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.23.7.tgz#db33c910c592b8ce13f2f449097d4fb926c84f51"
+  integrity sha512-NBeIoqbtOiUMomACV/y+V3Qfs9+Okr18vR5c/5pHClPpufWOrsx8TENboDPe265lFdfewX2yBtNTLPvnmCxwog==
 
 zwitch@^2.0.0:
   version "2.0.4"
