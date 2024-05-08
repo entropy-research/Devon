@@ -130,28 +130,30 @@ export function SimpleChat({
                 </div>
             </div>
             {/* {!viewOnly && ( */}
-                <div className="sticky bottom-0 w-full">
-                    <div className="bg-fade-bottom-to-top pt-20 overflow-hidden rounded-xl -mb-[1px]">
-                        {!viewOnly && !(messages?.length > 0) && <SuggestionContainer />}
-                        <ButtonScrollToBottom
-                            isAtBottom={isAtBottom}
-                            scrollToBottom={scrollToBottom}
-                        />
-                        {/* <VercelInput
+            <div className="sticky bottom-0 w-full">
+                <div className="bg-fade-bottom-to-top pt-20 overflow-hidden rounded-xl -mb-[1px]">
+                    {!viewOnly && !(messages?.length > 0) && (
+                        <SuggestionContainer />
+                    )}
+                    <ButtonScrollToBottom
+                        isAtBottom={isAtBottom}
+                        scrollToBottom={scrollToBottom}
+                    />
+                    {/* <VercelInput
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                     /> */}
-                        <RegularInput
-                            sessionId={id}
-                            isAtBottom={isAtBottom}
-                            scrollToBottom={scrollToBottom}
-                            setUserRequested={setUserRequested}
-                            userRequested={userRequested}
-                            modelLoading={modelLoading}
-                            viewOnly={viewOnly}
-                        />
-                    </div>
+                    <RegularInput
+                        sessionId={id}
+                        isAtBottom={isAtBottom}
+                        scrollToBottom={scrollToBottom}
+                        setUserRequested={setUserRequested}
+                        userRequested={userRequested}
+                        modelLoading={modelLoading}
+                        viewOnly={viewOnly}
+                    />
                 </div>
+            </div>
             {/* )} */}
             {/* <EventStream sessionId={'1'} /> */}
         </div>
@@ -198,7 +200,7 @@ const handleEvents = (
         if (event.type == 'ModelResponse') {
             let content = JSON.parse(event.content)
             model_loading = false
-            messages.push({ text: content.thought, type: 'agent' })
+            messages.push({ text: content.thought, type: 'thought' })
         }
 
         if (event.type == 'EnvironmentRequest') {
