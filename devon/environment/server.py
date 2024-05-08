@@ -261,4 +261,12 @@ async def read_events_stream(session: str):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import sys
+    port = 8000  # Default port
+    if len(sys.argv) > 1:
+        try:
+            port = int(sys.argv[1])
+        except ValueError:
+            print("Warning: Invalid port number provided. Using default port 8000.")
+
+    uvicorn.run(app, host="0.0.0.0", port=port)

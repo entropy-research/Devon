@@ -1,64 +1,48 @@
 import React, {useState} from 'react';
-import {Box, Text, useInput, useApp} from 'ink';
+import {Box, Text, useInput, useApp, Static} from 'ink';
 import TextInput from 'ink-text-input';
-import childProcess from 'node:child_process';
 import axios from 'axios';
 import Spinner from 'ink-spinner';
-import fs from 'fs';
+// import {writeLogLine} from './utils.js';
 
-
-const LOG_FILE = './devon-tui.log';
-
-const fd = fs.openSync(LOG_FILE, 'a');
-
-const writeLogLine = (line: string) => {
-	try {
-		fs.appendFileSync(fd, line + '\n');
-	} catch (error) {
-		// console.error('Failed to write to log file:', error);
-	}
-};
-
-const createSession = async (path: string) => {
+const createSession = async (port: number, path: string) => {
 	let success = false;
 	while (!success) {
 		try {
 			const encodedPath = encodeURIComponent(path);
 			const response = await axios.post(
-				`http://localhost:8000/session?session=cli&path=${encodedPath}`,
+				`http://localhost:${port}/session?session=cli&path=${encodedPath}`,
 			);
 			return response;
-			success = true;
 		} catch (error: any) {
-			// console.error('Error:', error.message);
 			await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
 		}
 	}
 	return false;
 };
 
-const startSession = async (setStarted: (value: boolean) => void) => {
+const startSession = async (
+	port: number,
+	setStarted: (value: boolean) => void,
+) => {
 	let success = false;
 	while (!success) {
 		try {
 			const response = await axios.post(
-				'http://localhost:8000/session/cli/start',
+				`http://localhost:${port}/session/cli/start`,
 			);
-			//   console.log(response.data);
 			setStarted(true);
 			return response.data;
-			success = true;
 		} catch (error: any) {
-			// console.error('Error starting session:', error.message);
 			await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
 		}
 	}
 };
 
-const fetchEvents = async () => {
+const fetchEvents = async (port: number) => {
 	try {
 		const response = await axios.get(
-			'http://localhost:8000/session/cli/events',
+			`http://localhost:${port}/session/cli/events`,
 		);
 		return response.data;
 	} catch (error: any) {
@@ -66,10 +50,10 @@ const fetchEvents = async () => {
 	}
 };
 
-const giveUserReponse = async (res: string) => {
+const giveUserReponse = async (port: number, res: string) => {
 	try {
 		const response = await axios.post(
-			'http://localhost:8000/session/cli/response?response=' + res,
+			`http://localhost:${port}/session/cli/response?response=` + res,
 		);
 		return response.data;
 	} catch (error: any) {
@@ -77,29 +61,17 @@ const giveUserReponse = async (res: string) => {
 	}
 };
 
-const sendInterrupt = async (res: string) => {
+const sendInterrupt = async (port: number, res: string) => {
 	try {
-		writeLogLine('interrupt: ' + res);
+		// writeLogLine('interrupt: ' + res);
 		const response = await axios.post(
-			'http://localhost:8000/session/cli/interrupt?message=' + res,
+			`http://localhost:${port}/session/cli/interrupt?message=` + res,
 		);
 		return response.data;
 	} catch (error: any) {
 		// console.error('Error:', error.message);
 	}
 };
-
-
-// const getState = async () => {
-// 	try {
-// 		const response = await axios.get(
-// 			'http://localhost:8000/session/cli/state',
-// 		);
-// 		return response.data;
-// 	} catch (error: any) {
-// 		// console.error('Error:', error.message);
-// 	}
-// };
 
 type Event = {
 	type:
@@ -132,10 +104,10 @@ const handleEvents = (
 	const messages: Message[] = [];
 	let user_request = false;
 	let model_loading = false;
-	let tool_message = ""
+	let tool_message = '';
+	let idx = 0;
 
 	for (const event of events) {
-		// console.log("EVENT", event["content"]);
 		if (event.type == 'ModelRequest') {
 			model_loading = true;
 		}
@@ -147,13 +119,17 @@ const handleEvents = (
 		}
 
 		if (event.type == 'EnvironmentRequest') {
-			tool_message = "Running command: " + event.content;
+			tool_message = 'Running command: ' + event.content;
 		}
 
 		if (event.type == 'EnvironmentResponse') {
-			tool_message += '\n> ' + event.content
-			messages.push({text: tool_message, type: 'tool'});
-			tool_message = ""
+			tool_message += '\n> ' + event.content;
+			if (tool_message.length > 2000) {
+				messages.push({text: tool_message.slice(0, 2000), type: 'tool'});
+			} else {
+				messages.push({text: tool_message, type: 'tool'});
+			}
+			tool_message = '';
 		}
 
 		if (event.type == 'Task') {
@@ -161,7 +137,7 @@ const handleEvents = (
 		}
 
 		if (event.type == 'Interrupt') {
-			writeLogLine('interrupt: ' + event.content);
+			// writeLogLine('interrupt: ' + event.content);
 			messages.push({text: event.content, type: 'user'});
 		}
 
@@ -176,83 +152,61 @@ const handleEvents = (
 		}
 
 		if (event.type == 'Stop') {
+			console.log('Devon has left the chat.');
 			exit();
 		}
+		idx += 1;
 	}
 	setUserRequested(user_request);
 	setModelLoading(model_loading);
 	return messages;
 };
 
-export const App = ({port} : {port : number}) => {
+export const App = ({port}: {port: number}) => {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [inputValue, setInputValue] = useState('');
 	const [userRequested, setUserRequested] = useState(false);
 	const [modelLoading, setModelLoading] = useState(false);
-	const [started,setStarted] = useState(false);
+	const [started, setStarted] = useState(false);
+	let status = '';
+
 	const {exit} = useApp();
-	// const scrollRef = useRef(null);
-	const controller = new AbortController();
+	let eventI = 0;
 
-
-	//   const [events, setEvents] = useState<Event[]>([]);
-
-	React.useEffect(() => {
-
-		console.log("PORT",port)
-		const subProcess = childProcess.spawn('python3', [
-			'/Users/mihirchintawar/agent/devon/environment/server.py',
-			port.toString(),
-		],{
-			signal: controller.signal
-		});
-
-		subProcess.stdout.on('data', (newOutput: Buffer) => {
-			writeLogLine(newOutput.toString('utf8'));
-		});
-
-		subProcess.stderr.on('data', (newOutput: Buffer) => {
-			console.error(newOutput.toString('utf8'));
-		});
-
-		subProcess.on("error", (error) => {
-			console.error('Error:', error.message);
-			process.exit(0);
-		});
-
-
-	}, []);
+	if (!started) {
+		status = 'Initializing...';
+	} else if (modelLoading) {
+		status = 'Waiting for Devon...';
+	} else if (userRequested) {
+		status = 'Type your message:';
+	} else {
+		status = 'Interrupt:';
+	}
 
 	React.useEffect(() => {
 		let cwd = process.cwd();
-		createSession(cwd);
-		startSession(setStarted);
-		// console.log("Started session");
+		createSession(port, cwd);
+		startSession(port, setStarted);
 
 		const interval = setInterval(async () => {
-			const newEvents = await fetchEvents();
-			// console.log("NEW EVENTS", newEvents);
-
-			// setEvents(newEvents);
+			const newEvents = await fetchEvents(port);
 			if (newEvents) {
-				const newMessages = handleEvents(newEvents, setUserRequested,setModelLoading,exit);
-				setMessages(newMessages);
-				// const state = await getState();
-				// console.log("STATE", state);
-				// setMessages((messages) => [...messages, {text: JSON.stringify(state), type: 'tool'}]);
+				const newMessages = handleEvents(
+					newEvents,
+					setUserRequested,
+					setModelLoading,
+					exit,
+				);
+				for (let i = eventI; i < newMessages.length; i++) {
+					setMessages(messages => [...messages, newMessages[i] as Message]);
+					eventI++;
+					await new Promise(resolve => setTimeout(resolve, 500));
+				}
 			}
-
-			// console.log("MESSAGES", messages);
 		}, 1000);
 
 		return () => clearInterval(interval);
 	}, []);
-
-	//   useEffect(() => {
-	//     if (scrollRef.current) {
-	//       (scrollRef.current as any).scrollIntoView({ behavior: 'smooth' });
-	//     }
-	//   }, [messages]);
 
 	useInput((_: any, key: any) => {
 		if (key.escape) {
@@ -261,21 +215,17 @@ export const App = ({port} : {port : number}) => {
 	});
 
 	const handleSubmit = () => {
-		if (started &&inputValue.trim() !== '') {
-			setMessages([...messages, {text: inputValue, type: 'user'}]);
+		if (started && inputValue.trim() !== '') {
 			setInputValue('');
 			if (inputValue.toLowerCase() == 'exit') {
-
-				controller.abort();
 				exit();
-				process.exit(0);
 			}
 
 			if (userRequested) {
-				giveUserReponse(inputValue);
+				giveUserReponse(port, inputValue);
 				setUserRequested(false);
 			} else {
-				sendInterrupt(inputValue);
+				sendInterrupt(port, inputValue);
 			}
 		}
 	};
@@ -287,65 +237,71 @@ export const App = ({port} : {port : number}) => {
 			borderStyle="classic"
 			borderColor="white"
 		>
-			{/* <Box flexGrow={1} overflow="hidden"> */}
-			<Box flexDirection="column" overflowX="hidden" paddingX={1} paddingY={1}>
-				{!started && <Text>Initializing...<Spinner type="simpleDots" /></Text>}
-				{messages.map((message, index) => {
-					let displayText = message.text;
-					let borderColor = 'blue';
-					if (message.type == 'thought') {
-						displayText = 'Thought: ' + message.text;
-						borderColor = 'red';
-					}
-
-					if (message.type == 'tool') {
-						displayText = 'Tool: ' + message.text;
-						borderColor = 'yellow';
-					}
-					if (message.type == 'task') {
-						displayText = 'Tasks: ' + message.text;
-						borderColor = 'red';
-					}
-					if (message.type == 'agent') {
-						displayText = 'Agent: ' + message.text;
-						borderColor = 'blue';
-					}
-					if (message.type == 'user') {
-						displayText = 'User: ' + message.text;
-						borderColor = 'green';
-					}
-					return (
+			<Box flexDirection="column" paddingY={1}>
+				<Static items={messages}>
+					{(message, index) => (
 						<Box
 							paddingX={3}
 							borderStyle="classic"
-							borderColor={borderColor}
+							borderColor={
+								message.type === 'thought'
+									? 'red'
+									: message.type === 'tool'
+									? 'yellow'
+									: message.type === 'task'
+									? 'red'
+									: message.type === 'agent'
+									? 'blue'
+									: 'green'
+							}
 							key={index}
 						>
-							<Text key={index} color={borderColor}>
-								{displayText}
+							<Text
+								key={index}
+								color={
+									message.type === 'thought'
+										? 'red'
+										: message.type === 'tool'
+										? 'yellow'
+										: message.type === 'task'
+										? 'red'
+										: message.type === 'agent'
+										? 'blue'
+										: 'green'
+								}
+							>
+								{message.type === 'thought'
+									? 'Devon is thinking: ' + message.text
+									: message.type === 'tool'
+									? 'Devon ran: ' + message.text
+									: message.type === 'task'
+									? 'Task: ' + message.text
+									: message.type === 'agent'
+									? 'Devon: ' + message.text
+									: 'User: ' + message.text}
 							</Text>
 						</Box>
-					);
-				})}
-				{modelLoading && <Box paddingX={3}>
-					<Text>Waiting for Agent...</Text>
-					<Spinner type="simpleDots" />
-				</Box>}
-				{/* <Box ref={scrollRef} /> */}
-				{/* </Box> */}
-			</Box>
-			{/* <Box  borderStyle="round" borderTopColor="white"> */}
-			<Box paddingX={3}>
-				<TextInput
+					)}
+				</Static>
+				{status ? (
+					<Box paddingX={3} marginBottom={1}>
+						<Text>
+							{status}
+							{modelLoading || !started ? <Spinner type="simpleDots" /> : <></>}
+						</Text>
+					</Box>
+				) : (
+					<Box paddingX={3} marginBottom={1}></Box>
+				)}
 
-					value={inputValue}
-					onChange={setInputValue}
-					onSubmit={handleSubmit}
-					placeholder="Type your message..."
-				/>
+				<Box paddingX={3}>
+					<TextInput
+						value={inputValue}
+						onChange={setInputValue}
+						onSubmit={handleSubmit}
+					/>
+				</Box>
 			</Box>
-		 </Box>
+		</Box>
 	);
 };
-
-// render(<ChatInterface />);

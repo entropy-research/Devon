@@ -4,23 +4,28 @@ import {render} from 'ink';
 // import meow from 'meow';
 import {App} from './app.js';
 import portfinder from 'portfinder';
-// TODO:
+import childProcess from 'node:child_process';
+// import {writeLogLine} from './utils.js';
 
-// - [ ] anthropic key correctly
+// TODO:
 // - [ ] Task managment
-// - [ ] Exit app on stop after user confirms
-// - [ ] slow down and smooth new message rendering
-// - [ ] choose open port automatically
+// - [ ] style everything
 // - [ ] make output more compact
+// - [ ] package as a single executable
+
+// - [x] anthropic key correctly
+// - [x] Exit app on stop after user confirms
+// - [x] make common exit function
+// - [x] slow down and smooth new message rendering
+// - [x] choose open port automatically
 // - [x] deliniate between agent thoughts and agent questions
 // - [x] Fix interrupt
 // - [x] Add loading/ feedback for user
-// - [x] Start Loading Screen 
+// - [x] Start Loading Screen
 // - [x] combine command and output into one
 
-
 // - [ ] provide headless mode
-// - [ ] handle error output 
+// - [ ] handle error output
 // - [ ] handle debug console
 // - [ ] if window big show editor and cli
 // - [ ] paginate outputs
@@ -46,9 +51,50 @@ import portfinder from 'portfinder';
 // 		},
 // 	},
 // );
-portfinder.getPort(function (_ : any, port : number) {
 
-render(<App port={port} />,{
-	exitOnCtrlC: true,
-})
-})
+// check if anthropic key is set
+if (!process.env['ANTHROPIC_API_KEY']) {
+	console.log(
+		'Please set the ANTHROPIC_API_KEY environment variable to use the Devon TUI.',
+	);
+	process.exit(1);
+}
+
+const controller = new AbortController();
+
+portfinder.setBasePort(10000);
+portfinder.getPort(function (_: any, port: number) {
+	const subProcess = childProcess.spawn(
+		'python3',
+		[
+			'/Users/mihirchintawar/agent/devon/environment/server.py',
+			port.toString(),
+		],
+		{
+			signal: controller.signal,
+		},
+	);
+
+	// subProcess.stdout.on('data', (newOutput: Buffer) => {
+	// 	writeLogLine(newOutput.toString('utf8'));
+	// });
+
+	// subProcess.stderr.on('data', (newOutput: Buffer) => {
+	// 	console.error(newOutput.toString('utf8'));
+	// });
+
+	subProcess.on('error', error => {
+		console.error('Error:', error.message);
+		process.exit(0);
+	});
+
+	const {waitUntilExit} = render(<App port={port} />, {
+		exitOnCtrlC: true,
+	});
+
+	waitUntilExit().then(() => {
+		console.log('Exiting...');
+		subProcess.kill();
+		process.exit(0);
+	});
+});
