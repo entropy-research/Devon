@@ -168,6 +168,14 @@ OBSERVATION: {observation}
         except KeyboardInterrupt:
             raise
         except RuntimeError as e:
+            session.event_log.append(
+                {
+                    "type": "Error",
+                    "content": str(e),
+                    "producer": self.name,
+                    "consumer": "none",
+                }
+            )
             logger.error(f"Runtime error: {e}")
             return (
                 f"Exit due to runtime error: {e}",
@@ -175,6 +183,14 @@ OBSERVATION: {observation}
                 f"exit due to runtime error: {e}",
             )
         except RetryError as e:
+            session.event_log.append(
+                {
+                    "type": "Error",
+                    "content": str(e),
+                    "producer": self.name,
+                    "consumer": "none",
+                }
+            )
             logger.error(f"Retry error: {e}")
             return (
                 f"Exit due to retry error: {e}",
