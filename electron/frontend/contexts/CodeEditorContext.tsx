@@ -12,15 +12,27 @@ const CodeEditorContext = createContext({
 
 export const CodeEditorContextProvider = ({ children, tabFiles }) => {
     const [files, setFiles] = useState(tabFiles)
-    const [file, setFile] = useState(files.length > 0 ? files[0] : null)
-    const [selectedFileId, setSelectedFileId] = useState(file?.id)
+    const [file, setFile] = useState(tabFiles.length > 0 ? tabFiles[0] : null)
+    const [selectedFileId, setSelectedFileId] = useState(
+        tabFiles.length > 0 ? tabFiles[0].id : null
+    )
     const [diffEnabled, setDiffEnabled] = useState(false)
 
     useEffect(() => {
+        if (tabFiles.length === 0) {
+            setFile(null)
+            setSelectedFileId(null)
+            return
+        }
         setFiles(tabFiles)
-        setFile(tabFiles.length > 0 ? tabFiles[0] : null)
-        setSelectedFileId(file?.id) 
-    }, [file?.id, tabFiles])
+        if (!file) {
+            setFile(tabFiles[0])
+        }
+        if (!selectedFileId && tabFiles.length > 0) {
+            setSelectedFileId(tabFiles[0].id)
+        }
+    }, [file, selectedFileId, tabFiles])
+
     return (
         <CodeEditorContext.Provider
             value={{
