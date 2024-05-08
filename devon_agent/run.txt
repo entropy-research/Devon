@@ -1,2 +1,0 @@
-https://github.com/entropy-research/agent.git
-Add reranking to the agent prior to ingestion, make sure that the diffs you create work with the parsing code in create_diff.py

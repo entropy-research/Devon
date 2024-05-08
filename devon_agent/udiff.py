@@ -6,12 +6,12 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from devon.swebenchenv.environment.utils import LOGGER_NAME
+from devon_agent.utils import LOGGER_NAME
+
+
 
 logger = logging.getLogger(LOGGER_NAME)
-
 DATA_LOGGER_NAME = "udiff_data"
-
 data_logger = logging.getLogger(DATA_LOGGER_NAME)
 
 
@@ -815,39 +815,3 @@ def apply_multi_file_context_diff(file_content, diff, original_change_count):
     apply_res["fail"].extend(failures)
 
     return apply_res, total_new_changed
-
-
-if __name__ == "__main__":
-    code = """
-    asomawefsdofjn content
-<DIFF>
-```diff
---- django/views/debug.py
-+++ django/views/debug.py
-@@ -38,11 +38,17 @@
-             if self.hidden_settings.search(key):
-                 cleansed = self.cleansed_substitute
-             elif isinstance(value, dict):
-                 cleansed = {k: self.cleanse_setting(k, v) for k, v in value.items()}
-+            elif isinstance(value, Iterable) and not isinstance(value, dict):
-+                cleansed = [self.cleanse_setting(None, v) for v in value]
-             else:
-                 cleansed = value
-         except TypeError:
-             # If the key isn't regex-able, just return as-is.
-             cleansed = value
-+        from collections.abc import Iterable
-+
-         if callable(cleansed):
-             cleansed = CallableSettingWrapper(cleansed)
- 
-         return cleansed
-```
-</DIFF>
-"""
-
-    res = extract_diff_from_response(code)
-
-    print(res)
-    delta = code.split("```diff")[1].split("```")[0]
-    print(delta)
