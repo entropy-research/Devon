@@ -23,7 +23,7 @@ class DotDict:
 
     def __getattr__(self, key):
         return self.data.get(key)
-    
+
     def to_dict(self):
         return self.__dict__
 

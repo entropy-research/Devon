@@ -12,7 +12,7 @@ from devon_swe_bench_experimental.environment.prompt import (
     system_prompt_template_v3,
 )
 
-from devon_swe_bench_experimental.environment.utils import LOGGER_NAME, Event
+from devon_swe_bench_experimental.environment.utils import LOGGER_NAME
 from tenacity import RetryError
 
 from typing import TYPE_CHECKING
@@ -182,7 +182,6 @@ OBSERVATION: {observation}
             )
         except Exception as e:
             raise e
-
 
 
 #     def run(self,session: 'Session', observation: str = None):

@@ -6,7 +6,11 @@ from typing import Dict, List
 
 import fastapi
 from devon_swe_bench_experimental.environment.agent import TaskAgent
-from devon_swe_bench_experimental.environment.session import Event, Session, SessionArguments
+from devon_swe_bench_experimental.environment.session import (
+    Event,
+    Session,
+    SessionArguments,
+)
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -166,14 +170,19 @@ def create_session(session: str, path: str):
 @app.post("/session/{session}/start")
 def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
     if session not in sessions:
-        raise fastapi.HTTPException(status_code=404,detail="Session not found" )
-    
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+
     if session in running_sessions:
         raise fastapi.HTTPException(status_code=304, detail="Session already running")
 
     sessions[session].enter()
     sessions[session].event_log.append(
-        Event(type="Task", content="ask user for what to do", producer="system", consumer="devon")
+        Event(
+            type="Task",
+            content="ask user for what to do",
+            producer="system",
+            consumer="devon",
+        )
     )
     background_tasks.add_task(sessions[session].step_event)
     running_sessions.append(session)
@@ -195,7 +204,9 @@ def interrupt_session(session: str, message: str):
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_obj.event_log.append(Event(type="Interrupt", content=message, producer="user", consumer="devon"))
+    session_obj.event_log.append(
+        Event(type="Interrupt", content=message, producer="user", consumer="devon")
+    )
     return session
 
 
@@ -208,6 +219,7 @@ def stop_session(session: str):
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
     session_obj.event_log.append(Event(type="stop", content="stop"))
     return session_obj
+
 
 @app.get("/session/{session}/state")
 def continue_session(session: str):
@@ -261,6 +273,7 @@ if __name__ == "__main__":
     import uvicorn
 
     import sys
+
     port = 8000  # Default port
     if len(sys.argv) > 1:
         try:

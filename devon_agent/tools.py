@@ -33,7 +33,6 @@ from devon_swe_bench_experimental.swebenchenv.environment.unified_diff.udiff imp
 )
 
 
-
 def normalize_path(path, specified_path):
     if path == os.sep:
         return specified_path

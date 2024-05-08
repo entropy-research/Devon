@@ -78,7 +78,9 @@ class LocalEnvironment(Environment):
                 ), completed_process.returncode
 
             output = (
-                completed_process.stdout.decode("utf-8") if completed_process.stdout else ""
+                completed_process.stdout.decode("utf-8")
+                if completed_process.stdout
+                else ""
             )
         except Exception as e:
             return str(e), -1
