@@ -1,10 +1,10 @@
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import Tuple
+from typing import Optional, Tuple
 
-from devon_swe_bench_experimental.agent.model import AnthropicModel, ModelArguments
-from devon_swe_bench_experimental.environment.prompt import (
+from devon_agent.model import AnthropicModel, ModelArguments
+from devon_agent.prompt import (
     commands_to_command_docs,
     history_to_bash_history,
     last_user_prompt_template_v3,
@@ -12,13 +12,13 @@ from devon_swe_bench_experimental.environment.prompt import (
     system_prompt_template_v3,
 )
 
-from devon_swe_bench_experimental.environment.utils import LOGGER_NAME
+from devon_agent.utils import LOGGER_NAME
 from tenacity import RetryError
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from devon_swe_bench_experimental.environment.session import Session
+    from devon_agent.session import Session
 
 # from devon.environment.cli import ChatEnvironment
 
@@ -33,6 +33,7 @@ class Agent:
     temperature: float = 0.0
     chat_history: list[dict[str, str]] = field(default_factory=list)
     interrupt: str = ""
+    api_key: Optional[str] = None
 
     def run(self, session: "Session", observation: str = None): ...
 
@@ -78,7 +79,7 @@ class TaskAgent(Agent):
             self.interrupt = ""
 
         self.current_model = AnthropicModel(
-            args=ModelArguments(model_name=self.model, temperature=self.temperature)
+            args=ModelArguments(model_name=self.model, temperature=self.temperature, api_key=self.api_key)
         )
         try:
             editor = self._convert_editor_to_view(

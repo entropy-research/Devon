@@ -66,10 +66,7 @@ portfinder.setBasePort(10000);
 portfinder.getPort(function (_: any, port: number) {
 	const subProcess = childProcess.spawn(
 		'python3',
-		[
-			'/Users/mihirchintawar/agent/devon_agent/server.py',
-			port.toString(),
-		],
+		['/Users/mihirchintawar/agent/devon_agent/server.py', port.toString()],
 		{
 			signal: controller.signal,
 		},

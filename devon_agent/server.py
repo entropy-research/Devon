@@ -5,8 +5,8 @@ from time import sleep
 from typing import Dict, List
 
 import fastapi
-from devon_swe_bench_experimental.environment.agent import TaskAgent
-from devon_swe_bench_experimental.environment.session import (
+from devon_agent.agent import TaskAgent
+from devon_agent.session import (
     Event,
     Session,
     SessionArguments,
@@ -62,6 +62,7 @@ get_sessions_sql = """
 SELECT * FROM sessions
 """
 
+API_KEY = None
 
 # @asynccontextmanager
 # async def lifespan(app: FastAPI):
@@ -156,6 +157,7 @@ def create_session(session: str, path: str):
         name="Devon",
         model="claude-opus",
         temperature=0.0,
+        api_key=API_KEY,
     )
     sessions[session] = Session(
         SessionArguments(
@@ -282,7 +284,7 @@ if __name__ == "__main__":
             print("Warning: Invalid port number provided. Using default port 8000.")
 
         try:
-            api_key = sys.argv[2]
+            API_KEY = sys.argv[2]
         except IndexError:
             if os.environ.get("ANTHROPIC_API_KEY"):
                 api_key = os.environ.get("ANTHROPIC_API_KEY")
