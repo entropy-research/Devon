@@ -1,45 +1,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ShellWidget from './shell-widget'
 import BrowserWidget from './browser-widget'
-import EditorWidget from './editor-widget'
+import EditorWidget from './editor-widget/editor-widget'
 import PlannerWidget from './planner-widget'
 import Chat from '../../chat/chat'
 import { ViewMode } from '@/lib/types'
-import { CodeEditorContextProvider } from '@/contexts/CodeEditorContext'
 import { ChatProps } from '@/lib/chat.types'
-
-const files = [
-    {
-        id: 1,
-        name: 'main.py',
-        language: 'python',
-        value: "# Devon's Code Editor",
-    },
-    {
-        id: 2,
-        name: 'script.js',
-        language: 'javascript',
-        value: "console.log('Hello, world!');",
-    },
-    {
-        id: 3,
-        name: 'style.css',
-        language: 'css',
-        value: 'body { background-color: #f0f0f0; }',
-    },
-    {
-        id: 4,
-        name: 'index.html',
-        language: 'html',
-        value: '<h1>Hello, world!</h1>',
-    },
-    // {
-    //     id: 5,
-    //     name: 'README.md',
-    //     language: 'markdown',
-    //     value: '# Welcome to Devon!',
-    // },
-]
 
 const tabs = [
     {
@@ -55,11 +21,7 @@ const tabs = [
     {
         id: 'editor',
         title: 'Editor',
-        content: (
-            <CodeEditorContextProvider tabFiles={files}>
-                <EditorWidget />
-            </CodeEditorContextProvider>
-        ),
+        content: <></>,
     },
     {
         id: 'planner',
@@ -83,11 +45,7 @@ const gridTabs = [
     },
     {
         id: 'editor',
-        content: (
-            <CodeEditorContextProvider tabFiles={files}>
-                <EditorWidget />
-            </CodeEditorContextProvider>
-        ),
+        content: <></>,
     },
     // {
     //     id: 'planner',
@@ -106,7 +64,7 @@ export default function AgentWorkspaceTabs({
     return (
         <>
             {viewMode === ViewMode.Panel ? (
-                <PanelView />
+                <PanelView chatProps={chatProps} />
             ) : (
                 <GridView chatProps={chatProps} />
             )}
@@ -114,7 +72,7 @@ export default function AgentWorkspaceTabs({
     )
 }
 
-const PanelView = () => (
+const PanelView = ({ chatProps }: { chatProps: ChatProps }) => (
     <Tabs defaultValue="shell" className="flex flex-col h-full">
         <TabsList className="gap-1 justify-start">
             {tabs.map(({ id, title }) => (
@@ -125,7 +83,11 @@ const PanelView = () => (
         </TabsList>
         {tabs.map(({ id, content }) => (
             <ContentContainer key={id} value={id}>
-                {content}
+                {id === 'editor' ? (
+                    <EditorWidget chatId={chatProps.id ?? null} />
+                ) : (
+                    content
+                )}
             </ContentContainer>
         ))}
     </Tabs>
@@ -146,7 +108,13 @@ const GridView = ({ chatProps }: { chatProps: ChatProps }) => (
         </div>
         <div className="grid grid-cols-2 gap-4 h-1/2 block">
             {gridTabs.slice(2, 4).map(({ id, content }) => (
-                <GridContentContainer key={id}>{content}</GridContentContainer>
+                <GridContentContainer key={id}>
+                    {id === 'editor' ? (
+                        <EditorWidget chatId={chatProps.id ?? null} />
+                    ) : (
+                        content
+                    )}
+                </GridContentContainer>
             ))}
         </div>
     </div>

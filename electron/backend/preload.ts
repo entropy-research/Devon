@@ -16,6 +16,12 @@ type Channel =
   | 'create-or-update-chat'
   | 'get-chats'
   | 'get-chat-by-id'
+  | 'encrypt-data'
+  | 'decrypt-data'
+  | 'save-data'
+  | 'load-data'
+  | 'delete-encrypted-data'
+  | 'check-has-encrypted-data'
 
 const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
   send: ['get-file-path', 'add-message', 'ping'],
@@ -29,6 +35,12 @@ const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
     'create-or-update-chat',
     'get-chats',
     'get-chat-by-id',
+    'encrypt-data',
+    'decrypt-data',
+    'save-data',
+    'load-data',
+    'delete-encrypted-data',
+    'check-has-encrypted-data'
   ],
   receive: ['file-path-response'],
 }

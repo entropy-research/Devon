@@ -6,9 +6,11 @@ import Link from 'next/link'
 import {
     // BotCard,
     BotMessage,
+    ToolResponseMessage,
+    ThoughtMessage,
 } from '@/components/vercel-chat/message'
 import { SpinnerMessage, UserMessage } from '@/components/vercel-chat/message'
-import Chat from '../chat/chat'
+// import Chat from '../chat/chat'
 
 export interface ChatList {
     messages: UIState
@@ -143,12 +145,16 @@ const DisplayedChatMessage = ({ message }) => {
             <div className="mb-8">
                 {message.type === 'agent' ? (
                     <BotMessage content={message.text}></BotMessage>
+                ) : message.type === 'thought' ? (
+                    <ThoughtMessage content={message.text}></ThoughtMessage>
                 ) : message.type === 'command' ? (
                     <ChatTypeWrapper type="Command">
                         {message.text}
                     </ChatTypeWrapper>
                 ) : message.type === 'tool' ? (
-                    <ToolResponseMessage>{message.text}</ToolResponseMessage>
+                    <ToolResponseMessage
+                        content={message.text}
+                    ></ToolResponseMessage>
                 ) : message.type === 'user' ? (
                     <UserMessage>{message.text}</UserMessage>
                 ) : message.type === 'task' ? (
@@ -169,10 +175,6 @@ const DisplayedChatMessage = ({ message }) => {
             </div>
         )
     )
-}
-
-const ToolResponseMessage = ({ children }) => {
-    return <div className="ml-[52px]"><p className="text-gray-400">{children}</p></div>
 }
 
 const ChatTypeWrapper = ({

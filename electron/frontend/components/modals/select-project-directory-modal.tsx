@@ -2,7 +2,7 @@ import FolderPicker from '@/components/ui/folder-picker'
 import { useState, lazy, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import useCreateSession from '@/lib/services/sessionService/use-create-session'
-import { handleNavigate } from '@/components/sidebar'
+import handleNavigate from '@/components/sidebar/handleNavigate'
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({

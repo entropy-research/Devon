@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { DM_Sans } from 'next/font/google'
 import { Toaster } from '@/components/ui/toaster'
-import Sidebar from '@/components/sidebar'
+import Sidebar from '@/components/sidebar/sidebar'
 
 import './globals.css'
 

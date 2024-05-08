@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 
 const CodeEditorContext = createContext({
     files: [],
@@ -12,9 +12,26 @@ const CodeEditorContext = createContext({
 
 export const CodeEditorContextProvider = ({ children, tabFiles }) => {
     const [files, setFiles] = useState(tabFiles)
-    const [file, setFile] = useState(files[0])
-    const [selectedFileId, setSelectedFileId] = useState(file.id)
+    const [file, setFile] = useState(tabFiles.length > 0 ? tabFiles[0] : null)
+    const [selectedFileId, setSelectedFileId] = useState(
+        tabFiles.length > 0 ? tabFiles[0].id : null
+    )
     const [diffEnabled, setDiffEnabled] = useState(false)
+
+    useEffect(() => {
+        if (tabFiles.length === 0) {
+            setFile(null)
+            setSelectedFileId(null)
+            return
+        }
+        setFiles(tabFiles)
+        if (!file) {
+            setFile(tabFiles[0])
+        }
+        if (!selectedFileId && tabFiles.length > 0) {
+            setSelectedFileId(tabFiles[0].id)
+        }
+    }, [file, selectedFileId, tabFiles])
 
     return (
         <CodeEditorContext.Provider

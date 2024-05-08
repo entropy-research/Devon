@@ -6,7 +6,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import CodeEditor from '@/components/agent-workspace/agent-tabs/editor-widget'
+import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 
 // The file tabs at the top of the editor widget. Also used in the shell widget
 const FileTabs = ({
@@ -15,12 +15,14 @@ const FileTabs = ({
     updateSelectedFile,
     diffEnabled,
     setDiffEnabled,
+    chatId,
 }: {
     files: any[]
-    selectedFileId: number
+    selectedFileId: string
     updateSelectedFile: (file: any) => void
     diffEnabled: boolean
     setDiffEnabled: (value: boolean) => void
+    chatId: string | null
 }) => {
     return (
         <div className="flex justify-between w-full">
@@ -44,7 +46,7 @@ const FileTabs = ({
                             <DialogHeader className="mb-4">
                                 <DialogTitle>Expanded Editor</DialogTitle>
                             </DialogHeader>
-                            <CodeEditor isExpandedVariant />
+                            <EditorWidget isExpandedVariant chatId={chatId}/>
                         </DialogContent>
                     }
                 />

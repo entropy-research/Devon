@@ -1,7 +1,14 @@
 'use client'
 
-import { useState, Suspense, lazy, Dispatch, SetStateAction } from 'react'
-// import { Key } from 'lucide-react'
+import {
+    useState,
+    Suspense,
+    lazy,
+    Dispatch,
+    SetStateAction,
+    useEffect,
+} from 'react'
+import { CircleHelp } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import DisabledWrapper from '@/components/ui/disabled-wrapper'
@@ -9,6 +16,13 @@ import {
     SelectProjectDirectoryComponent,
     StartChatButton,
 } from '@/components/modals/select-project-directory-modal'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
+import { useSafeStorage } from '@/lib/services/safeStorageService'
+import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -32,7 +46,15 @@ const OnboardingModal = ({
     const [isChecked, setIsChecked] = useState(false)
     const [apiKey, setApiKey] = useState('')
 
+    const { saveData, deleteData, checkHasEncryptedData } = useSafeStorage()
+    const [hasEncryptedData, setHasEncryptedData] = useState(false)
+
+    useEffect(() => {
+        checkHasEncryptedData().then(setHasEncryptedData)
+    }, [checkHasEncryptedData])
+
     function afterSubmit() {
+        saveData(apiKey) // Store the api key
         setInitialized(true)
     }
 
@@ -48,7 +70,7 @@ const OnboardingModal = ({
 
     function validateFields() {
         if (!isChecked) return false
-        return apiKey !== '' && folderPath !== ''
+        return (apiKey || hasEncryptedData) !== '' && folderPath !== ''
     }
 
     return (
@@ -91,13 +113,24 @@ const OnboardingModal = ({
                                     <p className="text-xl font-bold">
                                         Anthropic API Key
                                     </p>
+                                    <Popover>
+                                        <PopoverTrigger className="ml-1">
+                                            <CircleHelp size={20} />
+                                        </PopoverTrigger>
+                                        {hasEncryptedData ? <PopoverContent side='top' className="bg-night w-fit p-2">To edit, go to settings</PopoverContent>
+                                        : <SafeStoragePopoverContent/>}
+                                    </Popover>
                                 </div>
                                 <Input
                                     className="w-full"
                                     type="password"
-                                    value={apiKey}
+                                    value={
+                                        hasEncryptedData
+                                            ? '***************'
+                                            : apiKey
+                                    }
                                     onChange={handleApiKeyInputChange}
-                                    disabled={!isChecked}
+                                    disabled={!isChecked || hasEncryptedData}
                                 />
                             </div>
                         </DisabledWrapper>
