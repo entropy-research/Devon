@@ -183,3 +183,4 @@ PROMPT
 /electron/.yarn
 
 .ruff_cache
+.vscode
