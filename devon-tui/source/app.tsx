@@ -85,6 +85,7 @@ type Event = {
 		| 'EnvironmentResponse'
 		| 'ModelRequest'
 		| 'ToolRequest'
+		| 'Error'
 		| 'UserResponse';
 	content: string;
 	identifier: string | null;
@@ -92,7 +93,7 @@ type Event = {
 
 type Message = {
 	text: string;
-	type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought';
+	type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error';
 };
 
 const handleEvents = (
@@ -106,8 +107,12 @@ const handleEvents = (
 	let model_loading = false;
 	let tool_message = '';
 	let idx = 0;
+	let error = false;
 
 	for (const event of events) {
+		if (error) {
+			break;
+		}
 		if (event.type == 'ModelRequest') {
 			model_loading = true;
 		}
@@ -149,6 +154,14 @@ const handleEvents = (
 		if (event.type == 'UserRequest') {
 			messages.push({text: event.content, type: 'agent'});
 			user_request = true;
+		}
+
+		if (event.type == 'Error') {
+			if (!error) {
+				messages.push({text: event.content, type: 'error'});
+				error = true;
+			}
+
 		}
 
 		if (event.type == 'Stop') {
@@ -242,7 +255,7 @@ export const App = ({port}: {port: number}) => {
 					{(message, index) => (
 						<Box
 							paddingX={3}
-							borderStyle="classic"
+							borderStyle={message.type == 'error' ? 'double' : 'classic'}
 							borderColor={
 								message.type === 'thought'
 									? 'red'
@@ -251,7 +264,9 @@ export const App = ({port}: {port: number}) => {
 									: message.type === 'task'
 									? 'red'
 									: message.type === 'agent'
-									? 'blue'
+									? 'blue' 
+									: message.type === 'error'
+									? 'red'
 									: 'green'
 							}
 							key={index}
@@ -267,6 +282,8 @@ export const App = ({port}: {port: number}) => {
 										? 'red'
 										: message.type === 'agent'
 										? 'blue'
+										: message.type === 'error'
+										? 'red'
 										: 'green'
 								}
 							>
@@ -278,6 +295,8 @@ export const App = ({port}: {port: number}) => {
 									? 'Task: ' + message.text
 									: message.type === 'agent'
 									? 'Devon: ' + message.text
+									: message.type === 'error'
+									? 'Error: ' + message.text
 									: 'User: ' + message.text}
 							</Text>
 						</Box>

@@ -9,10 +9,10 @@ import childProcess from 'node:child_process';
 
 // TODO:
 // - [ ] Task managment
-// - [ ] style everything
-// - [ ] make output more compact
 // - [ ] package as a single executable
 
+// - [x] style everything
+// - [x] make output more compact
 // - [x] anthropic key correctly
 // - [x] Exit app on stop after user confirms
 // - [x] make common exit function

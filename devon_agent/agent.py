@@ -198,7 +198,20 @@ OBSERVATION: {observation}
                 f"exit due to retry error: {e}",
             )
         except Exception as e:
-            raise e
+            session.event_log.append(
+                {
+                    "type": "Error",
+                    "content": str(e),
+                    "producer": self.name,
+                    "consumer": "none",
+                }
+            )
+            logger.error(f"Exception: {e}")
+            return (
+                f"Exit due to exception: {e}",
+                "exit_error",
+                f"exit due to exception: {e}",
+            )
 
 
 class PlanningAgent:
