@@ -1,0 +1,13 @@
+<<<
+--- /scikit-learn__scikit-learn/sklearn/ensemble/voting.py
++++ /scikit-learn__scikit-learn/sklearn/ensemble/voting.py
+@@ -88,7 +88,7 @@
+ 
+         self.estimators_ = Parallel(n_jobs=self.n_jobs)(
+                 delayed(_parallel_fit_estimator)(clone(clf), X, y,
+-                                                 sample_weight=sample_weight)
++                                                 sample_weight=sample_weight) for clf in clfs if clf is not None
+                 for clf in clfs if clf is not None)
+ 
+         self.named_estimators_ = Bunch()
+>>>

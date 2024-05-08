@@ -1,0 +1,13 @@
+edit_file <<<
+--- django/contrib/admin/sites.py
++++ django/contrib/admin/sites.py
+@@ -433,7 +433,7 @@
+                     return HttpResponsePermanentRedirect(path)
+         raise Http404
+
+-    def _build_app_dict(self, request, label=None):
++    def build_app_dict(self, request, label=None):
+         """
+         Build the app dictionary. The optional `label` parameter filters models
+         of a specific app.
+>>>

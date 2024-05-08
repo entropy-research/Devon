@@ -1,0 +1,19 @@
+session
+- get state
+- tool interface
+
+- move chat to session
+- decouple chat from history
+- move history to session
+- decouple logger
+
+- asyncify everything (maybe use agent for this)
+
+
+tools
+- tool interface
+- parser 
+- docs generator
+
+
+Semantic macro

@@ -1,0 +1,16 @@
+<<<
+--- django__django/django/core/validators.py
++++ django__django/django/core/validators.py
+@@ -142,10 +142,12 @@
+             scheme, netloc, path, query, fragment = urlsplit(value)
+         except ValueError:  # for example, "Invalid IPv6 URL"
+-            raise ValidationError(self.message, code=self.code, params={'value': value})
++            raise ValidationError(
++                str(e),
++                code=self.code,
++                params={'value': value},
++            )
+         try:
+             netloc = punycode(netloc)  # IDN -> ACE
+         except UnicodeError:  # invalid domain part
+>>>

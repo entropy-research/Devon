@@ -1,0 +1,17 @@
+<<<
+--- django/db/models/query_utils.py
++++ django/db/models/query_utils.py
+@@ -40,6 +40,12 @@
+ 
+     def _combine(self, other, conn):
++        from django.db.models.expressions import Exists
++        if isinstance(other, Exists):
++            obj = type(self)()
++            obj.add(self, conn)
++            obj.add(other, conn)
++            return obj
+         if not isinstance(other, Q):
+             raise TypeError(other)
+ 
+         # If the other Q() is empty, ignore it and just use `self`.
+>>>

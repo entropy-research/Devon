@@ -1,0 +1,7 @@
+edit_file <<<
+--- sympy/printing/latex.py
++++ sympy/printing/latex.py
+@@ -743,7 +743,7 @@
+-            inv_trig_table = ["asin", "acos", "atan", "acot"]
++            inv_trig_table = ["asin", "acos", "atan", "acsc", "asec", "acot"]
+>>>

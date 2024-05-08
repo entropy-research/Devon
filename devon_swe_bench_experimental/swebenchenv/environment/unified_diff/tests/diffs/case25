@@ -1,0 +1,30 @@
+edit_file <<<
+--- /django__django/django/contrib/admin/sites.py
++++ /django__django/django/contrib/admin/sites.py
+@@ -433,7 +433,7 @@
+         return app_list
+ 
+     @method_decorator(never_cache)
+-    def _build_app_dict(self, request, label=None):
++    def build_app_dict(self, request, label=None):
+         """
+         Build the app dictionary. The optional `label` parameter filters models
+         of a specific app.
+@@ -460,7 +460,8 @@
+                 'perms': perms,
+                 'admin_url': None,
+                 'add_url': None,
++                'model': model,
+             }
+             if perms.get('change') or perms.get('view'):
+                 model_dict['view_only'] = not perms.get('change')
+@@ -501,7 +502,7 @@
+         Return a sorted list of all the installed apps that have been
+         registered in this site.
+         """
+-        app_dict = self._build_app_dict(request)
++        app_dict = self.build_app_dict(request)
+         app_list = sorted(app_dict.values(), key=lambda x: x['name'].lower())
+         for app in app_list:
+             app['models'].sort(key=lambda x: x['name'])
+>>>

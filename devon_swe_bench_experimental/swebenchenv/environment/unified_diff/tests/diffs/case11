@@ -1,0 +1,13 @@
+<<<
+--- /scikit-learn__scikit-learn/sklearn/preprocessing/label.py
++++ /scikit-learn__scikit-learn/sklearn/preprocessing/label.py
+@@ -127,6 +127,8 @@
+         if len(np.intersect1d(classes, self.classes_)) < len(classes):
+             diff = np.setdiff1d(classes, self.classes_)
+             raise ValueError("y contains previously unseen labels: %s" % str(diff))
++        if len(y) == 0:
++            return np.empty_like(self.classes_, dtype=self.classes_.dtype)
+         return np.searchsorted(self.classes_, y)
+ 
+     def inverse_transform(self, y):
+>>>

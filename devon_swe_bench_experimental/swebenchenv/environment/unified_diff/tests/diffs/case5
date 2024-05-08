@@ -1,0 +1,13 @@
+<<<
+--- django/db/models/fields/__init__.py
++++ django/db/models/fields/__init__.py
+@@ -2034,6 +2034,10 @@
+     description = _("Duration")
+ 
+     def __init__(self, *args, **kwargs):
++        if 'help_text' not in kwargs:
++            kwargs['help_text'] = _("Enter duration in the format: [DD] [[HH:]MM:]ss[.uuuuuu]")
+         super().__init__(*args, **kwargs)
+ 
+     def get_internal_type(self):
+>>>
