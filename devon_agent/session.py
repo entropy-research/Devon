@@ -69,6 +69,10 @@ Task
 - Content: The next task/object the agent has to complete
 - Next: ModelResponse
 
+Error
+- Content: The error message
+- Next: None
+
 Event Transitions
 ```
 stateDiagram
@@ -434,7 +438,6 @@ class Session:
 
         return docs
 
-    # start
     def enter(self):
         self.environment.enter()
 
