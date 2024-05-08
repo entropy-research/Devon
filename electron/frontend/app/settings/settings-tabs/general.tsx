@@ -47,16 +47,7 @@ const General = () => {
                             <PopoverTrigger className="ml-2 mb-2">
                                 <CircleHelp size={20} />
                             </PopoverTrigger>
-                            {hasEncryptedData ? (
-                                <PopoverContent
-                                    side="top"
-                                    className="bg-night w-fit p-2"
-                                >
-                                    To edit, go to settings
-                                </PopoverContent>
-                            ) : (
-                                <SafeStoragePopoverContent />
-                            )}
+                            <SafeStoragePopoverContent />
                         </Popover>
                     </div>
                     {!hasEncryptedData && (
