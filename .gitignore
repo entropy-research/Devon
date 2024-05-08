@@ -181,3 +181,5 @@ SCRATCHPAD
 PROMPT
 /electron/.storybook
 /electron/.yarn
+
+.ruff_cache
