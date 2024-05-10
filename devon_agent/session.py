@@ -28,6 +28,7 @@ from devon_agent.tools import (
     scroll_up,
     search_dir,
     search_file,
+    set_task,
     submit,
 )
 from devon_agent.utils import DotDict, Event
@@ -135,6 +136,7 @@ class Session:
             ask_user,
             exit,
             edit_file,
+            # set_task
         ]
 
     def to_dict(self):
@@ -439,7 +441,7 @@ class Session:
         return docs
 
     def enter(self):
-        self.environment.enter()
+        self.environment.setup()
 
     def exit(self):
-        self.environment.exit()
+        self.environment.teardown()

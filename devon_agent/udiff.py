@@ -833,7 +833,6 @@ def apply_file_context_diffs(file_content, all_diffs):
     return {"success": succeeded, "fail": failed}
 
 
-
 def apply_multi_file_context_diff(file_content, diff, original_change_count):
     # By the time we get here we have correctly captured a single command
 

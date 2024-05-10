@@ -79,7 +79,11 @@ class TaskAgent(Agent):
             self.interrupt = ""
 
         self.current_model = AnthropicModel(
-            args=ModelArguments(model_name=self.model, temperature=self.temperature, api_key=self.api_key)
+            args=ModelArguments(
+                model_name=self.model,
+                temperature=self.temperature,
+                api_key=self.api_key,
+            )
         )
         try:
             editor = self._convert_editor_to_view(

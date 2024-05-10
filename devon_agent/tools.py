@@ -13,24 +13,51 @@ context:
 
 import io
 import json
+import logging
 import os
 import re
 import tarfile
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict
+from devon_agent.utils import DotDict
 
 from devon_swe_bench_experimental.retrieval.main import (
     get_class_defn,
     get_function_defn,
     initialize_repository,
 )
-from devon_swe_bench_experimental.swebenchenv.environment.unified_diff.udiff import (
+from devon_agent.udiff import (
     Hallucination,
     apply_file_context_diffs,
     extract_all_diffs,
     log_failed_diff,
     log_successful_diff,
 )
+
+if TYPE_CHECKING:
+    from devon_agent.environment import EnvironmentModule
+    from devon_agent.agent import Agent
+
+
+# class ToolContext(TypedDict):
+#     environment: EnvironmentModule
+#     add_event: Callable
+#     logger: logging.Logger
+#     task_agent: Agent
+#     state: DotDict
+
+
+# class ToolModule(Protocol):
+
+#     def setup(self, ctx : ToolContext):
+#         pass
+
+#     def __call__(self, ctx : ToolContext, **kwargs):
+#         pass
+
+#     def cleanup(self, ctx : ToolContext):
+#         pass
 
 
 def normalize_path(path, specified_path):
@@ -49,6 +76,9 @@ def normalize_path(path, specified_path):
     else:
         path = Path(specified_path) / Path(path)
         return path.absolute().as_posix()
+
+
+ToolContext = Any
 
 
 def make_abs_path(ctx, fpath: str) -> str:
@@ -91,7 +121,7 @@ def cwd_normalize_path(ctx, path):
 
 def file_exists(ctx, fpath):
     abs_path = make_abs_path(ctx, fpath)
-    return ctx.environment.communicate(input=f"test -f {abs_path}")[1] == 0
+    return ctx.environment.execute(f"test -f {abs_path}")[1] == 0
 
 
 def read_file(ctx, file_path: str) -> str:
@@ -109,7 +139,7 @@ def read_file(ctx, file_path: str) -> str:
 
 
 def _list_files_recursive(ctx, files: list[str]) -> dict:
-    result = ctx.environment.communicate(f"find /{ctx.base_path} -type f")
+    result = ctx.environment.execute(f"find /{ctx.base_path} -type f")
     all_files = result[0].split("\n") if result[0] else []
 
     # Generate file tree as a nested dictionary and read specified files
@@ -133,7 +163,7 @@ def _list_files_recursive(ctx, files: list[str]) -> dict:
 
         if file_path in files:
             # Read file content from container
-            result = ctx.environment.communicate(f"cat '{file_path}'")
+            result = ctx.environment.execute(f"cat '{file_path}'")
             files_content[file_path] = result
 
     return {
@@ -434,7 +464,7 @@ def write_file(ctx, file_path: str, content: str = "") -> str:
             raise Exception(f"Could not write to file, file does not exist: {abs_path}")
 
         create_command = f"cat << 'DELIM' > {abs_path} \n" + content + "\nDELIM"
-        result = ctx.environment.communicate(input=create_command)
+        result = ctx.environment.execute(create_command)
 
         if result[1] == 1:
             raise Exception(result)
@@ -460,7 +490,7 @@ def delete_file(ctx, file_path: str) -> bool:
             raise Exception(f"Could not delete file, file does not exist: {abs_path}")
 
         # Creating the file with initial content
-        ctx.environment.communicate(f"rm -f {abs_path}")
+        ctx.environment.execute(f"rm -f {abs_path}")
 
         if abs_path in ctx.state.editor:
             del ctx.state.editor[abs_path]
@@ -539,7 +569,7 @@ def create_file(ctx, file_path: str, content: str = "") -> bool:
             + content
             + "\nDELIM"
         )
-        ctx.environment.communicate(input=create_command)
+        ctx.environment.execute(create_command)
 
         # copy_file_to_container(self.container_obj, contents=content, container_path=file_path)
 
@@ -635,7 +665,7 @@ def apply_diff(ctx, multi_file_diffs):
         tgt_file_abs = make_abs_path(ctx, tgt_file)
 
         src_file_exists = (
-            ctx.environment.communicate(f"test -e {src_file_abs} && echo 'exists'")[
+            ctx.environment.execute(f"test -e {src_file_abs} && echo 'exists'")[
                 0
             ].strip()
             == "exists"
@@ -977,7 +1007,7 @@ def find_file(ctx, file_path: str):
     """
     filename = os.path.basename(file_path)
     command = f"find {ctx.base_path} -type f -name '{filename}'"
-    result = ctx.environment.communicate(command)
+    result = ctx.environment.execute(command)
     if result[0] is None:
         return "No such file. Make sure the file exists"
     return result[0]
@@ -1020,7 +1050,7 @@ def search_dir(ctx, search_term: str, dir: str = "./"):
     abs_path = cwd_normalize_path(ctx, dir)
 
     command = f"find {abs_path} -type f ! -path '*/.*' -exec grep -nIH '{search_term}' {{}} + | cut -d: -f1 | sort | uniq -c"
-    result = ctx.environment.communicate(command)
+    result = ctx.environment.execute(command)
 
     matches = result[0].strip()
     if not matches:
@@ -1192,7 +1222,7 @@ def list_files(ctx, folder_path: str = ".") -> list:
     abs_path = cwd_normalize_path(ctx, folder_path)
 
     command = f"grep -rl '' {abs_path}"
-    result = ctx.environment.communicate(command)
+    result = ctx.environment.execute(command)
 
     return result
 
@@ -1205,7 +1235,7 @@ def get_cwd(ctx) -> str:
         str: The current working directory of the container.
     """
     command = "pwd"
-    result = ctx.environment.communicate(command)
+    result = ctx.environment.execute(command)
 
     # logger.info(f"CWD {result}")
 
@@ -1335,5 +1365,16 @@ def exit(ctx):
 
     SYNOPSIS
         exit
+    """
+    pass
+
+
+def set_task(ctx: ToolContext, task):
+    """
+    NAME
+        set_task - set the current task
+
+    SYNOPSIS
+        set_task TASK
     """
     pass

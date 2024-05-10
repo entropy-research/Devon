@@ -51,14 +51,12 @@ class AnthropicModel:
         self.api_model = self.SHORTCUTS.get(args.model_name, args.model_name)
         self.model_metadata = self.MODELS[self.api_model]
 
-
         if args.api_key is not None:
             self.api = Anthropic(api_key=args.api_key)
         else:
             self.api = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
-
         response = (
             self.api.messages.create(
                 messages=messages,

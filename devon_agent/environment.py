@@ -5,33 +5,36 @@ import subprocess
 
 from dataclasses import dataclass
 
-from typing import Protocol
+from typing import Optional, Protocol
 
 
 @dataclass(frozen=False)
-class Environment(Protocol):
-    path: str
+class EnvironmentModule(Protocol):
+    # tools : list[]
 
-    def enter(self): ...
+    def setup(self, **kwargs): ...
 
-    def exit(self): ...
+    def teardown(self, **kwargs): ...
 
-    def __enter__(self): ...
+    def __enter__(self):
+        self.setup()
+        return self
 
-    def __exit__(self, exc_type, exc_value, traceback): ...
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.teardown(exc_type, exc_value, traceback)
 
     def execute(self, input: str, timeout_duration=25): ...
 
 
 @dataclass(frozen=False)
-class LocalEnvironment(Environment):
+class LocalEnvironment:
     path: str
 
-    def enter(self):
+    def setup(self, **kwargs):
         self.old_dir = os.getcwd()
         os.chdir(self.path)
 
-    def exit(self):
+    def teardown(self, **kwargs):
         os.chdir(self.old_dir)
 
     def get_cwd(self):
@@ -82,8 +85,8 @@ class LocalEnvironment(Environment):
         return output, process.returncode
 
     def __enter__(self):
-        self.enter()
+        self.setup()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.exit()
+        self.teardown(exc_type, exc_value, traceback)
