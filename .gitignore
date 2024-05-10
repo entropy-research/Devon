@@ -19,7 +19,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -180,3 +179,8 @@ SCRATCHPAD
 
 
 PROMPT
+/electron/.storybook
+/electron/.yarn
+
+.ruff_cache
+.vscode
