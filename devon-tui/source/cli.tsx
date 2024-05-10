@@ -5,6 +5,9 @@ import {render} from 'ink';
 import {App} from './app.js';
 import portfinder from 'portfinder';
 import childProcess from 'node:child_process';
+
+
+
 // import {writeLogLine} from './utils.js';
 
 // TODO:
@@ -83,14 +86,9 @@ portfinder.getPort(function (_: any, port: number) {
 	// 	writeLogLine(newOutput.toString('utf8'));
 	// });
 
-	// subProcess.stderr.on('data', (newOutput: Buffer) => {
-	// 	console.error(newOutput.toString('utf8'));
-	// });
+	// subProcess.on('error', error => {
 
-	subProcess.on('error', error => {
-		console.error('Error:', error.message);
-		process.exit(0);
-	});
+	// });
 
 	const {waitUntilExit} = render(<App port={port} />, {
 		exitOnCtrlC: true,

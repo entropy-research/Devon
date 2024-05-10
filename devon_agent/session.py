@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, List
 from devon_agent.agent import TaskAgent
 from devon_agent.environment import LocalEnvironment
+from devon_agent.telemetry import ClientSessionEvent, Posthog, SessionEventEvent
 from devon_agent.tools import (
     ask_user,
     close_file,
@@ -40,6 +41,7 @@ class SessionArguments:
     path: str
     environment: str
     user_input: Any
+    name : str
 
 
 """
@@ -121,6 +123,8 @@ class Session:
         self.event_log: List[Event] = []
         self.event_index = 0
         self.get_user_input = args.user_input
+        self.telemetry_client = Posthog()
+        self.name = args.name
 
         self.state.editor = {}
 
@@ -218,6 +222,13 @@ class Session:
         event = self.event_log[self.event_index]
         self.logger.info(f"Event: {event}")
         self.logger.info(f"State: {self.state.editor}")
+
+        # Collect only event name and content only in case of error
+        telemetry_event = SessionEventEvent(
+            event_type=event["type"],
+            message="" if not event["type"] ==  "Error" else event["content"],
+        )
+        self.telemetry_client.capture(telemetry_event)
 
         if event["type"] == "ModelRequest":
             thought, action, output = self.agent.predict(
@@ -457,6 +468,7 @@ class Session:
         return docs
 
     def enter(self):
+        self.telemetry_client.capture(ClientSessionEvent(self.name))
         self.environment.setup()
 
     def exit(self):

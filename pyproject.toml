@@ -31,6 +31,7 @@ swebench = {version = "1.0.1", optional = true}
 gymnasium = {version = "^0.29.1", optional = true}
 datasets = {version = ">=2.14.6,<2.15.0", optional = true}
 click = "^8.1.7"
+posthog = "^3.5.0"
 
 [tool.poetry.extras]
 swebench = ["swebench", "datasets", "gymnasium"]
