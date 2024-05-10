@@ -422,28 +422,29 @@ Currently open files will be listed here. Close unused files. Use open files to 
 <COMMANDS>
 {command_docs} 
 </COMMANDS>
-<RESPONSE FORMAT>
+<RESPONSE FORMAT>s
 Shell prompt format: <cwd> $
 Required fields for each response:
 <THOUGHT>
 Your reflection, planning, and justification goes here
 </THOUGHT>
 <COMMAND>
-A single executable command goes here
+A single executable command goes here, you also have access to all non-interactive bash commands
 </COMMAND>
 </RESPONSE FORMAT>
 """
 
 
-def last_user_prompt_template_v3(issue, history, editor, working_dir):
+def last_user_prompt_template_v3(issue, history, editor, cwd, root_dir):
     return f"""
-<SETTING> 
-Current task: <TASK>{issue}</TASK>
+<SETTING>
+
+Current objective: {issue}
 
 Instructions:
 
 Edit necessary files and run checks/tests
-Submit changes with 'submit' command when ready
+Submit changes with 'submit' command when you think the task has been completed
 Interactive session commands (e.g. python, vim) NOT supported
 Write and run scripts instead (e.g. 'python script.py')
 </SETTING>
@@ -458,12 +459,9 @@ Write and run scripts instead (e.g. 'python script.py')
 </CONSTRAINTS>
 <RESPONSE FORMAT>
 <THOUGHT>
-
-**Am I overthinking?**
-Yes, I am overthinking, I should just make the change that fixes all cases of this type.
-
+Reflect on previous actions here. Feel free to use the no_op command if you need to think more.
 </THOUGHT>
-<COMMAND> 
+<COMMAND>
 Single executable command here
 </COMMAND>
 </RESPONSE FORMAT>
@@ -479,10 +477,10 @@ Single executable command here
 - Use 'no_op' periodically to pause and think
 - Focus on matching the source lines precisely, to do this make sure you identify the desired source lines first
 - Always scroll to the lines you want to change
-- If making a one line change, only include that line
 - Only make one change at a time
 - When changing functions, always make sure to search for and update references
-- You only have access to code contained in {working_dir}
+- You only have access to code contained in {root_dir}
+- Your current working directory is {cwd}
 </EDITING TIPS>"""
 
 

@@ -1,6 +1,7 @@
 import inspect
 import json
 import logging
+import os
 import traceback
 from dataclasses import dataclass
 from typing import Any, List
@@ -92,6 +93,21 @@ stateDiagram
 
 """
 
+def get_git_root(fpath=None):
+
+    path = fpath
+
+    if path is None:
+        path = os.getcwd()
+
+    while True:
+        if os.path.exists(os.path.join(path, '.git')):
+            return path
+        parent_dir = os.path.dirname(path)
+        if parent_dir == path:
+            return fpath
+        path = parent_dir
+
 
 class Session:
     def __init__(self, args: SessionArguments, agent):
@@ -101,7 +117,7 @@ class Session:
         self.state.PAGE_SIZE = 200
         self.logger = logger
         self.agent: TaskAgent = agent
-        self.base_path = args.path
+        self.base_path = get_git_root(args.path)
         self.event_log: List[Event] = []
         self.event_index = 0
         self.get_user_input = args.user_input
@@ -405,18 +421,18 @@ class Session:
                     if fn.__name__ == fn_name:
                         return fn(ctx, *args), False
             else:
-                try:
-                    output, rc = ctx.environment.communicate(
-                        fn_name + " " + " ".join(args)
-                    )
-                    if rc != 0:
-                        raise Exception(output)
-                    return output, False
-                except Exception as e:
-                    ctx.logger.error(
-                        f"Failed to execute bash command '{fn_name}': {str(e)}"
-                    )
-                    return "Failed to execute bash command", False
+                # try:
+                output, rc = ctx.environment.communicate(
+                    fn_name + " " + " ".join(args)
+                )
+                if rc != 0:
+                    raise Exception(output)
+                return output, False
+                # except Exception as e:
+                #     ctx.logger.error(
+                #         f"Failed to execute bash command '{fn_name}': {str(e)}"
+                #     )
+                #     return "Failed to execute bash command", False
         except Exception as e:
             ctx.logger.error(traceback.print_exc())
             return e.args[0], False
