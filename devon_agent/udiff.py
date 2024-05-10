@@ -635,6 +635,9 @@ def apply_indent(
     # print(new_lines)
 
     new_indents = [get_indent(line, indent_size) for line in new_lines]
+
+    if not new_indents:
+        return new_lines
     # print(new_indents)
 
     # print(relative_indents)

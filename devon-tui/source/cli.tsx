@@ -8,49 +8,13 @@ import childProcess from 'node:child_process';
 // import {writeLogLine} from './utils.js';
 
 // TODO:
-// - [ ] Task managment
-// - [ ] package as a single executable
-
-// - [x] style everything
-// - [x] make output more compact
-// - [x] anthropic key correctly
-// - [x] Exit app on stop after user confirms
-// - [x] make common exit function
-// - [x] slow down and smooth new message rendering
-// - [x] choose open port automatically
-// - [x] deliniate between agent thoughts and agent questions
-// - [x] Fix interrupt
-// - [x] Add loading/ feedback for user
-// - [x] Start Loading Screen
-// - [x] combine command and output into one
-
 // - [ ] provide headless mode
 // - [ ] handle error output
 // - [ ] handle debug console
 // - [ ] if window big show editor and cli
 // - [ ] paginate outputs
 
-// const cli = meow(
-// 	`
-// 	Usage
-// 	  $ devon-tui
 
-// 	Options
-// 		--name  Your name
-
-// 	Examples
-// 	  $ devon-tui --name=Jane
-// 	  Hello, Jane
-// `,
-// 	{
-// 		importMeta: import.meta,
-// 		flags: {
-// 			name: {
-// 				type: 'string',
-// 			},
-// 		},
-// 	},
-// );
 
 // check if anthropic key is set
 if (!process.env['ANTHROPIC_API_KEY']) {
