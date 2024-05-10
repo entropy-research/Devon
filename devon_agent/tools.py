@@ -15,7 +15,6 @@ import io
 import json
 import logging
 import os
-from shell_toolbox import normalize_path
 import re
 import tarfile
 import tempfile
@@ -64,6 +63,22 @@ if TYPE_CHECKING:
 
 ToolContext = Any
 
+def normalize_path(path, specified_path):
+    if path == os.sep:
+        return specified_path
+    elif os.path.isabs(path):
+        if path.startswith(specified_path):
+            path = Path(path)
+            return path.absolute().as_posix()
+        else:
+            path_components = path.strip(os.sep).split(os.sep)
+            path_components[0] = specified_path.strip(os.sep)
+            path = os.sep + os.path.join(*path_components)
+            path = Path(path)
+            return path.absolute().as_posix()
+    else:
+        path = Path(specified_path) / Path(path)
+        return path.absolute().as_posix()
 
 def make_abs_path(ctx, fpath: str) -> str:
     """
@@ -402,12 +417,12 @@ def scroll_to_line(ctx, file_path: str, line_number: str):
     total_lines = len(lines)
     line_number = int(line_number)
 
-    if line_number < 1 or line_number > total_lines:
+    if line_number < 0 or line_number > total_lines:
         raise Exception(
             f"Invalid line number: {line_number}. Line number should be between 1 and {total_lines}."
         )
 
-    window_number = (line_number - 1) // ctx.state.PAGE_SIZE
+    window_number = (line_number) // ctx.state.PAGE_SIZE
     ctx.state.editor[abs_path]["page"] = window_number
 
     window_start_line = window_number * ctx.state.PAGE_SIZE + 1
@@ -744,18 +759,20 @@ def real_write_diff(ctx, diff):
 
     if len(failures) == 0:
         file_paths = []
+        diff_results = []
         for result in successes:
             # This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
 
-            try:
-                compile(result[1], "<string>", "exec")
-            except Exception as e:
-                return "Error applying diff: \n" + repr(e)
-
             target_path = result[0]
 
+            if target_path.endswith(".py"):
+                try:
+                    compile(result[1], "<string>", "exec")
+                    before_results = check_lint(ctx, read_file(ctx, target_path), target_path)
+                except Exception as e:
+                    return "Error applying diff: \n" + repr(e)
+
             old_editor_code = "\n".join(ctx.state.editor[target_path]["lines"])
-            before_results = check_lint(ctx, read_file(ctx, target_path), target_path)
 
             write_file(ctx, file_path=target_path, content=result[1])
             file_paths.append(target_path)
@@ -764,7 +781,7 @@ def real_write_diff(ctx, diff):
 
             assert old_editor_code != new_editor_code
 
-            if target_path.ends_with(".py"):
+            if target_path.endswith(".py"):
                 after_results = check_lint(ctx, result[1], target_path)
 
                 diff_results = [
