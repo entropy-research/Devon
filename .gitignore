@@ -184,3 +184,9 @@ PROMPT
 
 .ruff_cache
 .vscode
+
+node_modules
+dist
+
+.yarn
+

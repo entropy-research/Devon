@@ -148,7 +148,11 @@ app.on('ready', () => {
   serverProcess = spawn('poetry', [
     'run',
     'python',
+<<<<<<< HEAD
     '../devon/environment/server.py',
+=======
+    '../devon_agent/server.py',
+>>>>>>> 4a56d75 (maintainance)
   ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
