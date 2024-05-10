@@ -14,6 +14,7 @@ context:
 import io
 import json
 import os
+from shell_toolbox import normalize_path
 import re
 import tarfile
 import tempfile
@@ -32,23 +33,6 @@ from devon_swe_bench_experimental.swebenchenv.environment.unified_diff.udiff imp
     log_successful_diff,
 )
 
-
-def normalize_path(path, specified_path):
-    if path == os.sep:
-        return specified_path
-    elif os.path.isabs(path):
-        if path.startswith(specified_path):
-            path = Path(path)
-            return path.absolute().as_posix()
-        else:
-            path_components = path.strip(os.sep).split(os.sep)
-            path_components[0] = specified_path.strip(os.sep)
-            path = os.sep + os.path.join(*path_components)
-            path = Path(path)
-            return path.absolute().as_posix()
-    else:
-        path = Path(specified_path) / Path(path)
-        return path.absolute().as_posix()
 
 
 def make_abs_path(ctx, fpath: str) -> str:
@@ -747,15 +731,17 @@ def real_write_diff(ctx, diff):
             file_paths.append(target_path)
 
             new_editor_code = "\n".join(ctx.state.editor[target_path]["lines"])
-            after_results = check_lint(ctx, result[1], target_path)
 
             assert old_editor_code != new_editor_code
 
-            diff_results = [
-                x
-                for x in after_results
-                if not check_lint_entry_in_list(x, before_results)
-            ]
+            if target_path.ends_with(".py"):
+                after_results = check_lint(ctx, result[1], target_path)
+
+                diff_results = [
+                    x
+                    for x in after_results
+                    if not check_lint_entry_in_list(x, before_results)
+                ]
 
         paths = ", ".join(file_paths)
 

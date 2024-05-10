@@ -128,7 +128,7 @@ class TaskAgent(Agent):
                 history = history_to_bash_history(self.chat_history)
 
             last_user_prompt = last_user_prompt_template_v3(
-                task, history, editor, session.environment.get_cwd()
+                task, history, editor, session.environment.get_cwd(), session.base_path
             )
 
             messages = [{"role": "user", "content": last_user_prompt}]
