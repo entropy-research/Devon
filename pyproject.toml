@@ -1,44 +1,46 @@
 [tool.poetry]
 name = "devon-agent"
-version = "0.0.5"
+version = "0.1.0"
 description = ""
 authors = ["killind-dev <61808204+killind-dev@users.noreply.github.com>","mihir1003 <mihir1003@gmail.com>"]
 readme = "README.md"
+exclude = [
+    "devon_tui",
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
 openai = "^1.14.1"
 anthropic = "^0.20.0"
-python-dotenv = "^1.0.1"
 pydantic = "^2.5.0"
-instructor = "^0.6.4"
 xmltodict = "^0.13.0"
 astroid = "^3.1.0"
-autopep8 = "^2.0.4"
-black = "^24.3.0"
-ruff = "^0.3.3"
 docker = "^7.0.0"
-pytest = "^8.1.1"
-unidiff = "^0.7.5"
 gitpython = "^3.1.42"
 pytest-json-report = "^1.5.0"
-gymnasium = "^0.29.1"
-swebench = "==1.0.1"
-datasets = ">=2.14.6,<2.15.0"
+pytest = "^8.1.1"
 ghapi = "^1.0.5"
-simple-parsing = "^0.1.5"
-dspy-ai = "^2.4.5"
-fabric = "^3.2.2"
 networkx = "^3.3"
 pylint = "^3.1.0"
 fastapi = "^0.110.3"
 uvicorn = "^0.29.0"
 sqlalchemy = "^2.0.30"
+tenacity = "^8.2.2"
+simple-parsing = {version = "^0.1.5", optional = true}
+swebench = {version = "1.0.1", optional = true}
+gymnasium = {version = "^0.29.1", optional = true}
+datasets = {version = ">=2.14.6,<2.15.0", optional = true}
+click = "^8.1.7"
+
+[tool.poetry.extras]
+swebench = ["swebench", "datasets", "gymnasium"]
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.3.3"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
 
 [tool.poetry.scripts]
 devon = "devon_agent.__main__:main"

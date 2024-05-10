@@ -64,9 +64,16 @@ const controller = new AbortController();
 
 portfinder.setBasePort(10000);
 portfinder.getPort(function (_: any, port: number) {
+	if (!childProcess.spawnSync('devon', ['--help']).stdout) {
+		console.error(
+			'The "devon" command is not available. Please ensure it is installed and in your PATH.',
+		);
+		process.exit(1);
+	}
+
 	const subProcess = childProcess.spawn(
-		'python3',
-		['/Users/mihirchintawar/agent/devon_agent/server.py', port.toString()],
+		'devon',
+		['server', '--port', port.toString()],
 		{
 			signal: controller.signal,
 		},

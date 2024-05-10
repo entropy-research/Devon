@@ -161,7 +161,6 @@ const handleEvents = (
 				messages.push({text: event.content, type: 'error'});
 				error = true;
 			}
-
 		}
 
 		if (event.type == 'Stop') {
@@ -264,7 +263,7 @@ export const App = ({port}: {port: number}) => {
 									: message.type === 'task'
 									? 'red'
 									: message.type === 'agent'
-									? 'blue' 
+									? 'blue'
 									: message.type === 'error'
 									? 'red'
 									: 'green'
