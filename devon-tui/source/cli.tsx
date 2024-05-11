@@ -78,9 +78,9 @@ portfinder.getPort(function (_: any, port: number) {
 		writeLogLine(newOutput.toString('utf8'));
 	});
 
-	subProcess.stderr.on('data', (newOutput: Buffer) => {
-		console.error(newOutput.toString('utf8'));
-	});
+	// subProcess.stderr.on('data', (newOutput: Buffer) => {
+	// 	console.error(newOutput.toString('utf8'));
+	// });
 
 	// subProcess.on('error', error => {
 
