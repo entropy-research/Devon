@@ -1,7 +1,7 @@
 # ast_extractor.py
 
 import ast
-from devon_swe_bench_experimental.retrieval.codebase_graph import add_node, add_edge
+from devon_agent.retrieval.codebase_graph import add_node, add_edge
 import networkx as nx
 import os
 

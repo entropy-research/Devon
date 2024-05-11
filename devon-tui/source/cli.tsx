@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import React from 'react';
 import {render} from 'ink';
-import meow from 'meow';
+// import meow from 'meow';
 import {App} from './app.js';
 import portfinder from 'portfinder';
 import childProcess from 'node:child_process';
@@ -18,32 +18,32 @@ import {writeLogLine} from './utils.js';
 // - [ ] if window big show editor and cli
 // - [ ] paginate outputs
 
-const cli = meow(
-	`
-	Usage
-	  $ devon
+// const cli = meow(
+// 	`
+// 	Usage
+// 	  $ devon
 
-	Options
-	  --version  Show version
+// 	Options
+// 	  --version  Show version
 
-	Examples
-	  $ devon
-`,
-	{
-		importMeta: import.meta,
-		flags: {
-			version: {
-				type: 'boolean',
-				alias: 'v',
-			},
-		},
-	},
-);
+// 	Examples
+// 	  $ devon
+// `,
+// 	{
+// 		importMeta: import.meta,
+// 		flags: {
+// 			version: {
+// 				type: 'boolean',
+// 				alias: 'v',
+// 			},
+// 		},
+// 	},
+// );
 
-if (cli.flags.version) {
-	console.log(cli.pkg.version);
-	process.exit(0);
-}
+// if (cli.flags.version) {
+// 	console.log(cli.pkg.version);
+// 	process.exit(0);
+// }
 
 
 

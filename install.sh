@@ -1,4 +1,4 @@
-
+#!/usr/bin/bash bash
 
 # check if python3  is installed
 if ! command -v python3 &> /dev/null
@@ -56,7 +56,7 @@ echo "Devon Backend is installed successfully."
 echo "Installing Devon TUI..."
 npm install -g devon-tui 
 # check if devon-tui is installed
-if ! command -v devon --version &> /dev/null
+if ! command -v devon &> /dev/null
 then
     echo "Devon TUI is not installed. Please install it manually by running 'npm install -g devon-tui' or 'sudo npm install -g devon-tui'."
     exit 1

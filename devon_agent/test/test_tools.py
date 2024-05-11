@@ -1,9 +1,9 @@
 import logging
 from pathlib import Path
 
-from devon_swe_bench_experimental.environment.environment import LocalEnvironment
-from devon_swe_bench_experimental.environment.tools import create_file
-from devon_swe_bench_experimental.environment.utils import DotDict
+from devon_agent.environment import LocalEnvironment
+from devon_agent.tools import create_file
+from devon_agent.utils import DotDict
 
 
 def test_create_file():
