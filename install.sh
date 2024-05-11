@@ -7,10 +7,17 @@ then
     exit 1
 fi
 
+# check if node is installed
+if ! command -v node &> /dev/null
+then
+    echo "node is not installed. Please install it first."
+    exit 1
+fi
+
 # check if npm is installed
 if ! command -v npm &> /dev/null
 then
-    echo "node is not installed. Please install it first."
+    echo "npm is not installed. Please install it first."
     exit 1
 fi
 
@@ -36,12 +43,12 @@ then
 fi
 
 echo "Installing Devon backend..."
-pipx install devon_agent
+pipx install devon_agent || { echo "Failed to install Devon backend. Please install it manually by running 'pipx install devon_agent'"; exit 1; }
 
 echo "Devon Backend is installed successfully."
 
 echo "Installing Devon TUI..."
-npm install -g devon-tui
+npm install -g devon-tui || { echo "Failed to install Devon TUI. Please install it manually by running 'npm install -g devon-tui' or 'sudo npm install -g devon-tui'."; exit 1; }
 
 echo "Devon TUI is installed successfully."
 echo "Devon is installed successfully."
