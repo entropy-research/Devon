@@ -38,9 +38,6 @@ curl -sSL https://raw.githubusercontent.com/entropy-research/Devon/main/install.
 
 ```bash
 pipx install devon_agent
-```
-
-```bash
 npm install -g devon-tui
 ```
 
