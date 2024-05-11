@@ -57,7 +57,7 @@ export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 Then to *run*, the command is:
 ```bash
-devon-tui
+devon
 ```
 
 It's as easy as that.

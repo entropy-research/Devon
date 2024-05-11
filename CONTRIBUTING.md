@@ -26,12 +26,8 @@ Here's an overview of the contribution workflow:
 Run the following commands in your terminal:
 
 ```bash
-poetry install
-
-cd devon_tui
-npm install
-npm run build
-npm install -g .
+chmod u+x build.sh
+./build.sh
 
 export DEVON_TELEMETRY_DISABLED=true
 ```
@@ -41,7 +37,7 @@ export DEVON_TELEMETRY_DISABLED=true
 Either run:
 
 ```bash
-devon-tui
+devon
 ```
 
 Or
