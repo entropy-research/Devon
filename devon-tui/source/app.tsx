@@ -110,9 +110,11 @@ const handleEvents = (
 	let error = false;
 
 	for (const event of events) {
-		if (error) {
-			break;
+		if (event.type == 'Stop') {
+			console.log('Devon has left the chat.');
+			exit();
 		}
+
 		if (event.type == 'ModelRequest') {
 			model_loading = true;
 		}
@@ -163,10 +165,7 @@ const handleEvents = (
 			}
 		}
 
-		if (event.type == 'Stop') {
-			console.log('Devon has left the chat.');
-			exit();
-		}
+
 		idx += 1;
 	}
 	setUserRequested(user_request);
