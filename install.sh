@@ -44,6 +44,5 @@ echo "Installing Devon TUI..."
 npm install -g devon-tui
 
 echo "Devon TUI is installed successfully."
-
 echo "Devon is installed successfully."
 echo "Run 'devon' to start the Devon TUI."
