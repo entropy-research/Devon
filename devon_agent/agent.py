@@ -12,6 +12,7 @@ from devon_agent.prompt import (
     system_prompt_template_v3,
 )
 
+from devon_agent.udiff import Hallucination
 from devon_agent.utils import LOGGER_NAME
 from tenacity import RetryError
 
@@ -144,8 +145,17 @@ class TaskAgent(Agent):
             #     + json.dumps({"input": messages[0], "output": output})
             #     + "<MODEL_OUT>"
             # )
-
-            thought, action = parse_response(output)
+            thought = None
+            action = None
+            for i in range(3):
+                try:
+                    thought, action = parse_response(output)
+                    break
+                except:
+                    continue
+            
+            if not thought or not action:
+                raise Hallucination("Agent failed to follow response format instructions")
 
             self.chat_history.append(
                 {
