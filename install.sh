@@ -46,8 +46,9 @@ echo "Installing Devon backend..."
 pipx install devon_agent 
 
 if ! command -v devon_agent --help &> /dev/null
-echo "Devon Backend is not installed. Please install it manually by running 'pipx install devon_agent'"
-exit 1
+then
+    echo "Devon Backend is not installed. Please install it manually by running 'pipx install devon_agent'"
+    exit 1
 fi
 
 echo "Devon Backend is installed successfully."
