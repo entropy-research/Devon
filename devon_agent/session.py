@@ -119,7 +119,7 @@ class Session:
         self.state.PAGE_SIZE = 200
         self.logger = logger
         self.agent: TaskAgent = agent
-        self.base_path = get_git_root(args.path)
+        self.base_path = args.path
         self.event_log: List[Event] = []
         self.event_index = 0
         self.get_user_input = args.user_input
@@ -257,7 +257,7 @@ class Session:
                         "consumer": "user",
                     }
                 )
-            elif tool_name in ["submit", "exit", "stop"]:
+            elif tool_name in ["submit", "exit", "stop", "exit_error","exit_api",]:
                 self.event_log.append(
                     {
                         "type": "Stop",
