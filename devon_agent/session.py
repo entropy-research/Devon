@@ -229,6 +229,15 @@ class Session:
             message="" if not event["type"] == "Error" else event["content"],
         )
         self.telemetry_client.capture(telemetry_event)
+        if event["type"] == "Error":
+            self.event_log.append(
+                {
+                    "type": "Stop",
+                    "content": "Stopped task",
+                    "producer": event["producer"],
+                    "consumer": "user",
+                }
+            )
 
         if event["type"] == "ModelRequest":
             thought, action, output = self.agent.predict(
