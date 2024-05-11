@@ -43,12 +43,23 @@ then
 fi
 
 echo "Installing Devon backend..."
-pipx install devon_agent || { echo "Failed to install Devon backend. Please install it manually by running 'pipx install devon_agent'"; exit 1; }
+pipx install devon_agent 
+
+if ! command -v devon_agent --help &> /dev/null
+echo "Devon Backend is not installed. Please install it manually by running 'pipx install devon_agent'"
+exit 1
+fi
 
 echo "Devon Backend is installed successfully."
 
 echo "Installing Devon TUI..."
-npm install -g devon-tui || { echo "Failed to install Devon TUI. Please install it manually by running 'npm install -g devon-tui' or 'sudo npm install -g devon-tui'."; exit 1; }
+npm install -g devon-tui 
+# check if devon-tui is installed
+if ! command -v devon --version &> /dev/null
+then
+    echo "Devon TUI is not installed. Please install it manually by running 'npm install -g devon-tui' or 'sudo npm install -g devon-tui'."
+    exit 1
+fi
 
 echo "Devon TUI is installed successfully."
 echo "Devon is installed successfully."

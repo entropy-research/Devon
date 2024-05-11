@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import React from 'react';
 import {render} from 'ink';
-// import meow from 'meow';
+import meow from 'meow';
 import {App} from './app.js';
 import portfinder from 'portfinder';
 import childProcess from 'node:child_process';
@@ -18,6 +18,33 @@ import {writeLogLine} from './utils.js';
 // - [ ] if window big show editor and cli
 // - [ ] paginate outputs
 
+const cli = meow(
+	`
+	Usage
+	  $ devon
+
+	Options
+	  --version  Show version
+
+	Examples
+	  $ devon
+`,
+	{
+		importMeta: import.meta,
+		flags: {
+			version: {
+				type: 'boolean',
+				alias: 'v',
+			},
+		},
+	},
+);
+
+if (cli.flags.version) {
+	console.log(cli.pkg.version);
+	process.exit(0);
+}
+
 
 
 // check if anthropic key is set
@@ -32,7 +59,7 @@ const controller = new AbortController();
 
 portfinder.setBasePort(10000);
 portfinder.getPort(function (_: any, port: number) {
-	if (!childProcess.spawnSync('devon', ['--help']).stdout) {
+	if (!childProcess.spawnSync('devon_agent', ['--help']).stdout) {
 		console.error(
 			'The "devon" command is not available. Please ensure it is installed and in your PATH.',
 		);
@@ -40,7 +67,7 @@ portfinder.getPort(function (_: any, port: number) {
 	}
 
 	const subProcess = childProcess.spawn(
-		'devon',
+		'devon_agent',
 		['server', '--port', port.toString()],
 		{
 			signal: controller.signal,
