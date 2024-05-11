@@ -22,7 +22,7 @@ VIDEO/GIF HERE
 ## Pre-requisites
 
 1. `node.js` and `npm`
-2. `pipx`
+2. `pipx`, if you dont have this go [here](https://pipx.pypa.io/stable/installation/)
 3. **Anthropic** api key
 
 ## Installation commands
