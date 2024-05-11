@@ -60,7 +60,8 @@ devon
 
 It's as easy as that.
 
-Don't worry, the agent will be able to only access files and folders in the directory you started it from. You can also correct it while it's performing actions.
+> [!NOTE]
+> Don't worry, the agent will be able to only access files and folders in the directory you started it from. You can also correct it while it's performing actions.
 
 # Features
 - Multi-file editing
@@ -77,7 +78,7 @@ Don't worry, the agent will be able to only access files and folders in the dire
 # Progress
 
 
-### This project is still super early and we need your help to make it great!
+### This project is still super early and <ins>we would love your help</ins> to make it great!
 
 ### Current goals
 - Multi-model support
@@ -94,7 +95,7 @@ View our current thoughts on next steps [**here**](https://docs.google.com/docum
   </a>
 </p>
 
-### Past Milestones
+### Past milestones
 
 - [x] **May 10, 2024** - Complete interactive agent v0.1.0
 - [x] **May 10, 2024** - Add steerability features
@@ -136,7 +137,7 @@ We would love feedback! Feel free to drop us a note on our [Discord](https://dis
 
 We collect basic event type (i.e. "tool call") and failure telemetry to solve bugs and improve the user experience, but if you want to reach out, we would love to hear from you!
 
-To disable telemtery, set the environment variable `DEVON_TELEMETRY_DISABLED` to `true` 
+To disable telemetry, set the environment variable `DEVON_TELEMETRY_DISABLED` to `true` 
 ```bash
 export DEVON_TELEMETRY_DISABLED=true
 ```
