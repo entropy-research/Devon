@@ -34,7 +34,7 @@ curl -sSL https://raw.githubusercontent.com/entropy-research/Devon/main/install.
 ```
 
 
-*Or to install using `pipx` + `npm`*
+*Or to install using `pipx` + `npm`:*
 
 ```bash
 pipx install devon_agent
