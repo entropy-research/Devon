@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict
 from devon_agent.utils import DotDict
 
-from devon_swe_bench_experimental.retrieval.main import (
+from devon_agent.retrieval.main import (
     get_class_defn,
     get_function_defn,
     initialize_repository,

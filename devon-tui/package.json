@@ -1,9 +1,9 @@
 {
 	"name": "devon-tui",
-	"version": "0.0.2",
+	"version": "0.0.4",
 	"license": "Apache-2.0",
 	"bin": {
-		"devon-tui": "dist/cli.js"
+		"devon": "dist/cli.js"
 	},
 	"type": "module",
 	"engines": {
