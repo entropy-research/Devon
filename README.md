@@ -38,8 +38,10 @@ curl -sSL https://raw.githubusercontent.com/entropy-research/Devon/main/install.
 
 ```bash
 pipx install devon_agent
-npm install -g devon-tui
+npm install -g devon-tui 
 ```
+
+This installs the python backend, and the cli command to run the tool
 
 ### Thats it! Happy building :)
 
