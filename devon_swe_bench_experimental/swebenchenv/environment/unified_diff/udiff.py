@@ -15,7 +15,6 @@ DATA_LOGGER_NAME = "udiff_data"
 data_logger = logging.getLogger(DATA_LOGGER_NAME)
 
 
-
 def log_successful_diff(diff, file_content, src_file, tgt_file):
     data_logger.info(f"<SUCCESS>")
     data_logger.info(f"<DIFF>")
@@ -31,6 +30,7 @@ def log_successful_diff(diff, file_content, src_file, tgt_file):
     data_logger.info(f"{tgt_file}")
     data_logger.info(f"</TGTFILE>")
     data_logger.info(f"</SUCCESS>")
+
 
 def log_failed_diff(diff, file_content, src_file, tgt_file):
     data_logger.info(f"<FAIL>")
@@ -83,7 +83,6 @@ class MultiFileContextDiff(BaseModel):
 
 
 def create_recover_prompt(src_lines, original_diff, diff, errors):
-
     error_block_content = [e[1].args for e in errors]
 
     return f"""
@@ -123,15 +122,15 @@ Does the new diff only create a hunk for the content/source lines the original d
 Once those questions are answered, please provide the improved diff according to the guidelines. If you get it right, I'll buy you Taylor Swift tickets.
 """
 
+
 def extract_diff_from_response(diff_text):
     if "```diff" in diff_text:
-
         return [
             diff.split("```")[0].strip()
             for diff in diff_text.split("```diff")[1:]
             if "```" in diff
         ]
-    
+
     if "<DIFF>" in diff_text:
         return [
             diff.replace("<DIFF>", "").strip()
@@ -145,16 +144,21 @@ def extract_diff_from_response(diff_text):
         if "<<<" in diff
     ]
 
+
 def strip_new_lines_from_ends(lines):
     content_lines_start = 0
     while content_lines_start < len(lines) and lines[content_lines_start] == "":
         content_lines_start += 1
-    
+
     content_lines_end = 0
-    while content_lines_end < len(lines) and list(reversed(lines[content_lines_start])) == "":
+    while (
+        content_lines_end < len(lines)
+        and list(reversed(lines[content_lines_start])) == ""
+    ):
         content_lines_start += 1
 
-    return lines[content_lines_start: len(lines)-content_lines_end]
+    return lines[content_lines_start : len(lines) - content_lines_end]
+
 
 def construct_versions_from_diff_hunk(hunk: ContextHunk):
     old_lines = []
@@ -171,6 +175,7 @@ def construct_versions_from_diff_hunk(hunk: ContextHunk):
 
     return old_lines, new_lines
 
+
 def find_nth_content_line(lines, n):
     start = 0
     for i, line in enumerate(lines):
@@ -181,7 +186,6 @@ def find_nth_content_line(lines, n):
     count = 0
     end = start
     while end < len(lines) and count < n:
-
         if lines[end] != "":
             count += 1
 
@@ -189,16 +193,19 @@ def find_nth_content_line(lines, n):
 
     return lines[start:end]  # maybe off by one? dont think so though, need to test
 
-def create_code_fence(old_lines, fence_len=3):
 
+def create_code_fence(old_lines, fence_len=3):
     if len(old_lines) < 4:
         start_fence = find_nth_content_line(old_lines, len(old_lines))
         end_fence = start_fence
     else:
         start_fence = find_nth_content_line(old_lines, fence_len)
-        end_fence = list(reversed(find_nth_content_line(list(reversed(old_lines)), fence_len)))
+        end_fence = list(
+            reversed(find_nth_content_line(list(reversed(old_lines)), fence_len))
+        )
 
     return start_fence, end_fence
+
 
 def levenshtein_distance(s1, s2):
     m, n = len(s1), len(s2)
@@ -218,13 +225,14 @@ def levenshtein_distance(s1, s2):
 
     return dp[m][n]
 
-def is_fuzzy_match(s1, s2, threshold=1):
 
+def is_fuzzy_match(s1, s2, threshold=1):
     for a, b in zip(s1, s2):
         distance = levenshtein_distance(a, b)
         if distance > threshold:
             return False
     return True
+
 
 def match_fence(lines, fence, start_index=0):
     subset_length = len(fence)
@@ -237,6 +245,7 @@ def match_fence(lines, fence, start_index=0):
                 return lines[i][0], lines[i + subset_length - 1][0], i
 
     return None, None, None
+
 
 def match_fence_all(stripped_file_lines, fence):
     matches = []
@@ -251,49 +260,59 @@ def match_fence_all(stripped_file_lines, fence):
 
     return matches
 
+
 def strip_comment_from_line(line):
-    comment_index = line.find('#')
-        
+    comment_index = line.find("#")
+
     # If '#' is found, return the line up to that index (stripped of leading/trailing whitespace)
     if comment_index != -1:
         return line[:comment_index].strip()
-    
+
     # If '#' is not found, return the original line (stripped of leading/trailing whitespace)
     return line.strip()
 
 
-def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_old_lines, old_lines, fence_len):
-    #create code fence based on lines. i.e. first N content lines
+def match_stripped_lines_context_with_fence_len(
+    stripped_file_lines, stripped_old_lines, old_lines, fence_len
+):
+    # create code fence based on lines. i.e. first N content lines
 
     # Match single line changes
     if len(stripped_old_lines) == 1:
-
         begin_fence = stripped_old_lines
         stop_fence = stripped_old_lines
         begin_matches = match_fence_all(stripped_file_lines, begin_fence)
 
         # If we allowed a single line match, but the match is not unique, bail
-        if (len(stripped_old_lines) == 1 and len(begin_matches) > 1):
+        if len(stripped_old_lines) == 1 and len(begin_matches) > 1:
             raise Hallucination(not_enough_context_prompt)
         elif len(begin_matches) == 1:
-            return [list(begin_matches[0][:2]) + list(begin_matches[0][:2])], begin_matches, begin_matches
+            return (
+                [list(begin_matches[0][:2]) + list(begin_matches[0][:2])],
+                begin_matches,
+                begin_matches,
+            )
         else:
             raise Hallucination(incorrect_context_prompt)
 
     else:
-        begin_fence, stop_fence = create_code_fence(old_lines=stripped_old_lines, fence_len=fence_len)
+        begin_fence, stop_fence = create_code_fence(
+            old_lines=stripped_old_lines, fence_len=fence_len
+        )
 
-    #Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
+    # Match N content lines. This means that the first N content lines will be matched on and the last N content lines will be matched on.
     begin_matches = match_fence_all(stripped_file_lines, begin_fence)
     end_matches = match_fence_all(stripped_file_lines, stop_fence)
 
-    #for each begin match, find first end match
+    # for each begin match, find first end match
     valid_pairs = []
     for begin_start, begin_end, src_idx in begin_matches:
         for stop_start, stop_end, end_idx in end_matches:
-            #TODO: add a line count error here
+            # TODO: add a line count error here
 
-            if src_idx <= end_idx and (end_idx - src_idx + fence_len) == len(stripped_old_lines):
+            if src_idx <= end_idx and (end_idx - src_idx + fence_len) == len(
+                stripped_old_lines
+            ):
                 valid_pairs.append((begin_start, stop_end, stop_start, begin_end))
                 break
 
@@ -301,7 +320,7 @@ def match_stripped_lines_context_with_fence_len(stripped_file_lines, stripped_ol
 
 
 def match_stripped_lines_context(stripped_file_lines, old_lines):
-    #given stripped file lines and stripped old lines,
+    # given stripped file lines and stripped old lines,
     stripped_old_lines = [line.strip() for line in old_lines]
     stripped_old_lines = [line for line in stripped_old_lines if line != ""]
 
@@ -309,20 +328,41 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
     results = []
     while not results and fence_len > 1:
         results, b, e = match_stripped_lines_context_with_fence_len(
-            [(i, line) for i, line in [(i, line.strip()) for i, line in stripped_file_lines] if line != ""],
-            [line for line in [line.strip() for line in stripped_old_lines] if line != ""],
-            old_lines, 
-            fence_len=fence_len
+            [
+                (i, line)
+                for i, line in [(i, line.strip()) for i, line in stripped_file_lines]
+                if line != ""
+            ],
+            [
+                line
+                for line in [line.strip() for line in stripped_old_lines]
+                if line != ""
+            ],
+            old_lines,
+            fence_len=fence_len,
         )
 
         if len(results) > 0:
             break
 
         results, b, e = match_stripped_lines_context_with_fence_len(
-            [(i, line) for i, line in [(i, strip_comment_from_line(line)) for i, line in stripped_file_lines] if line != ""],
-            [line for line in [strip_comment_from_line(line) for line in stripped_old_lines] if line != ""],
-            old_lines, 
-            fence_len=fence_len
+            [
+                (i, line)
+                for i, line in [
+                    (i, strip_comment_from_line(line))
+                    for i, line in stripped_file_lines
+                ]
+                if line != ""
+            ],
+            [
+                line
+                for line in [
+                    strip_comment_from_line(line) for line in stripped_old_lines
+                ]
+                if line != ""
+            ],
+            old_lines,
+            fence_len=fence_len,
         )
 
         if len(results) > 0:
@@ -330,7 +370,7 @@ def match_stripped_lines_context(stripped_file_lines, old_lines):
 
         fence_len -= 1
 
-    #if none throw error
+    # if none throw error
     if not results:
         if b and len(b) == 1:
             return b[0][0], None, None, None
@@ -351,7 +391,6 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
     i = 0
     while i < len(lines):
         if lines[i].startswith("---"):
-
             src_file = re.findall(r"--- (.*)", lines[i])[0]
             tgt_file = re.findall(r"\+\+\+ (.*)", lines[i + 1])[0]
             hunks = []
@@ -419,7 +458,7 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
     return file_diffs, changed_lines
 
 
-def get_indent(line,indent_size):
+def get_indent(line, indent_size):
     if indent_size == 0:
         return 0
     base_indent = " " * indent_size
@@ -428,19 +467,18 @@ def get_indent(line,indent_size):
         count = 0
         while line.startswith(base_indent):
             count += 1
-            line = line[len(base_indent):]
+            line = line[len(base_indent) :]
         return count
     else:
         return 0
 
+
 def get_prefix_whitespace(line):
-    
     count = 0
     while line.startswith(" "):
         count += 1
         line = line[1:]
     return count
-
 
 
 def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
@@ -450,11 +488,18 @@ def apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines):
 
     if base_indent_match != base_indent_hunk:
         if base_indent_match > base_indent_hunk:
-            indented_new_lines = ["    " * (base_indent_match - base_indent_hunk) + line for line in new_lines]
+            indented_new_lines = [
+                "    " * (base_indent_match - base_indent_hunk) + line
+                for line in new_lines
+            ]
         else:
-            indented_new_lines = [line.replace("    " * (base_indent_hunk - base_indent_match), "") for line in new_lines]
+            indented_new_lines = [
+                line.replace("    " * (base_indent_hunk - base_indent_match), "")
+                for line in new_lines
+            ]
 
     return indented_new_lines
+
 
 # single diff apply rules
 # 4. Try to match on lines -> if no match -> try again with more context = retry loop
@@ -546,22 +591,30 @@ def get_relative_indents(lines):
     for line in lines:
         space = get_prefix_whitespace(line)
         spaces.append(space)
-    
+
     gcd = math.gcd(*spaces)
 
     if gcd != 0:
-        spaces = [(space // gcd)  for space in spaces]
+        spaces = [(space // gcd) for space in spaces]
 
     min_indent = min(spaces) if spaces else 0
 
-    return [space - min_indent for space in spaces],gcd
+    return [space - min_indent for space in spaces], gcd
 
-def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end,stop_code_fence_start,stop_code_fence_end):
+
+def apply_indent(
+    src_lines,
+    new_lines,
+    start_code_fence_start,
+    start_code_fence_end,
+    stop_code_fence_start,
+    stop_code_fence_end,
+):
     """
     STEPS
     1. Get indentation of matched src lines
     2. Get relative indents of diff lines
-    3. Apply 
+    3. Apply
     """
     # print("*" * 10)
     # print(start_code_fence_start)
@@ -569,50 +622,59 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
     # print(stop_code_fence_start)
     # print(stop_code_fence_end)
 
+    start_code_fence = src_lines[start_code_fence_start : start_code_fence_end + 1]
+    stop_code_fence = src_lines[stop_code_fence_start : stop_code_fence_end + 1]
 
-    start_code_fence = src_lines[start_code_fence_start:start_code_fence_end + 1]
-    stop_code_fence = src_lines[stop_code_fence_start:stop_code_fence_end + 1]
-
-    relative_indents,indent_size = get_relative_indents(new_lines)
+    relative_indents, indent_size = get_relative_indents(new_lines)
 
     # print(start_code_fence)
     # print(stop_code_fence)
 
-    start_indents = [get_indent(line[1],indent_size) for line in start_code_fence]
-    stop_indents = [get_indent(line[1],indent_size) for line in stop_code_fence]
+    start_indents = [get_indent(line[1], indent_size) for line in start_code_fence]
+    stop_indents = [get_indent(line[1], indent_size) for line in stop_code_fence]
     # print(start_indents)
     # print(stop_indents)
     # print(new_lines)
 
-    new_indents = [get_indent(line,indent_size) for line in new_lines]
+    new_indents = [get_indent(line, indent_size) for line in new_lines]
     # print(new_indents)
-    
 
     # print(relative_indents)
     base = start_indents[0] - new_indents[0]
 
-
     line_no_base = start_code_fence_start
-
 
     base = None
     print("before change")
-    for i,line in enumerate(new_lines):
+    for i, line in enumerate(new_lines):
         current_line_no = line_no_base + i
         # print(current_line_no,start_code_fence_start,start_code_fence_end,current_line_no >= start_code_fence_start, current_line_no <= start_code_fence_end)
-        if current_line_no >= start_code_fence_start and current_line_no <= start_code_fence_end:
+        if (
+            current_line_no >= start_code_fence_start
+            and current_line_no <= start_code_fence_end
+        ):
             if src_lines[current_line_no][1].strip() == line.strip():
                 # print(base,relative_indents[i],start_indents[i])
-                if base and base  + relative_indents[i] != start_indents[i] and src_lines[current_line_no][1].strip():
+                if (
+                    base
+                    and base + relative_indents[i] != start_indents[i]
+                    and src_lines[current_line_no][1].strip()
+                ):
                     print(i)
                     print(relative_indents)
                     print(start_indents)
-                    print(base,relative_indents[i],start_indents[i], indent_size)
-                    raise Hallucination(f"Indentation does not match for line {current_line_no-1}.Make sure you specify the exact indents to make an edit. Line: " + src_lines[current_line_no-1][1])
+                    print(base, relative_indents[i], start_indents[i], indent_size)
+                    raise Hallucination(
+                        f"Indentation does not match for line {current_line_no-1}.Make sure you specify the exact indents to make an edit. Line: "
+                        + src_lines[current_line_no - 1][1]
+                    )
                 base = start_indents[0] - relative_indents[0]
                 # print("base",current_line_no,base)
             # start fence processing
-        elif current_line_no >= stop_code_fence_start and current_line_no <= stop_code_fence_end:
+        elif (
+            current_line_no >= stop_code_fence_start
+            and current_line_no <= stop_code_fence_end
+        ):
             # print(src_lines[current_line_no][1].strip(),line.strip())
             if src_lines[current_line_no][1].strip() != line.strip():
                 pass
@@ -621,7 +683,9 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
             new_lines[i] = " " * indent_size * new_indents[i] + new_lines[i].strip()
             continue
         # print("Indent:",(base + relative_indents[i]))
-        new_lines[i] = " " * indent_size * (base + relative_indents[i]) + new_lines[i].strip()
+        new_lines[i] = (
+            " " * indent_size * (base + relative_indents[i]) + new_lines[i].strip()
+        )
         # print(new_lines[i])
         # print(src_lines[current_line_no][1])
 
@@ -649,37 +713,36 @@ def apply_indent(src_lines,new_lines,start_code_fence_start,start_code_fence_end
     #     if new_indent != stop_indents[len(stop_indents) - i - 1]:
     #         raise Exception(f"Indentation does not match for line {stop_code_fence_end - i}")
 
-        # new_lines[len(new_lines) - i - 1] = "    " * new_indent + new_lines[len(new_lines) - i - 1].strip()
-        # print(new_lines[len(new_lines) - i - 1])
-        # print(src_lines[stop_code_fence_end - i][1])
-        # assert new_lines[len(new_lines) - i - 1] == src_lines[stop_code_fence_end - i][1]
+    # new_lines[len(new_lines) - i - 1] = "    " * new_indent + new_lines[len(new_lines) - i - 1].strip()
+    # print(new_lines[len(new_lines) - i - 1])
+    # print(src_lines[stop_code_fence_end - i][1])
+    # assert new_lines[len(new_lines) - i - 1] == src_lines[stop_code_fence_end - i][1]
 
     # print("*" * 10)
 
-    print(new_lines)    
+    print(new_lines)
 
     return new_lines
 
-def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
-    #create i, line pairs for diff apply
+def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
+    # create i, line pairs for diff apply
     src_lines = [(i, line) for i, line in enumerate(file_content.splitlines())]
 
-    #get stripped version of original file i.e. strip all lines then filter out empty lines
-    stripped_src_lines = [t for t in [(i, line.strip()) for i, line in src_lines] if t[1] != ""]
+    # get stripped version of original file i.e. strip all lines then filter out empty lines
+    stripped_src_lines = [
+        t for t in [(i, line.strip()) for i, line in src_lines] if t[1] != ""
+    ]
     # check if stripped_src_lines is empty and append file_diff hunks to it
     if not stripped_src_lines or all([line[1] == "" for line in stripped_src_lines]):
         old_lines, new_lines = construct_versions_from_diff_hunk(file_diff.hunks[0])
         return "\n".join(new_lines), []
-        
-   
 
     tgt_lines = list(src_lines)
 
     errors = []
 
     for hunk in file_diff.hunks:
-
         try:
             old_lines, new_lines = construct_versions_from_diff_hunk(hunk)
 
@@ -687,33 +750,51 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
                 # if either version is none, raise error
                 raise Hallucination(unable_to_parse_old_or_new_lines)
 
-            src_start, src_end, stop_start, begin_end = match_stripped_lines_context(stripped_src_lines, old_lines)
+            src_start, src_end, stop_start, begin_end = match_stripped_lines_context(
+                stripped_src_lines, old_lines
+            )
 
             new_lines = strip_new_lines_from_ends(new_lines)
 
             # print(src_start, src_end)
 
             if not (src_start is not None and src_end is not None):
-                #Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
+                # Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
 
                 if src_start:
                     real_start = max(0, src_start - 10)
                     real_end = min(len(src_lines), src_start + 10)
-                    real = "\n".join([line for _, line in src_lines[real_start: real_end]])
-                    raise Hallucination("Incorrect source lines, the source lines you wrote were:\n" + "\n".join(old_lines) + "\nThe actual source lines are: \n" + real)
+                    real = "\n".join(
+                        [line for _, line in src_lines[real_start:real_end]]
+                    )
+                    raise Hallucination(
+                        "Incorrect source lines, the source lines you wrote were:\n"
+                        + "\n".join(old_lines)
+                        + "\nThe actual source lines are: \n"
+                        + real
+                    )
                 elif src_end:
                     real_start = max(0, src_end - 10)
                     real_end = min(len(src_lines), src_end + 10)
-                    real = "\n".join([line for _, line in src_lines[real_start: real_end]])
-                    raise Hallucination("Incorrect source lines, the source lines you wrote were:\n" + "\n".join(old_lines) + "\nThe actual source lines are: \n" + real)
+                    real = "\n".join(
+                        [line for _, line in src_lines[real_start:real_end]]
+                    )
+                    raise Hallucination(
+                        "Incorrect source lines, the source lines you wrote were:\n"
+                        + "\n".join(old_lines)
+                        + "\nThe actual source lines are: \n"
+                        + real
+                    )
 
                 raise Hallucination(incorrect_context_prompt)
 
             if src_end - src_start > len(old_lines) + 5:
-                #Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
+                # Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
                 raise Hallucination(incorrect_context_prompt)
 
-            applied_code = apply_indent(src_lines,new_lines,src_start,begin_end,stop_start,src_end)
+            applied_code = apply_indent(
+                src_lines, new_lines, src_start, begin_end, stop_start, src_end
+            )
             # applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
             # applied_code = new_lines
 
@@ -733,25 +814,26 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
             print(e)
             errors.append((hunk, e, file_content))
 
-    #return correct code
+    # return correct code
     return "\n".join([entry[1] for entry in list(tgt_lines)]), errors
+
 
 def extract_all_diffs(diff_input):
     if isinstance(diff_input, list):
-        diff_input= "".join(diff_input)
-    
+        diff_input = "".join(diff_input)
+
     diff_code = diff_input
 
     # extract diff from response
     diffs = extract_diff_from_response(diff_code)
 
     if len(diffs) == 0:
-        #Raise exception about length of diffs
+        # Raise exception about length of diffs
         raise Hallucination(no_diffs_found)
-    
+
     total_changed_lines = 0
 
-    #for each diff, actually parse the changes from it. Assume this just works for parsing the diff hunks (not formatting or anything, but rather just extracting target lines)
+    # for each diff, actually parse the changes from it. Assume this just works for parsing the diff hunks (not formatting or anything, but rather just extracting target lines)
     all_diffs = []
     for diff in diffs:
         file_diffs, changed_lines = parse_multi_file_diffs(diff)
@@ -759,25 +841,26 @@ def extract_all_diffs(diff_input):
         all_diffs.extend(file_diffs)
 
     # changes = MultiFileContextDiff(files=all_diffs)
-    
-    #Check to see if there are diffs that have neither src or tgt file
+
+    # Check to see if there are diffs that have neither src or tgt file
     error_diffs = []
     for diff in all_diffs:
-        if (not (diff.src_file or diff.tgt_file)):
+        if not (diff.src_file or diff.tgt_file):
             error_diffs += diff
 
-    if len(error_diffs) !=0:
-        #Raise exception containing non-applicable diffs
+    if len(error_diffs) != 0:
+        # Raise exception containing non-applicable diffs
         raise Hallucination(non_applicable_diff_found)
 
-    #deduping the diffs here
+    # deduping the diffs here
     return list(all_diffs), total_changed_lines
+
 
 def apply_file_context_diffs(file_content, all_diffs):
     succeeded = []
     failed = []
 
-    #for each diff block, apply context diff, returns tuple result (abspath, new_content)
+    # for each diff block, apply context diff, returns tuple result (abspath, new_content)
     for diff in all_diffs:
         result, errors = apply_context_diff(file_content=file_content, file_diff=diff)
         if len(errors) == 0:
@@ -785,15 +868,14 @@ def apply_file_context_diffs(file_content, all_diffs):
         else:
             failed.extend(errors)
 
-    #should return files with new code to write
-    return {
-        "success": succeeded,
-        "fail": failed
-    }
+    # should return files with new code to write
+    return {"success": succeeded, "fail": failed}
+
 
 # 1. Capture command count -> solved by command parsing
 # 2. Capture tags -> if bad return
 # 3. Capture src and tgt file -> if none -> return. Bad
+
 
 def apply_multi_file_context_diff(file_content, diff, original_change_count):
     # By the time we get here we have correctly captured a single command
@@ -802,7 +884,10 @@ def apply_multi_file_context_diff(file_content, diff, original_change_count):
 
     try:
         all_diffs, total_new_changed = extract_all_diffs(diff)
-        if original_change_count is not None and (total_new_changed > (original_change_count + 5) or total_new_changed < (original_change_count - 1)):
+        if original_change_count is not None and (
+            total_new_changed > (original_change_count + 5)
+            or total_new_changed < (original_change_count - 1)
+        ):
             raise Hallucination(recover_failed_new_diff_too_different)
     except Hallucination as e:
         data_logger.error("<ERROR>")

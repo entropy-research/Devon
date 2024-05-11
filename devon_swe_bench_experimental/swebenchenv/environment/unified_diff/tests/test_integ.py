@@ -1,14 +1,14 @@
 from ast import AST
 import os
 
-from flaky import flaky
+# from flaky import flaky
 
 from anthropic import Anthropic
 from openai import OpenAI
 from devon_swe_bench_experimental.swebenchenv.environment.unified_diff.prompts.udiff_prompts import UnifiedDiffPrompts
 
 from devon_swe_bench_experimental.swebenchenv.environment.unified_diff.udiff import apply_context_diff, apply_multi_file_context_diff, create_recover_prompt, extract_all_diffs, extract_diff_from_response, parse_multi_file_diffs
-from devon_agent.agent.clients.client import GPT4, ClaudeHaiku, ClaudeSonnet, Message
+# from devon_agent.agent.clients.client import GPT4, ClaudeHaiku, ClaudeSonnet, Message
 
 def test_diff():
 
@@ -41,7 +41,7 @@ def test_diff():
 def test_diff_backoff_matching():
     # case 25
 
-    cases = ["case30","case28","case10", "case12", "case14", "case16", "case17", "case18", "case19", "case23", "case24", "case27"] #, "case21", "case25" < has a hallucination
+    cases = ["case30","case28","case10", "case12", "case14", "case16", "case17", "case18", "case19", "case23", "case24", "case27","case32"] #, "case21", "case25" < has a hallucination
 
     current_file = __file__
     current_dir = os.path.dirname(current_file)
@@ -88,68 +88,68 @@ def test_syntax_check():
         assert len(result["fail"]) == 0
 
 
-def execute_repair(diff_case, file_case):
-    api_key=os.environ.get("ANTHROPIC_API_KEY")
-    anthropic_client = Anthropic(api_key=api_key)
+# def execute_repair(diff_case, file_case):
+#     api_key=os.environ.get("ANTHROPIC_API_KEY")
+#     anthropic_client = Anthropic(api_key=api_key)
 
-    api_key=os.environ.get("OPENAI_API_KEY")
-    openai_client = OpenAI(api_key=api_key)
+#     api_key=os.environ.get("OPENAI_API_KEY")
+#     openai_client = OpenAI(api_key=api_key)
 
-    diff_model = ClaudeSonnet(client=anthropic_client, system_message=UnifiedDiffPrompts.main_system_v3, max_tokens=4096, temperature=0.5)
+#     diff_model = ClaudeSonnet(client=anthropic_client, system_message=UnifiedDiffPrompts.main_system_v3, max_tokens=4096, temperature=0.5)
 
-    current_file = __file__
-    current_dir = os.path.dirname(current_file)
+#     current_file = __file__
+#     current_dir = os.path.dirname(current_file)
 
-    file_content = open(current_dir + f"/files/{file_case}.py").read()
-    file_diff = open(current_dir + f"/diffs/{diff_case}").read()
+#     file_content = open(current_dir + f"/files/{file_case}.py").read()
+#     file_diff = open(current_dir + f"/diffs/{diff_case}").read()
 
-    # print(file_diff)
+#     # print(file_diff)
 
-    original_change_count = None
-    original_diff = file_diff
+#     original_change_count = None
+#     original_diff = file_diff
 
-    attempts = 0
-    fixed = False
-    while not fixed and attempts < 3:
+#     attempts = 0
+#     fixed = False
+#     while not fixed and attempts < 3:
 
-        res, total_changed = apply_multi_file_context_diff(file_content, file_diff, original_change_count)
+#         res, total_changed = apply_multi_file_context_diff(file_content, file_diff, original_change_count)
 
-        if original_change_count is None:
-            original_change_count = total_changed
+#         if original_change_count is None:
+#             original_change_count = total_changed
 
-        failures = []
-        successes = []
-        if len(res["fail"]) > 0:
-            failures.extend(res["fail"])
-        if len(res["success"]) > 0:
-            successes.extend(res["success"])
+#         failures = []
+#         successes = []
+#         if len(res["fail"]) > 0:
+#             failures.extend(res["fail"])
+#         if len(res["success"]) > 0:
+#             successes.extend(res["success"])
 
-        if len(failures) == 0:
-            fixed = True
-            break
-        else:
-            print("\n\n*********\n")
-            print("\n".join([f[1].args[0] for f in failures]))
-            print("\n*********\n\n")
-            attempts += 1
+#         if len(failures) == 0:
+#             fixed = True
+#             break
+#         else:
+#             print("\n\n*********\n")
+#             print("\n".join([f[1].args[0] for f in failures]))
+#             print("\n*********\n\n")
+#             attempts += 1
 
-            try:
-                msg = create_recover_prompt({failures[0][0].tgt_file:file_content}, original_diff, file_diff, failures)
-            except:
-                msg = create_recover_prompt({"":file_content}, original_diff, file_diff, failures)
+#             try:
+#                 msg = create_recover_prompt({failures[0][0].tgt_file:file_content}, original_diff, file_diff, failures)
+#             except:
+#                 msg = create_recover_prompt({"":file_content}, original_diff, file_diff, failures)
 
-            file_diff = diff_model.chat([
-                Message(
-                    role="user",
-                    content=msg
-                )
-            ])
+#             file_diff = diff_model.chat([
+#                 Message(
+#                     role="user",
+#                     content=msg
+#                 )
+#             ])
 
-            print(file_diff)
+#             print(file_diff)
 
-    #TODO: assert changed line count is the same
+#     #TODO: assert changed line count is the same
 
-    return fixed, successes, failures
+#     return fixed, successes, failures
 
 # def test_repair_apply1():
 #     fixed = execute_repair("case4", "case1")

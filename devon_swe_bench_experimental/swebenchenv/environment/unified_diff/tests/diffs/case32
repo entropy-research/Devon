@@ -1,0 +1,13 @@
+edit_file <<<
+--- /Users/mihirchintawar/game_of_life.py
++++ /Users/mihirchintawar/game_of_life.py
+@@ -31,7 +31,7 @@
+            if mouse_pressed:
+                x, y = event.pos
+                grid[x // cell_size, y // cell_size] = 1
+-       if event.type == pygame.QUIT:
++       if event.type == pygame.QUIT:
+            running = False
+
+    # Update the grid according to the rules of Conway's Game of Life
+>>>
