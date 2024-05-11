@@ -15,40 +15,41 @@
 </div>
 
 
-VIDEO/GIF HERE
+> Video/GIF Coming Soon!
 
 # Installation
 
-## Pre-requisites
+## Prerequisites
 
 1. `node.js` and `npm`
-2. `pipx`
-3. **Anthropic** api key
+2. `pipx`, if you don't have this go [here](https://pipx.pypa.io/stable/installation/)
+3. [**Anthropic**](https://console.anthropic.com/settings/keys) API Key
 
 ## Installation commands
 
-To use simply run:
+To use, simply run:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/entropy-research/Devon/main/install.sh | bash
 ```
 
 
-*Or to install using pipx + npm*
+*Or to install using `pipx` + `npm`:*
 
 ```bash
 pipx install devon_agent
+npm install -g devon-tui 
 ```
 
-```bash
-npm install -g devon-tui
-```
+This installs the Python backend, and the cli command to run the tool
 
 ### Thats it! Happy building :)
 
 
 # Usage
-Prior to running, set your Anthropic API key as an environment variable
+Navigate to your project folder and open the terminal.
+
+Set your Anthropic API key as an environment variable:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -61,32 +62,33 @@ devon
 
 It's as easy as that.
 
-Don't worry, the agent will be able to only access files and folders in the directory you started it from. You can also correct it while it's performing actions.
+> [!NOTE]
+> Don't worry, the agent will be able to only access files and folders in the directory you started it from. You can also correct it while it's performing actions.
 
 # Features
-- Multi file editing
-- Code base exploration
+- Multi-file editing
+- Codebase exploration
 - Config writing
 - Test writing
 - Bug fixing
 - Architecture exploration
 
 ### Limitations
-- Minimal functionality for non-python languages
+- Minimal functionality for non-Python languages
 - Sometimes have to specify the file where you want the change to happen
 
 # Progress
 
 
-### This project is still super early and we need your help to make it great!
+### This project is still super early and <ins>we would love your help</ins> to make it great!
 
 ### Current goals
 - Multi-model support
 - Launch plugin system for tool and agent builders
-- Create self hostable electron app
-- Set SOTA on swebench-lite
+- Create self-hostable Electron app
+- Set SOTA on [SWE-bench Lite](https://www.swebench.com/lite.html)
 
-View our current thoughts on next steps [here](https://docs.google.com/document/d/e/2PACX-1vTjLCQcWE_n-uUHFhtBkxTCIJ4FFe5ftY_E4_q69SjXhuEZv_CYpLaQDh3HqrJlAxsgikUx0sTzf9le/pub)
+> View our current thoughts on next steps [**here**](https://docs.google.com/document/d/e/2PACX-1vTjLCQcWE_n-uUHFhtBkxTCIJ4FFe5ftY_E4_q69SjXhuEZv_CYpLaQDh3HqrJlAxsgikUx0sTzf9le/pub)
 
 ### Star history
 <p align="center">
@@ -95,14 +97,14 @@ View our current thoughts on next steps [here](https://docs.google.com/document/
   </a>
 </p>
 
-### Past Milestones
+### Past milestones
 
-- [x] May 10, 2024, Complete interactive agent v0.1.0
-- [x] May 10, 2024, Add steerability features
-- [x] May 8, 2024, Beat AutoCodeRover on SWE-Bench Lite
-- [x] Mid April, 2024, Add repo level code search tooling
-- [x] April 2, 2024, Begin development of v0.1.0 interactive agent
-- [x] March 17, 2024 Launch non-interactive agent v0.0.1
+- [x] **May 10, 2024** - Complete interactive agent v0.1.0
+- [x] **May 10, 2024** - Add steerability features
+- [x] **May 8, 2024** - Beat AutoCodeRover on SWE-Bench Lite
+- [x] **Mid April, 2024** - Add repo level code search tooling
+- [x] **April 2, 2024** - Begin development of v0.1.0 interactive agent
+- [x] **March 17, 2024** - Launch non-interactive agent v0.0.1
 
 
 ## Current development priorities
@@ -110,11 +112,10 @@ View our current thoughts on next steps [here](https://docs.google.com/document/
 1. Improve context gathering and code indexing abilities ex:
     - Adding memory modules
     - Improved code indexing
-    - 
 2. Add alternative models and agents to:
     - a) Reduce end user cost and
     - b) Reduce end user latency
-3. Introduce electron app and new UI
+3. Introduce Electron app and new UI
 
 
 
@@ -129,24 +130,24 @@ From tackling issues to building features to creating datasets, there are many w
 
 For details, please check [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-If you would like to contribute to the project, please fill out our [contribution Form](https://forms.gle/VU7RN7mwNvqEYe3B9)
+If you would like to contribute to the project, please fill out our [Contribution Form](https://forms.gle/VU7RN7mwNvqEYe3B9)
 
 
 # Feedback
 
-We would love feedback! Feel free to drop us a note on our [discord](https://discord.gg/p5YpZ5vjd9) in the feedback channel, or create issues!
+We would love feedback! Feel free to drop us a note on our [Discord](https://discord.gg/p5YpZ5vjd9) in the #feedback channel, or [create issues](https://github.com/entropy-research/Devon/issues)!
 
 We collect basic event type (i.e. "tool call") and failure telemetry to solve bugs and improve the user experience, but if you want to reach out, we would love to hear from you!
 
-To disable telemtry, set the environment variable `DEVON_TELEMETRY_DISABLED` to `true` 
+To disable telemetry, set the environment variable `DEVON_TELEMETRY_DISABLED` to `true` 
 ```bash
 export DEVON_TELEMETRY_DISABLED=true
 ```
 
 # Community
 
-Join our discord server and say hi!
-[discord](https://discord.gg/p5YpZ5vjd9)
+Join our Discord server and say hi!
+[Discord](https://discord.gg/p5YpZ5vjd9)
 
 
 # License
