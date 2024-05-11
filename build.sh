@@ -18,9 +18,9 @@ fi
 
 poetry install
 
-cd devon_tui
+cd devon-tui
 npm install
 npm run build
 npm install -g .
 cd ..
-echo "Devon is ready to use! Use the command 'devon-tui' to start the Devon TUI."
+echo "Devon is ready to use! Use the command 'devon' to start the Devon terminal."
