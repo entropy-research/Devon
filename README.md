@@ -15,7 +15,7 @@
 </div>
 
 
-Video/GIF Coming Soon!
+> Video/GIF Coming Soon!
 
 # Installation
 
@@ -27,7 +27,7 @@ Video/GIF Coming Soon!
 
 ## Installation commands
 
-To use simply run:
+To use, simply run:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/entropy-research/Devon/main/install.sh | bash
@@ -47,7 +47,9 @@ This installs the Python backend, and the cli command to run the tool
 
 
 # Usage
-Prior to running, set your Anthropic API key as an environment variable
+Navigate to your project folder and open the terminal.
+
+Set your Anthropic API key as an environment variable:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -86,7 +88,7 @@ It's as easy as that.
 - Create self-hostable Electron app
 - Set SOTA on [SWE-bench Lite](https://www.swebench.com/lite.html)
 
-View our current thoughts on next steps [**here**](https://docs.google.com/document/d/e/2PACX-1vTjLCQcWE_n-uUHFhtBkxTCIJ4FFe5ftY_E4_q69SjXhuEZv_CYpLaQDh3HqrJlAxsgikUx0sTzf9le/pub)
+> View our current thoughts on next steps [**here**](https://docs.google.com/document/d/e/2PACX-1vTjLCQcWE_n-uUHFhtBkxTCIJ4FFe5ftY_E4_q69SjXhuEZv_CYpLaQDh3HqrJlAxsgikUx0sTzf9le/pub)
 
 ### Star history
 <p align="center">
