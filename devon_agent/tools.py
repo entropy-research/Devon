@@ -1309,7 +1309,7 @@ def parse_command(ctx, command: str) -> tuple:
     if len(parts) > 1:
         arg_string = parts[1]
 
-        line_0 = command.splitlines()[0]
+        line_0 = command.splitlines()[1]
 
         if "<<<" in line_0 and ">>>" in arg_string:
             # Handle multiline arguments
