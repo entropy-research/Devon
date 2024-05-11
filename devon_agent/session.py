@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any, List
 from devon_agent.agent import TaskAgent
 from devon_agent.environment import LocalEnvironment
-from devon_agent.telemetry import ClientSessionEvent, Posthog, SessionEventEvent
+from devon_agent.telemetry import Posthog, SessionEventEvent, SessionStartEvent
 from devon_agent.tools import (
     ask_user,
     close_file,
@@ -41,7 +41,7 @@ class SessionArguments:
     path: str
     environment: str
     user_input: Any
-    name : str
+    name: str
 
 
 """
@@ -95,15 +95,15 @@ stateDiagram
 
 """
 
-def get_git_root(fpath=None):
 
+def get_git_root(fpath=None):
     path = fpath
 
     if path is None:
         path = os.getcwd()
 
     while True:
-        if os.path.exists(os.path.join(path, '.git')):
+        if os.path.exists(os.path.join(path, ".git")):
             return path
         parent_dir = os.path.dirname(path)
         if parent_dir == path:
@@ -226,7 +226,7 @@ class Session:
         # Collect only event name and content only in case of error
         telemetry_event = SessionEventEvent(
             event_type=event["type"],
-            message="" if not event["type"] ==  "Error" else event["content"],
+            message="" if not event["type"] == "Error" else event["content"],
         )
         self.telemetry_client.capture(telemetry_event)
 
@@ -433,9 +433,7 @@ class Session:
                         return fn(ctx, *args), False
             else:
                 # try:
-                output, rc = ctx.environment.communicate(
-                    fn_name + " " + " ".join(args)
-                )
+                output, rc = ctx.environment.communicate(fn_name + " " + " ".join(args))
                 if rc != 0:
                     raise Exception(output)
                 return output, False
@@ -468,7 +466,7 @@ class Session:
         return docs
 
     def enter(self):
-        self.telemetry_client.capture(ClientSessionEvent(self.name))
+        self.telemetry_client.capture(SessionStartEvent(self.name))
         self.environment.setup()
 
     def exit(self):

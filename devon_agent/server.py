@@ -14,7 +14,6 @@ from devon_agent.session import (
 from fastapi.middleware.cors import CORSMiddleware
 
 
-
 from fastapi.responses import StreamingResponse
 
 # API
@@ -30,7 +29,6 @@ from fastapi.responses import StreamingResponse
 # get session event stream
 
 
-
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -40,7 +38,6 @@ sessions: Dict[str, Session] = {}
 
 
 API_KEY = None
-
 
 
 app = fastapi.FastAPI()
@@ -98,7 +95,10 @@ def create_session(session: str, path: str):
     )
     sessions[session] = Session(
         SessionArguments(
-            path, environment="local", user_input=lambda: get_user_input(session), name=session
+            path,
+            environment="local",
+            user_input=lambda: get_user_input(session),
+            name=session,
         ),
         agent,
     )

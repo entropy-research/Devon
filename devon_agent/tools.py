@@ -60,8 +60,8 @@ if TYPE_CHECKING:
 #         pass
 
 
-
 ToolContext = Any
+
 
 def normalize_path(path, specified_path):
     if path == os.sep:
@@ -79,6 +79,7 @@ def normalize_path(path, specified_path):
     else:
         path = Path(specified_path) / Path(path)
         return path.absolute().as_posix()
+
 
 def make_abs_path(ctx, fpath: str) -> str:
     """
@@ -768,7 +769,9 @@ def real_write_diff(ctx, diff):
             if target_path.endswith(".py"):
                 try:
                     compile(result[1], "<string>", "exec")
-                    before_results = check_lint(ctx, read_file(ctx, target_path), target_path)
+                    before_results = check_lint(
+                        ctx, read_file(ctx, target_path), target_path
+                    )
                 except Exception as e:
                     return "Error applying diff: \n" + repr(e)
 

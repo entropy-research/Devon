@@ -76,7 +76,6 @@ class ProductTelemetryClient:
 
     @property
     def context(self) -> Dict[str, Any]:
-
         telemetry_settings = {}
 
         self._context = {
@@ -109,15 +108,14 @@ class ProductTelemetryClient:
 
 class Posthog(ProductTelemetryClient):
     def __init__(self):
-        if not "pytest" in sys.modules:
+        telemetry_disabled = os.getenv("DEVON_TELEMETRY_DISABLED")
+        if telemetry_disabled == "true":
             posthog.disabled = True
-        else:
-            logger.info("Anonymized telemetry enabled.")
 
         posthog.project_api_key = "phc_odaedyRgd1jAk3qnlUBWj4o3v5xeJiGeyLTgXPA7dAx"
-        posthog_logger = logging.getLogger("posthog")
+        # posthog_logger = logging.getLogger("posthog")
         # Silence posthog's logging
-        posthog_logger.disabled = True
+        # posthog_logger.disabled = True
 
         self.batched_events: Dict[str, ProductTelemetryEvent] = {}
         self.seen_event_types: Set[Any] = set()
@@ -141,10 +139,12 @@ class Posthog(ProductTelemetryClient):
 
     def _direct_capture(self, event: ProductTelemetryEvent) -> None:
         try:
-            posthog.capture(
+            print(event.name)
+            result = posthog.capture(
                 self.user_id,
                 event.name,
                 {**event.properties, **self.context},
             )
+            print(result)
         except Exception as e:
             logger.error(f"Failed to send telemetry event {event.name}: {e}")
