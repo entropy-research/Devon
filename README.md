@@ -23,8 +23,7 @@ VIDEO/GIF HERE
 
 1. `node.js` and `npm`
 2. `pipx`
-3. **Anthropic** api key 
-4. **OpenAI** api key (coming Soon! For more info see our discord or isues.)
+3. **Anthropic** api key
 
 ## Installation commands
 
@@ -76,10 +75,12 @@ It's as easy as that.
 ### This project is still super early and we need your help to make it great!
 
 ### Current goals
+- Multi-model support
 - Launch plugin system for tool and agent builders
 - Create self hostable electron app
 - Set SOTA on swebench-lite
 
+View our current thoughts on next steps [here](https://docs.google.com/document/d/e/2PACX-1vTjLCQcWE_n-uUHFhtBkxTCIJ4FFe5ftY_E4_q69SjXhuEZv_CYpLaQDh3HqrJlAxsgikUx0sTzf9le/pub)
 
 ### Star history
 <p align="center">
@@ -90,12 +91,12 @@ It's as easy as that.
 
 ### Past Milestones
 
-- May 10, 2024, ~~Complete interactive agent v0.1.0~~
-- May 10, 2024, ~~Add steerability features~~
-- May 8, 2024, ~~Beat AutoCodeRover on SWE-Bench Lite~~
-- Mid April, 2024, ~~Add repo level code search tooling~~
-- April 2, 2024, ~~Begin development of v0.1.0 interactive agent~~
-- March 17, 2024 ~~Launch non-interactive agent v0.0.1~~
+- [x] May 10, 2024, Complete interactive agent v0.1.0
+- [x] May 10, 2024, Add steerability features
+- [x] May 8, 2024, Beat AutoCodeRover on SWE-Bench Lite
+- [x] Mid April, 2024, Add repo level code search tooling
+- [x] April 2, 2024, Begin development of v0.1.0 interactive agent
+- [x] March 17, 2024 Launch non-interactive agent v0.0.1
 
 
 ## Current development priorities
