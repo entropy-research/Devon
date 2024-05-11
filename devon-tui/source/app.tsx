@@ -160,6 +160,7 @@ const handleEvents = (
 
 		if (event.type == 'Error') {
 			if (!error) {
+				console.error('Error:', event.content);
 				messages.push({text: event.content, type: 'error'});
 				error = true;
 			}
