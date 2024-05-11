@@ -61,6 +61,8 @@ devon
 
 It's as easy as that.
 
+Don't worry, the agent will be able to only access files and folders in the directory you started it from. You can also correct it while its performing actions.
+
 # Features
 - Multi file editing
 - Code base exploration
@@ -68,6 +70,10 @@ It's as easy as that.
 - Test writing
 - Bug fixing
 - Architecture exploration
+
+### Limitations
+- Minimal functionality for non-python languages
+- Sometimes have to specify the file where you want the change to happen
 
 # Progress
 
