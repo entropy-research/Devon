@@ -453,7 +453,7 @@ class Session:
                 #     return "Failed to execute bash command", False
         except Exception as e:
             ctx.logger.error(traceback.print_exc())
-            return e.args[0], False
+            return e.args[0] if len(e.args) > 0 else "Failed to execute command due to internal error", False
 
     def get_available_actions(self) -> list[str]:
         return [fn.__name__ for fn in self.tools]

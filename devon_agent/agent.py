@@ -162,8 +162,8 @@ class TaskAgent(Agent):
             except Exception:
                 raise ValueError(f"Multiple actions found in response: {output}")
             
-            # if not thought or not action:
-            #     raise Hallucination("Agent failed to follow response format instructions")
+            if not thought or not action:
+                raise ValueError("Agent failed to follow response format instructions")
 
             self.chat_history.append(
                 {
