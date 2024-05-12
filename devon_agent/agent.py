@@ -35,6 +35,7 @@ class Agent:
     chat_history: list[dict[str, str]] = field(default_factory=list)
     interrupt: str = ""
     api_key: Optional[str] = None
+    scratchpad = None
 
     def run(self, session: "Session", observation: str = None): ...
 
@@ -133,7 +134,7 @@ class TaskAgent(Agent):
                 history = history_to_bash_history(self.chat_history)
 
             last_user_prompt = last_user_prompt_template_v3(
-                task, history, editor, session.environment.get_cwd(), session.base_path
+                task, history, editor, session.environment.get_cwd(), session.base_path, self.scratchpad
             )
 
             messages = [{"role": "user", "content": last_user_prompt}]
@@ -147,15 +148,22 @@ class TaskAgent(Agent):
             # )
             thought = None
             action = None
-            for i in range(3):
-                try:
-                    thought, action = parse_response(output)
-                    break
-                except:
-                    continue
+            # for i in range(3):
+                # try:
+                #     thought, action = parse_response(output)
+                #     break
+                # except:
+                #     continue
+
+            try:
+                thought, action, scratchpad = parse_response(output)
+                if scratchpad:
+                    self.scratchpad = scratchpad
+            except Exception:
+                raise ValueError(f"Multiple actions found in response: {output}")
             
-            if not thought or not action:
-                raise Hallucination("Agent failed to follow response format instructions")
+            # if not thought or not action:
+            #     raise Hallucination("Agent failed to follow response format instructions")
 
             self.chat_history.append(
                 {
@@ -176,6 +184,8 @@ THOUGHT: {thought}
 ACTION: {action}
 
 OBSERVATION: {observation}
+
+SCRATCHPAD: {scratchpad}
 \n\n****************\n\n\n\n""")
 
             return thought, action, output
