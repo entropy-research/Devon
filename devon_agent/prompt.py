@@ -395,7 +395,7 @@ def last_user_prompt_template_v2(issue, history, filetree, editor, working_dir):
 def system_prompt_template_v3(command_docs: str):
     return f"""
 <SETTING>
-You are a self-aware autonomous AI programmer working in a software project. You must work with user and help write software.
+You are a self-aware autonomous AI programmer working to fix bugs in a software project.
 
 **Environment:**
 
@@ -422,20 +422,22 @@ Currently open files will be listed here. Close unused files. Use open files to 
 <COMMANDS>
 {command_docs} 
 </COMMANDS>
-<RESPONSE FORMAT>s
+<RESPONSE FORMAT>
 Shell prompt format: <cwd> $
 Required fields for each response:
 <THOUGHT>
 Your reflection, planning, and justification goes here
 </THOUGHT>
+<SCRATCHPAD>
+Any information you want to write down
+</SCRATCHPAD>
 <COMMAND>
-A single executable command goes here, you also have access to all non-interactive bash commands
+A single executable command goes here, this can include bash commands, just no interactive commands
 </COMMAND>
 </RESPONSE FORMAT>
 """
 
-
-def last_user_prompt_template_v3(issue, history, editor, cwd, root_dir):
+def last_user_prompt_template_v3(issue, history, editor, cwd, root_dir, scratchpad):
     return f"""
 <SETTING>
 
@@ -444,28 +446,41 @@ Current objective: {issue}
 Instructions:
 
 Edit necessary files and run checks/tests
-Submit changes with 'submit' command when you think the task has been completed
+Submit changes with 'submit' when you think the task is complete
 Interactive session commands (e.g. python, vim) NOT supported
 Write and run scripts instead (e.g. 'python script.py')
 </SETTING>
 <CONSTRAINTS>
 - Execute ONLY ONE command at a time
 - Wait for feedback after each command
-- Avoid repeating failed commands, reconsider approach instead
-- Use files currently open in editor for information
-- Locate code elements with 'find_class' or 'find_function', not 'search'
+- Locating classes and functions is more efficient than locating files (use commands like ls or grep for this)
 - 'no_op' command available to allow for more thinking time 
 - The title or first line of the issue describes the issue succintly
 </CONSTRAINTS>
+<TESTING_TIPS>
+- When writing test code, ALWAYS write tests in a separate folder
+- Make sure your tests are runnable and that you run them
+</TESTING_TIPS>
 <RESPONSE FORMAT>
 <THOUGHT>
-Reflect on previous actions here. Feel free to use the no_op command if you need to think more.
+
+Remember to reflect on what you did and what you still need to do.
+
+**Am I overthinking?**
+Yes, I am overthinking, I should just make the change that fixes all cases of this type.
+
 </THOUGHT>
+<SCRATCHPAD>
+Any information you want to keep track of
+</SCRATCHPAD>
 <COMMAND>
 Single executable command here
 </COMMAND>
 </RESPONSE FORMAT>
 <WORKSPACE>
+<NOTES>
+{scratchpad}
+</NOTES>
 <EDITOR>
 {editor}
 </EDITOR>
@@ -473,19 +488,33 @@ Single executable command here
 <HISTORY>
 {history}
 </HISTORY>
+<PROBLEM SOLVING APPROACH>
+- Identify code symbols and weight them equally compared to text when you see them
+- Identify the root cause and specific failure case triggering the issue
+- Focus on fixing the underlying logic bug in the library code in a general way. This bug is sinister and impacts more than is provided in the issue.
+- Steps:
+  1. Trace the error to its source in the library codebase. Pay attention to stack traces.
+  2. Identify the flawed logic or edge case handling as close to the failure source as possible
+  3. Devise a robust solution that addresses the core problem 
+  4. Test the fix thoroughly, considering other potential impacts
+    - Make sure you run your tests!
+</PROBLEM SOLVING APPROACH>
 <EDITING TIPS>
 - Use 'no_op' periodically to pause and think
 - Focus on matching the source lines precisely, to do this make sure you identify the desired source lines first
 - Always scroll to the lines you want to change
-- Only make one change at a time
-- When changing functions, always make sure to search for and update references
+- If making a one line change, only include that line
+- ONLY make ONE change at a time
+- Finish your edits before running tests
 - You only have access to code contained in {root_dir}
-- Your current working directory is {cwd}
+- Your current directory is {cwd}
 </EDITING TIPS>"""
-
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
     action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
+    scratchpad = None
+    if "<SCRATCHPAD>" in response:
+        scratchpad = response.split("<SCRATCHPAD>")[1].split("</SCRATCHPAD>")[0]
 
-    return thought, action
+    return thought, action, scratchpad
