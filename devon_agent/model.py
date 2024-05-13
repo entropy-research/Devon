@@ -1,8 +1,11 @@
+import datetime
 import os
 from dataclasses import dataclass
+import time
 from typing import Optional
 
 from anthropic import Anthropic
+import anthropic
 
 
 @dataclass(frozen=False)
@@ -57,17 +60,29 @@ class AnthropicModel:
             self.api = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
-        response = (
-            self.api.messages.create(
-                messages=messages,
-                max_tokens=self.model_metadata["max_tokens"],
-                model=self.api_model,
-                temperature=self.args.temperature,
-                system=system_message,
-                stop_sequences=["</COMMAND>"],
-            )
-            .content[0]
-            .text
-        )
 
-        return response + "</COMMAND>"
+        retries = 0
+        max_retries = 5
+        backoff_factor = 0.5
+        while retries < max_retries:
+            try:
+                response = (
+                    self.api.messages.create(
+                        messages=messages,
+                        max_tokens=self.model_metadata["max_tokens"],
+                        model=self.api_model,
+                        temperature=self.args.temperature,
+                        system=system_message,
+                        stop_sequences=["</COMMAND>"],
+                    )
+                )
+                return response.content[0].text + "</COMMAND>"
+            except anthropic.RateLimitError as e:
+                if retries == max_retries - 1:
+                    raise e
+                else:
+                    sleep_time = backoff_factor * (2 ** retries)
+                    print(f"Request failed. Retrying in {sleep_time} seconds...")
+                    time.sleep(sleep_time)
+                    retries += 1
+
