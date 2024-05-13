@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
+import { useBackendUrl } from '@/contexts/BackendUrlContext';
 
 const EventStream = ({ sessionId }) => {
+    const backendUrl = useBackendUrl()
     const [events, setEvents] = useState<any>([])
 
     useEffect(() => {
         const eventSource = new EventSource(
-            `http://localhost:8000/session/${sessionId}/events/stream`
+            `${backendUrl}/session/${sessionId}/events/stream`
         )
 
         eventSource.onmessage = event => {

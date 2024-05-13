@@ -22,9 +22,10 @@ type Channel =
   | 'load-data'
   | 'delete-encrypted-data'
   | 'check-has-encrypted-data'
+  | 'server-port'
 
 const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
-  send: ['get-file-path', 'add-message', 'ping'],
+  send: ['get-file-path', 'add-message', 'ping', 'server-port'],
   invoke: [
     'get-file-path',
     'add-message',
@@ -42,7 +43,7 @@ const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
     'delete-encrypted-data',
     'check-has-encrypted-data'
   ],
-  receive: ['file-path-response'],
+  receive: ['file-path-response', 'server-port'],
 }
 
 type ReceiveHandler = (event: any, ...arg: [any?, any?, any?]) => void

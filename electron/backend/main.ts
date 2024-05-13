@@ -4,14 +4,17 @@ import { app, BrowserWindow, ipcMain, dialog, safeStorage } from 'electron'
 import log from 'electron-log'
 import electronUpdater from 'electron-updater'
 import electronIsDev from 'electron-is-dev'
-import ElectronStore from 'electron-store'
+// import ElectronStore from 'electron-store'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
-import { Message, StoreSchema } from './types.js'
 import {
-  // addMessageToHistory,
-  getConversationHistory,
-} from './electronStoreUtils.js'
+  Message,
+  // StoreSchema
+} from './types.js'
+// import {
+// addMessageToHistory,
+// getConversationHistory,
+// } from './electronStoreUtils.js'
 import { readFile, writeFile } from 'fs/promises'
 import {
   addMessage,
@@ -21,31 +24,31 @@ import {
   createChat,
   getChatById,
 } from './database.js'
-import { spawn } from 'child_process'
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
+import portfinder from 'portfinder'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const { autoUpdater } = electronUpdater
 let appWindow: BrowserWindow | null = null
 
-const schema: ElectronStore.Schema<StoreSchema> = {
-  conversationHistory: {
-    type: 'array',
-    default: [],
-    items: {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        role: { type: 'string' },
-        content: { type: 'string' },
-      },
-      required: ['id', 'role', 'content'],
-    },
-  },
-}
+// const schema: ElectronStore.Schema<StoreSchema> = {
+//   conversationHistory: {
+//     type: 'array',
+//     default: [],
+//     items: {
+//       type: 'object',
+//       properties: {
+//         id: { type: 'string' },
+//         role: { type: 'string' },
+//         content: { type: 'string' },
+//       },
+//       required: ['id', 'role', 'content'],
+//     },
+//   },
+// }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const store = new ElectronStore<StoreSchema>({ schema })
+// const store = new ElectronStore<StoreSchema>({ schema })
 
 process.on('uncaughtException', error => {
   console.error('Uncaught Exception:', error)
@@ -63,7 +66,6 @@ class AppUpdater {
 }
 
 if (electronIsDev) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { default: electronDebug } = await import('electron-debug')
   electronDebug({
     showDevTools: true,
@@ -127,11 +129,12 @@ const spawnAppWindow = async () => {
   })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let CHAT_DATA_PATH: string
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let serverProcess: any = null
+let serverProcess: ChildProcessWithoutNullStreams
+
+const controller = new AbortController()
+portfinder.setBasePort(10001)
 
 app.on('ready', () => {
   new AppUpdater()
@@ -145,30 +148,33 @@ app.on('ready', () => {
     )
   }
 
-  serverProcess = spawn('poetry', [
-    'run',
-    'python',
-<<<<<<< HEAD
-    '../devon/environment/server.py',
-=======
-    '../devon_agent/server.py',
->>>>>>> 4a56d75 (maintainance)
-  ])
+  portfinder
+    .getPortPromise()
+    .then((port: number) => {
+      serverProcess = spawn('devon', ['server', '--port', port.toString()], {
+        signal: controller.signal,
+      })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  serverProcess.stdout.on('data', (data: any) => {
-    console.log(`Server: ${data}`)
-  })
+      serverProcess.stdout.on('data', (data: unknown) => {
+        console.log(`Server: ${data}`)
+      })
+ 
+      if (appWindow) {
+        appWindow.webContents.send('server-port', port)
+      }
+      
+      serverProcess.stderr.on('data', (data: unknown) => {
+        console.error(`Server Error: ${data}`)
+      })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  serverProcess.stderr.on('data', (data: any) => {
-    console.error(`Server Error: ${data}`)
-  })
+      serverProcess.on('close', (code: unknown) => {
+        console.log(`Server process exited with code ${code}`)
+      })
+    })
+    .catch(error => {
+      console.error('Failed to find a free port:', error)
+    })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  serverProcess.on('close', (code: any) => {
-    console.log(`Server process exited with code ${code}`)
-  })
   // CHAT_DATA_PATH = path.join(app.getPath('userData'), 'store', 'chatData.json')
   // mkdir(path.dirname(CHAT_DATA_PATH), { recursive: true }).catch(console.error)
   spawnAppWindow()
@@ -250,7 +256,7 @@ ipcMain.handle('create-or-update-chat', async (event, chat) => {
   }
 })
 
-ipcMain.handle('get-chats', async (event, userId) => {
+ipcMain.handle('get-chats', async () => {
   try {
     const chats = getChats()
     return { success: true, data: chats }
@@ -289,11 +295,11 @@ ipcMain.handle('get-messages', async () => {
   }
 })
 
-ipcMain.handle('get-conversation-history', () => {
-  const history = getConversationHistory(store)
-  console.log(history)
-  return history
-})
+// ipcMain.handle('get-conversation-history', () => {
+//   const history = getConversationHistory(store)
+//   console.log(history)
+//   return history
+// })
 
 ipcMain.handle('get-user-data-path', () => {
   return app.getPath('userData')
@@ -372,7 +378,7 @@ ipcMain.handle('save-data', async (event, plainText) => {
   }
 })
 
-ipcMain.handle('load-data', async event => {
+ipcMain.handle('load-data', async () => {
   const filePath = path.join(app.getPath('userData'), 'secureData.bin')
   try {
     const encryptedData = fs.readFileSync(filePath)
@@ -388,7 +394,7 @@ ipcMain.handle('load-data', async event => {
   }
 })
 
-ipcMain.handle('check-has-encrypted-data', async event => {
+ipcMain.handle('check-has-encrypted-data', async () => {
   const filePath = path.join(app.getPath('userData'), 'secureData.bin')
   try {
     await fs.promises.access(filePath, fs.constants.F_OK)
@@ -404,7 +410,7 @@ ipcMain.handle('check-has-encrypted-data', async event => {
   }
 })
 
-ipcMain.handle('delete-encrypted-data', async event => {
+ipcMain.handle('delete-encrypted-data', async () => {
   const filePath = path.join(app.getPath('userData'), 'secureData.bin')
   try {
     // Check if file exists before attempting to delete
