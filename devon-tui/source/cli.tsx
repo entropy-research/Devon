@@ -70,13 +70,13 @@ portfinder.getPort(function (_: any, port: number) {
 		},
 	);
 
-	// subProcess.stdout.on('data', (newOutput: Buffer) => {
-	// 	writeLogLine(newOutput.toString('utf8'));
-	// });
+	subProcess.stdout.on('data', (newOutput: Buffer) => {
+		console.log(newOutput.toString('utf8'));
+	});
 
-	// subProcess.stderr.on('data', (newOutput: Buffer) => {
-	// 	console.error(newOutput.toString('utf8'));
-	// });
+	subProcess.stderr.on('data', (newOutput: Buffer) => {
+		console.error(newOutput.toString('utf8'));
+	});
 
 	const {waitUntilExit} = render(<App port={port} />, {
 		exitOnCtrlC: true,
