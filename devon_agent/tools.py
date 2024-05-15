@@ -11,6 +11,7 @@ context:
     - task_agent
 """
 
+from abc import ABC
 import io
 import json
 import logging
@@ -58,9 +59,6 @@ if TYPE_CHECKING:
 
 #     def cleanup(self, ctx : ToolContext):
 #         pass
-
-
-ToolContext = Any
 
 
 def normalize_path(path, specified_path):
@@ -117,7 +115,6 @@ def cwd_normalize_path(ctx, path):
     else:
         print(get_cwd(ctx), path)
         return make_abs_path(ctx, os.path.join(get_cwd(ctx), path))
-
 
 def file_exists(ctx, fpath):
     abs_path = make_abs_path(ctx, fpath)
@@ -1377,7 +1374,7 @@ def exit(ctx):
     pass
 
 
-def set_task(ctx: ToolContext, task):
+def set_task(ctx, task):
     """
     NAME
         set_task - set the current task

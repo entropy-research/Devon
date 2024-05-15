@@ -96,7 +96,7 @@ def create_session(session: str, path: str):
     sessions[session] = Session(
         SessionArguments(
             path,
-            environment="local",
+            # environment="local",
             user_input=lambda: get_user_input(session),
             name=session,
         ),
@@ -123,7 +123,7 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
             consumer="devon",
         )
     )
-    background_tasks.add_task(sessions[session].step_event)
+    background_tasks.add_task(sessions[session].run_event_loop)
     running_sessions.append(session)
     return session
 

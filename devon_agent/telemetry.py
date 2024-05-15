@@ -139,7 +139,7 @@ class Posthog(ProductTelemetryClient):
 
     def _direct_capture(self, event: ProductTelemetryEvent) -> None:
         try:
-            print(event.name)
+            # print(event.name)
             result = posthog.capture(
                 self.user_id,
                 event.name,
