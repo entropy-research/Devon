@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import json
 import logging
 import os
+import inspect
 from pathlib import Path
 import re
 import traceback
@@ -12,6 +13,15 @@ from ghapi.all import GhApi
 from devon_agent.environments.swebenchenv import SWEEnvEnvironment
 from devon_agent.tool import ToolNotFoundException
 from devon_agent.tools import parse_command
+from devon_agent.utils import DotDict
+
+from devon_agent.tools.editortools import CreateFileTool, DeleteFileTool, OpenFileTool, ScrollDownTool, ScrollToLineTool, ScrollUpTool
+from devon_agent.tools.edittools import EditFileTool
+from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, ListDirsRecursiveTool, SearchDirTool
+from devon_agent.tools.filetools import SearchFileTool
+from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
+from devon_agent.tools.shelltool import ShellTool
+
 
 GITHUB_ISSUE_URL_PATTERN = re.compile(r"github\.com\/(.*?)\/(.*?)\/issues\/(\d+)")
 
@@ -118,15 +128,18 @@ def get_instances(
 
 @dataclass
 class SWEEnvSessionArguments:
-    image_name: str
-    data_path: str
-    split: str = "dev"
-    container_name: Optional[str] = None
-    install_environment: bool = True
-    timeout: int = 35
-    verbose: bool = False
-    no_mirror: bool = False
-    specific_issues: Optional[List[str]] = None
+    sweenv: SWEEnvEnvironment
+    # image_name: str
+    # data_path: str
+    # split: str = "dev"
+    # container_name: Optional[str] = None
+    # install_environment: bool = True
+    # timeout: int = 35
+    # verbose: bool = False
+    # no_mirror: bool = False
+    # specific_issues: Optional[List[str]] = None
+    record: Optional[dict] = None
+
 
 
 class SWEEnvSession:
@@ -135,59 +148,120 @@ class SWEEnvSession:
 
         self.event_log = []
         self.event_index = 0
+        self.state = DotDict({})
+        self.agent = agent
 
-        if not self.args.verbose:
-            self.logger.disabled = True
+        # if not self.args.verbose:
+        #     self.logger.disabled = True
 
         self.logger = logging.getLogger(__name__)
 
-        self.data_path = self.args.data_path
-        specific_issues = (
-            self.args.specific_issues if self.args.specific_issues else None
-        )
-        self.data = get_instances(
-            self.data_path,
-            self.args.base_commit,
-            self.args.split,
-            token=self.token,
-            specific_issues=specific_issues,
-        )  # Load data from path
-        self.logger.info(f"💽 Loaded dataset from {self.data_path}")
-        self.issues = specific_issues
+        # self.data_path = args.data_path
+        # specific_issues = (
+        #     self.args.specific_issues if self.args.specific_issues else None
+        # )
+        # self.data = get_instances(
+        #     self.data_path,
+        #     self.args.base_commit,
+        #     self.args.split,
+        #     token=self.token,
+        #     specific_issues=specific_issues,
+        # )  # Load data from path
+        # self.logger.info(f"💽 Loaded dataset from {self.data_path}")
+        # self.issues = specific_issues
 
         self.idx = 1
+        self.record = args.record
+        
+        sweenv = args.sweenv
+
+        sweenv.register_tools({
+            "create_file" : CreateFileTool(),
+            "open_file" : OpenFileTool(),
+            "scroll_up" : ScrollUpTool(),
+            "scroll_down" : ScrollDownTool(),
+            "scroll_to_line" : ScrollToLineTool(),
+            "search_file" : SearchFileTool(),
+            "edit_file" : EditFileTool(),
+            "search_dir" : SearchDirTool(),
+            "find_file" : FindFileTool(),
+            # "list_dirs_recursive" : ListDirsRecursiveTool(),
+            "get_cwd" : GetCwdTool(),
+            "no_op" : NoOpTool(),
+            "submit" : SubmitTool(),
+            "delete_file" : DeleteFileTool(),
+
+        })
+        sweenv.set_default_tool(ShellTool())
+        self.default_environment = sweenv
 
         self.environments = {
-            "swebenchenv": SWEEnvEnvironment(
-                logger=self.logger,
-                image_name=args.image_name,
-                container_name=args.container_name,
-                persistent=args.container_name if args.container_name else False,
-                timeout=args.timeout,
-                no_mirror=args.no_mirror,
-            )
+            "swebenchenv": sweenv
         }
+
+
+    def enter(self):
+        self.environments["swebenchenv"].setup()
+        self.environments["swebenchenv"].reset(self.record)
+
+        self.base_path = self.environments["swebenchenv"].base_path
+
+        for tool in self.environments["swebenchenv"].tools.values():
+            tool.setup({
+                "environment" : self.environments["swebenchenv"],
+                "session" : self,
+                "state" : self.state,
+            })
+
+
+    def exit(self):
+        self.environments["swebenchenv"].teardown()
 
     def run_event_loop(self):
         event_id = 0
         # current event
+        submission = None
+
         while True and not (event_id == len(self.event_log)):
 
             event = self.event_log[event_id]
 
             self.logger.info(f"Event: {event}")
-            self.logger.info(f"State: {self.state}")
+            # self.logger.info(f"State: {self.state}")
 
             if event["type"] == "Stop":
                 # handle swebench logic issue logic
-                self.idx += 1
-                self.record = self.data[self.idx]
-                self.environments["swebenchenv"].reset(self.record)
+                # self.idx += 1
+                # self.record = self.data[self.idx]
+                # self.environments["swebenchenv"].reset(self.record)
+
+                command = """submit() {
+    cd $ROOT
+
+    # Check if the patch file exists and is non-empty
+    if [ -s "/root/test.patch" ]; then
+        # Apply the patch in reverse
+        git apply -R < "/root/test.patch"
+    fi
+
+    echo "\nbuild" >> .gitignore
+    git add -A
+    git diff --cached > model.patch
+    echo "<<SUBMISSION||"
+    cat model.patch
+    echo "||SUBMISSION>>"
+}
+submit"""
+
+                submission, rc =  self.environments["swebenchenv"].execute(command)
+                break
 
             events = self.step_event(event)
             self.event_log.extend(events)
 
             event_id += 1
+        
+        return submission
 
     def step_event(self, event):
 
@@ -241,6 +315,7 @@ class SWEEnvSession:
                                 "consumer": "user",
                             }
                         )
+
                     case _:
                         try:
 
@@ -358,3 +433,28 @@ class SWEEnvSession:
                 pass
 
         return new_events
+    
+    def get_available_actions(self) -> list[str]:
+        # get all tools for all environments
+
+        tools = []
+        for env in self.environments.values():
+            tools.extend(env.tools)
+
+        return tools
+
+
+    def generate_command_docs(self, format="manpage"):
+        """
+        Generates a dictionary of function names and their docstrings.
+        """
+        docs = {}
+        for env in self.environments.values():
+            for name,tool in env.tools.items():
+                signature = inspect.signature(tool.function)
+                docs[name] = {
+                    "docstring" : tool.documentation(format),
+                    "signature" : str(signature),
+                }
+
+        return docs

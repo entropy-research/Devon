@@ -90,9 +90,9 @@ class TaskAgent(Agent):
             )
         )
         try:
-            print(session.state.editor)
-            print(session.state.editor.PAGE_SIZE)
-            print(session.state.editor.files)
+            # print(session.state.editor)
+            # print(session.state.editor.PAGE_SIZE)
+            # print(session.state.editor.files)
             editor = self._convert_editor_to_view(
                 session.state.editor.files, session.state.editor.PAGE_SIZE
             )
@@ -296,7 +296,7 @@ You must respond in the following format:ONLY ONE COMMAND AT A TIME
         </OBSERVATION>"""
 
             self.history.append({"role": "user", "content": user_prompt_template})
-            logger.info(self.history[-1]["content"])
+            # logger.info(self.history[-1]["content"])
             output = self.current_model.query(self.history, system_prompt_template)
 
             thought, action = parse_response(output)

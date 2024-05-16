@@ -19,9 +19,16 @@ import traceback
 from io import BytesIO
 from pathlib import Path
 from subprocess import PIPE, STDOUT
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
+
+from swebench import (
+    get_environment_yml,
+    get_requirements,
+    MAP_VERSION_TO_INSTALL
+)
 
 from devon_agent.environment import EnvironmentModule
+from devon_agent.tool import Tool
 
 LOGGER_NAME = "intercode"
 START_UP_DELAY = 5
@@ -31,6 +38,10 @@ TIMEOUT_DURATION = 25
 logger = logging.getLogger(LOGGER_NAME)
 
 
+
+LONG_TIMEOUT = 500
+PATH_TO_REQS = "/root/requirements.txt"
+PATH_TO_ENV_YML = "/root/environment.yml"
 
 
 
@@ -303,10 +314,10 @@ def get_container(
 @dataclass(frozen=False)
 class DockerEnvironment(EnvironmentModule):
     logger : logging.Logger
-    container_name: Optional[str] = None
-    persistent: bool = False
     image_name: str
     timeout: int
+    container_name: Optional[str] = None
+    persistent: bool = False
 
     def setup(self, **kwargs):
 
@@ -344,19 +355,19 @@ class DockerEnvironment(EnvironmentModule):
         self.container_obj = client.containers.get(self.container_name)
         # self.logger.info("🌱 Environment Initialized")
 
-        # self.communicate_with_handling(
+        # self.communicate(
         #     "source /root/.bashrc",
         #     error_msg="Failed to source .bashrc",
         # )
-        # self.communicate_with_handling(
+        # self.communicate(
         #     "mkdir -p /root/commands",
         #     error_msg="Failed to create commands directory",
         # )
-        # self.communicate_with_handling(
+        # self.communicate(
         #     "touch /root/commands/__init__.py",
         #     error_msg="Failed to create __init__.py",
         # )
-        # self.communicate_with_handling(
+        # self.communicate(
         #     "export PATH=$PATH:/root/commands",
         #     error_msg="Failed to add commands directory to PATH",
         # )
@@ -469,11 +480,13 @@ class DockerEnvironment(EnvironmentModule):
 @dataclass(frozen=False)
 class SWEEnvEnvironment(EnvironmentModule):
     logger : logging.Logger
+    image_name: str
     container_name: Optional[str] = None
     persistent: bool = False
-    image_name: str
-    timeout: int
+    timeout: Optional[int] = None
     no_mirror: bool = True
+    token: str = None
+    install_environment: bool = True
 
     def setup(self, **kwargs):
 
@@ -509,22 +522,36 @@ class SWEEnvEnvironment(EnvironmentModule):
         self.container_obj = client.containers.get(self.container_name)
         self.logger.info("🌱 Environment Initialized")
 
-        self.communicate_with_handling(
+        self.communicate(
             "source /root/.bashrc",
-            error_msg="Failed to source .bashrc",
+            # error_msg="Failed to source .bashrc",
         )
-        self.communicate_with_handling(
+        self.communicate(
             "mkdir -p /root/commands",
-            error_msg="Failed to create commands directory",
+            # error_msg="Failed to create commands directory",
         )
-        self.communicate_with_handling(
+        self.communicate(
             "touch /root/commands/__init__.py",
-            error_msg="Failed to create __init__.py",
+            # error_msg="Failed to create __init__.py",
         )
-        self.communicate_with_handling(
+        self.communicate(
             "export PATH=$PATH:/root/commands",
-            error_msg="Failed to add commands directory to PATH",
+            # error_msg="Failed to add commands directory to PATH",
         )
+
+    def get_pids(self, all_pids=False) -> list[str]:
+        """
+        Gets list of processes running inside docker container
+        """
+        pids = (
+            self.container_obj.exec_run("ps -eo pid,comm --no-headers")
+            .output.decode()
+            .split("\n")
+        )
+        pids = [x.split() for x in pids if x]
+        if not all_pids:
+            pids = [x for x in pids if x[1] != "ps" and x[0] not in self.parent_pids]
+        return pids
 
     # They use commands because python tools wouldn't work without some sort of tool proxy
     def _communicate(
@@ -535,7 +562,7 @@ class SWEEnvEnvironment(EnvironmentModule):
 
         # Add \n, stdin write, flush => execute commant
         try:
-            self.returncode = None
+            returncode = None
             cmd = input if input.endswith("\n") else input + "\n"
             self.container.stdin.write(cmd)
             time.sleep(0.1)
@@ -563,9 +590,8 @@ class SWEEnvEnvironment(EnvironmentModule):
             raise RuntimeError(
                 f"Container crashed. Failed to get exit code. Output:\n---\n{buffer}\n---"
             )
-
-        self.returncode = int(exit_code)
-        return buffer
+        
+        return buffer, int(exit_code)
 
 
     # Send shell commands in a format the container understands
@@ -585,20 +611,18 @@ class SWEEnvEnvironment(EnvironmentModule):
             output (`str`) - output from container
         """
         if input.strip() != "exit":
-            output, valid = self._check_syntax(input)
-            if not valid:
-                return output  # shows syntax errors
-            output = self._communicate(
+            # output = self._communicate(input)
+            # if not valid:
+            #     return output  # shows syntax errors
+            output, rc = self._communicate(
                 input,
                 timeout_duration=timeout_duration,
             )
-            self.communicate_output = output
-            return output
+            return output, rc
         else:
             self.container.terminate()
-            self.returncode = 0
-            self.communicate_output = ""
-            return ""
+            rc = 0
+            return "", rc
 
     def execute(self, input: str, timeout_duration=25):
         return self.communicate(input, timeout_duration=timeout_duration)
@@ -630,24 +654,37 @@ class SWEEnvEnvironment(EnvironmentModule):
                 pass
             self.logger.info("Agent container stopped")
 
+    def register_tools(self, tools: Dict[str, 'Tool']):
+        if "_tools" not in self.__dict__:
+            self._tools = {}
+        if self._tools is None:
+            self._tools = {}
+        self._tools.update(tools)
     
-    def install_env(self) -> None:
+    def set_default_tool(self, tool: 'Tool'):
+        self.default_tool = tool
+
+    @property
+    def tools(self) -> Dict[str, 'Tool']:
+        return self._tools
+    
+    def install_env(self,record) -> None:
         """
         Creates conda environment and installs third party dependencies to allow code execution
         """
 
-        repo_name = self.record["repo"].replace("/", "__")
+        repo_name = record["repo"].replace("/", "__")
         # Create environment if does not exist yet
         
         # Check for env
-        env_name = f"{repo_name}__{self.record['version']}"
-        env_check = self.communicate(
+        env_name = f"{repo_name}__{record['version']}"
+        env_check,_ = self.communicate(
             f"conda env list | grep {env_name}", timeout_duration=LONG_TIMEOUT
         )
         
         # Map version to install?? based on task I guess. this seems relatively dumb. This probably makes up for like 5%-10% of would be failures lol
-        install_configs = MAP_VERSION_TO_INSTALL[self.record["repo"]][
-            str(self.record["version"])
+        install_configs = MAP_VERSION_TO_INSTALL[record["repo"]][
+            str(record["version"])
         ]
 
         # If env doesnt exist -> setup env bullshit (reqs.txt, or env.yaml, etc. not sure whats up here, what types of dependencies are needed)
@@ -658,23 +695,23 @@ class SWEEnvEnvironment(EnvironmentModule):
             )
             if packages == "requirements.txt":
                 # Create conda environment
-                self.communicate_with_handling(
+                self.communicate(
                     f"conda create -n {env_name} python={install_configs['python']} -y",
-                    error_msg="Failed to create conda environment",
+                    # error_msg="Failed to create conda environment",
                     timeout_duration=LONG_TIMEOUT,
                 )
                 # Write reqs to requirements.txt in docker container
-                content_reqs = get_requirements(self.record)
+                content_reqs = get_requirements(record)
                 copy_file_to_container(self.container_obj, content_reqs, PATH_TO_REQS)
                 
                 # Create conda environment + install reqs
-                self.communicate_with_handling(
+                self.communicate(
                     f"conda activate {env_name}",
-                    error_msg="Failed to activate conda environment",
+                    # error_msg="Failed to activate conda environment",
                 )
-                self.communicate_with_handling(
+                self.communicate(
                     f"pip install -r {PATH_TO_REQS}",
-                    error_msg="Failed to install requirements.txt",
+                    # error_msg="Failed to install requirements.txt",
                     timeout_duration=LONG_TIMEOUT,
                 )
                 self.communicate(f"rm {PATH_TO_REQS}")
@@ -684,93 +721,95 @@ class SWEEnvEnvironment(EnvironmentModule):
                 copy_file_to_container(self.container_obj, content_env_yml, PATH_TO_ENV_YML)
                 if "no_use_env" in install_configs and install_configs["no_use_env"]:
                     # Create conda environment
-                    self.communicate_with_handling(
+                    self.communicate(
                         f"conda create -c conda-forge -n {env_name} python={install_configs['python']} -y",
-                        error_msg="Failed to create conda environment",
+                        # error_msg="Failed to create conda environment",
                         timeout_duration=LONG_TIMEOUT,
                     )
                     # Install packages
-                    self.communicate_with_handling(
+                    self.communicate(
                         f"conda env update -f {PATH_TO_ENV_YML}",
-                        error_msg="Failed to install environment.yml",
+                        # error_msg="Failed to install environment.yml",
                         timeout_duration=LONG_TIMEOUT
                     )
                 else:
                     # Create environment + install packages
-                    self.communicate_with_handling(
+                    self.communicate(
                         f"conda env create --file {PATH_TO_ENV_YML}",
-                        error_msg="Failed to create conda environment with environment.yml",
+                        # error_msg="Failed to create conda environment with environment.yml",
                         timeout_duration=LONG_TIMEOUT,
                     )
                 self.communicate(f"rm {PATH_TO_ENV_YML}")
             else:
                 # Create environment + install packages
-                self.communicate_with_handling(
+                self.communicate(
                     f"conda create -n {env_name} python={install_configs['python']} {packages} -y",
-                    error_msg="Failed to create conda environment",
+                    # error_msg="Failed to create conda environment",
                     timeout_duration=LONG_TIMEOUT,
                 )
             # Install extra pip packages if specified
             if "pip_packages" in install_configs:
-                self.communicate_with_handling(
+                self.communicate(
                     f"source activate {env_name} && pip install {install_configs['pip_packages']}",
-                    error_msg="Failed to install pip packages",
+                    # error_msg="Failed to install pip packages",
                     timeout_duration=LONG_TIMEOUT
                 )
 
         # Activate environment
-        self.communicate_with_handling(
+        self.communicate(
             f"conda activate {env_name}",
-            error_msg="Failed to activate conda environment"
+            # error_msg="Failed to activate conda environment"
         )
 
         # Install repo at base commit
         if "pre_install" in install_configs:
             self.logger.info("Running pre-install commands...")
             for pre_install_cmd in install_configs["pre_install"]:
-                self.communicate_with_handling(
+                self.communicate(
                     pre_install_cmd,
-                    error_msg="Pre-install commands failed to execute successfully",
+                    # error_msg="Pre-install commands failed to execute successfully",
                 )
         self.logger.info(f"Installing {repo_name} at base commit...")
         if "install" in install_configs:
             install_cmd = install_configs["install"]
-            self.communicate_with_handling(
+            self.communicate(
                 install_cmd,
-                error_msg="Install command failed to execute successfully",
+                # error_msg="Install command failed to execute successfully",
                 timeout_duration=LONG_TIMEOUT
             )
         if "post_install" in install_configs:
             self.logger.info("Running post-install commands...")
             for post_install_cmd in install_configs["post_install"]:
-                self.communicate_with_handling(
+                self.communicate(
                     post_install_cmd,
-                    error_msg="Post-install commands failed to execute successfully",
+                    # error_msg="Post-install commands failed to execute successfully",
                 )
 
+    def get_cwd(self):
+        return self.execute("pwd")[0]
 
     def reset(self,record):
 
         base_commit = record["base_commit"]
         query = record["problem_statement"]
-        folders = self.communicate(input="ls").split("\n")
-        repo_name = self.record["repo"].replace("/", "__")
-        self.file_root = "/" + self.record['repo'].replace('/', '__')
+        folders = self.communicate(input="ls")[0].split("\n")
+        repo_name = record["repo"].replace("/", "__")
+        self.base_path = "/" + record['repo'].replace('/', '__')
 
         if repo_name not in folders:
             if not self.no_mirror:
                 self.logger.info(f"{repo_name} not found in container, cloning...")
-                self.communicate_with_handling(
-                    input=f"git clone https://{self.token}@github.com/{self.record['repo']}.git {repo_name}",
-                    error_msg="Failed to clone repository from mirror",
+                self.communicate(
+                    input=f"git clone https://{self.token}@github.com/{record['repo']}.git {repo_name}",
+                    # error_msg="Failed to clone repository from mirror",
                     timeout_duration=LONG_TIMEOUT,
                 )
                 self.logger.info(f"{repo_name} not found in container, cloning...")
             else:
                 logger.info(f"Trying to clone from non-mirror...")
-                self.communicate_with_handling(
-                    input=f"git clone https://{self.token}@github.com/{self.record['repo']}.git {repo_name}",
-                    error_msg="Failed to clone repository from non-mirror",
+                self.communicate(
+                    input=f"git clone https://{self.token}@github.com/{record['repo']}.git {repo_name}",
+                    # error_msg="Failed to clone repository from non-mirror",
                     timeout_duration=LONG_TIMEOUT,
                 )
 
@@ -780,12 +819,12 @@ class SWEEnvEnvironment(EnvironmentModule):
             "export ROOT=$(pwd -P)",
             "git status",
             "git restore .",
-            f"git reset --hard {self.base_commit}",
+            f"git reset --hard {base_commit}",
             "git clean -fdxq",
         ]:
-            self.communicate_with_handling(
+            self.communicate(
                 input=cmd,
-                error_msg="Failed to clean repository",
+                # error_msg="Failed to clean repository",
             )
 
         for cmd in [
@@ -795,27 +834,26 @@ class SWEEnvEnvironment(EnvironmentModule):
             "export SEARCH_FILES=()",
             "export SEARCH_INDEX=0",
         ]:
-            self.communicate_with_handling(
+            self.communicate(
                 input=cmd,
-                error_msg="Failed to reset environment variables",
+                # error_msg="Failed to reset environment variables",
             )
         
-        self.communicate_with_handling(
+        self.communicate(
             "source /root/miniconda3/etc/profile.d/conda.sh",
-            error_msg="Failed to source conda",
+            # error_msg="Failed to source conda",
         )
 
-        system = self.communicate("uname -s").strip().lower()
-        arch = self.communicate("uname -m").strip().lower()
+        system = self.communicate("uname -s")[0].strip().lower()
+        arch = self.communicate("uname -m")[0].strip().lower()
         if system == 'linux' and arch == 'x86_64':
-            self.communicate_with_handling(
+            self.communicate(
                 f"apt update; apt install build-essential -y",
-                error_msg="Failed to install build-essential",
                 timeout_duration=LONG_TIMEOUT,
                 )
             
         if self.install_environment:
-            self.install_env()
+            self.install_env(record)
 
         
 

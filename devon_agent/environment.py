@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 
-from typing import Callable, Dict, Optional, Protocol,TYPE_CHECKING
+from typing import Callable, Dict, Optional, Protocol,TYPE_CHECKING, Tuple
 
 from git import Repo
 
@@ -41,7 +41,7 @@ class EnvironmentModule(Protocol):
     def __exit__(self, exc_type, exc_value, traceback):
         self.teardown(exc_type, exc_value, traceback)
 
-    def execute(self, input: str, timeout_duration=25): ...
+    def execute(self, input: str, timeout_duration=25) -> Tuple[str, int]: ...
 
     def register_tools(self, tools: Dict[str,'Tool']):...
 

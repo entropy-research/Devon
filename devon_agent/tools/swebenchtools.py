@@ -42,34 +42,7 @@ class SubmitTool(Tool):
         pass
     
     def function(self, ctx : ToolContext):
-        ctx["session"].event_log.append({
-            "type": "Stop",
-            "content": "Submit",
-            "producer": "devon",
-            "consumer": "user",
-        })
-
-        command = """submit() {
-    cd $ROOT
-
-    # Check if the patch file exists and is non-empty
-    if [ -s "/root/test.patch" ]; then
-        # Apply the patch in reverse
-        git apply -R < "/root/test.patch"
-    fi
-
-    echo "\nbuild" >> .gitignore
-    git add -A
-    git diff --cached > model.patch
-    echo "<<SUBMISSION||"
-    cat model.patch
-    echo "||SUBMISSION>>"
-}
-submit"""
-
-        output, rc =  ctx["environment"].execute(command)
-
-        return output
+        pass
 
     def cleanup(self, ctx):
         pass
