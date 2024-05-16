@@ -48,16 +48,28 @@ const gridTabs = [
 export default function AgentWorkspaceTabs({
     viewMode,
     chatProps,
+    visibilityProps: {
+        showPlanner,
+        setShowPlanner,
+        showTimeline,
+        setShowTimeline,
+    },
 }: {
     viewMode: ViewMode
     chatProps: ChatProps
+    visibilityProps: {
+        showPlanner: boolean
+        setShowPlanner: (show: boolean) => void
+        showTimeline: boolean
+        setShowTimeline: (show: boolean) => void
+    }
 }) {
     return (
         <>
             {viewMode === ViewMode.Panel ? (
-                <div className="flex gap-5 w-full h-full justify-around">
-                    <PlannerWidget />
-                    <TimelineWidget />
+                <div className="flex gap-5 w-full h-full justify-around pr-5 flex-1">
+                    {showPlanner && <PlannerWidget />}
+                    {showTimeline && <TimelineWidget />}
                 </div>
             ) : (
                 <GridView chatProps={chatProps} />

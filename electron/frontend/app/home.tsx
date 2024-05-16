@@ -14,37 +14,75 @@ import AgentWorkspaceHeader from '@/components/agent-workspace/agent-header'
 export default function Home({ chatProps }: { chatProps: ChatProps }) {
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
+    const [showPlanner, setShowPlanner] = useState<boolean>(true)
+    const [showTimeline, setShowTimeline] = useState<boolean>(true)
+
     const toggleViewMode = () => {
         setViewMode(
             viewMode === ViewMode.Panel ? ViewMode.Grid : ViewMode.Panel
         )
     }
 
+    const visibilityProps = {
+        showPlanner,
+        setShowPlanner,
+        showTimeline,
+        setShowTimeline,
+    }
+
+    const [isAgentWorkspaceVisible, setAgentWorkspaceVisible] = useState(true)
+
+    const toggleAgentWorkspace = () => {
+        setAgentWorkspaceVisible(!isAgentWorkspaceVisible)
+    }
+
     return (
         <>
-            <AgentWorkspaceHeader toggleViewMode={toggleViewMode} />
+            <AgentWorkspaceHeader
+                toggleViewMode={toggleViewMode}
+                visibilityProps={visibilityProps}
+            />
 
             {viewMode === ViewMode.Panel ? (
                 <>
-                    <ResizablePanelGroup direction="horizontal">
-                        <ResizablePanel>
+                    {/* <ResizablePanelGroup direction="horizontal">
+                        <ResizablePanel className="w-full">
                             <Chat chatProps={chatProps} />
                         </ResizablePanel>
                         <ResizableHandle withHandle className="px-3" />
-                        <ResizablePanel className="w-full">
+                        <ResizablePanel>
                             <AgentWorkspace
                                 viewMode={viewMode}
                                 toggleViewMode={toggleViewMode}
                                 chatProps={chatProps}
+                                visibilityProps={visibilityProps}
                             />
                         </ResizablePanel>
-                    </ResizablePanelGroup>
+                    </ResizablePanelGroup> */}
+                    <div className="w-full flex flex-row">
+                        <div
+                            className={`transition-all duration-500 ${showPlanner ? 'w-1/3' : 'w-full'}`}
+                        >
+                            <Chat chatProps={chatProps} />
+                        </div>
+                        <div
+                            className={`transition-all duration-300`}
+                        >
+                            <AgentWorkspace
+                                viewMode={viewMode}
+                                toggleViewMode={toggleViewMode}
+                                chatProps={chatProps}
+                                visibilityProps={visibilityProps}
+                            />
+                        </div>
+                    </div>
                 </>
             ) : (
                 <AgentWorkspace
                     viewMode={viewMode}
                     toggleViewMode={toggleViewMode}
                     chatProps={chatProps}
+                    visibilityProps={visibilityProps}
                 />
             )}
         </>

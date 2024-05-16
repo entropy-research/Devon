@@ -6,14 +6,25 @@ export default function AgentWorkspace({
     viewMode,
     toggleViewMode,
     chatProps,
+    visibilityProps,
 }: {
     viewMode: ViewMode
     toggleViewMode: () => void
     chatProps: ChatProps
+    visibilityProps: {
+        showPlanner: boolean
+        setShowPlanner: (show: boolean) => void
+        showTimeline: boolean
+        setShowTimeline: (show: boolean) => void
+    }
 }) {
     return (
-        <div className="h-full w-full flex flex-col overflow-hidden">
-            <AgentWorkspaceTabs viewMode={viewMode} chatProps={chatProps} />
+        <div className="h-full flex flex-col overflow-hidden">
+            <AgentWorkspaceTabs
+                viewMode={viewMode}
+                chatProps={chatProps}
+                visibilityProps={visibilityProps}
+            />
         </div>
     )
 }
