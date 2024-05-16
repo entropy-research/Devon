@@ -9,7 +9,6 @@ import { Session } from '@/lib/chat.types'
 import { usePathname, useRouter } from 'next/navigation'
 import { Message } from '@/lib/chat/chat.actions'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
-import SuggestionContainer from './suggestion-container'
 import { VercelInput } from './input'
 import { useToast } from '@/components/ui/use-toast'
 import { ButtonScrollToBottom } from './button-scroll-to-bottom'
@@ -156,7 +155,6 @@ export function VercelChat({
             </div>
             {!viewOnly && (
                 <div className="sticky bottom-0 w-full">
-                    {!(messages?.length > 0) && <SuggestionContainer />}
                     <ButtonScrollToBottom
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}

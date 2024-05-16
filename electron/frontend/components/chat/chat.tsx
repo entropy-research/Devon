@@ -11,7 +11,7 @@ export default function Chat({
     chatProps?: ChatProps
 }) {
     return (
-        <div className="dark:bg-shade rounded-lg h-full w-full flex flex-col flex-1">
+        <div className="rounded-lg h-full w-full flex flex-col flex-1">
             <Header sessionId={chatProps?.id} />
             <div className="flex-1 overflow-y-auto">
                 {/* <VercelChat viewOnly={viewOnly} {...chatProps} /> */}

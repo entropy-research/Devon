@@ -21,8 +21,8 @@ const config: Config = {
     extend: {
       colors: {
         day: '#f2f2f2', // 'white' bg
-        night: '#242424', // 'black' bg
-        shade: '#2e2e2e',
+        night: '#1e1e1e', // 'black' bg
+        batman: '#2c2c2c',
         outline: {
           day: '#f2f2f2',
           night: '#484848',
@@ -32,7 +32,7 @@ const config: Config = {
         // input: {
         //   dark: '#484848',
         // },
-        primary: '#6096FF', // blue
+        primary: '#6041d1', // blue
         'custom-blue': 'rgba(0,187,255,0.5)',
         input: 'var(--input)',
         // primary: {

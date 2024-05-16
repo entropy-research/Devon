@@ -41,33 +41,11 @@ const SidebarContext = createContext(defaultValue)
 
 export default function Sidebar() {
     const [expanded, setExpanded] = useState(false)
-    const timerRef = useRef<NodeJS.Timeout | null>(null)
-    // const { expanded } = useContext(SidebarContext)
-
-    function handleMouseOver() {
-        if (timerRef.current) {
-            clearTimeout(timerRef.current)
-        }
-        timerRef.current = setTimeout(() => {
-            setExpanded(true)
-        }, 300)
-    }
-
-    function handleMouseOut() {
-        if (timerRef.current) {
-            clearTimeout(timerRef.current)
-        }
-        timerRef.current = setTimeout(() => {
-            setExpanded(false)
-        }, 300)
-    }
 
     return (
         <aside className="h-full flex flex-row">
             <nav
-                className="h-full flex flex-col bg-shade rounded-lg py-6 max-w-[280px] w-full"
-                onMouseOver={handleMouseOver}
-                onMouseOut={handleMouseOut}
+                className="h-full flex flex-col bg-batman rounded-sm py-6 max-w-[280px] w-full"
             >
                 <SidebarContext.Provider value={{ expanded }}>
                     <ul

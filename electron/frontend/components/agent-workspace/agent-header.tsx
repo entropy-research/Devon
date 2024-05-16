@@ -9,30 +9,21 @@ const AgentWorkspaceHeader = ({
 }: {
     toggleViewMode: () => void
 }) => {
-    const [value, setValue] = useState(true)
-    const toast = useComingSoonToast()
+    const [value, setValue] = useState(false)
 
     const onChange = () => {
-        if (!value) {
-            toast()
-        }
+        // if (!value) {
+        //     toast()
+        // }
         setValue(!value)
+        toggleViewMode()
     }
     return (
-        <div className="flex flex-row justify-between items-start">
-            <h1 className="font-bold text-lg mb-5">{`Devon's Workspace`}</h1>
-
-            <div className="flex flex-row gap-4 items-center">
-                <button onClick={toggleViewMode}>
-                    <LayoutGrid className="w-5 h-5 text-primary" />
-                </button>
-                <div className="flex flex-row gap-2 items-center">
-                    <Switch checked={value} onCheckedChange={onChange} />
-                    <p className="text-sm font-semibold">
-                        {value ? 'Following' : 'Follow'}
-                    </p>
-                </div>
-            </div>
+        <div className="flex flex-row gap-2 items-center absolute z-10 right-10 top-5">
+            <p className="text-lg font-semibold">
+                {value ? 'Dev Mode' : 'Observe Mode'}
+            </p>
+            <Switch checked={value} onCheckedChange={onChange} />
         </div>
     )
 }
