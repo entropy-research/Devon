@@ -254,6 +254,11 @@ class SWEEnvSession:
 submit"""
 
                 submission, rc =  self.environments["swebenchenv"].execute(command)
+                pattern = r"\<\<SUBMISSION\|\|(.*)\|\|SUBMISSION\>\>"
+                match = re.search(pattern, submission, re.DOTALL)
+                if match is None:
+                    return None
+                submission = match.group(1)
                 break
 
             events = self.step_event(event)
