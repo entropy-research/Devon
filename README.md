@@ -1,3 +1,23 @@
+# devon
+
+`pipx install devon_agent`
+  installed package devon-agent 0.1.6, installed using Python 3.11.9
+  These apps are now globally available
+    - devon_agent.exe
+done! ✨ 🌟 ✨
+
+`npm install -g devon-tu`i
+  added 128 packages in 23s
+
+Set your Anthropic API key as an environment variable:
+`export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+
+Then to run, the command is:
+`devon`
+
+To disable telemetry, set the environment variable DEVON_TELEMETRY_DISABLED to true
+
+`export DEVON_TELEMETRY_DISABLED=true`
 
 <!-- PROJECT LOGO -->
 <div align="center">
@@ -16,15 +36,15 @@
 https://github.com/entropy-research/Devon/assets/61808204/d42a8b9a-0211-4624-9804-d24df1d4dbf6
 </div>
 
-# Installation
+## Installation
 
-## Prerequisites
+### Prerequisites
 
 1. `node.js` and `npm`
 2. `pipx`, if you don't have this go [here](https://pipx.pypa.io/stable/installation/)
 3. [**Anthropic**](https://console.anthropic.com/settings/keys) API Key
 
-## Installation commands
+### Installation commands
 
 To use, simply run:
 
@@ -42,10 +62,10 @@ npm install -g devon-tui
 
 This installs the Python backend, and the cli command to run the tool
 
-### Thats it! Happy building :)
+#### Thats it! Happy building :)
 
+### Usage
 
-# Usage
 Navigate to your project folder and open the terminal.
 
 Set your Anthropic API key as an environment variable:
@@ -64,7 +84,8 @@ It's as easy as that.
 > [!NOTE]
 > Don't worry, the agent will be able to only access files and folders in the directory you started it from. You can also correct it while it's performing actions.
 
-# Features
+### Features
+
 - Multi-file editing
 - Codebase exploration
 - Config writing
@@ -73,15 +94,16 @@ It's as easy as that.
 - Architecture exploration
 
 ### Limitations
+
 - Minimal functionality for non-Python languages
 - Sometimes have to specify the file where you want the change to happen
 
-# Progress
+## Progress
 
-
-### This project is still super early and <ins>we would love your help</ins> to make it great!
+This project is still super early and <ins>we would love your help</ins> to make it great!
 
 ### Current goals
+
 - Multi-model support
 - Launch plugin system for tool and agent builders
 - Create self-hostable Electron app
@@ -90,6 +112,7 @@ It's as easy as that.
 > View our current thoughts on next steps [**here**](https://docs.google.com/document/d/e/2PACX-1vTjLCQcWE_n-uUHFhtBkxTCIJ4FFe5ftY_E4_q69SjXhuEZv_CYpLaQDh3HqrJlAxsgikUx0sTzf9le/pub)
 
 ### Star history
+
 <p align="center">
   <a href="https://star-history.com/#entropy-research/Devon&Date">
     <img src="https://api.star-history.com/svg?repos=entropy-research/Devon&type=Date" width="500" alt="Star History Chart">
@@ -118,7 +141,7 @@ It's as easy as that.
 
 
 
-# How can I contribute?
+### How can I contribute?
 
 Devon and the entropy-research org are community-driven, and we welcome contributions from everyone!
 From tackling issues to building features to creating datasets, there are many ways to get involved:
@@ -132,7 +155,7 @@ For details, please check [CONTRIBUTING.md](./CONTRIBUTING.md).
 If you would like to contribute to the project, please fill out our [Contribution Form](https://forms.gle/VU7RN7mwNvqEYe3B9)
 
 
-# Feedback
+### Feedback
 
 We would love feedback! Feel free to drop us a note on our [Discord](https://discord.gg/p5YpZ5vjd9) in the #feedback channel, or [create issues](https://github.com/entropy-research/Devon/issues)!
 
@@ -143,12 +166,12 @@ To disable telemetry, set the environment variable `DEVON_TELEMETRY_DISABLED` to
 export DEVON_TELEMETRY_DISABLED=true
 ```
 
-# Community
+### Community
 
 Join our Discord server and say hi!
 [Discord](https://discord.gg/p5YpZ5vjd9)
 
 
-# License
+### License
 
 Distributed under the Apache 2.0 License. See [`LICENSE`](./LICENSE) for more information.
