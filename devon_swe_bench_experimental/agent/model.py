@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from anthropic import Anthropic
+from openai import OpenAI
 import os
 
 
@@ -86,6 +87,54 @@ class AnthropicModel:
 
         return response + "</COMMAND>"
 
+class OpenAIModel:
+    MODELS = {
+        "gpt-4-turbo-2024-04-09": {
+            "max_context": 128_000,
+            "cost_per_input_token": 1e-05,
+            "cost_per_output_token": 3e-05,
+        },
+    }
+
+    SHORTCUTS = {
+        "gpt4-turbo": "gpt-4-turbo-2024-04-09",
+    }
+
+    def __init__(self, args: ModelArguments):
+        self.args = args
+        self.api_model = self.SHORTCUTS.get(args.model_name, args.model_name)
+        self.model_metadata = self.MODELS[self.api_model]
+
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    def history_to_messages(
+        self, history: list[dict[str, str]], is_demonstration: bool = False
+    ) -> list[dict[str, str]]:
+        """
+        Create `messages` by filtering out all keys except for role/content per `history` turn
+        """
+        # Remove system messages if it is a demonstration
+        if is_demonstration:
+            history = [entry for entry in history if entry["role"] != "system"]
+            return '\n'.join([entry["content"] for entry in history])
+        # Return history components with just role, content fields
+        return [
+            {k: v for k, v in entry.items() if k in ["role", "content"]}
+            for entry in history
+        ]
+
+    def query(self, messages, system_message) -> str:
+        """
+        Query the OpenAI API with the given `history` and return the response.
+        """
+        # Perform OpenAI API call
+        response = self.client.chat.completions.create(
+            messages=[{"role":"system", "content": system_message}],
+            model=self.api_model,
+            temperature=self.args.temperature,
+            top_p=self.args.top_p,
+        )
+        return response.choices[0].message.content
 
 # Simple shim for providing commands
 def process_command(model, command):
