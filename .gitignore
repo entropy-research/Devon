@@ -179,7 +179,6 @@ SCRATCHPAD
 
 
 PROMPT
-<<<<<<< HEAD
 /electron/.storybook
 /electron/.yarn
 
@@ -191,6 +190,4 @@ dist
 
 .yarn
 
-=======
 build
->>>>>>> da7e0e3 (large)
