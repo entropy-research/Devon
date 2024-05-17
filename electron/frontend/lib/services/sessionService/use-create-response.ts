@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { useBackendUrl } from '@/contexts/BackendUrlContext';
 
 // Send over user response
 
-const BACKEND_URL = 'http://localhost:8000'
-
 const useCreateResponse = () => {
+    const backendUrl = useBackendUrl()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [responseData, setResponseData] = useState(null)
@@ -15,7 +15,7 @@ const useCreateResponse = () => {
         setError(null)
         try {
             const result = await axios.post(
-                `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/response?response=${encodeURIComponent(response)}`
+                `${backendUrl}/session/${encodeURIComponent(sessionId)}/response?response=${encodeURIComponent(response)}`
             )
             setResponseData(result.data)
             return result.data

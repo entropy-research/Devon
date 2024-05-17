@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import axios from 'axios';
-
-const BACKEND_URL = 'http://localhost:8000';
+import { useBackendUrl } from '@/contexts/BackendUrlContext';
 
 const useDeleteSession = () => {
+    const backendUrl = useBackendUrl()
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [response, setResponse] = useState(null);
@@ -14,7 +14,7 @@ const useDeleteSession = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.delete(`${BACKEND_URL}/session`, { params: { session } });
+            const response = await axios.delete(`${backendUrl}/session`, { params: { session } });
             setResponse(response.data);  // Save the response data which might be the updated session list
         } catch (err) {
             setError(err.message || 'Unknown error');

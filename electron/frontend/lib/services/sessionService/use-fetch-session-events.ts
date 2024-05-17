@@ -1,7 +1,8 @@
 import { useQuery } from 'react-query'
 import axios from 'axios'
-
-const BACKEND_URL = 'http://localhost:8000'
+import { useBackendUrl } from '@/contexts/BackendUrlContext';
+// const backendUrl = useBackendUrl()
+const BACKEND_URL = 'http://localhost:10001' // TODO: Change this to the actual backend URL
 
 // Function to fetch session events
 export const fetchSessionEvents = async sessionId => {

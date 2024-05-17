@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import axios from 'axios'
-
-const BACKEND_URL = 'http://localhost:8000'
+import { useBackendUrl } from '@/contexts/BackendUrlContext';
 
 const useStartSession = () => {
+    const backendUrl = useBackendUrl()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [sessionStarted, setSessionStarted] = useState(false)
@@ -15,7 +15,7 @@ const useStartSession = () => {
             if (!sessionId) throw new Error('Session ID is required')
             // If a session is already started, it will return a 304
             const response = await axios.post(
-                `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/start`
+                `${backendUrl}/session/${encodeURIComponent(sessionId)}/start`
             )
             setSessionStarted(true)
         } catch (err) {
