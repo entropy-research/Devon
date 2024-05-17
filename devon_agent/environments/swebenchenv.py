@@ -789,12 +789,15 @@ class SWEEnvEnvironment(EnvironmentModule):
         return self.execute("pwd")[0]
 
     def reset(self,record):
+        self.communicate("cd /")
 
         base_commit = record["base_commit"]
         query = record["problem_statement"]
         folders = self.communicate(input="ls")[0].split("\n")
+        print(folders)
         repo_name = record["repo"].replace("/", "__")
         self.base_path = "/" + record['repo'].replace('/', '__')
+        print(self.communicate("ls "+ self.base_path)[0])
 
         if repo_name not in folders:
             if not self.no_mirror:
@@ -854,6 +857,12 @@ class SWEEnvEnvironment(EnvironmentModule):
             
         if self.install_environment:
             self.install_env(record)
+
+
+    def create_tar(self, file_path):
+        tar_data, _ = self.container_obj.get_archive(path=file_path)
+
+        return tar_data
 
         
 

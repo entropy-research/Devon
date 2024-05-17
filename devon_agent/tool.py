@@ -93,11 +93,13 @@ class Tool(ABC):
             func(context, response)
         return response
 
-    def register_pre(self, func : PreTool):
+    def register_pre_hook(self, func : PreTool):
         self.pre_funcs.append(func)
+        return self
 
-    def register_post(self, func : PostTool):
+    def register_post_hook(self, func : PostTool):
         self.post_funcs.append(func)
+        return self
 
 class ToolNotFoundException(Exception):
     """Exception raised when a tool is not found in the available environments."""

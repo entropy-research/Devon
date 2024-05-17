@@ -5,14 +5,18 @@ import os
 import inspect
 from pathlib import Path
 import re
+import tarfile
+import tempfile
 import traceback
 from typing import List, Optional
 from datasets import load_dataset, load_from_disk
 from ghapi.all import GhApi
 
 from devon_agent.environments.swebenchenv import SWEEnvEnvironment
+from devon_agent.retrieval.code_index import CodeIndex
 from devon_agent.tool import ToolNotFoundException
 from devon_agent.tools import parse_command
+from devon_agent.tools.codeindex import FindClassTool, FindFunctionTool
 from devon_agent.utils import DotDict
 
 from devon_agent.tools.editortools import CreateFileTool, DeleteFileTool, OpenFileTool, ScrollDownTool, ScrollToLineTool, ScrollUpTool
@@ -24,6 +28,36 @@ from devon_agent.tools.shelltool import ShellTool
 
 
 GITHUB_ISSUE_URL_PATTERN = re.compile(r"github\.com\/(.*?)\/(.*?)\/issues\/(\d+)")
+
+
+def build_code_index(ctx, **kwargs):
+
+    if ctx["state"].code_index:
+        return
+    if "cache_path" in kwargs and os.path.exists(kwargs["cache_path"]):
+        ctx["state"].code_index = CodeIndex.load_from_json(kwargs["cache_path"])
+        return
+
+    env = ctx["environment"]
+    print(ctx["session"].base_path)
+    tar_data = env.create_tar(ctx["session"].base_path)
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        for chunk in tar_data:
+            f.write(chunk)
+        f.flush()
+        f.seek(0)
+        temp_dir = tempfile.mkdtemp()
+        with tarfile.open(f.name, "r") as tar:
+            tar.extractall(path=temp_dir)
+        ci = CodeIndex(temp_dir)
+        ci.initialize()
+        print(f"code index built for {ctx['session'].record['instance_id']}")
+        ctx["state"].code_index = ci
+    
+    if "cache_path" in kwargs:
+        print(f"saving code index to {kwargs['cache_path']}")
+        ci.save_as_json(kwargs["cache_path"])
+
 
 
 def get_commit(api: GhApi, owner: str, repo: str, base_commit: str = None):
@@ -185,6 +219,8 @@ class SWEEnvSession:
             "edit_file" : EditFileTool(),
             "search_dir" : SearchDirTool(),
             "find_file" : FindFileTool(),
+            "find_function" : FindFunctionTool().register_pre_hook(lambda ctx, **kwargs: build_code_index(ctx, cache_path=f"cache/{self.record['instance_id']}")),
+            "find_class" : FindClassTool().register_pre_hook(lambda ctx, **kwargs: build_code_index(ctx, cache_path=f"cache/{self.record['instance_id']}")),
             # "list_dirs_recursive" : ListDirsRecursiveTool(),
             "get_cwd" : GetCwdTool(),
             "no_op" : NoOpTool(),
@@ -397,7 +433,7 @@ submit"""
                             new_events.append(
                                 {
                                     "type": "ToolResponse",
-                                    "content": e.args[0],
+                                    "content": str(e),
                                     "producer": self.default_environment.name,
                                     "consumer": event["producer"],
                                 }
