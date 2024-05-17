@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import axios from 'axios'
-
-const BACKEND_URL = 'http://localhost:8000'
+import { useBackendUrl } from '@/contexts/BackendUrlContext';
+// const backendUrl = useBackendUrl()
+const BACKEND_URL = 'http://localhost:10001' // TODO: Change this to the actual backend URL
 
 export const fetchSessionState = async sessionId => {
     const { data } = await axios.get(
@@ -11,6 +12,7 @@ export const fetchSessionState = async sessionId => {
 }
 
 const useSessionState = sessionId => {
+    const backendUrl = useBackendUrl()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [sessionState, setSessionState] = useState(null)
@@ -21,7 +23,7 @@ const useSessionState = sessionId => {
         if (!sessionId || sessionId === 'New') return
         try {
             const response = await axios.post(
-                `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/state`
+                `${backendUrl}/session/${encodeURIComponent(sessionId)}/state`
             )
             setSessionState(response.data)
         } catch (err) {

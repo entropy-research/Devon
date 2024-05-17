@@ -155,7 +155,6 @@ class SWEEnv(gym.Env):
 
         # Establish connection with execution container
         self.image_name = args.image_name
-        # uses mutation to add container to self. WHY??? Academic ass code
         self._reset_container()
         # Set timeout
         self.timeout = self.args.timeout
@@ -256,7 +255,6 @@ class SWEEnv(gym.Env):
             self.table_cache.save(self.record["instance_id"])
 
         # Reset environment variables
-        # Reset env vars in the container? maybe this is used for tracking, but why not on the agent?
         for cmd in [
             'export CURRENT_FILE=""',
             "export CURRENT_LINE=0",
@@ -269,7 +267,6 @@ class SWEEnv(gym.Env):
                 error_msg="Failed to reset environment variables",
             )
 
-        # Set up ironment (They use CONDA??????? WHY?)
         self.communicate_with_handling(
             "source /root/miniconda3/etc/profile.d/conda.sh",
             error_msg="Failed to source conda",
@@ -339,7 +336,7 @@ class SWEEnv(gym.Env):
         info = {}
 
         observation = ""
-        # Handle special actions -> This is fucking dumb but ok
+        # Handle special actions
         if action.strip() == "skip":
             observation = "Skipped"
             info["exit_status"] = "skipped"
@@ -400,7 +397,7 @@ class SWEEnv(gym.Env):
         submission = self.get_submission(action, observation)
         if submission is not None:
             self.logger.info(f"Found submission: {submission}")
-            info["exit_status"] = "submitted" #this is seemingly preemptive actually. Why is this code so coupled
+            info["exit_status"] = "submitted"
             info["submission"] = submission if submission.strip() != "" else None
             observation = submission if submission.strip() != "" else None
             return observation, 0, True, info
@@ -463,17 +460,13 @@ class SWEEnv(gym.Env):
         Handles container initialization. Defines container name and creates it
         """
 
-        # if self.container_name -> container is persistent -> should exist? not necessarily
-        # how does it know this is the correct way to init a docker env
-        # this code seems ai written
-        # docker.containers.get -> assumes container exists? raises error if not exist
         if self.container_name is None:
             process_id = str(os.getpid())
             current_time = str(datetime.datetime.now())
             unique_string = current_time + process_id
             hash_object = hashlib.sha256(unique_string.encode())
             self.container_name = f"{self.image_name}-{hash_object.hexdigest()[:10]}"
-        # this is what creates the actual container
+
         self.container, self.parent_pids = get_container(
             self.container_name, self.image_name, persistent=self.persistent
         )
@@ -486,7 +479,7 @@ class SWEEnv(gym.Env):
                     "Docker is not runninsg. Please start Docker and try again."
                 ) from e
             raise e
-        # ... why does this need to exist. the container already exists above...
+
         self.container_obj = client.containers.get(self.container_name)
         self.logger.info("🌱 Environment Initialized")
 
@@ -511,7 +504,6 @@ class SWEEnv(gym.Env):
             error_msg="Failed to add commands directory to PATH",
         )
 
-    # They use commands because python tools wouldn't work without some sort of tool proxy
     def _communicate(
         self,
         input: str,
@@ -550,7 +542,6 @@ class SWEEnv(gym.Env):
         self.returncode = int(exit_code)
         return buffer
 
-    # WHAT is the purpose of this
     def _check_syntax(self, input: str) -> None:
         """
         Saves environment variables to file
@@ -746,77 +737,6 @@ class SWEEnv(gym.Env):
         results = json.loads(pylint_output.getvalue())
 
         return results
-
-    #     reporter = CustomLintReporter()
-
-    #     check(code_string,file_path, reporter=reporter)
-
-    #     return (reporter.errors,reporter.warnings)
-
-
-
-
-    # def list_dirs_recursive(self, file_path: str) -> dict:
-    #     """
-    #     Returns the entire directory tree in its entirety from the file system.
-
-    #     Args:
-    #         path: the path to list the folder subtree from.
-
-    #     Returns:
-    #         dict: A dictionary with two keys: 'file_tree' containing a list of all files in the tree,
-    #             and 'files_content' containing a dictionary of specified files and their content.
-    #     """
-
-    #     abs_path = self.cwd_normalize_path(file_path)
-
-    #     return json.dumps(self._list_files_recursive([abs_path])["directory_tree"])
-
-    #TOOL FUNCTIONS
-
-#     def get_testing_instructions(self):
-#         """
-#     DESCRIPTION
-#         The get_testing_instructions command defines instructions REQURIED for running tests.
-#         ALWAYS call this before creating reproduce.py
-#         """
-#         if not self.TESTING_TIPS:
-#             anth_api_key=os.environ.get("ANTHROPIC_API_KEY")
-#             anthropic_client = Anthropic(api_key=anth_api_key)
-
-#             model = ClaudeOpus(client=anthropic_client, system_message="""
-# You are an expert open source developer and a helpful assistant to the user.
-
-# The user will ask for help with testing, your job is to respond with pseudo code for the simplest generic way to test in the code base
-
-# Make sure you cover ALL setup steps AND required imports
-
-# The user will write their code in a file called reproduce.py and will run it with `python reproduce.py`. The ONLY command the user will run is python reproduce.py
-# """, max_tokens=4096)
-
-#             res = model.chat(
-#                 messages=[
-#                     # Message(
-#                     #     role="user",
-#                     #     content=f"I am new to programming and I need help with writing tests for the following github issue ({self.record['instance_id']}) so that I can test it {self.record['problem_statement']} please succinctly describe a generic approach for writing the test code in this repo."
-#                     # ),
-#                     Message(
-#                         role="user",
-#                         content=f"""I am new to programming and I need help with writing tests for the following github issue ({self.record['instance_id']}) so that I can test it
-
-# Please describe a generic approach for writing the test code in this repo.
-
-# Make sure it covers all set up steps. I will only write code in reproduce.py. This is the ONLY file I have access to.
-
-# I am writing my test code in a file called reproduce.py and will run it with `python reproduce.py`"""
-#                     )
-#                 ]
-#             )
-
-#             self.TESTING_TIPS = res
-
-#         return self.TESTING_TIPS
-
 
     def open_file(self, file_path: str):
         """
@@ -1306,7 +1226,6 @@ EXAMPLES
         if len(failures) == 0:
             file_paths = []
             for result in successes:
-                #This will overwrite if the tgt files are the same, but doesnt really matter in this case because its usually only one diff
 
                 try:
                     compile(result[1], "<string>", "exec")
@@ -1659,87 +1578,6 @@ EXAMPLES
         result = f"Found {num_matches} matches for \"{search_term}\" in {abs_path}:\n {matches}"
         return result
 
-#     def search_files(self, file_name: str, dir: str = "./"):
-#         """
-#         NAME
-#       search_files - find all files with a given name in a directory
-
-# SYNOPSIS
-#       search_files [FILE_NAME] [DIR]
-
-# DESCRIPTION
-#       The search_files command finds all files with the given FILE_NAME in the specified
-#       DIR. If DIR is not provided, it searches in the current directory.
-
-# OPTIONS
-#       FILE_NAME
-#              The name of the file to search for.
-
-#       DIR   The directory to search in. If not provided, the command searches in the
-#              current directory ("./").
-
-# RETURN VALUE
-#       The search_files command returns a summary of the search results as a string.
-
-# EXAMPLES
-#       To find all files named "example.txt" in the current directory:
-
-#              search_files "example.txt"
-
-#       To find all files named "data.csv" in the "/path/to/directory" directory:
-
-#              search_files "data.csv" "/path/to/directory"
-#         """
-
-#         command = f"grep -rl '{file_name}' {dir}"
-#         result = self.communicate(command)
-
-#         matches = result
-#         if not matches:
-#             return f"No matches found for \"{file_name}\" in {dir}"
-
-#         num_matches = matches.count('\n') + 1
-#         result = f"Found {num_matches} matches for \"{file_name}\" in {dir}:\n{matches}"
-#         return result.replace('\n', '\n    ')
-
-#     def list_files(self, folder_path: str = ".") -> list:
-#         """NAME
-#       list_files - list all files in a specific folder
-
-# SYNOPSIS
-#       list_files [FOLDER_PATH]
-
-# DESCRIPTION
-#       The list_files command lists all files in the specified FOLDER_PATH. If no
-#       FOLDER_PATH is provided, it lists files in the current directory.
-
-# OPTIONS
-#       FOLDER_PATH
-#              The path of the folder to list files from. If not specified, the command
-#              lists files in the current directory (".").
-
-# RETURN VALUE
-#       The list_files command returns a list of file paths within the specified folder.
-
-# EXAMPLES
-#       To list all files in the current directory:
-
-#              list_files
-
-#       To list all files in the "/path/to/directory" directory:
-
-#              list_files "/path/to/directory"
-#         """
-
-#         abs_path = self.cwd_normalize_path(folder_path)
-
-#         command = f"grep -rl '' {abs_path}"
-#         result = self.communicate(command)
-
-#         # file_paths = result.split('\n')
-#         # print(file_paths)
-#         return result
-
     def get_cwd(self) -> str:
         """
         Gets the current working directory of the container.
@@ -1799,29 +1637,6 @@ EXAMPLES
             docs[name] = {"signature": sig, "docstring": docstring}
 
         return docs
-
-    # def parse_command(self, command: str) -> tuple:
-    #     """
-    #     Parses a command string into its function name and arguments.
-
-    #     Args:
-    #         command (str): The command string to parse.
-
-    #     Returns:
-    #         tuple: A tuple containing the function name (str) and a list of arguments (list).
-    #     """
-    #     print(command)
-
-    #     parts = re.findall(r'(?:"[^"]*"|\[[^]]*\]|<<<[^>]*>>>|[^"\s]+)', command)
-    #     fn_name = parts[0]
-    #     args = []
-    #     for arg in parts[1:]:
-    #         if arg.startswith('"') and arg.endswith('"'):
-    #             arg = arg[1:-1]
-    #         elif arg.startswith("<<<") and arg.endswith(">>>"):
-    #             arg = arg[3:-3]
-    #         args.append(arg)
-    #     return fn_name, args
 
     def parse_command(self, command: str) -> tuple:
         """
@@ -1942,7 +1757,6 @@ EXAMPLES
             pids = [x for x in pids if x[1] != "ps" and x[0] not in self.parent_pids]
         return pids
 
-    # Output is the submission observation?
     def get_submission(self, action, output: str) -> str:
         """
         Function for extracting diff patch submission at the end of an episode.
@@ -1975,12 +1789,10 @@ EXAMPLES
             f"conda env list | grep {env_name}", timeout_duration=LONG_TIMEOUT
         )
         
-        # Map version to install?? based on task I guess. this seems relatively dumb. This probably makes up for like 5%-10% of would be failures lol
         install_configs = MAP_VERSION_TO_INSTALL[self.record["repo"]][
             str(self.record["version"])
         ]
 
-        # If env doesnt exist -> setup env bullshit (reqs.txt, or env.yaml, etc. not sure whats up here, what types of dependencies are needed)
         if env_check.strip() == "":
             self.logger.info(f"{env_name} conda env not found, creating...")
             packages = (

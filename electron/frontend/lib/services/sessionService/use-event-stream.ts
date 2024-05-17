@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
 import { createEventSource } from './sessionService'
+import { useBackendUrl } from '@/contexts/BackendUrlContext';
 
 type EventData = Record<string, any>
 
-const BACKEND_URL = 'http://localhost:8000'
-
 const useEventStream = sessionId => {
+    const backendUrl = useBackendUrl()
     const [events, setEvents] = useState<EventData[]>([])
 
     useEffect(() => {
         if (!sessionId) return // Guard to ensure sessionId is provided
 
-        const eventStreamUrl = `${BACKEND_URL}/${sessionId}/events/stream`
+        const eventStreamUrl = `${backendUrl}/${sessionId}/events/stream`
         const eventSource = createEventSource(eventStreamUrl)
 
         eventSource.onMessage(event => {

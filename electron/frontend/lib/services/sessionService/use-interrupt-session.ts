@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import axios from 'axios'
-
-const BACKEND_URL = 'http://localhost:8000'
+import { useBackendUrl } from '@/contexts/BackendUrlContext';
 
 const useInterruptSession = () => {
+    const backendUrl = useBackendUrl()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [interruptData, setInterruptData] = useState(null)
@@ -13,7 +13,7 @@ const useInterruptSession = () => {
         setError(null)
         try {
             const result = await axios.post(
-                `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/interrupt?message=${encodeURIComponent(message)}`
+                `${backendUrl}/session/${encodeURIComponent(sessionId)}/interrupt?message=${encodeURIComponent(message)}`
             )
             setInterruptData(result.data)
             return result.data

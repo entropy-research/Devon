@@ -81,7 +81,7 @@ class TaskAgent(Agent):
         observation: str,
         session: "Session",
     ) -> Tuple[str, str, str]:
-        
+
         if self.model not in self.supported_models:
             raise Exception("Model not supported")
 
@@ -123,7 +123,7 @@ class TaskAgent(Agent):
             )
 
             output = ""
-            
+
             system_prompt = system_prompt_template_v3(commands + command_docs)
 
             last_observation = None
@@ -158,17 +158,17 @@ class TaskAgent(Agent):
             messages = [{"role": "user", "content": last_user_prompt}]
 
             output = self.current_model.query(messages, system_message=system_prompt)
-        
+
             thought = None
             action = None
-            
+
             try:
                 thought, action, scratchpad = parse_response(output)
                 if scratchpad:
                     self.scratchpad = scratchpad
             except Exception:
                 raise Hallucination(f"Multiple actions found in response: {output}")
-            
+
             if not thought or not action:
                 raise Hallucination("Agent failed to follow response format instructions")
 

@@ -26,6 +26,8 @@ from devon_agent.tools.filetools import SearchFileTool
 from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
 from devon_agent.tools.shelltool import ShellTool
 
+from swebench import KEY_INSTANCE_ID, KEY_MODEL, KEY_PREDICTION
+
 
 GITHUB_ISSUE_URL_PATTERN = re.compile(r"github\.com\/(.*?)\/(.*?)\/issues\/(\d+)")
 
@@ -173,6 +175,7 @@ class SWEEnvSessionArguments:
     # no_mirror: bool = False
     # specific_issues: Optional[List[str]] = None
     record: Optional[dict] = None
+    skip_existing: bool = True
 
 
 
@@ -184,6 +187,7 @@ class SWEEnvSession:
         self.event_index = 0
         self.state = DotDict({})
         self.agent = agent
+        self.skip_existing = args.skip_existing
 
         # if not self.args.verbose:
         #     self.logger.disabled = True
@@ -205,7 +209,8 @@ class SWEEnvSession:
         # self.issues = specific_issues
 
         self.idx = 1
-        self.record = args.record
+        
+        self.env = args.sweenv
         
         sweenv = args.sweenv
 
@@ -253,7 +258,7 @@ class SWEEnvSession:
     def exit(self):
         self.environments["swebenchenv"].teardown()
 
-    def run_event_loop(self):
+    def _run_single_instance_loop(self):
         event_id = 0
         # current event
         submission = None
@@ -267,9 +272,6 @@ class SWEEnvSession:
 
             if event["type"] == "Stop":
                 # handle swebench logic issue logic
-                # self.idx += 1
-                # self.record = self.data[self.idx]
-                # self.environments["swebenchenv"].reset(self.record)
 
                 command = """submit() {
     cd $ROOT
@@ -303,6 +305,117 @@ submit"""
             event_id += 1
         
         return submission
+
+    def run_event_loop(self, data, traj_dir):
+
+        """
+    input: data, agent, traj dir, env
+    
+    try:
+        #in session
+        for index in data:
+            try:
+                1. reset environment with instance (should skip/not)
+                2. setup dirs
+                3. run loop over submit loop
+            except keyboard exception as e:
+                raise e
+            except exception:
+                handle normally + continue
+
+    except:
+        env.close
+
+    """
+
+        for index in range(len(data)):
+            try:
+                # Reset environment
+                self.record = data[index]
+                self.idx = index
+
+                instance_id = self.record["instance_id"]
+                if self.should_skip(traj_dir, instance_id):
+                    continue
+                self.logger.info("▶️  Beginning task " + str(index))
+                try:
+                    self.env.reset(self.record)
+                    self.event_log = []
+                except Exception as e:
+                    self.logger.error(f"Error resetting environment: {e}")
+                    self.env.teardown()
+                    self.env.setup()
+                    continue
+
+                os.makedirs(traj_dir, exist_ok=True)
+
+                try:
+
+                    self.enter()
+                    self.event_log.append({
+                        "type":"ModelRequest",
+                        "content":"",
+                        "producer":"system",
+                        "consumer":"devon"
+                    })
+                    submission = self._run_single_instance_loop()
+                except Exception as e:
+                    self.logger.error(f"Error running agent: {e}")
+                    traceback.print_exc()
+                    continue
+                self.save_predictions(traj_dir, instance_id, submission)
+
+            except KeyboardInterrupt as e:
+                raise e
+            except Exception as e:
+                traceback.print_exc()
+                self.logger.warning(f"❌ Failed on {self.record['instance_id']}: {e}")
+                self.env.teardown()
+                self.env.setup()
+                continue
+
+
+    def save_predictions(self, traj_dir, instance_id, submission):
+        output_file = Path(traj_dir) / "all_preds.jsonl"
+        model_patch = submission
+        datum = {
+            KEY_MODEL: Path(traj_dir).name,
+            KEY_INSTANCE_ID: instance_id,
+            KEY_PREDICTION: model_patch,
+        }
+        with open(output_file, "a+") as fp:
+            print(json.dumps(datum), file=fp, flush=True)
+        self.logger.info(f"Saved predictions to {output_file}")
+
+
+    def should_skip(self, traj_dir, instance_id):
+        """Check if we should skip this instance based on the instance filter and skip_existing flag."""
+        # Skip instances that don't match the instance filter
+        # if re.match(args.instance_filter, instance_id) is None:
+        #     logger.info(f"Instance filter not matched. Skipping instance {instance_id}")
+        #     return True
+
+        # If flag is set to False, don't skip
+        if not self.skip_existing:
+            return False
+
+        # Check if there's an existing trajectory for this instance
+        log_path = traj_dir / f"{instance_id}.traj"
+
+        if log_path.exists():
+            with log_path.open("r") as f:
+                data = json.load(f)
+            # If the trajectory has no exit status, it's incomplete and we will redo it
+            exit_status = data["info"].get("exit_status", None)
+            if exit_status == "early_exit" or exit_status is None:
+                self.logger.info(f"Found existing trajectory with no exit status: {log_path}")
+                self.logger.info("Removing incomplete trajectory...")
+                os.remove(log_path)
+            else:
+                self.logger.info(f"⏭️ Skipping existing trajectory: {log_path}")
+                return True
+            return False
+
 
     def step_event(self, event):
 

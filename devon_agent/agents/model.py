@@ -1,7 +1,14 @@
 import os
+import litellm
+import logging
 from litellm import completion
 from dataclasses import dataclass
 from typing import Optional
+
+litellm.telemetry = False
+
+logger = logging.getLogger("LiteLLM")
+logger.disabled = True
 
 @dataclass(frozen=False)
 class ModelArguments:

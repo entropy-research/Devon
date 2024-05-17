@@ -44,9 +44,9 @@ import childProcess from 'node:child_process';
 
 
 // check if anthropic key is set
-if (!process.env['ANTHROPIC_API_KEY']) {
+if (!process.env['ANTHROPIC_API_KEY'] && !process.env['OPENAI_API_KEY']) {
 	console.log(
-		'Please set the ANTHROPIC_API_KEY environment variable to use the Devon TUI.',
+		'Please set the ANTHROPIC_API_KEY or OPENAI_API_KEY environment variable to use the Devon TUI.',
 	);
 	process.exit(1);
 }

@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { nanoid } from '@/lib/chat.utils'
-import useFetchSessionEvents from '@/lib/services/sessionService/use-fetch-session-events'
-
-const BACKEND_URL = 'http://localhost:8000'
+// import useFetchSessionEvents from '@/lib/services/sessionService/use-fetch-session-events'
+import { useBackendUrl } from '@/contexts/BackendUrlContext';
 
 const useCreateSession = () => {
+    const backendUrl = useBackendUrl()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [sessionId, setSessionId] = useState('')
@@ -17,7 +17,7 @@ const useCreateSession = () => {
         setSessionId(_id)
         try {
             const response = await axios.post(
-                `${BACKEND_URL}/session?session=${encodeURIComponent(_id)}&path=${encodeURIComponent(path)}`,
+                `${backendUrl}/session?session=${encodeURIComponent(_id)}&path=${encodeURIComponent(path)}`,
                 {}
             )
             setSessionId(response.data)
