@@ -1,5 +1,6 @@
 import json
 import logging
+import textwrap
 from dataclasses import dataclass, field
 import traceback
 from typing import Optional, Tuple
@@ -61,11 +62,13 @@ class TaskAgent(Agent):
             [str(i + start_idx).zfill(4) + line for i, line in enumerate(lines)]
         )
 
-        return f"""
-************ FILE: {path}, WINDOW STARTLINE: {start_idx}, WINDOW ENDLINE: {start_idx+content_len}, TOTAL FILE LINES: {all_lines_len} ************
-{window_lines}
-************************************
-"""
+        return textwrap.dedent(
+            f"""
+            ************ FILE: {path}, WINDOW STARTLINE: {start_idx}, WINDOW ENDLINE: {start_idx+content_len}, TOTAL FILE LINES: {all_lines_len} ************
+            {window_lines}
+            ************************************
+            """
+        )
 
     def _convert_editor_to_view(self, editor, PAGE_SIZE=50):
         return "\n".join(
@@ -172,7 +175,7 @@ class TaskAgent(Agent):
                     self.scratchpad = scratchpad
             except Exception:
                 raise Hallucination(f"Multiple actions found in response: {output}")
-            
+
             if not thought or not action:
                 raise Hallucination("Agent failed to follow response format instructions")
 
@@ -186,18 +189,20 @@ class TaskAgent(Agent):
                 }
             )
 
-            logger.info(f"""
-\n\n\n\n****************\n\n
-NAME: {self.name}                        
-
-THOUGHT: {thought}
-
-ACTION: {action}
-
-OBSERVATION: {observation}
-
-SCRATCHPAD: {scratchpad}
-\n\n****************\n\n\n\n""")
+            logger.info(textwrap.dedent(
+                f"""
+                \n\n\n\n****************\n\n
+                NAME: {self.name}                        
+                
+                THOUGHT: {thought}
+                
+                ACTION: {action}
+                
+                OBSERVATION: {observation}
+                
+                SCRATCHPAD: {scratchpad}
+                \n\n****************\n\n\n\n"""
+            ))
 
             return thought, action, output
         except KeyboardInterrupt:
@@ -262,13 +267,14 @@ class PlanningAgent:
             {"role": "user", "content": "Hey How are you?"},
             {
                 "role": "assistant",
-                "content": """<THOUGHT>
-I should ask the user what they want
-</THOUGHT>
-<COMMAND>
-ask_user "Hi, What can I help you with?"
-</COMMAND>
-""",
+                "content": textwrap.dedent("""
+                    <THOUGHT>
+                    I should ask the user what they want
+                    </THOUGHT>
+                    <COMMAND>
+                    ask_user "Hi, What can I help you with?"
+                    </COMMAND>
+                """),
             },
         ]
 
@@ -276,24 +282,25 @@ ask_user "Hi, What can I help you with?"
 
     def forward(self, observation, available_actions, env):
         try:
-            system_prompt_template = f"""You are a user-facing software engineer. Your job is to communicate with the user, understand user needs, plan and delegate. You may perform actions to acheive this.
-Actions:
-{available_actions}
+            system_prompt_template = textwrap.dedent(f"""
+                You are a user-facing software engineer. Your job is to communicate with the user, understand user needs, plan and delegate. You may perform actions to acheive this.
+                Actions:
+                {available_actions}
+                
+                Docs:
+                {env.generate_command_docs()}
+                
+                You must respond in the following format:ONLY ONE COMMAND AT A TIME
+                <THOUGHT>
+                
+                </THOUGHT>
+                <COMMAND>
+                </COMMAND>""")
 
-Docs:
-{env.generate_command_docs()}
-
-You must respond in the following format:ONLY ONE COMMAND AT A TIME
-<THOUGHT>
-
-</THOUGHT>
-<COMMAND>
-</COMMAND>
-"""
-
-            user_prompt_template = f"""<OBSERVATION>
-        {observation}
-        </OBSERVATION>"""
+            user_prompt_template = textwrap.dedent(f"""
+                <OBSERVATION>
+                {observation}
+                </OBSERVATION>""")
 
             self.history.append({"role": "user", "content": user_prompt_template})
             # logger.info(self.history[-1]["content"])

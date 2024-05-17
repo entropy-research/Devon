@@ -16,7 +16,7 @@ The context is a dict that contains the following keys:
 - state: The state object that the tool is working with.
 
 
-Sometimes tools form a logical group, such as an file editor or a code search tool. In this case, tool boxes can be used to group tools together.
+Sometimes tools form a logical group, such as a file editor or a code search tool. In this case, tool boxes can be used to group tools together.
 
 Often, you want to run operations before and after a tool is called. pre and post functions can be used to achieve this.
 
@@ -58,7 +58,6 @@ class Tool(ABC):
     def name(self):
         pass
 
-
     @abstractmethod
     def setup(self, context: ToolContext):
         """
@@ -79,7 +78,7 @@ class Tool(ABC):
         pass
 
     @abstractmethod
-    def function(self,context, **kwargs):
+    def function(self, context, **kwargs):
         """
         Excutes the tool and returns the response.
         """
@@ -100,6 +99,7 @@ class Tool(ABC):
     def register_post_hook(self, func : PostTool):
         self.post_funcs.append(func)
         return self
+
 
 class ToolNotFoundException(Exception):
     """Exception raised when a tool is not found in the available environments."""
