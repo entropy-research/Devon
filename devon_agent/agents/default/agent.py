@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import traceback
 from typing import Optional, Tuple
 
-from devon_agent.model import AnthropicModel, ModelArguments
+from devon_agent.agents.model import AnthropicModel, ModelArguments, OpenAiModel
 from devon_agent.prompt import (
     commands_to_command_docs,
     history_to_bash_history,
@@ -22,8 +22,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from devon_agent.session import Session
-
-# from devon.environment.cli import ChatEnvironment
 
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -43,6 +41,11 @@ class Agent:
 
 
 class TaskAgent(Agent):
+    supported_models = {
+        "gpt4-o": OpenAiModel,
+        "claude-opus": AnthropicModel
+    }
+
     def _format_editor_entry(self, k, v, PAGE_SIZE=50):
         path = k
         page = v["page"]
@@ -78,21 +81,23 @@ class TaskAgent(Agent):
         observation: str,
         session: "Session",
     ) -> Tuple[str, str, str]:
-        if self.interrupt:
-            observation = observation + ". also " + self.interrupt
-            self.interrupt = ""
 
-        self.current_model = AnthropicModel(
+        if self.model not in self.supported_models:
+            raise Exception("Model not supported")
+
+        self.current_model = self.supported_models[self.model](
             args=ModelArguments(
                 model_name=self.model,
                 temperature=self.temperature,
                 api_key=self.api_key,
             )
         )
+
+        if self.interrupt:
+            observation = observation + ". also " + self.interrupt
+            self.interrupt = ""
+
         try:
-            # print(session.state.editor)
-            # print(session.state.editor.PAGE_SIZE)
-            # print(session.state.editor.files)
             editor = self._convert_editor_to_view(
                 session.state.editor.files, session.state.editor.PAGE_SIZE
             )
@@ -116,6 +121,8 @@ class TaskAgent(Agent):
                 )
                 + "\n"
             )
+
+            output = ""
 
             system_prompt = system_prompt_template_v3(commands + command_docs)
 
@@ -152,19 +159,8 @@ class TaskAgent(Agent):
 
             output = self.current_model.query(messages, system_message=system_prompt)
 
-            # logger.debug(
-            #     "<MODEL_OUT>"
-            #     + json.dumps({"input": messages[0], "output": output})
-            #     + "<MODEL_OUT>"
-            # )
             thought = None
             action = None
-            # for i in range(3):
-                # try:
-                #     thought, action = parse_response(output)
-                #     break
-                # except:
-                #     continue
 
             try:
                 thought, action, scratchpad = parse_response(output)
@@ -172,7 +168,7 @@ class TaskAgent(Agent):
                     self.scratchpad = scratchpad
             except Exception:
                 raise Hallucination(f"Multiple actions found in response: {output}")
-            
+
             if not thought or not action:
                 raise Hallucination("Agent failed to follow response format instructions")
 
@@ -250,115 +246,3 @@ SCRATCHPAD: {scratchpad}
                 "exit_error",
                 f"exit due to exception: {e}",
             )
-
-
-class PlanningAgent:
-    def __init__(self, name="PlanningAgent", model="claude-opus", temperature=0.0):
-        self.name = name
-        self.current_model = AnthropicModel(
-            args=ModelArguments(model_name="claude-haiku", temperature=temperature)
-        )
-        self.history = [
-            {"role": "user", "content": "Hey How are you?"},
-            {
-                "role": "assistant",
-                "content": """<THOUGHT>
-I should ask the user what they want
-</THOUGHT>
-<COMMAND>
-ask_user "Hi, What can I help you with?"
-</COMMAND>
-""",
-            },
-        ]
-
-        self.interrupt = ""
-
-    def forward(self, observation, available_actions, env):
-        try:
-            system_prompt_template = f"""You are a user-facing software engineer. Your job is to communicate with the user, understand user needs, plan and delegate. You may perform actions to acheive this.
-Actions:
-{available_actions}
-
-Docs:
-{env.generate_command_docs()}
-
-You must respond in the following format:ONLY ONE COMMAND AT A TIME
-<THOUGHT>
-
-</THOUGHT>
-<COMMAND>
-</COMMAND>
-"""
-
-            user_prompt_template = f"""<OBSERVATION>
-        {observation}
-        </OBSERVATION>"""
-
-            self.history.append({"role": "user", "content": user_prompt_template})
-            # logger.info(self.history[-1]["content"])
-            output = self.current_model.query(self.history, system_prompt_template)
-
-            thought, action = parse_response(output)
-
-            self.history.append({"role": "assistant", "content": output})
-
-            return thought, action, output
-
-        except Exception as e:
-            raise e
-
-    def stop(self):
-        pass
-
-    def interupt(self):
-        pass
-
-    def get_state(self):
-        pass
-
-    def run(
-        self,
-        env,
-        observation: str = None,
-    ):
-        # system_prompt = system_prompt_template_v3(commands + command_docs)
-        # self.history.append({"role": "system", "content": system_prompt})
-        info = {}
-        done = False
-        while not done:
-            if self.interrupt:
-                observation = self.interrupt
-                self.interrupt = ""
-
-            thought, action, output = self.forward(
-                observation, env.get_available_actions(), env
-            )
-
-            observations = list()
-            if action == "exit":
-                done = True
-
-            try:
-                # assert output.count("<COMMAND>") == 1
-                # assert output.count("<THOUGHT>") == 1
-                output, done = self.parse_command_to_function(
-                    command_string=action
-                )
-                obs, done = env.step(action, thought)
-            except AssertionError as e:
-                # logger.error(output)
-                logger.error(e)
-                obs = str(e)
-            except Exception as e:
-                raise e
-            observations.append(obs)
-
-            if action.strip() == "submit":
-                done = True
-
-            observation = "\n".join(
-                [json.dumps(obs) for obs in observations if obs is not None]
-            )
-
-        return info

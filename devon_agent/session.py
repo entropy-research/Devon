@@ -4,42 +4,29 @@ import logging
 import os
 import traceback
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any, Dict, List, Optional
 from devon_agent.agent import TaskAgent
-from devon_agent.environment import LocalEnvironment
+from devon_agent.environment import EnvironmentModule, LocalEnvironment, UserEnvironment
 from devon_agent.telemetry import Posthog, SessionEventEvent, SessionStartEvent
+from devon_agent.tool import  ToolNotFoundException
 from devon_agent.tools import (
-    ask_user,
-    close_file,
-    create_file,
-    delete_file,
-    edit_file,
-    exit,
-    extract_signature_and_docstring,
-    find_class,
-    find_file,
-    find_function,
-    get_cwd,
-    list_dirs_recursive,
-    no_op,
-    open_file,
     parse_command,
-    real_write_diff,
-    scroll_down,
-    scroll_to_line,
-    scroll_up,
-    search_dir,
-    search_file,
-    set_task,
-    submit,
 )
+from devon_agent.tools.editortools import CreateFileTool, DeleteFileTool, OpenFileTool, ScrollDownTool, ScrollToLineTool, ScrollUpTool
+from devon_agent.tools.edittools import EditFileTool
+from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, ListDirsRecursiveTool, SearchDirTool
+from devon_agent.tools.filetools import SearchFileTool
+from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
+from devon_agent.tools.shelltool import ShellTool
+from devon_agent.tools.usertools import AskUserTool
+
 from devon_agent.utils import DotDict, Event
 
 
 @dataclass(frozen=False)
 class SessionArguments:
     path: str
-    environment: str
+    # environments: List[str]
     user_input: Any
     name: str
 
@@ -126,38 +113,49 @@ class Session:
         self.telemetry_client = Posthog()
         self.name = args.name
 
-        self.state.editor = {}
+        local_environment = LocalEnvironment(args.path)
+        local_environment.register_tools({
+            "create_file" : CreateFileTool(),
+            "open_file" : OpenFileTool(),
+            "scroll_up" : ScrollUpTool(),
+            "scroll_down" : ScrollDownTool(),
+            "scroll_to_line" : ScrollToLineTool(),
+            "search_file" : SearchFileTool(),
+            "edit_file" : EditFileTool(),
+            "search_dir" : SearchDirTool(),
+            "find_file" : FindFileTool(),
+            # "list_dirs_recursive" : ListDirsRecursiveTool(),
+            "get_cwd" : GetCwdTool(),
+            "no_op" : NoOpTool(),
+            "submit" : SubmitTool(),
+            "delete_file" : DeleteFileTool(),
+        })
+        local_environment.set_default_tool(ShellTool())
+        self.default_environment = local_environment
+
+        user_environment = UserEnvironment(args.user_input)
+
+        user_environment.register_tools({
+            "ask_user" : AskUserTool(),
+        })
+
+        self.environments = {
+            "local" : local_environment,
+            "user" : user_environment,
+        }
+
+
 
         self.path = args.path
-        self.environment_type = args.environment
+        self.base_path = args.path
+        # self.environment_type = args.environment
 
-        if args.environment == "local":
-            self.environment = LocalEnvironment(args.path)
-        else:
-            raise ValueError("Unknown environment type")
+        # if args.environment == "local":
+        #     self.default_environment = LocalEnvironment(args.path)
+        # else:
+        #     raise ValueError("Unknown environment type")
 
-        self.tools = [
-            list_dirs_recursive,
-            close_file,
-            create_file,
-            open_file,
-            search_dir,
-            # find_function,
-            # find_class,
-            search_file,
-            get_cwd,
-            delete_file,
-            submit,
-            no_op,
-            scroll_up,
-            scroll_down,
-            scroll_to_line,
-            find_file,
-            ask_user,
-            exit,
-            edit_file,
-            # set_task
-        ]
+
 
     def to_dict(self):
         return {
@@ -197,77 +195,58 @@ class Session:
 
         return instance
 
-    def step(self, action: str, thought: str) -> tuple[str, bool]:
-        # parse command
-        # run command/tool
-        # return reponse as observation
+    # def step(self, action: str, thought: str) -> tuple[str, bool]:
+    #     # parse command
+    #     # run command/tool
+    #     # return reponse as observation
 
-        if action == "exit":
-            return "Exited task", True
+    #     if action == "exit":
+    #         return "Exited task", True
 
-        try:
-            return self.parse_command_to_function(command_string=action)
-        except Exception as e:
-            return e.args[0], False
+    #     try:
+    #         return self.parse_command_to_function(command_string=action)
+    #     except Exception as e:
+    #         return e.args[0], False
 
     def get_last_task(self):
         for event in self.event_log[::-1]:
             if event["type"] == "Task":
                 return event["content"]
         return "Task unspecified ask user to specify task"
+    
+    def run_event_loop(self):
+        event_id = 0
+        #current event
+        while True and not (event_id == len(self.event_log)):
 
-    def step_event(self):
-        if self.event_index == len(self.event_log):
-            return "No more events to process", True
-        event = self.event_log[self.event_index]
-        self.logger.info(f"Event: {event}")
-        self.logger.info(f"State: {self.state.editor}")
+            event = self.event_log[event_id]
 
-        # Collect only event name and content only in case of error
-        telemetry_event = SessionEventEvent(
-            event_type=event["type"],
-            message="" if not event["type"] == "Error" else event["content"],
-        )
-        self.telemetry_client.capture(telemetry_event)
-        if event["type"] == "Error":
-            self.event_log.append(
-                {
-                    "type": "Stop",
-                    "content": "Stopped task",
-                    "producer": event["producer"],
-                    "consumer": "user",
-                }
+            self.logger.info(f"Event: {event}")
+            self.logger.info(f"State: {self.state}")
+
+            # Collect only event name and content only in case of error
+            telemetry_event = SessionEventEvent(
+                event_type=event["type"],
+                message="" if not event["type"] == "Error" else event["content"],
             )
 
-        if event["type"] == "ModelRequest":
-            thought, action, output = self.agent.predict(
-                self.get_last_task(), event["content"], self
-            )
-            self.event_log.append(
-                {
-                    "type": "ModelResponse",
-                    "content": json.dumps(
-                        {"thought": thought, "action": action, "output": output}
-                    ),
-                    "producer": self.agent.name,
-                    "consumer": event["producer"],
-                }
-            )
+            self.telemetry_client.capture(telemetry_event)
 
-        if event["type"] == "ToolRequest":
-            tool_name, args = parse_command(self, event["content"])
+            if event["type"] == "Stop":
+                break
 
-            if tool_name == "ask_user":
-                self.event_log.append(
-                    {
-                        "type": "UserRequest",
-                        "content": args[0],
-                        "producer": event["producer"],
-                        "consumer": "user",
-                    }
-                )
-            elif tool_name in ["submit", "exit", "stop", "exit_error","exit_api",]:
-                self.event_log.append(
+            events = self.step_event(event)
+            self.event_log.extend(events)
+
+            event_id += 1
+            
+
+    def step_event(self, event):
+        
+        new_events = []
+        match event["type"]:
+            case "Error":
+                new_events.append(
                     {
                         "type": "Stop",
                         "content": "Stopped task",
@@ -275,208 +254,279 @@ class Session:
                         "consumer": "user",
                     }
                 )
-            elif tool_name == "set_task":
-                self.event_log.append(
-                    {
-                        "type": "Task",
-                        "content": args[0],
-                        "producer": event["producer"],
-                        "consumer": self.agent.name,
+
+            case "ModelRequest":
+                thought, action, output = self.agent.predict(
+                    self.get_last_task(), event["content"], self
+                )
+                if action == "hallucination":
+                    new_events.append(
+                        {
+                            "type": "ModelRequest",
+                            "content": output,
+                            "producer": self.agent.name,
+                            "consumer": event["producer"],
+                        }
+                    )
+                else:
+                    new_events.append(
+                        {
+                        "type": "ModelResponse",
+                        "content": json.dumps(
+                            {"thought": thought, "action": action, "output": output}
+                        ),
+                        "producer": self.agent.name,
+                        "consumer": event["producer"],
                     }
                 )
-            elif tool_name == "send_message":
-                self.event_log.append(
+
+            case "ToolRequest":
+                tool_name, args = event["content"]["toolname"], event["content"]["args"]
+
+                match tool_name:
+                    case "submit" | "exit" | "stop" | "exit_error" | "exit_api":
+                        new_events.append(
+                            {
+                                "type": "Stop",
+                                "content": "Stopped task",
+                                "producer": event["producer"],
+                                "consumer": "user",
+                            }
+                        )
+                    case "set_task":
+                        new_events.append(
+                            {
+                                "type": "Task",
+                                "content": args[0],
+                                "producer": event["producer"],
+                                "consumer": self.agent.name,
+                            }
+                        )
+                    case _:        
+                        try:
+
+                            toolname = event["content"]["toolname"]
+                            args = event["content"]["args"]
+                            raw_command = event["content"]["raw_command"]
+
+                            env = None
+
+                            for _env in list(self.environments.values()):
+                                if toolname in _env.tools:
+                                    env = _env
+                            
+                            if not env:
+                                raise ToolNotFoundException(toolname, self.environments)
+
+                            response =  env.tools[toolname]({
+                                "environment": env,
+                                "session": self,
+                                "state": self.state,
+                                "raw_command": raw_command
+                            }, *args)
+
+
+                            new_events.append(
+                                {
+                                    "type": "ToolResponse",
+                                    "content": response,
+                                    "producer": toolname,
+                                    "consumer": event["producer"],
+                                }
+                            )
+
+                        except ToolNotFoundException as e:
+                            
+                            if not (self.default_environment and self.default_environment.default_tool):
+                                raise e
+                            
+                            try:
+                        
+                                response  = self.default_environment.default_tool({
+                                    "state" : self.state,
+                                    "environment" : self.default_environment,
+                                    "session" : self,
+                                    "raw_command" : event["content"]["raw_command"],
+                                }, event["content"]["toolname"], event["content"]["args"])
+
+                                new_events.append(
+                                    {
+                                        "type": "ToolResponse",
+                                        "content": response,
+                                        "producer": self.default_environment.name,
+                                        "consumer": event["producer"],
+                                    }
+                                )
+                            except Exception as e:
+                                self.logger.error(traceback.format_exc())
+                                self.logger.error(f"Error routing tool call: {e}")
+                                new_events.append(
+                                    {
+                                        "type": "ToolResponse",
+                                        "content": f"Error calling command, command failed with: {e.args[0] if len(e.args) > 0 else 'unknown'}",
+                                        "producer": self.default_environment.name,
+                                        "consumer": event["producer"],
+                                    }
+                                )
+                        except Exception as e:
+                            self.logger.error(traceback.format_exc())
+                            self.logger.error(f"Error routing tool call: {e}")
+                            new_events.append(
+                                {
+                                    "type": "ToolResponse",
+                                    "content": e.args[0],
+                                    "producer": self.default_environment.name,
+                                    "consumer": event["producer"],
+                                }
+                            )
+
+            case "ToolResponse":
+                new_events.append(
                     {
                         "type": "ModelRequest",
-                        "content": args[1],
-                        "producer": event["producer"],
-                        "consumer": args[0],
-                    }
-                )
-
-            else:
-                output, done = self.parse_command_to_function(
-                    command_string=event["content"]
-                )
-                self.event_log.append(
-                    {
-                        "type": "EnvironmentRequest",
                         "content": event["content"],
                         "producer": event["producer"],
-                        "consumer": self.environment.__class__.__name__,
-                    }
-                )
-                self.event_log.append(
-                    {
-                        "type": "EnvironmentResponse",
-                        "content": output,
-                        "producer": self.environment.__class__.__name__,
-                        "consumer": event["consumer"],
-                    }
-                )
-                self.event_log.append(
-                    {
-                        "type": "ToolResponse",
-                        "content": output,
-                        "producer": self.environment.__class__.__name__,
                         "consumer": event["consumer"],
                     }
                 )
 
-        if event["type"] == "EnvironmentRequest":
-            pass
-
-        if event["type"] == "EnvironmentResponse":
-            pass
-
-        if event["type"] == "ToolResponse":
-            self.event_log.append(
-                {
-                    "type": "ModelRequest",
-                    "content": event["content"],
-                    "producer": event["producer"],
-                    "consumer": event["consumer"],
-                }
-            )
-
-        if event["type"] == "ModelResponse":
-            content = json.loads(event["content"])["action"]
-            self.event_log.append(
-                {
-                    "type": "ToolRequest",
-                    "content": content,
-                    "producer": event["producer"],
-                    "consumer": event["consumer"],
-                }
-            )
-
-        if event["type"] == "UserRequest":
-            user_input = self.get_user_input()
-            if user_input is None:
-                self.logger.info("No user input provided")
-                self.event_log.append(
+            case "ModelResponse":
+                content = json.loads(event["content"])["action"]
+                toolname, args = parse_command(content)
+                new_events.append(
                     {
-                        "type": "Stop",
-                        "content": "No user input provided",
-                        "producer": "user",
+                        "type": "ToolRequest",
+                        "content": {
+                            "toolname" : toolname,
+                            "args" : args,
+                            "raw_command" : content
+                        },
+                        "producer": event["producer"],
                         "consumer": event["consumer"],
                     }
                 )
-                return "No user input provided", True
 
-            self.event_log.append(
-                {
-                    "type": "UserResponse",
-                    "content": user_input,
-                    "producer": "user",
-                    "consumer": event["producer"],
-                }
-            )
-            self.event_log.append(
-                {
-                    "type": "ToolResponse",
-                    "content": user_input,
-                    "producer": "user",
-                    "consumer": event["producer"],
-                }
-            )
+            case "Interrupt":
+                if self.agent.interrupt:
+                    self.agent.interrupt += (
+                        "You have been interrupted, pay attention to this message "
+                        + event["content"]
+                    )
+                else:
+                    self.agent.interrupt = event["content"]
 
-        if event["type"] == "Interrupt":
-            if self.agent.interrupt:
-                self.agent.interrupt += (
-                    "You have been interrupted, pay attention to this message "
-                    + event["content"]
+            case "Task":
+                task = event["content"]
+                self.logger.info(f"Task: {task}")
+                if task is None:
+                    task = "Task unspecified ask user to specify task"
+
+                new_events.append(
+                    {
+                        "type": "ModelRequest",
+                        "content": "",
+                        "producer": event["producer"],
+                        "consumer": event["consumer"],
+                    }
                 )
-            else:
-                self.agent.interrupt = event["content"]
+            case _:
+                pass
 
-        if event["type"] == "Stop":
-            return "Stopped task", True
+        return new_events
 
-        if event["type"] == "Task":
-            task = event["content"]
-            self.logger.info(f"Task: {task}")
-            if task is None:
-                task = "Task unspecified ask user to specify task"
+    # def parse_command_to_function(self, command_string) -> tuple[str, bool]:
+    #     """
+    #     Parses a command string into its function name and arguments.
+    #     """
+    #     ctx = self
 
-            self.event_log.append(
-                {
-                    "type": "ModelRequest",
-                    "content": "",
-                    "producer": event["producer"],
-                    "consumer": event["consumer"],
-                }
-            )
+    #     fn_name, args = parse_command(ctx, command_string)
+    #     if fn_name in ["vim", "nano"]:
+    #         return "Interactive Commands are not allowed", False
 
-        self.event_index += 1
-        return self.step_event()
+    #     if (
+    #         fn_name == "python"
+    #         and len([line for line in command_string.splitlines() if line]) != 1
+    #     ):
+    #         return "Interactive Commands are not allowed", False
 
-    def parse_command_to_function(self, command_string) -> tuple[str, bool]:
-        """
-        Parses a command string into its function name and arguments.
-        """
-        ctx = self
+    #     fn_names = [fn.__name__ for fn in self.tools]
 
-        fn_name, args = parse_command(ctx, command_string)
-        if fn_name in ["vim", "nano"]:
-            return "Interactive Commands are not allowed", False
-
-        if (
-            fn_name == "python"
-            and len([line for line in command_string.splitlines() if line]) != 1
-        ):
-            return "Interactive Commands are not allowed", False
-
-        fn_names = [fn.__name__ for fn in self.tools]
-
-        try:
-            if fn_name == "edit_file":
-                try:
-                    return real_write_diff(self, command_string), False
-                except Exception as e:
-                    ctx.logger.error(traceback.print_exc())
-                    raise e
-            elif fn_name in fn_names:
-                for fn in self.tools:
-                    if fn.__name__ == fn_name:
-                        return fn(ctx, *args), False
-            else:
-                # try:
-                output, rc = ctx.environment.communicate(fn_name + " " + " ".join(args))
-                if rc != 0:
-                    raise Exception(output)
-                return output, False
-                # except Exception as e:
-                #     ctx.logger.error(
-                #         f"Failed to execute bash command '{fn_name}': {str(e)}"
-                #     )
-                #     return "Failed to execute bash command", False
-        except Exception as e:
-            ctx.logger.error(traceback.print_exc())
-            return e.args[0] if len(e.args) > 0 else "Failed to execute command due to internal error", False
+    #     try:
+    #         if fn_name == "edit_file":
+    #             try:
+    #                 return real_write_diff(self, command_string), False
+    #             except Exception as e:
+    #                 ctx.logger.error(traceback.print_exc())
+    #                 raise e
+    #         elif fn_name in fn_names:
+    #             for fn in self.tools:
+    #                 if fn.__name__ == fn_name:
+    #                     return fn(ctx, *args), False
+    #         else:
+    #             # try:
+    #             output, rc = ctx.environment.communicate(fn_name + " " + " ".join(args))
+    #             if rc != 0:
+    #                 raise Exception(output)
+    #             return output, False
+    #             # except Exception as e:
+    #             #     ctx.logger.error(
+    #             #         f"Failed to execute bash command '{fn_name}': {str(e)}"
+    #             #     )
+    #             #     return "Failed to execute bash command", False
+    #     except Exception as e:
+    #         ctx.logger.error(traceback.print_exc())
+    #         return e.args[0] if len(e.args) > 0 else "Failed to execute command due to internal error", False
 
     def get_available_actions(self) -> list[str]:
-        return [fn.__name__ for fn in self.tools]
+        # get all tools for all environments
 
-    def generate_command_docs(self):
+        tools = []
+        for env in self.environments.values():
+            tools.extend(env.tools)
+
+        return tools
+
+
+    def generate_command_docs(self, format="manpage"):
         """
         Generates a dictionary of function names and their docstrings.
         """
-
-        funcs = self.tools
         docs = {}
-
-        for func in funcs:
-            name = func.__name__
-            code = inspect.getsource(func)
-            sig, docstring = extract_signature_and_docstring(code)
-            docs[name] = {"signature": sig, "docstring": docstring}
+        for env in self.environments.values():
+            for name,tool in env.tools.items():
+                signature = inspect.signature(tool.function)
+                docs[name] = {
+                    "docstring" : tool.documentation(format),
+                    "signature" : str(signature),
+                }
 
         return docs
 
+
     def enter(self):
+        print("Entering session")
+        print(self.environments)
+        for name, env in self.environments.items():
+            print("Setting up env")
+            env.setup(self)
+            for tool in env.tools.values():
+                print("Setting up tool")
+                tool.setup({
+                    "environment" : env,
+                    "session" : self,
+                    "state" : self.state,
+                })
+
         self.telemetry_client.capture(SessionStartEvent(self.name))
-        self.environment.setup()
+        
 
     def exit(self):
-        self.environment.teardown()
+        for env in self.environments.values():
+            env.teardown()
+            for tool in env.tools.values():
+                tool.setup({
+                    "environment" : env,
+                    "session" : self,
+                    "state" : self.state,
+                })

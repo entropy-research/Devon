@@ -1,3 +1,4 @@
+import json
 import networkx as nx
 
 def create_graph():
@@ -173,3 +174,67 @@ def get_all_paths(graph, source, target):
         list: All paths from source to target.
     """
     return list(nx.all_simple_paths(graph, source, target))
+
+
+class CodeGraph:
+
+    def __init__(self, graph=None):
+        """
+        Creates a new directed graph for representing the Python codebase.
+        Returns:
+            nx.DiGraph: The created graph.
+        """
+        if graph is not None:
+            self.graph = graph
+        else:
+            graph = nx.DiGraph(name="Python Codebase Graph")
+            graph.graph["node_attrs"] = {
+                "type": None,
+                "code": None,
+                "doc": None,
+                "location": {
+                    "file_path": None,
+                    "start_line": None,
+                    "end_line": None,
+                },
+                "dependencies": {
+                    "imports": [],
+                    "exported": [],
+                },
+            }
+            graph.graph["edge_types"] = {
+                "calls": {
+                    "ref_location": {
+                        "file_path": None,
+                        "line_number": None,
+                    }
+                },
+                "imports": {
+                    "ref_location": {
+                        "file_path": None,
+                        "line_number": None,
+                    }
+                },
+            }
+            graph.graph["total_nodes"] = 0
+            graph.graph["total_edges"] = 0
+            graph.graph["disconnected_components"] = []
+
+            self.graph : nx.DiGraph = graph
+
+    def to_json(self):
+        from networkx.readwrite import json_graph
+
+        jg = json_graph.adjacency_data(self.graph)
+        return jg
+    
+    @classmethod
+    def from_json(cls,json_str):
+        from networkx.readwrite import json_graph
+
+        jg = json.loads(json_str)
+        graph = json_graph.adjacency_graph(jg)
+        return cls(graph)
+    
+
+

@@ -5,7 +5,7 @@ from time import sleep
 from typing import Dict, List
 
 import fastapi
-from devon_agent.agent import TaskAgent
+from devon_agent.agents.default.agent import TaskAgent
 from devon_agent.session import (
     Event,
     Session,
@@ -38,6 +38,7 @@ sessions: Dict[str, Session] = {}
 
 
 API_KEY = None
+MODEL = None
 
 
 app = fastapi.FastAPI()
@@ -89,14 +90,14 @@ def create_session(session: str, path: str):
 
     agent = TaskAgent(
         name="Devon",
-        model="claude-opus",
+        model=MODEL,
         temperature=0.0,
         api_key=API_KEY,
     )
     sessions[session] = Session(
         SessionArguments(
             path,
-            environment="local",
+            # environment="local",
             user_input=lambda: get_user_input(session),
             name=session,
         ),
@@ -123,7 +124,7 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
             consumer="devon",
         )
     )
-    background_tasks.add_task(sessions[session].step_event)
+    background_tasks.add_task(sessions[session].run_event_loop)
     running_sessions.append(session)
     return session
 
@@ -220,12 +221,16 @@ if __name__ == "__main__":
         except ValueError:
             print("Warning: Invalid port number provided. Using default port 8000.")
 
-        try:
-            API_KEY = sys.argv[2]
-        except IndexError:
-            if os.environ.get("ANTHROPIC_API_KEY"):
-                api_key = os.environ.get("ANTHROPIC_API_KEY")
-            else:
-                raise ValueError("API key not provided.")
+        if os.environ.get("OPENAI_API_KEY"):
+            API_KEY = os.environ.get("OPENAI_API_KEY")
+            MODEL = "gpt4-o"
+        elif os.environ.get("ANTHROPIC_API_KEY"):
+            API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+            MODEL = "claude-opus"
+        else:
+            raise ValueError("API key not provided.")
+
+        if os.environ.get("DEVON_MODEL"):
+            MODEL = os.environ.get("DEVON_MODEL")
 
     uvicorn.run(app, host="0.0.0.0", port=port)

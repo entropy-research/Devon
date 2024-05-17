@@ -22,6 +22,7 @@ def discover_python_files(root_dir, ignore_dirs=None):
 
         for file in files:
             if file.endswith(".py"):
+                print(f"discovered {os.path.join(root, file)}")
                 python_files.append(os.path.join(root, file))
 
     return python_files
