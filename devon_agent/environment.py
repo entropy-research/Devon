@@ -11,11 +11,9 @@ import sys
 import time
 import traceback
 
-from typing import Callable, Dict, Optional, Protocol,TYPE_CHECKING, Tuple
+from typing import Callable, Dict, Optional, Protocol, TYPE_CHECKING, Tuple
 
 from git import Repo
-
-
 
 if TYPE_CHECKING:
     from devon_agent.tool import Tool
@@ -30,7 +28,7 @@ class EnvironmentModule(Protocol):
     def name(self):
         pass
 
-    def setup(self, session : 'Session', **kwargs): ...
+    def setup(self, session: 'Session', **kwargs): ...
 
     def teardown(self, **kwargs): ...
 
@@ -43,12 +41,12 @@ class EnvironmentModule(Protocol):
 
     def execute(self, input: str, timeout_duration=25) -> Tuple[str, int]: ...
 
-    def register_tools(self, tools: Dict[str,'Tool']):...
+    def register_tools(self, tools: Dict[str, 'Tool']): ...
 
-    def set_default_tool(self, tool: 'Tool'):...
+    def set_default_tool(self, tool: 'Tool'): ...
 
     @property
-    def tools(self) -> Dict[str, 'Tool']:...
+    def tools(self) -> Dict[str, 'Tool']: ...
 
     """
     in session, if tool in env.tools, then call tool with env in context
@@ -62,8 +60,8 @@ class LocalEnvironment:
     @property
     def name(self):
         return "local"
-    
-    def setup(self, session : 'Session', **kwargs):
+
+    def setup(self, session: 'Session', **kwargs):
         self.old_dir = os.getcwd()
         os.chdir(self.path)
         self.session = session
@@ -79,7 +77,8 @@ class LocalEnvironment:
             pipe.close()
 
         # Start a new shell process
-        self.process = subprocess.Popen(["/bin/bash"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+        self.process = subprocess.Popen(["/bin/bash"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE, shell=True, text=True)
 
         # Queues to hold stdout and stderr
         # self.stdout_queue = queue.Queue()
@@ -94,7 +93,6 @@ class LocalEnvironment:
         # self.stderr_thread.start()
         # self.process = subprocess.Popen(["/bin/bash"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-
     def teardown(self, **kwargs):
         os.chdir(self.old_dir)
 
@@ -107,14 +105,13 @@ class LocalEnvironment:
     def execute(self, input: str, timeout_duration=25):
         try:
 
-
             self.session.event_log.append({
-                "type" : "EnvironmentRequest",
-                "content" : input,
-                "producer" : "tool",
-                "consumer" : self.name,
+                "type": "EnvironmentRequest",
+                "content": input,
+                "producer": "tool",
+                "consumer": self.name,
             })
-            
+
             self.process.stdin.write(input + '\n')
             self.process.stdin.write("echo \n")
             self.process.stdin.write("echo $?\n")
@@ -127,7 +124,7 @@ class LocalEnvironment:
 
             while (line := self.process.stdout.readline()) != 'EOL\n':
                 output += line
-            
+
             while (line := self.process.stderr.readline()) != 'EOL\n':
                 error += line
 
@@ -141,17 +138,17 @@ class LocalEnvironment:
             )
 
             self.session.event_log.append({
-                "type" : "EnvironmentResponse",
-                "content" : output,
-                "producer" : self.name,
-                "consumer" : "tool",
+                "type": "EnvironmentResponse",
+                "content": output,
+                "producer": self.name,
+                "consumer": "tool",
             })
         except Exception as e:
             traceback.print_exc()
             return str(e), -1
 
         return output, return_code
-    
+
     def __enter__(self):
         self.setup()
         return self
@@ -165,13 +162,14 @@ class LocalEnvironment:
         if self._tools is None:
             self._tools = {}
         self._tools.update(tools)
-    
+
     def set_default_tool(self, tool: 'Tool'):
         self.default_tool = tool
 
     @property
     def tools(self) -> Dict[str, 'Tool']:
         return self._tools
+
 
 # @dataclass(frozen=False)
 # class SWEBenchEnvironment:
@@ -185,7 +183,7 @@ class UserEnvironment:
     def name(self):
         return "user_environment"
 
-    def setup(self, session : 'Session', **kwargs):
+    def setup(self, session: 'Session', **kwargs):
         self.session = session
 
     def teardown(self, **kwargs):
@@ -193,21 +191,21 @@ class UserEnvironment:
 
     def execute(self, input: str, timeout_duration=25):
         self.session.event_log.append({
-                "type" : "UserRequest",
-                "content" : input,
-                "producer" : "tool",
-                "consumer" : self.name,
-            })
-        response =  self.user_func()
+            "type": "UserRequest",
+            "content": input,
+            "producer": "tool",
+            "consumer": self.name,
+        })
+        response = self.user_func()
         self.session.event_log.append({
-                "type" : "UserResponse",
-                "content" : response,
-                "producer" : self.name,
-                "consumer" : "tool",
-            })
+            "type": "UserResponse",
+            "content": response,
+            "producer": self.name,
+            "consumer": "tool",
+        })
         return response
 
-    def register_tools(self, tools: Dict[str,'Tool']):
+    def register_tools(self, tools: Dict[str, 'Tool']):
         if "_tools" not in self.__dict__:
             self._tools = {}
         if self._tools is None:
@@ -223,12 +221,13 @@ class UserEnvironment:
 
 
 if __name__ == "__main__":
-    from devon_agent.session import Session,SessionArguments
+    from devon_agent.session import Session, SessionArguments
+
     # from devon_agent.agent import Agent
     command = "cat /Users/mihirchintawar/agent/devon_swe_bench_experimental/swebenchenv/environment/swe_env.py"
 
     session = Session(
-        args = SessionArguments(
+        args=SessionArguments(
             path=".",
             user_input=lambda: "Hello, World!",
             name="test"
@@ -239,9 +238,9 @@ if __name__ == "__main__":
     localEnv = LocalEnvironment(path=".")
 
     localEnv.setup(session)
-    output,code =localEnv.execute(command)
+    output, code = localEnv.execute(command)
     localEnv.teardown()
-    print(output,code)
+    print(output, code)
 
     # process = subprocess.Popen(["/bin/bash"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
 
@@ -255,7 +254,7 @@ if __name__ == "__main__":
 
     # while (line := process.stdout.readline()) != 'EOL\n':
     #     output += line
-    
+
     # while (line := process.stderr.readline()) != 'EOL\n':
     #     error += line
 
