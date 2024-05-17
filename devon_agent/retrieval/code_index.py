@@ -167,7 +167,7 @@ class CodeIndex:
         code_index = cls(index["codebase_path"])
         code_index.function_table.function_table = index["function_table"]
         code_index.class_table.class_table = index["class_table"]
-        code_index.code_graph.from_json(index["code_graph"])
+        code_index.code_graph.from_json_dict(index["code_graph"])
         return code_index
         
 

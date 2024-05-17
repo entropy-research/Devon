@@ -227,6 +227,14 @@ class CodeGraph:
 
         jg = json_graph.adjacency_data(self.graph)
         return jg
+
+    @classmethod
+    def from_json_dict(cls,json_dict):
+        from networkx.readwrite import json_graph
+
+
+        graph = json_graph.adjacency_graph(json_dict)
+        return cls(graph)
     
     @classmethod
     def from_json(cls,json_str):
