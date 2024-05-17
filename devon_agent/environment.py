@@ -116,8 +116,7 @@ class LocalEnvironment:
             })
             
             self.process.stdin.write(input + '\n')
-            self.process.stdin.write("echo \n")
-            self.process.stdin.write("echo $?\n")
+            self.process.stdin.write('echo "$?"\n')
             self.process.stdin.write("echo 'EOL'\n")
             self.process.stdin.write(f"echo 'EOL' >&2\n")
             self.process.stdin.flush()
@@ -131,9 +130,10 @@ class LocalEnvironment:
             while (line := self.process.stderr.readline()) != 'EOL\n':
                 error += line
 
+            # print(output.splitlines())
             return_code = int(output.splitlines()[-1])
-            output = "\n".join(output.splitlines()[:-2])
-            print(return_code)
+            output = "\n".join(output.splitlines()[:-1])
+            # print(return_code)
             output = (
                 output
                 if return_code == 0
@@ -146,11 +146,11 @@ class LocalEnvironment:
                 "producer" : self.name,
                 "consumer" : "tool",
             })
+
+            return output, return_code
         except Exception as e:
             traceback.print_exc()
             return str(e), -1
-
-        return output, return_code
     
     def __enter__(self):
         self.setup()

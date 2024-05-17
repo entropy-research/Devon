@@ -61,7 +61,9 @@ def cwd_normalize_path(ctx, path):
 
 def file_exists(ctx, fpath):
     abs_path = cwd_normalize_path(ctx, fpath)
-    return ctx["environment"].execute(f"test -f {abs_path}")[1] == 0
+    out, rc = ctx["environment"].execute(f"test -f {abs_path}")
+
+    return rc == 0
 
 def _capture_window(lines, index, window_size):
     start_line = index - window_size if index - window_size >= 0 else 0

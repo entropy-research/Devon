@@ -318,7 +318,7 @@ class Session:
                             if not env:
                                 raise ToolNotFoundException(toolname, self.environments)
 
-                            response =  env.tools[toolname]({
+                            response = env.tools[toolname]({
                                 "environment": env,
                                 "session": self,
                                 "state": self.state,

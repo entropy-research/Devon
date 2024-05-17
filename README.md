@@ -22,11 +22,11 @@ https://github.com/entropy-research/Devon/assets/61808204/d42a8b9a-0211-4624-980
 
 1. `node.js` and `npm`
 2. `pipx`, if you don't have this go [here](https://pipx.pypa.io/stable/installation/)
-3. [**Anthropic**](https://console.anthropic.com/settings/keys) API Key
+3. [**Anthropic**](https://console.anthropic.com/settings/keys) API Key or [**OpenAI**](https://platform.openai.com/api-keys) API key
 
 ## Installation commands
 
-To use, simply run:
+To install, simply run:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/entropy-research/Devon/main/install.sh | bash
@@ -45,13 +45,17 @@ This installs the Python backend, and the cli command to run the tool
 ### Thats it! Happy building :)
 
 
-# Usage
+# Running the agent
 Navigate to your project folder and open the terminal.
 
-Set your Anthropic API key as an environment variable:
+Set your Anthropic API or OpenAI API key as an environment variable:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+#OR
+
+export OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 Then to *run*, the command is:
@@ -63,6 +67,11 @@ It's as easy as that.
 
 > [!NOTE]
 > Don't worry, the agent will be able to only access files and folders in the directory you started it from. You can also correct it while it's performing actions.
+
+To run in *debug* mode, the command is:
+```bash
+devon --debug
+```
 
 # Features
 - Multi-file editing

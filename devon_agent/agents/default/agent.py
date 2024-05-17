@@ -1,16 +1,15 @@
 import json
 import logging
+import time
 from dataclasses import dataclass, field
 import traceback
 from typing import Optional, Tuple
 
 from devon_agent.agents.model import AnthropicModel, ModelArguments, OpenAiModel
-from devon_agent.prompt import (
-    commands_to_command_docs,
-    history_to_bash_history,
-    last_user_prompt_template_v3,
-    parse_response,
-    system_prompt_template_v3,
+from devon_agent.agents.default.anthropic_prompts import anthropic_history_to_bash_history, anthropic_last_user_prompt_template_v3, anthropic_system_prompt_template_v3, anthropic_commands_to_command_docs
+from devon_agent.agents.default.openai_prompts import openai_last_user_prompt_template_v3, openai_system_prompt_template_v3, openai_commands_to_command_docs
+from devon_agent.agents.default.anthropic_prompts import (
+    parse_response
 )
 from devon_agent.tools.utils import get_cwd
 
@@ -106,25 +105,10 @@ class TaskAgent(Agent):
                 {"role": "user", "content": observation, "agent": self.name}
             )
 
-            commands = (
-                "Avaliable Custom Commands:\n"
-                + "\n".join(
-                    [f"{command}" for command in session.get_available_actions()]
-                )
-                + "\n"
-            )
 
-            command_docs = (
-                "Custom Commands Documentation:\n"
-                + commands_to_command_docs(
-                    list(session.generate_command_docs().values())
-                )
-                + "\n"
-            )
+            command_docs = list(session.generate_command_docs().values())
 
             output = ""
-
-            system_prompt = system_prompt_template_v3(commands + command_docs)
 
             last_observation = None
             second_last_observation = None
@@ -138,24 +122,62 @@ class TaskAgent(Agent):
                 and "Failed to edit file" in second_last_observation
             ):
                 self.chat_history = self.chat_history[:-6]
-                history = history_to_bash_history(self.chat_history)
                 self.current_model.args.temperature += (
                     0.2 if self.current_model.args.temperature < 0.8 else 0
                 )
-            else:
-                history = history_to_bash_history(self.chat_history)
+            
+            if self.model == "claude_opus":
 
-            last_user_prompt = last_user_prompt_template_v3(
-                task, history, editor, get_cwd(
-                    {
-                        "session" : session,
-                        "environment" : session.default_environment,
-                        "state" : session.state
-                    }
-                ), session.base_path, self.scratchpad
-            )
+                command_docs = (
+                    "Custom Commands Documentation:\n"
+                    + anthropic_commands_to_command_docs(
+                        command_docs
+                    )
+                    + "\n"
+                )
 
-            messages = [{"role": "user", "content": last_user_prompt}]
+                history = anthropic_history_to_bash_history(self.chat_history)
+                system_prompt = anthropic_system_prompt_template_v3(command_docs)
+                last_user_prompt = anthropic_last_user_prompt_template_v3(
+                    task, history, editor, get_cwd(
+                        {
+                            "session" : session,
+                            "environment" : session.default_environment,
+                            "state" : session.state
+                        }
+                    ), session.base_path, self.scratchpad
+                )
+
+                messages = [{"role": "user", "content": last_user_prompt}]
+            elif self.model == "gpt4-o":
+                
+                time.sleep(3)
+
+                command_docs = (
+                    "Custom Commands Documentation:\n"
+                    + openai_commands_to_command_docs(
+                        command_docs
+                    )
+                    + "\n"
+                )
+
+                history = [entry for entry in self.chat_history if entry["role"] == "user" or entry["role"] == "assistant"]
+                system_prompt = openai_system_prompt_template_v3(command_docs)
+                last_user_prompt = openai_last_user_prompt_template_v3(
+                    task,
+                    editor,
+                    get_cwd(
+                        {
+                            "session" : session,
+                            "environment" : session.default_environment,
+                            "state" : session.state
+                        }
+                    ),
+                    session.base_path,
+                    self.scratchpad
+                )
+
+                messages = history + [{"role": "user", "content": last_user_prompt}]
 
             output = self.current_model.query(messages, system_message=system_prompt)
 

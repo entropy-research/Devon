@@ -36,11 +36,6 @@ origins = [
 
 sessions: Dict[str, Session] = {}
 
-
-API_KEY = None
-MODEL = None
-
-
 app = fastapi.FastAPI()
 
 app.add_middleware(
@@ -90,9 +85,9 @@ def create_session(session: str, path: str):
 
     agent = TaskAgent(
         name="Devon",
-        model=MODEL,
+        model=app.model,
         temperature=0.0,
-        api_key=API_KEY,
+        api_key=app.api_key,
     )
     sessions[session] = Session(
         SessionArguments(
@@ -222,15 +217,15 @@ if __name__ == "__main__":
             print("Warning: Invalid port number provided. Using default port 8000.")
 
         if os.environ.get("OPENAI_API_KEY"):
-            API_KEY = os.environ.get("OPENAI_API_KEY")
-            MODEL = "gpt4-o"
+            app.api_key = os.environ.get("OPENAI_API_KEY")
+            app.model = "gpt4-o"
         elif os.environ.get("ANTHROPIC_API_KEY"):
-            API_KEY = os.environ.get("ANTHROPIC_API_KEY")
-            MODEL = "claude-opus"
+            app.api_key = os.environ.get("ANTHROPIC_API_KEY")
+            app.model = "claude-opus"
         else:
             raise ValueError("API key not provided.")
 
         if os.environ.get("DEVON_MODEL"):
-            MODEL = os.environ.get("DEVON_MODEL")
+            app.model = os.environ.get("DEVON_MODEL")
 
     uvicorn.run(app, host="0.0.0.0", port=port)

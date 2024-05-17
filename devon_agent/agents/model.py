@@ -5,7 +5,9 @@ from litellm import completion
 from dataclasses import dataclass
 from typing import Optional
 
-litellm.telemetry = False
+# litellm.telemetry = False
+
+# litellm.set_verbose=True
 
 logger = logging.getLogger("LiteLLM")
 logger.disabled = True

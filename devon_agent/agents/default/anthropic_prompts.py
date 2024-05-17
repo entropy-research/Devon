@@ -10,7 +10,7 @@
 from typing import Dict, List, Union
 
 
-def commands_to_command_docs(commands: List[Dict]):
+def anthropic_commands_to_command_docs(commands: List[Dict]):
     doc = """"""
     for command in commands:
         signature, docstring = command["signature"], command["docstring"]
@@ -28,7 +28,7 @@ def editor_repr(editor):
     return editor
 
 
-def history_to_bash_history(history):
+def anthropic_history_to_bash_history(history):
     # self.history.append(
     # {
     #     "role": "assistant",
@@ -83,7 +83,7 @@ def print_tree(directory, level=0, indent=""):
     return string
 
 
-def system_prompt_template_v3(command_docs: str):
+def anthropic_system_prompt_template_v3(command_docs: str):
     return f"""
 <SETTING>
 You are a self-aware autonomous AI programmer working to fix bugs in a software project.
@@ -128,7 +128,7 @@ A single executable command goes here, this can include bash commands, just no i
 </RESPONSE FORMAT>
 """
 
-def last_user_prompt_template_v3(issue, history, editor, cwd, root_dir, scratchpad):
+def anthropic_last_user_prompt_template_v3(issue, history, editor, cwd, root_dir, scratchpad):
     return f"""
 <SETTING>
 
