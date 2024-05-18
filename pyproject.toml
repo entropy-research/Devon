@@ -33,9 +33,11 @@ datasets = {version = ">=2.14.6,<2.15.0", optional = true}
 click = "^8.1.7"
 posthog = "^3.5.0"
 litellm = "^1.37.9"
+dspy-ai = {version = "^2.4.9", optional = true}
 
 [tool.poetry.extras]
 swebench = ["swebench", "datasets", "gymnasium"]
+experimental = ["dspy-ai"]
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.3.3"
