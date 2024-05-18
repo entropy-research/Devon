@@ -160,7 +160,9 @@ if (input[0] === 'configure') {
     const subProcess = childProcess.spawn(
       'devon_agent',
       ['server', '--port', port.toString(), '--model', modelName, '--api_key', api_key],
-      { signal: controller.signal },
+      {
+        signal: controller.signal
+      },
     );
 
     if(cli.flags.debug) {
@@ -179,7 +181,7 @@ if (input[0] === 'configure') {
 
     waitUntilExit().then(() => {
       console.log('Exiting...');
-      subProcess.kill();
+      subProcess.kill('SIGKILL');
       process.exit(0);
     });
   });
