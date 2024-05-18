@@ -57,7 +57,7 @@ def process_batch(args):
         no_mirror=args.no_mirror,
         token=gh_token,
     )
-    env.setup()
+    # env.setup()
 
     # env = SWEEnv(args.environment,batch)
     agent = TaskAgent(name="devon", model=args.model, temperature=args.temperature)
@@ -96,15 +96,20 @@ def process_batch(args):
                 # container_name=args.container_name,
                 # timeout=args.timeout,
                 # no_mirror=args.no_mirror,
+
                 sweenv=env,
                 skip_existing=True
             ),
             agent=agent,
+            data=data,
+            traj_dir=traj_dir,
         )
-        session.run_event_loop(data, traj_dir)
+        session.enter()
+        session.run_event_loop()
+        session.exit()
     except KeyboardInterrupt:
         logger.info("Exiting InterCode environment...")
-        env.close()
+        env.teardown()
 
 
 if __name__ == "__main__":

@@ -181,13 +181,15 @@ class SWEEnvSessionArguments:
 
 class SWEEnvSession:
 
-    def __init__(self, args: SWEEnvSessionArguments, agent):
+    def __init__(self, args: SWEEnvSessionArguments, agent, data, traj_dir):
 
         self.event_log = []
         self.event_index = 0
         self.state = DotDict({})
         self.agent = agent
         self.skip_existing = args.skip_existing
+        self.data = data
+        self.traj_dir = traj_dir
 
         # if not self.args.verbose:
         #     self.logger.disabled = True
@@ -242,17 +244,29 @@ class SWEEnvSession:
 
 
     def enter(self):
+        self.record = self.data[self.idx]
         self.environments["swebenchenv"].setup()
-        self.environments["swebenchenv"].reset(self.record)
 
+        # self.base_path = self.environments["swebenchenv"].base_path
+
+        # for tool in self.environments["swebenchenv"].tools.values():
+        #     tool.setup({
+        #         "environment" : self.environments["swebenchenv"],
+        #         "session" : self,
+        #         "state" : self.state,
+        #     })
+
+    def reset(self,record):
+        # self.environments["swebenchenv"].setup()
+        self.environments["swebenchenv"].reset(record)
         self.base_path = self.environments["swebenchenv"].base_path
-
         for tool in self.environments["swebenchenv"].tools.values():
             tool.setup({
                 "environment" : self.environments["swebenchenv"],
                 "session" : self,
                 "state" : self.state,
             })
+
 
 
     def exit(self):
@@ -306,7 +320,7 @@ submit"""
         
         return submission
 
-    def run_event_loop(self, data, traj_dir):
+    def run_event_loop(self):
 
         """
     input: data, agent, traj dir, env
@@ -328,30 +342,23 @@ submit"""
 
     """
 
-        for index in range(len(data)):
+        for index in range(len(self.data)):
             try:
-                # Reset environment
-                self.record = data[index]
-                self.idx = index
 
-                instance_id = self.record["instance_id"]
-                if self.should_skip(traj_dir, instance_id):
+
+                record = self.data[index]
+                instance_id = record["instance_id"]
+                # instance_id = self.record["instance_id"]
+                if self.should_skip(self.traj_dir, instance_id):
                     continue
                 self.logger.info("▶️  Beginning task " + str(index))
-                try:
-                    self.env.reset(self.record)
-                    self.event_log = []
-                except Exception as e:
-                    self.logger.error(f"Error resetting environment: {e}")
-                    self.env.teardown()
-                    self.env.setup()
-                    continue
 
-                os.makedirs(traj_dir, exist_ok=True)
+                self.event_log = []
+                self.reset(record)
+                os.makedirs(self.traj_dir, exist_ok=True)
 
                 try:
 
-                    self.enter()
                     self.event_log.append({
                         "type":"ModelRequest",
                         "content":"",
@@ -363,15 +370,15 @@ submit"""
                     self.logger.error(f"Error running agent: {e}")
                     traceback.print_exc()
                     continue
-                self.save_predictions(traj_dir, instance_id, submission)
+                self.save_predictions(self.traj_dir, instance_id, submission)
 
             except KeyboardInterrupt as e:
                 raise e
             except Exception as e:
                 traceback.print_exc()
                 self.logger.warning(f"❌ Failed on {self.record['instance_id']}: {e}")
-                self.env.teardown()
-                self.env.setup()
+                # self.env.teardown()
+                # self.env.setup()
                 continue
 
 

@@ -600,7 +600,7 @@ class SWEEnvEnvironment(EnvironmentModule):
         self,
         input: str,
         timeout_duration=25,
-    ) -> str:
+    ) -> Tuple[str, int]:
         """
         Sends input to container and returns output
 
@@ -802,19 +802,24 @@ class SWEEnvEnvironment(EnvironmentModule):
         if repo_name not in folders:
             if not self.no_mirror:
                 self.logger.info(f"{repo_name} not found in container, cloning...")
-                self.communicate(
+                error,rc = self.communicate(
                     input=f"git clone https://{self.token}@github.com/{record['repo']}.git {repo_name}",
                     # error_msg="Failed to clone repository from mirror",
                     timeout_duration=LONG_TIMEOUT,
                 )
-                self.logger.info(f"{repo_name} not found in container, cloning...")
+                if rc != 0:
+                    raise RuntimeError("Failed to clone repository from mirror" + error)
+                # self.logger.info(f"{repo_name} not found in container, cloning...")
             else:
                 logger.info(f"Trying to clone from non-mirror...")
-                self.communicate(
+                _,rc = self.communicate(
                     input=f"git clone https://{self.token}@github.com/{record['repo']}.git {repo_name}",
                     # error_msg="Failed to clone repository from non-mirror",
                     timeout_duration=LONG_TIMEOUT,
                 )
+                if rc != 0:
+                    raise RuntimeError("Failed to clone repository from non-mirror")
+        print(self.communicate("ls "+ self.base_path)[0])
 
         for cmd in [
             "echo -n > /root/files_to_edit.txt",
@@ -825,10 +830,12 @@ class SWEEnvEnvironment(EnvironmentModule):
             f"git reset --hard {base_commit}",
             "git clean -fdxq",
         ]:
-            self.communicate(
+            _,rc = self.communicate(
                 input=cmd,
                 # error_msg="Failed to clean repository",
             )
+            if rc != 0:
+                raise RuntimeError("Failed to reset repository")
 
         for cmd in [
             "export CURRENT_FILE=""",
@@ -837,15 +844,20 @@ class SWEEnvEnvironment(EnvironmentModule):
             "export SEARCH_FILES=()",
             "export SEARCH_INDEX=0",
         ]:
-            self.communicate(
+            _,rc = self.communicate(
                 input=cmd,
                 # error_msg="Failed to reset environment variables",
             )
+            if rc != 0:
+                raise RuntimeError("Failed to reset environment variables")
         
-        self.communicate(
+        _,rc = self.communicate(
             "source /root/miniconda3/etc/profile.d/conda.sh",
             # error_msg="Failed to source conda",
         )
+        if rc != 0:
+            raise RuntimeError("Failed to source conda")
+
 
         system = self.communicate("uname -s")[0].strip().lower()
         arch = self.communicate("uname -m")[0].strip().lower()
