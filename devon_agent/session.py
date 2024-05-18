@@ -392,19 +392,29 @@ class Session:
 
             case "ModelResponse":
                 content = json.loads(event["content"])["action"]
-                toolname, args = parse_command(content)
-                new_events.append(
-                    {
-                        "type": "ToolRequest",
-                        "content": {
-                            "toolname" : toolname,
-                            "args" : args,
-                            "raw_command" : content
-                        },
-                        "producer": event["producer"],
-                        "consumer": event["consumer"],
-                    }
-                )
+                try:
+                    toolname, args = parse_command(content)
+                    new_events.append(
+                        {
+                            "type": "ToolRequest",
+                            "content": {
+                                "toolname" : toolname,
+                                "args" : args,
+                                "raw_command" : content
+                            },
+                            "producer": event["producer"],
+                            "consumer": event["consumer"],
+                        }
+                    )
+                except ValueError as e:
+                    new_events.append(
+                        {
+                            "type": "ToolResponse",
+                            "content": e.args[0] if len(e.args) > 0 else "Failed to parse command please follow the specified format",
+                            "producer": event["producer"],
+                            "consumer": event["consumer"],
+                        }
+                    )
 
             case "Interrupt":
                 if self.agent.interrupt:

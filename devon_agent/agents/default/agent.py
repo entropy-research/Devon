@@ -126,7 +126,7 @@ class TaskAgent(Agent):
                     0.2 if self.current_model.args.temperature < 0.8 else 0
                 )
             
-            if self.model == "claude_opus":
+            if self.model == "claude-opus":
 
                 command_docs = (
                     "Custom Commands Documentation:\n"
