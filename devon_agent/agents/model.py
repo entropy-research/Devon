@@ -12,6 +12,7 @@ from typing import Optional
 logger = logging.getLogger("LiteLLM")
 logger.disabled = True
 
+
 @dataclass(frozen=False)
 class ModelArguments:
     model_name: str
@@ -63,13 +64,13 @@ class AnthropicModel:
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
-                messages=[{"role": "system", "content": system_message}] + messages,
-                max_tokens=self.model_metadata["max_tokens"],
-                model=self.api_model,
-                temperature=self.args.temperature,
-                stop=["</COMMAND>"],
-            )
-        
+            messages=[{"role": "system", "content": system_message}] + messages,
+            max_tokens=self.model_metadata["max_tokens"],
+            model=self.api_model,
+            temperature=self.args.temperature,
+            stop=["</COMMAND>"],
+        )
+
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
         return response + "</COMMAND>"
 
@@ -105,13 +106,13 @@ class OpenAiModel:
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
-                messages=[{"role": "system", "content": system_message}] + messages,
-                max_tokens=self.model_metadata["max_tokens"],
-                model=self.api_model,
-                temperature=self.args.temperature,
-                stop=["</COMMAND>"],
-            )
-        
+            messages=[{"role": "system", "content": system_message}] + messages,
+            max_tokens=self.model_metadata["max_tokens"],
+            model=self.api_model,
+            temperature=self.args.temperature,
+            stop=["</COMMAND>"],
+        )
+
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
         return response + "</COMMAND>"
 
@@ -139,13 +140,13 @@ class GroqModel:
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
-                messages=[{"role": "system", "content": system_message}] + messages,
-                max_tokens=self.model_metadata["max_tokens"],
-                model=self.api_model,
-                temperature=self.args.temperature,
-                stop=["</COMMAND>"],
-            )
-        
+            messages=[{"role": "system", "content": system_message}] + messages,
+            max_tokens=self.model_metadata["max_tokens"],
+            model=self.api_model,
+            temperature=self.args.temperature,
+            stop=["</COMMAND>"],
+        )
+
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
         return response + "</COMMAND>"
 
@@ -154,7 +155,7 @@ class OllamaModel:
 
     def __init__(self, args: ModelArguments):
         self.args = args
-        self.api_model = args.model
+        self.api_model = args.model_name  # fixed
         self.model_metadata = {
             "max_tokens": 4096,
         }
@@ -163,13 +164,13 @@ class OllamaModel:
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
-                messages=[{"role": "system", "content": system_message}] + messages,
-                max_tokens=self.model_metadata["max_tokens"],
-                model=self.api_model,
-                temperature=self.args.temperature,
-                stop=["</COMMAND>"],
-                api_base="http://localhost:11434"
-            )
-        
+            messages=[{"role": "system", "content": system_message}] + messages,
+            max_tokens=self.model_metadata["max_tokens"],
+            model=self.api_model,
+            temperature=self.args.temperature,
+            stop=["</COMMAND>"],
+            api_base="http://localhost:11434"
+        )
+
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
         return response + "</COMMAND>"
