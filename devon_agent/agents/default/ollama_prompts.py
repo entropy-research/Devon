@@ -132,7 +132,8 @@ if __name__ == "__main__":
     from devon_agent.agents.model import ModelArguments, OllamaModel
 
     # --- Setup
-    agent = TaskAgent(model='gpt4-o', name='test_agent')
+    # the agent is created only to have the command_docs, so gpt4-o was arbitrary 
+    agent = TaskAgent(model='gpt4-o', name='test_agent') 
 
     se_args = SessionArguments(
         name='test_session',
