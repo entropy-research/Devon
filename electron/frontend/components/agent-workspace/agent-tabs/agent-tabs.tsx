@@ -7,6 +7,7 @@ import PlannerWidget from './planner-widget'
 import Chat from '../../chat/chat'
 import { ViewMode } from '@/lib/types'
 import { ChatProps } from '@/lib/chat.types'
+import { useContext, createContext, useState, useRef } from 'react'
 
 const observeTabs = [
     {
@@ -45,6 +46,10 @@ const gridTabs = [
     // },
 ]
 
+const defaultValue = {
+    expanded: true,
+}
+
 export default function AgentWorkspaceTabs({
     viewMode,
     chatProps,
@@ -68,8 +73,16 @@ export default function AgentWorkspaceTabs({
         <>
             {viewMode === ViewMode.Panel ? (
                 <div className="flex gap-5 w-full h-full justify-around pr-5 flex-1">
-                    {showPlanner && <PlannerWidget />}
-                    {showTimeline && <TimelineWidget />}
+                    <div
+                        className={`transition-all duration-300 ${showPlanner ? 'w-full' : 'w-0 overflow-hidden'}`}
+                    >
+                        <PlannerWidget />
+                    </div>
+                    <div
+                        className={`transition-all duration-300 ${showTimeline ? 'w-full' : 'w-0 overflow-hidden'}`}
+                    >
+                        <TimelineWidget />
+                    </div>
                 </div>
             ) : (
                 <GridView chatProps={chatProps} />
@@ -77,6 +90,24 @@ export default function AgentWorkspaceTabs({
         </>
     )
 }
+
+// function PlannerWidget() {
+//     const { expanded } = useContext(CTX1);
+//     return (
+//         <div className={`transition-all duration-300 ${expanded ? 'w-1/2' : 'w-0 overflow-hidden'}`}>
+//             {expanded && <div>Planner Content</div>}
+//         </div>
+//     );
+// }
+
+// function TimelineWidget() {
+//     const { expanded } = useContext(CTX2);
+//     return (
+//         <div className={`transition-all duration-300 ${expanded ? 'w-1/2' : 'w-0 overflow-hidden'}`}>
+//             {expanded && <div>Timeline Content</div>}
+//         </div>
+//     );
+// }
 
 const GridView = ({ chatProps }: { chatProps: ChatProps }) => (
     <div className="h-full w-full flex flex-row gap-4">

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { DM_Sans } from 'next/font/google'
 import { Toaster } from '@/components/ui/toaster'
-import Sidebar from '@/components/sidebar/sidebar'
+import HeaderSidebar from './header-sidebar'
 
 import './globals.css'
 
@@ -23,8 +23,10 @@ export default function RootLayout({
             <body className={`${dmSans.className} h-full`}>
                 <main className="flex h-full flex-row overflow-hidden">
                     <div className="relative w-full overflow-hidden bg-day transition-colors duration-200 dark:bg-night md:flex">
-                        <Sidebar />
-                        {children}
+                        <HeaderSidebar />
+                        <div className="mt-[72px] flex flex-row w-full">
+                            {children}
+                        </div>
                     </div>
                 </main>
                 <Toaster />

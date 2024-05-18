@@ -14,10 +14,6 @@ const SidebarHeader = ({ expanded }: { expanded: boolean }) => {
         >
             <>
                 <a href="/?chat=New" onClick={handleClick} className="flex">
-                    <Bot className="text-primary" />
-                    {expanded && (
-                        <h1 className="text-lg font-semibold mx-3">Devon</h1>
-                    )}
                 </a>
                 <SelectProjectDirectoryModal
                     trigger={

@@ -25,7 +25,7 @@ function SidebarItem({
     `}
         >
             <Link href={route} className="flex">
-                {icon}
+                {expanded && icon}
                 <span
                     className={`overflow-hidden transition-all flex items-start ${
                         expanded ? 'w-52 ml-3' : 'w-0'

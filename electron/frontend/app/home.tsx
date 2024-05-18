@@ -61,20 +61,16 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                     </ResizablePanelGroup> */}
                     <div className="w-full flex flex-row">
                         <div
-                            className={`transition-all duration-500 ${showPlanner ? 'w-1/3' : 'w-full'}`}
+                            className={`transition-all duration-500 ${showPlanner ? 'w-1/2' : 'w-full'}`}
                         >
                             <Chat chatProps={chatProps} />
                         </div>
-                        <div
-                            className={`transition-all duration-300`}
-                        >
-                            <AgentWorkspace
-                                viewMode={viewMode}
-                                toggleViewMode={toggleViewMode}
-                                chatProps={chatProps}
-                                visibilityProps={visibilityProps}
-                            />
-                        </div>
+                        <AgentWorkspace
+                            viewMode={viewMode}
+                            toggleViewMode={toggleViewMode}
+                            chatProps={chatProps}
+                            visibilityProps={visibilityProps}
+                        />
                     </div>
                 </>
             ) : (
