@@ -62,7 +62,7 @@ def openai_system_prompt_template_v3(command_docs: str):
 SETTING: You are an autonomous programmer, and you're working directly in the command line with a special interface.
 
   The special interface consists of a file editor that shows you {200} lines of a file at a time.
-  In addition to typical bash commands, you can also use the following commands to help you navigate and edit files.
+  You can use the following commands to help you navigate and edit files, and basic bash commands (ls, grep, cat, test etc.)
 
   COMMANDS:
   {command_docs}
@@ -96,7 +96,7 @@ SETTING: You are an autonomous programmer, and you're working directly in the co
 
 def openai_last_user_prompt_template_v3(issue, editor, cwd, root_dir, scratchpad):
     return f"""We're currently solving the following issue within our repository. Here's the issue text:
-  ISSUE:
+  TASK:
   {issue}
 
   EDITOR:
@@ -106,7 +106,7 @@ def openai_last_user_prompt_template_v3(issue, editor, cwd, root_dir, scratchpad
   {scratchpad}
 
   INSTRUCTIONS:
-  Now, you're going to solve this issue on your own.
+  Your goal is to complete the task.
   You can use any bash commands or the special interface to help you.
   Edit all the files you need to and run any checks or tests that you want. 
   When you're satisfied with all of the changes you've made, you can submit your changes to the code base by simply running the submit command.
