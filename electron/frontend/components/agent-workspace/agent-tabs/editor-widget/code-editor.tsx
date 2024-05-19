@@ -6,16 +6,6 @@ import FileTabs from '@/components/file-tabs/file-tabs'
 import { useCodeEditorState } from '@/contexts/CodeEditorContext'
 import { useSearchParams } from 'next/navigation'
 
-const boilerplateFile = {
-    id: 'main.py',
-    name: 'main.py',
-    path: 'main.py',
-    language: 'python',
-    value: {
-        lines: `# Welcome to Devon!`,
-    },
-}
-
 // Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/CodeEditor.tsx
 export default function CodeEditor({
     isExpandedVariant = false,
@@ -52,7 +42,7 @@ export default function CodeEditor({
 
     if (!selectedFileId || !chatId || chatId === 'New') {
         return (
-            <div className="flex flex-col">
+            <>
                 {/* <FileTabs
                     files={[boilerplateFile]}
                     selectedFileId={boilerplateFile.id}
@@ -62,15 +52,13 @@ export default function CodeEditor({
                     chatId={chatId}
                 /> */}
                 <div className="w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
-                    {boilerplateFile && (
-                        <BothEditorTypes
-                            diffEnabled={diffEnabled}
-                            file={boilerplateFile}
-                            handleEditorDidMount={handleEditorDidMount}
-                        />
-                    )}
+                    {file && <BothEditorTypes
+                        diffEnabled={diffEnabled}
+                        file={file}
+                        handleEditorDidMount={handleEditorDidMount}
+                    />}
                 </div>
-            </div>
+            </>
         )
     }
 

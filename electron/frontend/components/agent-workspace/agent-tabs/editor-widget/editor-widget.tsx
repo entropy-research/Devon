@@ -5,6 +5,25 @@ import { ChatProps } from '@/lib/chat.types'
 import { fetchSessionState } from '@/lib/services/sessionService/use-session-state'
 import FileTree from './file-tree/file-tree'
 
+const boilerplateFile = {
+    id: 'main.py',
+    name: 'main.py',
+    path: 'main.py',
+    language: 'python',
+    value: {
+        lines: `# Welcome to Devon!`,
+    },
+}
+const boilerplateFile2 = {
+    id: 'hello.py',
+    name: 'hello.py',
+    path: 'hello.py',
+    language: 'python',
+    value: {
+        lines: `# Hello world!`,
+    },
+}
+
 const EditorWidget = ({
     chatId,
     isExpandedVariant = false,
@@ -18,20 +37,26 @@ const EditorWidget = ({
         if (!chatId || chatId === 'New') return
 
         async function getSessionState() {
-            const { PAGE_SIZE, data, editor } = await fetchSessionState(chatId)
+            const { editor } = await fetchSessionState(chatId)
+            const ed = editor.files
             // Editor is a dictionary. Get the keys and values
             const _files: any = []
-            for (let key in editor) {
-                if (editor.hasOwnProperty(key)) {
+
+            for (let key in ed) {
+                if (ed.hasOwnProperty(key)) {
                     // This check is necessary to exclude properties from the prototype chain
                     _files.push({
                         id: key,
                         name: key.split('/').pop(),
                         path: key,
                         language: 'python',
-                        value: editor[key],
+                        value: ed[key],
                     })
                 }
+            }
+            if (!_files.length) {
+                _files.push(boilerplateFile)
+                _files.push(boilerplateFile2)
             }
             setFiles(_files)
         }

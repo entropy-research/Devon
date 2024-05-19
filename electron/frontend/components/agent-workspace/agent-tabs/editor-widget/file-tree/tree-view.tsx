@@ -62,8 +62,8 @@ export const TreeView = ({
                 initialSelectedId={initialSelectedId}
                 initialExpendedItems={initialExpendedItems}
                 elements={elements}
-                style={{ height, width }}
-                className="w-full h-full overflow-y-auto"
+                // style={{ height, width }}
+                className="h-full overflow-y-auto"
             >
                 {getVirtualItems().map(element => (
                     <TreeItem
@@ -91,10 +91,10 @@ export const TreeItem = forwardRef<
     } & React.HTMLAttributes<HTMLUListElement>
 >(({ className, elements, indicator, ...props }, ref) => {
     return (
-        <ul ref={ref} className="w-full space-y-1 " {...props}>
+        <ul ref={ref} className="space-y-0" {...props}>
             {elements &&
                 elements.map(element => (
-                    <li key={element.id} className="w-full">
+                    <li key={element.id}>
                         {element.children && element.children?.length > 0 ? (
                             <Folder
                                 element={element.name}
