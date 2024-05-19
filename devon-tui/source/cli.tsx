@@ -77,7 +77,7 @@ if (input[0] === 'configure') {
           type: 'list',
           name: 'modelName',
           message: 'Select the model name:',
-          choices: ['claude-opus', 'gpt4-o'],
+          choices: ['claude-opus', 'gpt4-o', 'llama-3-70b'],
         },
       ])
       .then((answers) => {
