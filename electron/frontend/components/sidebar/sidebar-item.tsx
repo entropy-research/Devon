@@ -31,7 +31,7 @@ function SidebarItem({
                         expanded ? 'w-52 ml-3' : 'w-0'
                     }`}
                 >
-                    {text}
+                    {expanded && text}
                 </span>
             </Link>
             {alert && (
