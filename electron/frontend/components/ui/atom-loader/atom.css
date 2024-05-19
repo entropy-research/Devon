@@ -1,0 +1,31 @@
+/* Source: https://css-loaders.com/hypnotic/ */
+.loader {
+  width: 30px;
+  height: 15px;
+  border: 2px solid;
+  box-sizing: border-box;
+  border-radius: 50%;
+  display: grid;
+  animation: l2 9s infinite linear;
+  border-color: rgba(118, 86, 232, 0.5);
+}
+
+.loader:before,
+.loader:after {
+  content: '';
+  grid-area: 1/1;
+  border: inherit;
+  border-radius: 50%;
+  animation: inherit;
+  animation-duration: 6s;
+}
+
+.loader:after {
+  --s: -1;
+}
+
+@keyframes l2 {
+  100% {
+      transform: rotate(calc(var(--s, 1) * 1turn));
+  }
+}

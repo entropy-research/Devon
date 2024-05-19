@@ -27,11 +27,13 @@ const SelectProjectDirectoryModal = ({
     openProjectModal,
     setOpenProjectModal,
     hideclose,
+    header,
 }: {
     trigger?: JSX.Element
     openProjectModal?: boolean
     setOpenProjectModal?: (open: boolean) => void
     hideclose?: boolean
+    header?:  JSX.Element
 }) => {
     const [folderPath, setFolderPath] = useState('')
     const [open, setOpen] = useState(false)
@@ -61,6 +63,7 @@ const SelectProjectDirectoryModal = ({
                 hideclose={hideclose ? true.toString() : false.toString()}
             >
                 <div className="mx-8 my-4">
+                    {header}
                     <SelectProjectDirectoryComponent
                         folderPath={folderPath}
                         setFolderPath={setFolderPath}

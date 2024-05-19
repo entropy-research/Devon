@@ -72,20 +72,26 @@ export default function AgentWorkspaceTabs({
     return (
         <>
             {viewMode === ViewMode.Panel ? (
-                <div className="flex gap-5 w-full h-full justify-around pr-5 flex-1">
-                    <div
-                        className={`transition-all duration-300 ${showPlanner ? 'w-full' : 'w-0 overflow-hidden'}`}
-                    >
-                        <PlannerWidget />
-                    </div>
-                    <div
-                        className={`transition-all duration-300 ${showTimeline ? 'w-full' : 'w-0 overflow-hidden'}`}
-                    >
-                        <TimelineWidget />
-                    </div>
-                </div>
+                // <div className="flex gap-5 w-full h-full justify-around pr-5 flex-1">
+                //     <div
+                //         className={`transition-all duration-300 ${showPlanner ? 'w-full' : 'w-0 overflow-hidden'}`}
+                //     >
+                //         <PlannerWidget />
+                //     </div>
+                //     <div
+                //         className={`transition-all duration-300 ${showTimeline ? 'w-full' : 'w-0 overflow-hidden'}`}
+                //     >
+                //         <TimelineWidget />
+                //     </div>
+                // </div>
+                <>
+                    {showPlanner && <PlannerWidget />}
+                    {showTimeline && <TimelineWidget />}
+                </>
             ) : (
-                <GridView chatProps={chatProps} />
+                <div className="flex gap-5 w-full h-full justify-around pr-5 flex-1">
+                    <GridView chatProps={chatProps} />
+                </div>
             )}
         </>
     )
@@ -111,9 +117,11 @@ export default function AgentWorkspaceTabs({
 
 const GridView = ({ chatProps }: { chatProps: ChatProps }) => (
     <div className="h-full w-full flex flex-row gap-4">
-        <div className="flex flex-col flex-1">
+        <div className="w-full">
             <EditorWidget chatId={chatProps.id ?? null} />
         </div>
-        <TimelineWidget />
+        <div className="flex flex-1">
+            <TimelineWidget />
+        </div>
     </div>
 )

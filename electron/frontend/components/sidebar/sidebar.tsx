@@ -47,7 +47,7 @@ export default function Sidebar({
     setExpanded: Dispatch<SetStateAction<boolean>>
 }) {
     return (
-        <aside className="h-full flex flex-row">
+        <aside className="h-full flex flex-row bg-midnight">
             <nav className="h-full flex flex-col rounded-sm py-6 max-w-[280px] w-full">
                 <SidebarContext.Provider value={{ expanded }}>
                     <ul

@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { BACKEND_URL } from '@/lib/config'
 
 const BackendUrlContext = createContext('')
 
 export const BackendUrlProvider = ({ children }) => {
-    const [backendUrl, setBackendUrl] = useState('http://localhost:10001') // Default url to 8000
+    const [backendUrl, setBackendUrl] = useState(BACKEND_URL) // Default url to 8000
 
     useEffect(() => {
         const portHandler = port => {
@@ -24,11 +25,12 @@ export const BackendUrlProvider = ({ children }) => {
 }
 
 export const useBackendUrl = () => {
-    const context = useContext(BackendUrlContext)
-    if (context === null) {
-        throw new Error(
-            'useBackendUrl must be used within a BackendUrlProvider'
-        )
-    }
-    return context
+    // const context = useContext(BackendUrlContext)
+    // if (context === null) {
+    //     throw new Error(
+    //         'useBackendUrl must be used within a BackendUrlProvider'
+    //     )
+    // }
+    // return context
+    return BACKEND_URL
 }

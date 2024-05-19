@@ -13,15 +13,15 @@ const SidebarHeader = ({ expanded }: { expanded: boolean }) => {
             className={`flex flex-row ${expanded && 'border-b border-outline-day dark:border-outline-night mx-2'} pb-4 items-center justify-between`}
         >
             <>
-                <a href="/?chat=New" onClick={handleClick} className="flex">
+                <a href="/?chat=New" onClick={handleClick} className="flex mb-6">
                 </a>
-                <SelectProjectDirectoryModal
+                {/* <SelectProjectDirectoryModal
                     trigger={
                         <button className={expanded ? 'visible' : 'hidden'}>
                             <SquarePen size={20} className="text-primary" />
                         </button>
                     }
-                />
+                /> */}
             </>
         </div>
     )

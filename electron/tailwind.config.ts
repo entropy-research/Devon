@@ -22,6 +22,7 @@ const config: Config = {
       colors: {
         day: '#f2f2f2', // 'white' bg
         night: '#1e1e1e', // 'black' bg
+        midnight: '#111111', // 'black' bg
         batman: '#2c2c2c',
         outline: {
           day: '#f2f2f2',
@@ -32,7 +33,7 @@ const config: Config = {
         // input: {
         //   dark: '#484848',
         // },
-        primary: '#6041d1', // blue
+        primary: '#7656e8',
         'custom-blue': 'rgba(0,187,255,0.5)',
         input: 'var(--input)',
         // primary: {
@@ -72,6 +73,15 @@ const config: Config = {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
+      animation: {
+        pulse: 'pulse 4s infinite',
+      },
+      keyframes: {
+        pulse: {
+          '0%, 100%': { transform: 'scale(1)', opacity: '0.3' },
+          '50%': { transform: 'scale(0.3)', opacity: '0.6' },
+        },
       },
     },
   },

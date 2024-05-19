@@ -11,6 +11,7 @@ import useCreateResponse from '@/lib/services/sessionService/use-create-response
 import useInterruptSession from '@/lib/services/sessionService/use-interrupt-session'
 import { useSearchParams } from 'next/navigation'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
+import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 
 export function VercelInput({
     isAtBottom,
@@ -153,7 +154,9 @@ export function RegularInput({
     }
 
     return (
-        <div className={`relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}>
+        <div
+            className={`relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
+        >
             {(modelLoading || userRequested) && (
                 <InformationBox
                     modelLoading={modelLoading}
@@ -201,7 +204,7 @@ export function RegularInput({
                         <div className="relative">
                             <AutoresizeTextarea
                                 ref={inputRef}
-                                placeholder="Give Devon a task to work on ..."
+                                placeholder="Send a message to Devon ..."
                                 onFocus={handleFocus}
                                 onBlur={() => setFocused(false)}
                                 rows={1}
@@ -209,14 +212,14 @@ export function RegularInput({
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
                             />
-                            <button
+                            {/* <button
                                 onClick={toast}
                                 className="absolute left-[0.5rem] top-1/2 -translate-y-1/2 xl:left-[0.75rem] flex h-8 w-8 items-center justify-center rounded-md smooth-hover"
                             >
                                 <Paperclip
                                     className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}
                                 />
-                            </button>
+                            </button> */}
                             <button
                                 className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 xl:right-4"
                                 type="submit"
@@ -241,11 +244,9 @@ const InformationBox = ({ modelLoading, userRequested }) => {
     const types = {
         modelLoading: {
             text: 'Devon is working...',
-            color: 'bg-aqua',
         },
         userRequested: {
-            text: 'Devon is awaiting your response.',
-            color: 'bg-orange',
+            text: 'Devon is waiting for your response',
         },
     }
 
@@ -256,11 +257,9 @@ const InformationBox = ({ modelLoading, userRequested }) => {
             <div className="flex items-center gap-4">
                 <div className="relative flex justify-center items-center">
                     <div
-                        className={`w-7 h-7 rounded-full ${currentType.color} animate-pulse`}
+                        className={`absolute w-4 h-4 rounded-full bg-primary animate-pulse`}
                     ></div>
-                    <div
-                        className={`absolute w-4 h-4 rounded-full ${currentType.color} opacity-50`}
-                    ></div>
+                    <AtomLoader />
                 </div>
                 <p className="italic text-gray-400">{currentType.text}</p>
             </div>

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { useBackendUrl } from '@/contexts/BackendUrlContext';
+import { useBackendUrl } from '@/contexts/BackendUrlContext'
 // const backendUrl = useBackendUrl()
-const BACKEND_URL = 'http://localhost:10001' // TODO: Change this to the actual backend URL
+import { BACKEND_URL } from '@/lib/config'
 
 export const fetchSessionState = async sessionId => {
     const { data } = await axios.get(

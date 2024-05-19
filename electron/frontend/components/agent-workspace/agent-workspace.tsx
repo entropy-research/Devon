@@ -19,12 +19,18 @@ export default function AgentWorkspace({
     }
 }) {
     return (
-        <div className="h-full flex flex-col overflow-hidden">
-            <AgentWorkspaceTabs
-                viewMode={viewMode}
-                chatProps={chatProps}
-                visibilityProps={visibilityProps}
-            />
-        </div>
+        // <div className="h-full flex flex-col overflow-hidden w-full">
+        //     <AgentWorkspaceTabs
+        //         viewMode={viewMode}
+        //         chatProps={chatProps}
+        //         visibilityProps={visibilityProps}
+        //     />
+        // </div>
+
+         <AgentWorkspaceTabs
+             viewMode={viewMode}
+             chatProps={chatProps}
+             visibilityProps={visibilityProps}
+         />
     )
 }
