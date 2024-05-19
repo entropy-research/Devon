@@ -117,5 +117,4 @@ class LiteLLMModel:
                         **self.completion_kwargs
                     )
                 )
-                logger.info(f"Response: response.choices[0].message.content")
                 return response.choices[0].message.content + "</COMMAND>"
