@@ -1,6 +1,7 @@
 import json
 import logging
 from dataclasses import dataclass, field
+import traceback
 from typing import Optional, Tuple
 
 from devon_agent.model import AnthropicModel, ModelArguments, LiteLLMModel
@@ -11,9 +12,11 @@ from devon_agent.prompt import (
     parse_response,
     system_prompt_template_v3,
 )
+from devon_agent.tools.utils import get_cwd
 
 from devon_agent.udiff import Hallucination
-from devon_agent.utils import LOGGER_NAME, get_model_name_from_config
+from devon_agent.utils import LOGGER_NAME, DotDict, get_model_name_from_config
+
 from tenacity import RetryError
 
 from typing import TYPE_CHECKING
@@ -97,8 +100,11 @@ class TaskAgent(Agent):
                 )
             )
         try:
+            # print(session.state.editor)
+            # print(session.state.editor.PAGE_SIZE)
+            # print(session.state.editor.files)
             editor = self._convert_editor_to_view(
-                session.state.editor, session.state.PAGE_SIZE
+                session.state.editor.files, session.state.editor.PAGE_SIZE
             )
 
             self.chat_history.append(
@@ -143,7 +149,13 @@ class TaskAgent(Agent):
                 history = history_to_bash_history(self.chat_history)
 
             last_user_prompt = last_user_prompt_template_v3(
-                task, history, editor, session.environment.get_cwd(), session.base_path, self.scratchpad
+                task, history, editor, get_cwd(
+                    {
+                        "session" : session,
+                        "environment" : session.default_environment,
+                        "state" : session.state
+                    }
+                ), session.base_path, self.scratchpad
             )
 
             messages = [{"role": "user", "content": last_user_prompt}]
@@ -169,10 +181,10 @@ class TaskAgent(Agent):
                 if scratchpad:
                     self.scratchpad = scratchpad
             except Exception:
-                raise ValueError(f"Multiple actions found in response: {output}")
+                raise Hallucination(f"Multiple actions found in response: {output}")
             
             if not thought or not action:
-                raise ValueError("Agent failed to follow response format instructions")
+                raise Hallucination("Agent failed to follow response format instructions")
 
             self.chat_history.append(
                 {
@@ -200,6 +212,8 @@ SCRATCHPAD: {scratchpad}
             return thought, action, output
         except KeyboardInterrupt:
             raise
+        except Hallucination as e:
+            return "hallucination","hallucination","Incorrect response format"
         except RuntimeError as e:
             session.event_log.append(
                 {
@@ -239,6 +253,7 @@ SCRATCHPAD: {scratchpad}
                     "consumer": "none",
                 }
             )
+            traceback.print_exc()
             logger.error(f"Exception: {e}")
             return (
                 f"Exit due to exception: {e}",
@@ -291,7 +306,7 @@ You must respond in the following format:ONLY ONE COMMAND AT A TIME
         </OBSERVATION>"""
 
             self.history.append({"role": "user", "content": user_prompt_template})
-            logger.info(self.history[-1]["content"])
+            # logger.info(self.history[-1]["content"])
             output = self.current_model.query(self.history, system_prompt_template)
 
             thought, action = parse_response(output)
@@ -337,6 +352,9 @@ You must respond in the following format:ONLY ONE COMMAND AT A TIME
             try:
                 # assert output.count("<COMMAND>") == 1
                 # assert output.count("<THOUGHT>") == 1
+                output, done = self.parse_command_to_function(
+                    command_string=action
+                )
                 obs, done = env.step(action, thought)
             except AssertionError as e:
                 # logger.error(output)
