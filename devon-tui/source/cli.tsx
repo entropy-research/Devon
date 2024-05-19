@@ -72,35 +72,45 @@ if (input[0] === 'configure') {
     console.log('Configuring Devon CLI...');
   
     inquirer
-      .prompt([
-        {
-          type: 'list',
-          name: 'modelName',
-          message: 'Select the model name:',
-          choices: ['claude-opus', 'gpt4-o'],
-        },
-      ])
-      .then((answers) => {
-        const modelName = answers.modelName;
-        console.log(`Selected model name: ${modelName}`);
+    .prompt([
+      {
+        type: 'list',
+        name: 'modelName',
+        message: 'Select the model name:',
+        choices: ['claude-opus', 'gpt4-o', 'type your own choice'],
+      },
+    ])
+    .then(async (answers) => {
+      let modelName = answers.modelName;
+      if (modelName === 'type your own choice') {
+        const customAnswer = await inquirer.prompt([
+          {
+            type: 'input',
+            name: 'modelName',
+            default: 'groq/llama3-70b-8192',
+            message: 'Enter the model name:',
+          },
+        ]);
+        modelName = customAnswer.modelName;
+      }
+      console.log(`Selected model name: ${modelName}`);
   
-        // Save the selected model name to .devon.config file in the package directory
-        const packageDir = process.cwd();
-        const configPath = path.join(packageDir, '.devon.config');
-        const config = {
+      // Save the selected model name to .devon.config file in the package directory
+      const packageDir = process.cwd();
+      const configPath = path.join(packageDir, '.devon.config');
+      const config = {
         modelName,
-        };
-
-        fs.writeFile(configPath, JSON.stringify(config, null, 2), (err) => {
+      };
+  
+      fs.writeFile(configPath, JSON.stringify(config, null, 2), (err) => {
         if (err) {
-            console.error('Error saving configuration:', err);
+          console.error('Error saving configuration:', err);
         } else {
-            console.log('Configuration saved to', configPath);
+          console.log('Configuration saved to', configPath);
         }
         process.exit(0);
-        });
-        
       });
+    });
   } else {
   // Handle the start subcommand (default)
   // Handle the start subcommand (default)
