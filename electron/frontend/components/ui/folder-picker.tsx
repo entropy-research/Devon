@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
@@ -10,16 +11,18 @@ const FolderPicker = ({ folderPath, setFolderPath, disabled }) => {
         setFolderPath(e.target.value)
     }
 
-    window.api.receive('file-path-response', path => {
-        if (path === 'cancelled') {
-            console.log('Directory selection was cancelled.')
-        } else if (path === 'error') {
-            console.error('An error occurred during the directory selection.')
-        } else {
-            console.log('Selected directory:', path)
-            setFolderPath(path)
-        }
-    })
+    useEffect(() => {
+        window.api.receive('file-path-response', path => {
+            if (path === 'cancelled') {
+                console.log('Directory selection was cancelled.')
+            } else if (path === 'error') {
+                console.error('An error occurred during the directory selection.')
+            } else {
+                console.log('Selected directory:', path)
+                setFolderPath(path)
+            }
+        })
+    }, [])
 
     return (
         <div className="flex flex-col gap-3">
