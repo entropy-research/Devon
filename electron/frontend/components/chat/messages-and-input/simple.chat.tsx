@@ -39,7 +39,7 @@ export function SimpleChat({
     const path = usePathname()
     const [messages, setMessages] = useState<Message[]>([])
     const {
-        messagesRef,
+        // messagesRef,
         scrollRef,
         visibilityRef,
         isAtBottom,
@@ -99,12 +99,12 @@ export function SimpleChat({
     }, [toast, missingKeys])
 
     return (
-        <div className="flex flex-col flex-2 relative h-full" ref={scrollRef}>
+        <div className="flex flex-col flex-2 relative h-full overflow-y-auto" ref={scrollRef}>
             <div className="flex-1">
-                <div
-                    className={cn('pt-4 md:pt-10', className)}
+                {/* <div
+                    className={cn('pt-4 md:pt-10 bg-red-500', className)}
                     ref={messagesRef}
-                >
+                > */}
                     {/* <SessionEventsDisplay
                         sessionId={id}
                         setMessages={setMessages}
@@ -124,17 +124,17 @@ export function SimpleChat({
                     ) : (
                         <></>
                     )}
-                    {!viewOnly && <div className="h-[150px]"></div>}
-                    <div className="h-px w-full" ref={visibilityRef} />
-                </div>
+                    {/* {!viewOnly && <div className="h-[150px]"></div>} */}
+                    <div className="h-px w-full" ref={visibilityRef}></div>
+                {/* </div> */}
             </div>
             {/* {!viewOnly && ( */}
             <div className="sticky bottom-0 w-full">
                 <div className="bg-fade-bottom-to-top pt-20 overflow-hidden rounded-xl -mb-[1px]">
-                    <ButtonScrollToBottom
+                    {/* <ButtonScrollToBottom
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
-                    />
+                    /> */}
                     {/* <VercelInput
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}

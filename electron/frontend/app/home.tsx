@@ -62,7 +62,7 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                     <div className="w-full flex flex-row">
                         <div
                             // className={`transition-all duration-500 ${showPlanner ? 'w-1/2' : 'w-full'}`}
-                            className={`transition-all duration-500 w-full`}
+                            className={`transition-all duration-500 w-full flex justify-center`}
                         >
                             <Chat chatProps={chatProps} />
                         </div>

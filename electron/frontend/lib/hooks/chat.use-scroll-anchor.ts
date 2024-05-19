@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export const useScrollAnchor = () => {
-    const messagesRef = useRef<HTMLDivElement>(null)
+    // const messagesRef = useRef<HTMLDivElement>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
     const visibilityRef = useRef<HTMLDivElement>(null)
 
@@ -9,23 +9,47 @@ export const useScrollAnchor = () => {
     const [isVisible, setIsVisible] = useState(false)
 
     const scrollToBottom = useCallback(() => {
-        if (messagesRef.current) {
-            messagesRef.current.scrollIntoView({
-                block: 'end',
+        // if (messagesRef.current) {
+        //     console.log("here")
+        //     messagesRef.current.scrollIntoView({
+        //         block: 'center',
+        //         behavior: 'smooth',
+        //     })
+        // }
+        // if (scrollRef.current) {
+        //     scrollRef.current.scrollTo({
+        //         top: scrollRef.current.scrollHeight,
+        //         behavior: 'smooth',
+        //     })
+        // }
+        if (scrollRef.current) {
+            console.log('scrolloing')
+            scrollRef.current.scrollTo({
+                top: scrollRef.current.scrollHeight,
                 behavior: 'smooth',
             })
         }
     }, [])
 
+    // useEffect(() => {
+    //     if (messagesRef.current) {
+    //         if (isAtBottom && !isVisible) {
+    //             messagesRef.current.scrollIntoView({
+    //                 block: 'end',
+    //             })
+    //         }
+    //     }
+    // }, [isAtBottom, isVisible])
+
     useEffect(() => {
-        if (messagesRef.current) {
+        console.log('called')
+        if (scrollRef.current) {
+            console.log(isAtBottom, isVisible)
             if (isAtBottom && !isVisible) {
-                messagesRef.current.scrollIntoView({
-                    block: 'end',
-                })
+                scrollToBottom()
             }
         }
-    }, [isAtBottom, isVisible])
+    }, [isAtBottom, isVisible, scrollToBottom])
 
     useEffect(() => {
         const { current } = scrollRef
@@ -33,7 +57,7 @@ export const useScrollAnchor = () => {
         if (current) {
             const handleScroll = (event: Event) => {
                 const target = event.target as HTMLDivElement
-                const offset = 25
+                const offset = 100
                 const isAtBottom =
                     target.scrollTop + target.clientHeight >=
                     target.scrollHeight - offset
@@ -58,8 +82,10 @@ export const useScrollAnchor = () => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
                             setIsVisible(true)
+                            console.log('visible')
                         } else {
                             setIsVisible(false)
+                            console.log('not visible')
                         }
                     })
                 },
@@ -77,7 +103,7 @@ export const useScrollAnchor = () => {
     })
 
     return {
-        messagesRef,
+        // messagesRef,
         scrollRef,
         visibilityRef,
         scrollToBottom,

@@ -155,7 +155,7 @@ export function RegularInput({
 
     return (
         <div
-            className={`relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
+            className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
         >
             {(modelLoading || userRequested) && (
                 <InformationBox

@@ -77,7 +77,7 @@ export function ChatList2({
     }
 
     return (
-        <div className="relative max-w-2xl px-8">
+        <div className="relative px-8">
             {/* {!isShared && !session ? (
                 <>
                     <div className="group relative mb-4 flex items-start">
