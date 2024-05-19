@@ -17,7 +17,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.responses import StreamingResponse
 
-from devon_agent.utils import get_model_name_from_config
 LOGGER_NAME = "devon"
 
 logger = logging.getLogger(LOGGER_NAME)

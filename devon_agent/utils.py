@@ -14,15 +14,6 @@ logger.addHandler(stdout_handler)
 
 logger.setLevel(logging.DEBUG)
 
-def get_model_name_from_config(config_path=".devon.config"):
-    if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Config file {config_path} not found.")
-    
-    with open(config_path, "r") as file:
-        config = json.load(file)
-    
-    return config.get("modelName")
-
 class DotDict:
     """
     Wrapper class for accessing dictionary keys as attributes

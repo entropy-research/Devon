@@ -15,7 +15,7 @@ from devon_agent.prompt import (
 from devon_agent.tools.utils import get_cwd
 
 from devon_agent.udiff import Hallucination
-from devon_agent.utils import LOGGER_NAME, DotDict, get_model_name_from_config
+from devon_agent.utils import LOGGER_NAME, DotDict
 
 from tenacity import RetryError
 
@@ -33,7 +33,7 @@ logger = logging.getLogger(LOGGER_NAME)
 @dataclass(frozen=False)
 class Agent:
     name: str
-    model: str = get_model_name_from_config() or "anthropic"
+    model: str = DotDict.get("modelName")
     temperature: float = 0.0
     chat_history: list[dict[str, str]] = field(default_factory=list)
     interrupt: str = ""
@@ -95,7 +95,7 @@ class TaskAgent(Agent):
         else:
             self.current_model = LiteLLMModel(
                 args=ModelArguments(
-                    model_name=get_model_name_from_config(),
+                    model_name=self.model,
                     temperature=self.temperature,
                 )
             )
