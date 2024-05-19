@@ -19,7 +19,6 @@ export async function getChat(chatId: string) {
     //     return response.data
     // } catch (error) {
     //     console.error('Failed to get chat:', error)
-    //     console.log('bad chat')
     // }
 }
 

@@ -10,7 +10,6 @@ export const useScrollAnchor = () => {
 
     const scrollToBottom = useCallback(() => {
         // if (messagesRef.current) {
-        //     console.log("here")
         //     messagesRef.current.scrollIntoView({
         //         block: 'center',
         //         behavior: 'smooth',
@@ -23,7 +22,6 @@ export const useScrollAnchor = () => {
         //     })
         // }
         if (scrollRef.current) {
-            console.log('scrolloing')
             scrollRef.current.scrollTo({
                 top: scrollRef.current.scrollHeight,
                 behavior: 'smooth',
@@ -42,9 +40,7 @@ export const useScrollAnchor = () => {
     // }, [isAtBottom, isVisible])
 
     useEffect(() => {
-        console.log('called')
         if (scrollRef.current) {
-            console.log(isAtBottom, isVisible)
             if (isAtBottom && !isVisible) {
                 scrollToBottom()
             }
@@ -82,10 +78,8 @@ export const useScrollAnchor = () => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
                             setIsVisible(true)
-                            console.log('visible')
                         } else {
                             setIsVisible(false)
-                            console.log('not visible')
                         }
                     })
                 },

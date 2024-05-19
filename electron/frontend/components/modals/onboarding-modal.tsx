@@ -78,7 +78,7 @@ const OnboardingModal = ({
             <Dialog open={!initialized} onOpenChange={setInitialized}>
                 <DialogContent hideclose={true.toString()}>
                     <div className="flex flex-col items-center justify-center my-8 mx-8">
-                        <h1 className="text-4xl font-bold">
+                        <h1 className="text-3xl font-bold">
                             Welcome to Devon!
                         </h1>
                         <p className="text-md mt-3">Devon, not Devin</p>

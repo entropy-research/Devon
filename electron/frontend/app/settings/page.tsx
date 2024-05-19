@@ -6,7 +6,7 @@ import { useComingSoonToast } from '@/components/ui/use-toast'
 export default function Page() {
     const toast = useComingSoonToast()
     return (
-        <div className="dark:bg-batman rounded-lg h-full w-full flex flex-col py-5 px-[2rem]">
+        <div className="rounded-lg h-full w-full flex flex-col py-5 px-[2rem]">
             <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10 justify-start">
                 <div className="grid w-full max-w-6xl gap-2">
                     <h1 className="text-3xl font-semibold">Settings</h1>
@@ -20,7 +20,7 @@ export default function Page() {
                             General
                         </Link>
                         <Link
-                            className="text-lg font-semibold"
+                            className="text-lg font-semibold text-neutral-500"
                             href="#"
                             onClick={toast}
                         >

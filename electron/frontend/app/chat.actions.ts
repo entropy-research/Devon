@@ -52,10 +52,8 @@ export async function getChat2(id: string, userId: string) {
     // const messages = await loadMessages()
     // const chats = await readChats()
     const chats: Chat[] = await loadChatData()
-    // console.log('CHATS', chats)
     // const messages = []
     // const path = await fetchUserDataPath()
-    // console.log('path', path)
 
     const chat = chats.find(c => c.id === id)
 

@@ -65,7 +65,6 @@ export function VercelChat({
         // }
         // )
         const chat = getChatById('1').then(res => {
-            console.log('chat', res)
             const userId = '1'
             const chatId = '1'
             if (res === null) {

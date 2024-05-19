@@ -21,16 +21,9 @@ import { CircleHelp } from 'lucide-react'
 import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
 
 const General = () => {
+    const { toast } = useToast()
     const [hasAcceptedCheckbox, setHasAcceptedCheckbox, clearKey] =
         useLocalStorage<boolean>(LocalStorageKey.hasAcceptedCheckbox, false)
-    const { toast } = useToast()
-    const { saveData, deleteData, checkHasEncryptedData } = useSafeStorage()
-    const [key, setKey] = useState('')
-    const [hasEncryptedData, setHasEncryptedData] = useState(false)
-
-    useEffect(() => {
-        checkHasEncryptedData().then(setHasEncryptedData)
-    }, [checkHasEncryptedData])
 
     const handleLocalStorage = () => {
         clearKey()
@@ -39,49 +32,9 @@ const General = () => {
 
     return (
         <div className="grid gap-6">
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center">
-                        <CardTitle>Anthropic API Key</CardTitle>
-                        <Popover >
-                            <PopoverTrigger className="ml-2 mb-2">
-                                <CircleHelp size={20} />
-                            </PopoverTrigger>
-                            <SafeStoragePopoverContent />
-                        </Popover>
-                    </div>
-                    {!hasEncryptedData && (
-                        <CardDescription>Enter your API key</CardDescription>
-                    )}
-                </CardHeader>
-                <CardContent>
-                    {hasEncryptedData ? (
-                        <div className="flex gap-4">
-                            <Input
-                                type="password"
-                                value="**********************"
-                                disabled
-                            />
-                            <Button onClick={deleteData}>Delete API Key</Button>
-                        </div>
-                    ) : (
-                        <div className="flex gap-4 pb-2">
-                            <Input
-                                placeholder="API Key"
-                                type="password"
-                                value={key}
-                                onChange={e => setKey(e.target.value)}
-                            />
-                            {key.length > 0 && (
-                                <Button onClick={() => saveData(key)}>
-                                    Save
-                                </Button>
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-            <Card>
+            <APIKeyCard name="Anthropic API Key" />
+            <APIKeyCard name="OpenAI API Key" comingSoon />
+            <Card className="bg-midnight">
                 <CardHeader>
                     <CardTitle>Miscellaneous</CardTitle>
                 </CardHeader>
@@ -92,6 +45,77 @@ const General = () => {
                 </CardContent>
             </Card>
         </div>
+    )
+}
+
+const APIKeyCard = ({
+    name,
+    comingSoon = false,
+}: {
+    name: string
+    comingSoon?: boolean
+}) => {
+    const { saveData, deleteData, checkHasEncryptedData } = useSafeStorage()
+    const [key, setKey] = useState('')
+    const [hasEncryptedData, setHasEncryptedData] = useState(false)
+
+    useEffect(() => {
+        if (comingSoon) return
+        checkHasEncryptedData().then(setHasEncryptedData)
+    }, [checkHasEncryptedData])
+
+    return (
+        <Card className="bg-midnight">
+            <CardHeader>
+                <div className="flex items-center">
+                    <CardTitle>
+                        {name}
+                    </CardTitle>
+                    <Popover>
+                        <PopoverTrigger className="ml-2 mb-2">
+                            <CircleHelp size={20} />
+                        </PopoverTrigger>
+                        <SafeStoragePopoverContent />
+                    </Popover>
+                    {comingSoon && <p className="text-md px-3 text-neutral-500">(Coming soon!)</p>}
+                </div>
+                {!hasEncryptedData && (
+                    <CardDescription>Enter your API key</CardDescription>
+                )}
+            </CardHeader>
+            <CardContent>
+                {hasEncryptedData ? (
+                    <div className="flex gap-4">
+                        <Input
+                            type="password"
+                            value="**********************"
+                            disabled
+                        />
+                        <Button disabled={comingSoon} onClick={deleteData}>
+                            Delete API Key
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="flex gap-4 pb-2">
+                        <Input
+                            disabled={comingSoon}
+                            placeholder="API Key"
+                            type="password"
+                            value={key}
+                            onChange={e => setKey(e.target.value)}
+                        />
+                        {key.length > 0 && (
+                            <Button
+                                disabled={comingSoon}
+                                onClick={() => saveData(key)}
+                            >
+                                Save
+                            </Button>
+                        )}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     )
 }
 

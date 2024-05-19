@@ -507,8 +507,6 @@ export const AI = createAI<AIState, UIState>({
                 path,
             }
 
-            // console.log("SAVEEEDD!!!")
-
             await saveChat(chat)
         } else {
             return

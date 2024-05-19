@@ -13,6 +13,7 @@ import { useSearchParams } from 'next/navigation'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 
+
 export function VercelInput({
     isAtBottom,
     scrollToBottom,
@@ -132,12 +133,14 @@ export function RegularInput({
     const [openProjectModal, setOpenProjectModal] = useState(false)
 
     async function submitUserMessage(value: string) {
+        const chatId = searchParams.get('chat')
+
         // Distinguish between user request vs interrupt
         if (userRequested) {
             setUserRequested(false)
-            return createResponse(sessionId, value)
+            return createResponse(chatId, value)
         }
-        return interruptSession(sessionId, value)
+        return interruptSession(chatId, value)
     }
 
     function checkShouldOpenModal() {
