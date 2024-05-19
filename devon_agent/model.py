@@ -14,6 +14,7 @@ class ModelArguments:
     temperature: float = 1.0
     top_p: float = 1.0
     api_key: Optional[str] = None
+    api_base: Optional[str] = None
 
 
 class HumanModel:
@@ -21,6 +22,7 @@ class HumanModel:
         self.args = args
         self.api_key = os.environ.get("ANTHROPIC_API_KEY")
         self.model = Anthropic(api_key=self.api_key)
+ 
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         thought = ""
@@ -86,3 +88,27 @@ class AnthropicModel:
                     time.sleep(sleep_time)
                     retries += 1
 
+    class LiteLLMModel:
+        def __init__(self, args: ModelArguments):
+            self.args = args
+            self.completion_kwargs = {
+                "model": args.model_name,
+                "temperature": args.temperature,
+                "max_tokens": args.model_metadata["max_tokens"] or 1024,
+            }
+            
+            if args.api_key is not None and args.api_base is not None:
+                self.completion_kwargs["api_key"] = args.api_key
+                self.completion_kwargs["api_base"] = args.api_base
+
+        def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
+                    if system_message:
+                        messages.insert(0, {"role": "system", "content": system_message})
+                    response = (
+                        self.api.messages.create(
+                            messages=messages,
+                            stop=["</COMMAND>"],
+                            **self.completion_kwargs
+                        )
+                    )
+                    return response.content[0].text + "</COMMAND>"
