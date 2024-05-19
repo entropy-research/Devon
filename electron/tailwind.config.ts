@@ -81,7 +81,7 @@ const config: Config = {
       },
       keyframes: {
         pulse: {
-          '0%, 100%': { transform: 'scale(1)', opacity: '0.3' },
+          '0%, 100%': { transform: 'scale(1)', opacity: '0.4' },
           '50%': { transform: 'scale(0.3)', opacity: '0.6' },
         },
         "accordion-down": {

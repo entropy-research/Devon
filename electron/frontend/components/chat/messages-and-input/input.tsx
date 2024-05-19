@@ -260,7 +260,7 @@ const InformationBox = ({ modelLoading, userRequested }) => {
             <div className="flex items-center gap-4">
                 <div className="relative flex justify-center items-center">
                     <div
-                        className={`absolute w-4 h-4 rounded-full bg-primary animate-pulse`}
+                        className={`absolute w-4 h-4 rounded-full bg-primary animate-pulse blur-sm`}
                     ></div>
                     <AtomLoader />
                 </div>
