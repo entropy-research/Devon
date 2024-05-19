@@ -1,5 +1,5 @@
 import datetime
-import logging
+
 import os
 from dataclasses import dataclass
 import time
@@ -10,8 +10,6 @@ import anthropic
 
 import litellm
 
-LOGGER_NAME = "devon"
-logger = logging.getLogger(LOGGER_NAME)
 
 @dataclass(frozen=False)
 class ModelArguments:
