@@ -52,15 +52,15 @@ export default function CodeEditor({
 
     if (!selectedFileId || !chatId || chatId === 'New') {
         return (
-            <>
-                <FileTabs
+            <div className="flex flex-col">
+                {/* <FileTabs
                     files={[boilerplateFile]}
                     selectedFileId={boilerplateFile.id}
                     updateSelectedFile={updateSelectedFile}
                     diffEnabled={diffEnabled}
                     setDiffEnabled={setDiffEnabled}
                     chatId={chatId}
-                />
+                /> */}
                 <div className="w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
                     {boilerplateFile && (
                         <BothEditorTypes
@@ -70,7 +70,7 @@ export default function CodeEditor({
                         />
                     )}
                 </div>
-            </>
+            </div>
         )
     }
 
@@ -105,15 +105,15 @@ export default function CodeEditor({
 
     return (
         <>
-            <FileTabs
+            {/* <FileTabs
                 files={files}
                 selectedFileId={selectedFileId}
                 updateSelectedFile={updateSelectedFile}
                 diffEnabled={diffEnabled}
                 setDiffEnabled={setDiffEnabled}
                 chatId={chatId}
-            />
-            <div className="w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
+            /> */}
+            <div className="flex w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
                 {file && (
                     <BothEditorTypes
                         diffEnabled={diffEnabled}
