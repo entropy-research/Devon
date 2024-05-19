@@ -1,12 +1,17 @@
 import datetime
+import logging
 import os
 from dataclasses import dataclass
 import time
-from typing import Optional
+from typing import Any, Optional
 
 from anthropic import Anthropic
 import anthropic
 
+import litellm
+
+LOGGER_NAME = "devon"
+logger = logging.getLogger(LOGGER_NAME)
 
 @dataclass(frozen=False)
 class ModelArguments:
@@ -15,6 +20,7 @@ class ModelArguments:
     top_p: float = 1.0
     api_key: Optional[str] = None
     api_base: Optional[str] = None
+    model_metadata: Optional[dict[str, Any]] = None
 
 
 class HumanModel:
@@ -88,27 +94,28 @@ class AnthropicModel:
                     time.sleep(sleep_time)
                     retries += 1
 
-    class LiteLLMModel:
-        def __init__(self, args: ModelArguments):
-            self.args = args
-            self.completion_kwargs = {
-                "model": args.model_name,
-                "temperature": args.temperature,
-                "max_tokens": args.model_metadata["max_tokens"] or 1024,
-            }
-            
-            if args.api_key is not None and args.api_base is not None:
-                self.completion_kwargs["api_key"] = args.api_key
-                self.completion_kwargs["api_base"] = args.api_base
+class LiteLLMModel:
+    def __init__(self, args: ModelArguments):
+        self.args = args
+        self.completion_kwargs = {
+            "model": args.model_name,
+            "temperature": args.temperature,
+            "max_tokens": 1024, #TODO: make this dynamic
+        }
+        
+        if args.api_key is not None and args.api_base is not None:
+            self.completion_kwargs["api_key"] = args.api_key
+            self.completion_kwargs["api_base"] = args.api_base
 
-        def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
-                    if system_message:
-                        messages.insert(0, {"role": "system", "content": system_message})
-                    response = (
-                        self.api.messages.create(
-                            messages=messages,
-                            stop=["</COMMAND>"],
-                            **self.completion_kwargs
-                        )
+    def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
+                if system_message:
+                    messages.insert(0, {"role": "system", "content": system_message})
+                response = (
+                    litellm.completion(
+                        messages=messages,
+                        stop=["</COMMAND>"],
+                        **self.completion_kwargs
                     )
-                    return response.content[0].text + "</COMMAND>"
+                )
+                logger.info(f"Response: response.choices[0].message.content")
+                return response.choices[0].message.content + "</COMMAND>"

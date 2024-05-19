@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
 
-from devon_agent.model import AnthropicModel, ModelArguments
+from devon_agent.model import AnthropicModel, ModelArguments, LiteLLMModel
 from devon_agent.prompt import (
     commands_to_command_docs,
     history_to_bash_history,
@@ -13,7 +13,7 @@ from devon_agent.prompt import (
 )
 
 from devon_agent.udiff import Hallucination
-from devon_agent.utils import LOGGER_NAME
+from devon_agent.utils import LOGGER_NAME, get_model_name_from_config
 from tenacity import RetryError
 
 from typing import TYPE_CHECKING
@@ -30,11 +30,12 @@ logger = logging.getLogger(LOGGER_NAME)
 @dataclass(frozen=False)
 class Agent:
     name: str
-    model: str
+    model: str = get_model_name_from_config() or "anthropic"
     temperature: float = 0.0
     chat_history: list[dict[str, str]] = field(default_factory=list)
     interrupt: str = ""
     api_key: Optional[str] = None
+    api_base: Optional[str] = None
     scratchpad = None
 
     def run(self, session: "Session", observation: str = None): ...
@@ -80,13 +81,21 @@ class TaskAgent(Agent):
             observation = observation + ". also " + self.interrupt
             self.interrupt = ""
 
-        self.current_model = AnthropicModel(
-            args=ModelArguments(
-                model_name=self.model,
-                temperature=self.temperature,
-                api_key=self.api_key,
+        if self.model == "anthropic":
+            self.current_model = AnthropicModel(
+                args=ModelArguments(
+                    model_name=self.model,
+                    temperature=self.temperature,
+                    api_key=self.api_key,
+                )
             )
-        )
+        else:
+            self.current_model = LiteLLMModel(
+                args=ModelArguments(
+                    model_name=get_model_name_from_config(),
+                    temperature=self.temperature,
+                )
+            )
         try:
             editor = self._convert_editor_to_view(
                 session.state.editor, session.state.PAGE_SIZE

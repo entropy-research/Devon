@@ -33,6 +33,7 @@ datasets = {version = ">=2.14.6,<2.15.0", optional = true}
 click = "^8.1.7"
 posthog = "^3.5.0"
 
+litellm = "^1.37.16"
 [tool.poetry.extras]
 swebench = ["swebench", "datasets", "gymnasium"]
 

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import json
 import os
 from time import sleep
@@ -15,6 +16,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 from fastapi.responses import StreamingResponse
+
+from devon_agent.utils import get_model_name_from_config
+LOGGER_NAME = "devon"
+
+logger = logging.getLogger(LOGGER_NAME)
 
 # API
 # SESSION
@@ -86,13 +92,14 @@ def read_session():
 def create_session(session: str, path: str):
     if not os.path.exists(path):
         raise fastapi.HTTPException(status_code=404, detail="Path not found")
-
+    logger.info(f"Creating session {session}")
     agent = TaskAgent(
         name="Devon",
-        model="claude-opus",
+        model=get_model_name_from_config() or "claude-opus",
         temperature=0.0,
         api_key=API_KEY,
     )
+    logger.info(f"Model: {agent.model}")
     sessions[session] = Session(
         SessionArguments(
             path,
@@ -167,7 +174,6 @@ def continue_session(session: str):
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    print(session_obj.state)
     return session_obj.state.to_dict()
 
 
