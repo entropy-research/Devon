@@ -18,7 +18,7 @@ class ModelArguments:
     top_p: float = 1.0
     api_key: Optional[str] = None
     api_base: Optional[str] = None
-    model_metadata: Optional[dict[str, Any]] = None
+    max_tokens: Optional[int] = 1024
 
 
 class HumanModel:
@@ -98,7 +98,7 @@ class LiteLLMModel:
         self.completion_kwargs = {
             "model": args.model_name,
             "temperature": args.temperature,
-            "max_tokens": 1024, #TODO: make this dynamic
+            "max_tokens": args.max_tokens
         }
         
         if args.api_key is not None and args.api_base is not None:
