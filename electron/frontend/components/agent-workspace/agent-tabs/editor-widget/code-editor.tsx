@@ -50,7 +50,7 @@ export default function CodeEditor({
         monaco.editor.setTheme('theme')
     }
 
-    if (!chatId || chatId === 'New') {
+    if (!selectedFileId || !chatId || chatId === 'New') {
         return (
             <>
                 <FileTabs
@@ -74,13 +74,13 @@ export default function CodeEditor({
         )
     }
 
-    if (!file || !selectedFileId || !files) {
-        return (
-            <p className="text-lg flex justify-center items-center h-full w-full">
-                Loading...
-            </p>
-        )
-    }
+    // if (!file || !selectedFileId || !files) {
+    //     return (
+    //         <p className="text-lg flex justify-center items-center h-full w-full">
+    //             Loading...
+    //         </p>
+    //     )
+    // }
 
     function updateSelectedFile(file: any) {
         setFile(file)

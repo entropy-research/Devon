@@ -48,7 +48,7 @@ const AgentWorkspaceHeader = ({
                 </button>
             </div>
             <div className="flex flex-row gap-2 items-center ">
-                <p className="text-lg font-semibold">
+                <p className="text-md font-semibold">
                     {value ? 'Dev Mode' : 'Observe Mode'}
                 </p>
                 <Switch checked={value} onCheckedChange={onChange} />
