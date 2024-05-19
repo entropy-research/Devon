@@ -18,14 +18,6 @@ def server(port, key):
 
     import sys
 
-    if key is None:
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            print(
-                "Please set the ANTHROPIC_API_KEY environment variable to use the Devon Agent."
-            )
-            sys.exit(1)
-    else:
-        os.environ["ANTHROPIC_API_KEY"] = key
     uvicorn.run(app, host="0.0.0.0", port=port)
 
 
