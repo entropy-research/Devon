@@ -84,10 +84,10 @@ export default function AgentWorkspaceTabs({
                 //         <TimelineWidget />
                 //     </div>
                 // </div>
-                <>
+                <div className="flex px-5 gap-5">
                     {showPlanner && <PlannerWidget />}
                     {showTimeline && <TimelineWidget />}
-                </>
+                </div>
             ) : (
                 <div className="flex gap-5 w-full h-full justify-around pr-5 flex-1">
                     <GridView chatProps={chatProps} />
