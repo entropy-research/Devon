@@ -107,8 +107,8 @@ devon --help
 - Multi-model support
   - [x] Claude 3 Opus
   - [x] GPT4-o
-  - [x] Grok
-  - [ ] Ollama
+  - [x] Groq llama3-70b
+  - [ ] Ollama llama3-70b + 7b
 - Launch plugin system for tool and agent builders
 - Create self-hostable Electron app
 - Set SOTA on [SWE-bench Lite](https://www.swebench.com/lite.html)
