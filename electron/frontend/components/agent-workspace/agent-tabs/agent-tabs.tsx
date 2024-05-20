@@ -85,7 +85,8 @@ export default function AgentWorkspaceTabs({
                 //     </div>
                 // </div>
                 <div className="flex px-5 gap-5">
-                    {showPlanner && <PlannerWidget />}
+                    {/* {showPlanner && <PlannerWidget />} */}
+                    <EditorWidget chatId={chatProps.id ?? null} />
                     {showTimeline && <TimelineWidget />}
                 </div>
             ) : (

@@ -72,6 +72,7 @@ export function SimpleChat({
                         setUserRequested,
                         setModelLoading
                     )
+                    console.log('parsed,', parsedMessages)
                     setMessages(parsedMessages)
                 })
                 .catch(error => {

@@ -20,6 +20,7 @@ const useCreateSession = () => {
                 `${backendUrl}/session?session=${encodeURIComponent(_id)}&path=${encodeURIComponent(path)}`,
                 {}
             )
+            console.log('creating', response)
             setSessionId(response.data)
             return response.data
         } catch (err) {

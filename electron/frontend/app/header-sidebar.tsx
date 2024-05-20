@@ -9,7 +9,7 @@ const HeaderSidebar = () => {
 
     return (
         <>
-            <div className="flex w-full absolute top-0 p-4 items-center gap-2">
+            <div className="flex w-full absolute top-0 px-4 pt-3 items-center gap-2">
                 <button onClick={() => setExpanded(!expanded)} className="p-2">
                     <PanelsTopLeft size="1.4rem"/>
                 </button>
@@ -21,10 +21,10 @@ const HeaderSidebar = () => {
                         <button
                             className={`ml-[82px] p-2 ${expanded ? 'visible' : 'hidden'}`}
                         >
-                            <SquarePen size="1.4rem" className="text-primary" />
+                            <SquarePen size="1.3rem" className="text-primary" />
                         </button>
                     }
-                    header={<h1 className="text-3xl font-bold mb-5">Create new chat</h1>}
+                    header={<h1 className="text-2xl font-bold mb-5">Create new chat</h1>}
                 />
             </div>
             <Sidebar expanded={expanded} setExpanded={setExpanded} />

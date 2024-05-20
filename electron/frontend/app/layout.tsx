@@ -24,7 +24,7 @@ export default function RootLayout({
                 <main className="flex h-full flex-row overflow-hidden">
                     <div className="relative w-full overflow-hidden bg-day transition-colors duration-200 dark:bg-night md:flex">
                         <HeaderSidebar />
-                        <div className="mt-[72px] flex flex-row w-full">
+                        <div className="mt-[56px] flex flex-row w-full">
                             {children}
                         </div>
                     </div>

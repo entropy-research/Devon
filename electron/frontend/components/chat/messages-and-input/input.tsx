@@ -134,7 +134,7 @@ export function RegularInput({
 
     async function submitUserMessage(value: string) {
         const chatId = searchParams.get('chat')
-
+        console.log('userRequested', userRequested)
         // Distinguish between user request vs interrupt
         if (userRequested) {
             setUserRequested(false)

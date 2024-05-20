@@ -52,11 +52,13 @@ export default function CodeEditor({
                     chatId={chatId}
                 /> */}
                 <div className="w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
-                    {file && <BothEditorTypes
-                        diffEnabled={diffEnabled}
-                        file={file}
-                        handleEditorDidMount={handleEditorDidMount}
-                    />}
+                    {file && (
+                        <BothEditorTypes
+                            diffEnabled={diffEnabled}
+                            file={file}
+                            handleEditorDidMount={handleEditorDidMount}
+                        />
+                    )}
                 </div>
             </>
         )

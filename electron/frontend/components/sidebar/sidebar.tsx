@@ -48,7 +48,7 @@ export default function Sidebar({
 }) {
     return (
         <aside className="h-full flex flex-row bg-midnight">
-            <nav className="h-full flex flex-col rounded-sm py-6 max-w-[280px] w-full">
+            <nav className="h-full flex flex-col rounded-sm py-4 max-w-[280px] w-full">
                 <SidebarContext.Provider value={{ expanded }}>
                     <ul
                         className={`flex-1 flex flex-col justify-between ${expanded ? 'px-3' : 'px-0 mx-0 w-0 items-center'}`}

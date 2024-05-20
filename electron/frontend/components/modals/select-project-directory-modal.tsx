@@ -94,7 +94,7 @@ export const SelectProjectDirectoryComponent = ({
 }) => {
     return (
         <div className={`flex flex-col ${className ?? ''}`}>
-            <p className="text-xl font-bold mb-4">
+            <p className="text-lg font-bold mb-4">
                 Select your project directory
             </p>
             <FolderPicker

@@ -4,6 +4,7 @@ import { CodeEditorContextProvider } from '@/contexts/CodeEditorContext'
 import { ChatProps } from '@/lib/chat.types'
 import { fetchSessionState } from '@/lib/services/sessionService/use-session-state'
 import FileTree from './file-tree/file-tree'
+import ShellWidget from '@/components/agent-workspace/agent-tabs/shell-widget'
 
 const boilerplateFile = {
     id: 'main.py',
@@ -69,12 +70,17 @@ const EditorWidget = ({
 
     return (
         <CodeEditorContextProvider tabFiles={files}>
-            <div className="flex flex-row h-full pl-5">
-                <div className="flex-none w-48">
+            <div className="flex flex-row h-full w-full pr-[2px]">
+                <div className="flex-none w-48 bg-midnight">
                     <FileTree />
                 </div>
-                <div className="flex-grow">
-                    <CodeEditor isExpandedVariant={isExpandedVariant} />
+                <div className="flex-grow w-full h-full">
+                    <div className="h-2/3 -mr-[13px]">
+                        <CodeEditor isExpandedVariant={isExpandedVariant} />
+                    </div>
+                    <div className="">
+                    <ShellWidget />
+                    </div>
                 </div>
             </div>
         </CodeEditorContextProvider>

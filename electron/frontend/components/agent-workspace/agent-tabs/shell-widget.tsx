@@ -145,10 +145,10 @@ function Terminal({ messages }): JSX.Element {
     return (
         <div className="h-full flex flex-col">
             <div className="flex items-center justify-start">
-            {[{ id: 1, name: 'default' }].map(file => (
+            {[{ id: 1, name: 'Terminal' }].map(file => (
                 <button
                     key={file.id}
-                    className={`bg-black px-5 py-3 text-md border-t-4 min-w-[150px] ${file.id === 1 ? 'border-t-aqua outline outline-gray-500 outline-[1.5px] rounded-t-lg' : 'border-transparent'}`}
+                    className={`bg-black px-1 pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 1 ? 'border-t-primary outline outline-neutral-500 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
                     // onClick={() => updateSelectedFile(file)}
                 >
                     {file.name}

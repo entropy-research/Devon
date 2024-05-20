@@ -1,10 +1,17 @@
 'use client'
-import { NotebookPen, GitPullRequest } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import {
+    NotebookPen,
+    GitPullRequest,
+    LayoutPanelLeft,
+    Columns2,
+} from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
-import { useState } from 'react'
 import { useComingSoonToast } from '@/components/ui/use-toast'
+import { ViewMode } from '@/lib/types'
 
 const AgentWorkspaceHeader = ({
+    viewMode,
     toggleViewMode,
     visibilityProps: {
         showPlanner,
@@ -13,6 +20,7 @@ const AgentWorkspaceHeader = ({
         setShowTimeline,
     },
 }: {
+    viewMode: ViewMode
     toggleViewMode: () => void
     visibilityProps: {
         showPlanner: boolean
@@ -30,28 +38,43 @@ const AgentWorkspaceHeader = ({
         setValue(!value)
         toggleViewMode()
     }
+    useEffect(() => {}, [value])
 
     return (
-        <div className="absolute z-10 right-10 top-5 flex gap-5 items-center">
-            <div className="flex gap-3">
-                <button
+        <div className="absolute z-10 right-10 top-2 flex gap-2 items-center h-10">
+            {showTimeline && (
+                <div className="flex gap-3">
+                    {/* <button
                     onClick={() => setShowPlanner(!showPlanner)}
                     className={`w-10 h-10 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${showPlanner ? 'bg-gray-100 dark:bg-batman' : ''}`}
                 >
                     <NotebookPen className="w-5 h-5" />
-                </button>
-                <button
-                    onClick={() => setShowTimeline(!showTimeline)}
-                    className={`w-10 h-10 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${showTimeline ? 'bg-gray-100 dark:bg-batman' : ''}`}
-                >
-                    <GitPullRequest className="w-5 h-5" />
-                </button>
-            </div>
-            <div className="flex flex-row gap-2 items-center ">
+                </button> */}
+                    <button
+                        onClick={toggleViewMode}
+                        // className={`flex p-2 items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${viewMode === ViewMode.Panel ? 'bg-gray-100 dark:bg-batman' : ''}`}
+                        className={`flex p-2 items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman`}
+                    >
+                        {viewMode === ViewMode.Panel ? (
+                            <Columns2 size="1.4rem" />
+                        ) : (
+                            <LayoutPanelLeft size="1.3rem" />
+                        )}
+                    </button>
+                </div>
+            )}
+            {/* <div className="flex flex-row gap-2 items-center ">
                 <p className="text-md font-semibold">
                     {value ? 'Dev Mode' : 'Observe Mode'}
                 </p>
                 <Switch checked={value} onCheckedChange={onChange} />
+            </div> */}
+            <div className="flex flex-row gap-2 items-center ">
+                <p className="text-md font-semibold">Show Timeline</p>
+                <Switch
+                    checked={showTimeline}
+                    onCheckedChange={() => setShowTimeline(!showTimeline)}
+                />
             </div>
         </div>
     )
