@@ -22,7 +22,10 @@ https://github.com/entropy-research/Devon/assets/61808204/d42a8b9a-0211-4624-980
 
 1. `node.js` and `npm`
 2. `pipx`, if you don't have this go [here](https://pipx.pypa.io/stable/installation/)
-3. [**Anthropic**](https://console.anthropic.com/settings/keys) API Key or [**OpenAI**](https://platform.openai.com/api-keys) API key or [**Groq**](https://console.groq.com/keys) API key
+3. API Key <samp>(just one is required)</samp>
+   - [**Anthropic**](https://console.anthropic.com/settings/keys)
+    - [**OpenAI**](https://platform.openai.com/api-keys)
+    - [**Groq**](https://console.groq.com/keys)
 > We're currently working on supporting Windows!
 
 ## Installation commands
@@ -102,6 +105,10 @@ devon --help
 
 ### Current goals
 - Multi-model support
+  - [x] Claude 3 Opus
+  - [x] GPT4-o
+  - [x] Grok
+  - [ ] Ollama
 - Launch plugin system for tool and agent builders
 - Create self-hostable Electron app
 - Set SOTA on [SWE-bench Lite](https://www.swebench.com/lite.html)
