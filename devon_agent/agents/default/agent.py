@@ -5,12 +5,14 @@ from dataclasses import dataclass, field
 import traceback
 from typing import Optional, Tuple
 
-from devon_agent.agents.model import AnthropicModel, ModelArguments, OpenAiModel
+from devon_agent.agents.model import AnthropicModel, GroqModel, ModelArguments, OpenAiModel
 from devon_agent.agents.default.anthropic_prompts import anthropic_history_to_bash_history, anthropic_last_user_prompt_template_v3, anthropic_system_prompt_template_v3, anthropic_commands_to_command_docs
 from devon_agent.agents.default.openai_prompts import openai_last_user_prompt_template_v3, openai_system_prompt_template_v3, openai_commands_to_command_docs
 from devon_agent.agents.default.anthropic_prompts import (
     parse_response
 )
+from devon_agent.agents.default.llama3_prompts import llama3_commands_to_command_docs, llama3_history_to_bash_history, llama3_last_user_prompt_template_v1, llama3_parse_response, llama3_system_prompt_template_v1
+
 from devon_agent.tools.utils import get_cwd
 
 from devon_agent.udiff import Hallucination
@@ -42,7 +44,8 @@ class Agent:
 class TaskAgent(Agent):
     supported_models = {
         "gpt4-o": OpenAiModel,
-        "claude-opus": AnthropicModel
+        "claude-opus": AnthropicModel,
+        "llama-3-70b": GroqModel
     }
 
     def _format_editor_entry(self, k, v, PAGE_SIZE=50):
@@ -178,14 +181,38 @@ class TaskAgent(Agent):
                 )
 
                 messages = history + [{"role": "user", "content": last_user_prompt}]
+            elif self.model == "llama-3-70b":  
+                time.sleep(3)
+            
+                command_docs = (
+                    "Custom Commands Documentation:\n"
+                    + llama3_commands_to_command_docs(
+                        command_docs
+                    )
+                    + "\n"
+                )
 
+                history = llama3_history_to_bash_history(self.chat_history)
+                system_prompt = llama3_system_prompt_template_v1(command_docs)
+                last_user_prompt = llama3_last_user_prompt_template_v1(
+                    task, history, editor, get_cwd(
+                        {
+                            "session" : session,
+                            "environment" : session.default_environment,
+                            "state" : session.state
+                        }
+                    ), session.base_path, self.scratchpad
+                )
+
+                messages = [{"role": "user", "content": last_user_prompt}]
+            
             output = self.current_model.query(messages, system_message=system_prompt)
 
             thought = None
             action = None
 
             try:
-                thought, action, scratchpad = parse_response(output)
+                thought, action, scratchpad = llama3_parse_response(output)
                 if scratchpad:
                     self.scratchpad = scratchpad
             except Exception:
