@@ -565,7 +565,7 @@ class ScrollDownTool(Tool):
         else:
             new_page_number = old_page_number + 1
 
-        ctx["state"].editor.file[abs_path]["page"] = new_page_number
+        ctx["state"].editor.files[abs_path]["page"] = new_page_number
 
         return f"Scrolled down in file {abs_path} to line {ctx['state'].editor.PAGE_SIZE * new_page_number}"
 
