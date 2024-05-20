@@ -78,6 +78,11 @@ To run in *debug* mode, the command is:
 devon --debug
 ```
 
+For a list of all commands available:
+```bash
+devon --help
+```
+
 # Features
 - Multi-file editing
 - Codebase exploration
@@ -112,6 +117,7 @@ devon --debug
 
 ### Past milestones
 
+- [x] **May 19, 2024** - GPT4o support + better interface support v0.1.7
 - [x] **May 10, 2024** - Complete interactive agent v0.1.0
 - [x] **May 10, 2024** - Add steerability features
 - [x] **May 8, 2024** - Beat AutoCodeRover on SWE-Bench Lite
