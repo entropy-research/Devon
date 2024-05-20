@@ -24,59 +24,95 @@ system_prompts = {
 
 user_prompts = {
     'phi3': dedent("""
-
+    We are solving the following issue within our repository:
+    ISSUE:
+    {issue}
+    
+    EDITOR:
+    {editor}
+    
+    SCRATCHPAD:
+    {scratchpad}
+    
+    INSTRUCTIONS:
+    Your job is to solve the ISSUE with the COMMANDS you were provided.
+    When you have solved the ISSUE you can submit your changes to the repository code base by running submit command.
+    You only have access to files in {root_dir}
+    
+    NOTE ABOUT THE EDIT COMMAND: 
+    Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
+    
+    IMPORTANT:
+    1.  Always start by trying to replicate the bug that the issues discusses. 
+        If the issue includes code for reproducing the bug, we recommend that you re-implement that in your environment,
+        run it to make sure you can reproduce the bug.
+        Then proceed to fix it, when you are done re-run the bug reproduction script to make sure that the bug is fixed.
+        If the bug reproduction script do not print anything when it successfully runs, we recommend adding the follow
+        print("Script completed successfully, no errors.") command at the end of the file, so that you can be sure that 
+        the script indeed ran fine all the way through. 
+    
+    2.  If you run a command and it doesn't work, try running a different command. A command that did not work once will 
+        not work the second time unless you modify it!
+    
+    3.  If you open a file and need to get to an area around a specific line that is not in the first 100 lines, for 
+        example line 583, do not just use the scroll_down command multiple times. Use the goto 583 command.
+    
+    4.  If the bug reproduction script requires inputting/reading a specific file, such as buggy-input.png, and you'd 
+        like to understand how to input that file, conduct a search in the existing repo code, to see whether someone 
+        else has already done that. Do this by running the command: find_file "buggy-input.png" If that doesn't work, 
+        use the linux 'find' command.
+    
+    5.  Always make sure to look at the currently open file and the current working directory (which appears right after
+     the currently open file). The currently open file might be in a different directory than the working directory! 
+     Note that some commands, such as 'create', open files, so they might change the current  open file.
+    
+    6. When editing files, it is easy to accidentally specify a wrong line number or to write code with incorrect 
+    indentation. Always check the code after you issue an edit to make sure that it reflects what you wanted to 
+    accomplish. If it didn't, issue another command to fix it.
+    
+    (Current directory: {cwd})
+    bash-$
     """),
     # add mistral, llama3, gemma etc.
 }
 
 
-# command docs is generated in agent.py and has the following format
-# command["signature"]
-# command["docstring"]
-# Example:
-# NAME
-#     search_dir - search for a term in all files in a directory
-#
-#     SYNOPSIS
-#             search_dir [SEARCH_TERM] [DIR]
-#
-#     DESCRIPTION
-#             The search_dir command searches for SEARCH_TERM in all files in the specified DIR.
-#             If DIR is not provided, it searches in the current directory.
-#             Does not search for files but for the content of the files.
-#
-#     OPTIONS
-#             ...
-#     RETURN VALUE
-#             ...
-#     EXAMPLES
-#             ...
-
-
 def ollama_system_prompt_template(model: str,
                                   command_docs: str):
-    """"""
+    """Returns system prompt for specified model"""
+    if model not in system_prompts.keys():
+        raise NotImplementedError(f'Model {model} not available.')
     return system_prompts[model].format(command_docs=command_docs)
 
 
 def ollama_user_prompt_template(model: str,
                                 issue: str, editor: str, cwd: str, root_dir: str, scratchpad: str):
-    """"""
-    return user_prompts[model]
+    """Returns user prompt for specified model"""
+    if model not in user_prompts.keys():
+        raise NotImplementedError(f'Model {model} not available.')
+
+    template = user_prompts[model].replace('{issue}', issue)
+    template = template.replace('{editor}', editor)
+    template = template.replace('{scratchpad}', scratchpad)
+    template = template.replace('{root_dir}', root_dir)
+    template = template.replace('{cwd}', cwd)
+    return template
 
 
 # TODO:
 #   the following commands are common to all prompt classes,
 #   could be abstracted with a Prompt class in future
 def parse_response(response):
-    thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
-    action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
-    scratchpad = None
-    if "<SCRATCHPAD>" in response:
-        scratchpad = response.split("<SCRATCHPAD>")[1].split("</SCRATCHPAD>")[0]
+    try:
+        thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
+        action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
+        scratchpad = None
+        if "<SCRATCHPAD>" in response:
+            scratchpad = response.split("<SCRATCHPAD>")[1].split("</SCRATCHPAD>")[0]
 
-    return thought, action, scratchpad
-
+        return thought, action, scratchpad
+    except Exception as e:
+        return None
 
 def ollama_commands_to_command_docs(commands: List[Dict]):
     doc = """"""
@@ -123,46 +159,3 @@ def print_tree(directory, level=0, indent=""):
             string += f"\n{indent}├── {name}"
 
     return string
-
-
-# TODO: make test
-if __name__ == "__main__":
-    from devon_agent.agents.default.agent import TaskAgent
-    from devon_agent.session import SessionArguments, Session
-    from devon_agent.agents.model import ModelArguments, OllamaModel
-
-    # --- Setup
-    # the agent is created only to have the command_docs, so gpt4-o was arbitrary 
-    agent = TaskAgent(model='gpt4-o', name='test_agent') 
-
-    se_args = SessionArguments(
-        name='test_session',
-        path='../../../../',
-        user_input='Hello World'
-    )
-    session = Session(se_args, agent)
-
-    command_docs = list(session.generate_command_docs().values())
-    command_docs = (
-            "Custom Commands Documentation:\n"
-            + ollama_commands_to_command_docs(command_docs)
-            + "\n"
-    )
-    sys_prompt = ollama_system_prompt_template('phi3', command_docs)
-    # print(sys_prompt)
-
-    # --- Model
-    model_args = ModelArguments(
-        model_name='phi3',
-        temperature=0.1
-    )
-    model = OllamaModel(model_args)
-
-    # --- TEST
-    response = model.query(
-        system_message=sys_prompt,
-        messages=[
-            {'role': 'user', 'content': 'search the file test.txt'}
-        ]
-    )
-    print(response)
