@@ -159,10 +159,10 @@ if __name__ == "__main__":
     model = OllamaModel(model_args)
 
     # --- TEST
-    # response = model.query(
-    #     system_message=sys_prompt,
-    #     messages=[
-    #         {'role': 'user', 'message': 'search the file test.txt'}
-    #     ]
-    # )
-    # print(response)
+    response = model.query(
+        system_message=sys_prompt,
+        messages=[
+            {'role': 'user', 'content': 'search the file test.txt'}
+        ]
+    )
+    print(response)
