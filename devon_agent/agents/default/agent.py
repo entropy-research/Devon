@@ -11,7 +11,7 @@ from devon_agent.agents.default.openai_prompts import openai_last_user_prompt_te
 from devon_agent.agents.default.anthropic_prompts import (
     parse_response
 )
-from devon_agent.agents.default.llama3_prompts import llama3_commands_to_command_docs, llama3_history_to_bash_history, llama3_last_user_prompt_template_v3, llama3_parse_response, llama3_system_prompt_template_v3
+from devon_agent.agents.default.llama3_prompts import llama3_commands_to_command_docs, llama3_history_to_bash_history, llama3_last_user_prompt_template_v1, llama3_parse_response, llama3_system_prompt_template_v1
 
 from devon_agent.tools.utils import get_cwd
 
@@ -193,8 +193,8 @@ class TaskAgent(Agent):
                 )
 
                 history = llama3_history_to_bash_history(self.chat_history)
-                system_prompt = llama3_system_prompt_template_v3(command_docs)
-                last_user_prompt = llama3_last_user_prompt_template_v3(
+                system_prompt = llama3_system_prompt_template_v1(command_docs)
+                last_user_prompt = llama3_last_user_prompt_template_v1(
                     task, history, editor, get_cwd(
                         {
                             "session" : session,

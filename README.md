@@ -22,7 +22,7 @@ https://github.com/entropy-research/Devon/assets/61808204/d42a8b9a-0211-4624-980
 
 1. `node.js` and `npm`
 2. `pipx`, if you don't have this go [here](https://pipx.pypa.io/stable/installation/)
-3. [**Anthropic**](https://console.anthropic.com/settings/keys) API Key or [**OpenAI**](https://platform.openai.com/api-keys) API key
+3. [**Anthropic**](https://console.anthropic.com/settings/keys) API Key or [**OpenAI**](https://platform.openai.com/api-keys) API key or [**Groq**](https://console.groq.com/keys) API key
 > We're currently working on supporting Windows!
 
 ## Installation commands
@@ -57,6 +57,10 @@ export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 #OR
 
 export OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+#OR
+
+export GROQ_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 Then to *run*, the command is:
