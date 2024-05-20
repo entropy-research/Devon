@@ -25,7 +25,7 @@ https://github.com/entropy-research/Devon/assets/61808204/d42a8b9a-0211-4624-980
 3. API Key <samp>(just one is required)</samp>
    - [**Anthropic**](https://console.anthropic.com/settings/keys)
     - [**OpenAI**](https://platform.openai.com/api-keys)
-    - [**Groq**](https://console.groq.com/keys)
+    - [**Groq**](https://console.groq.com/keys) (not released in package yet, run locally)
 > We're currently working on supporting Windows!
 
 ## Installation commands
