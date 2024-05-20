@@ -26,7 +26,7 @@ https://github.com/entropy-research/Devon/assets/61808204/d42a8b9a-0211-4624-980
    - [**Anthropic**](https://console.anthropic.com/settings/keys)
     - [**OpenAI**](https://platform.openai.com/api-keys)
     - [**Groq**](https://console.groq.com/keys) (not released in package yet, run locally)
-> We're currently working on supporting Windows!
+> We're currently working on supporting Windows! (Let us know if you can help)
 
 ## Installation commands
 
@@ -156,8 +156,7 @@ From tackling issues to building features to creating datasets, there are many w
 
 For details, please check [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-If you would like to contribute to the project, please fill out our [Contribution Form](https://forms.gle/VU7RN7mwNvqEYe3B9)
-
+If you would like to contribute to the project, please join the discord: [Discord](https://discord.gg/p5YpZ5vjd9)
 
 # Feedback
 
