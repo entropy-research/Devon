@@ -109,6 +109,7 @@ devon --help
   - [x] GPT4-o
   - [x] Groq llama3-70b
   - [ ] Ollama llama3-70b + 7b
+  - [ ] Google Gemini 1.5 Pro
 - Launch plugin system for tool and agent builders
 - Create self-hostable Electron app
 - Set SOTA on [SWE-bench Lite](https://www.swebench.com/lite.html)
