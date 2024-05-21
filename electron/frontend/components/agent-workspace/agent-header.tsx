@@ -63,12 +63,6 @@ const AgentWorkspaceHeader = ({
                     </button>
                 </div>
             )}
-            {/* <div className="flex flex-row gap-2 items-center ">
-                <p className="text-md font-semibold">
-                    {value ? 'Dev Mode' : 'Observe Mode'}
-                </p>
-                <Switch checked={value} onCheckedChange={onChange} />
-            </div> */}
             <div className="flex flex-row gap-2 items-center ">
                 <p className="text-md font-semibold">Show Timeline</p>
                 <Switch
@@ -81,3 +75,23 @@ const AgentWorkspaceHeader = ({
 }
 
 export default AgentWorkspaceHeader
+
+export const ToggleTimelineHeader = ({
+    showTimeline,
+    setShowTimeline,
+}: {
+    showTimeline: boolean
+    setShowTimeline: (show: boolean) => void
+}) => {
+    return (
+        <div className="flex flex-row gap-2 items-center mr-5">
+            <button
+                className={`border border-neutral-500 rounded-md pl-4 pr-3 flex p-2 items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${showTimeline ? 'bg-gray-100 dark:bg-batman' : ''}`}
+                onClick={() => setShowTimeline(!showTimeline)}
+            >
+                <p className="mr-2 font-bold">Timeline</p>
+                <GitPullRequest size="1.3rem" />
+            </button>
+        </div>
+    )
+}

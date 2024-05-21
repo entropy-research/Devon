@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/resizable'
 import { ViewMode } from '@/lib/types'
 import { ChatProps } from '@/lib/chat.types'
-import AgentWorkspaceHeader from '@/components/agent-workspace/agent-header'
+import AgentWorkspaceHeader, { ToggleTimelineHeader } from '@/components/agent-workspace/agent-header'
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-widget'
 // import ShellWidget from '@/components/agent-workspace/agent-tabs/shell-widget'
@@ -41,11 +41,11 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
 
     return (
         <>
-            <AgentWorkspaceHeader
+            {/* <AgentWorkspaceHeader
                 viewMode={viewMode}
                 toggleViewMode={toggleViewMode}
                 visibilityProps={visibilityProps}
-            />
+            /> */}
 
             {/* {viewMode === ViewMode.Panel ? ( */}
             <>
@@ -66,11 +66,11 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                 <div className="w-full flex flex-row">
                     
                     <div
-                        className={`flex ${viewMode === ViewMode.Panel ? 'flex-col' : 'flex-row'} w-full`}
+                        className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative`}
                     >
                         {showTimeline && <TimelineWidget
                             className={
-                                viewMode === ViewMode.Panel ? 'w-full overflow-hidden' : 'w-[275px]'
+                                viewMode === ViewMode.Panel ? 'w-[275px]' : 'w-full overflow-hidden'
                             }
                         />}
                         {/* <div
@@ -80,7 +80,8 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                         // >
                             <Chat chatProps={chatProps} />
                         </div> */}
-                        <Chat chatProps={chatProps} />
+                        <Chat chatProps={chatProps} headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />} />
+                        
                     </div>
                     <div className="flex flex-col w-full">
                         {/* <div className="flex flex-col w-[800px]"> */}
