@@ -18,7 +18,7 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
     const [showPlanner, setShowPlanner] = useState<boolean>(true)
-    const [showTimeline, setShowTimeline] = useState<boolean>(true)
+    const [showTimeline, setShowTimeline] = useState<boolean>(false)
 
     const toggleViewMode = () => {
         setViewMode(

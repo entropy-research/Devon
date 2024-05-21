@@ -37,7 +37,7 @@ export function SimpleChat({
     missingKeys,
 }: { viewOnly: boolean } & ChatProps) {
     const path = usePathname()
-    const [messages, setMessages] = useState<Message[]>([])
+    const [messages, setMessages] = useState<MessageType[]>([])
     const {
         // messagesRef,
         scrollRef,
@@ -52,6 +52,7 @@ export function SimpleChat({
     const [userRequested, setUserRequested] = useState(false)
 
     const [modelLoading, setModelLoading] = useState(false)
+    const [eventIdx, setEventIdx] = useState(0);
 
     // TODO: Actually use this to load chat from backend
     useEffect(() => {
@@ -64,28 +65,30 @@ export function SimpleChat({
 
     useEffect(() => {
         if (!id || id === 'New') return
-        const fetchAndUpdateMessages = () => {
-            fetchSessionEvents(id)
-                .then(data => {
-                    const parsedMessages = handleEvents(
-                        data,
-                        setUserRequested,
-                        setModelLoading
-                    )
-                    console.log('parsed,', parsedMessages)
-                    setMessages(parsedMessages)
-                })
-                .catch(error => {
-                    console.error('Error fetching session events:', error)
-                })
-        }
-
-        const intervalId = setInterval(fetchAndUpdateMessages, 2000)
+        let curIdx = eventIdx
+        const intervalId = setInterval(async () => {
+			const newEvents = await fetchSessionEvents(id);
+            console.log('NEW', eventIdx, newEvents)
+			if (newEvents) {
+				const newMessages = handleEvents(
+					newEvents,
+					setUserRequested,
+					setModelLoading,
+                    () => {}
+					// exit,
+				);
+				for (let i = eventIdx; i < newMessages.length; i++) {
+					setMessages(messages => [...messages, newMessages[i] as MessageType]);
+					curIdx += 1
+				}
+			}
+            setEventIdx(curIdx);
+		}, 2000);
 
         return () => {
             clearInterval(intervalId)
         }
-    }, [id, messages])
+    }, [eventIdx, id, messages])
 
     // useEffect(() => {
     //     setNewChatId(id)
@@ -182,14 +185,21 @@ type MessageType = {
 const handleEvents = (
     events: Event[],
     setUserRequested: (value: boolean) => void,
-    setModelLoading: (value: boolean) => void
+    setModelLoading: (value: boolean) => void,
+    exit: () => void,
 ) => {
     const messages: MessageType[] = []
     let user_request = false
     let model_loading = false
     let tool_message = ''
+    let idx = 0;
+	let error = false;
 
     for (const event of events) {
+        if (event.type == 'Stop') {
+			// console.log('Devon has left the chat.');
+			// exit();
+		}
         if (event.type == 'ModelRequest') {
             model_loading = true
         }
@@ -228,12 +238,9 @@ const handleEvents = (
             messages.push({ text: event.content, type: 'agent' })
             user_request = true
         }
-
-        if (event.type == 'Stop') {
-            // exit();
-        }
     }
     setUserRequested(user_request)
     setModelLoading(model_loading)
-    return messages.slice(2, messages.length)
+    // return messages.slice(2, messages.length)
+    return messages
 }
