@@ -1,0 +1,12 @@
+.timeline {
+    transform: scale(0.5);
+    transform-origin: top left;
+}
+
+.timeline * {
+    font-size: 20pt !important;
+}
+
+.timeline rect {
+    visibility: hidden;
+}

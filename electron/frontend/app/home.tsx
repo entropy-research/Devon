@@ -39,10 +39,6 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
         setAgentWorkspaceVisible(!isAgentWorkspaceVisible)
     }
 
-    useEffect(() => {
-        console.log('red')
-    }, [viewMode, showTimeline])
-
     return (
         <>
             <AgentWorkspaceHeader
@@ -80,7 +76,7 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                         // )} */}
                         {showTimeline && <TimelineWidget
                             className={
-                                viewMode === ViewMode.Panel ? 'pl-5' : ''
+                                viewMode === ViewMode.Panel ? 'pl-5 w-full overflow-hidden' : 'w-[300px] mr-5'
                             }
                         />}
                         {/* <div
