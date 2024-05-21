@@ -38,7 +38,9 @@ const EditorWidget = ({
         if (!chatId || chatId === 'New') return
 
         async function getSessionState() {
-            const { editor } = await fetchSessionState(chatId)
+            const res = await fetchSessionState(chatId)
+            console.log(res.data)
+            const editor = res.editor
             const ed = editor.files
             // Editor is a dictionary. Get the keys and values
             const _files: any = []
@@ -70,16 +72,18 @@ const EditorWidget = ({
 
     return (
         <CodeEditorContextProvider tabFiles={files}>
-            <div className="flex flex-row h-full w-full pr-[2px]">
-                <div className="flex-none w-48 bg-midnight">
-                    <FileTree />
-                </div>
-                <div className="flex-grow w-full h-full">
-                    <div className="h-2/3 -mr-[13px]">
-                        <CodeEditor isExpandedVariant={isExpandedVariant} />
+            <div className="flex flex-col h-full w-full pr-[2px]">
+                <div className="flex flex-row h-full w-full">
+                    <div className="flex-none w-48 bg-midnight">
+                        <FileTree />
                     </div>
-                    <div className="">
-                    <ShellWidget />
+                    <div className="flex-grow w-full h-full">
+                        <div className="h-2/3 -mr-[13px]">
+                            <CodeEditor isExpandedVariant={isExpandedVariant} />
+                        </div>
+                        <div className="">
+                            <ShellWidget />
+                        </div>
                     </div>
                 </div>
             </div>

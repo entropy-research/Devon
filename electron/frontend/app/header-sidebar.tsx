@@ -9,7 +9,7 @@ const HeaderSidebar = () => {
 
     return (
         <>
-            <div className="flex w-full absolute top-0 px-4 pt-3 items-center gap-2">
+            <div className="flex w-full absolute top-0 px-4 pt-3 items-center gap-2 pb-1">
                 <button onClick={() => setExpanded(!expanded)} className="p-2">
                     <PanelsTopLeft size="1.4rem"/>
                 </button>
@@ -19,7 +19,7 @@ const HeaderSidebar = () => {
                 <SelectProjectDirectoryModal
                     trigger={
                         <button
-                            className={`ml-[82px] p-2 ${expanded ? 'visible' : 'hidden'}`}
+                            className={`ml-[96px] p-2 ${expanded ? 'visible' : 'hidden'}`}
                         >
                             <SquarePen size="1.3rem" className="text-primary" />
                         </button>

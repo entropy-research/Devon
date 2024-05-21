@@ -43,15 +43,16 @@ export default function CodeEditor({
     if (!selectedFileId || !chatId || chatId === 'New') {
         return (
             <>
-                {/* <FileTabs
-                    files={[boilerplateFile]}
-                    selectedFileId={boilerplateFile.id}
+                <FileTabs
+                    files={files}
+                    selectedFileId={selectedFileId ?? files[0]?.id}
                     updateSelectedFile={updateSelectedFile}
                     diffEnabled={diffEnabled}
                     setDiffEnabled={setDiffEnabled}
                     chatId={chatId}
-                /> */}
-                <div className="w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
+                />
+                <PathDisplay />
+                <div className="w-full bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
                     {file && (
                         <BothEditorTypes
                             diffEnabled={diffEnabled}
@@ -83,7 +84,7 @@ export default function CodeEditor({
 
     if (isExpandedVariant) {
         return (
-            <div className="w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden">
+            <div className="w-full bg-workspace rounded-b-lg overflow-hidden">
                 <BothEditorTypes
                     diffEnabled={diffEnabled}
                     file={file}
@@ -95,14 +96,15 @@ export default function CodeEditor({
 
     return (
         <>
-            {/* <FileTabs
+            <FileTabs
                 files={files}
                 selectedFileId={selectedFileId}
                 updateSelectedFile={updateSelectedFile}
                 diffEnabled={diffEnabled}
                 setDiffEnabled={setDiffEnabled}
                 chatId={chatId}
-            /> */}
+            />
+            <PathDisplay />
             <div className="flex w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
                 {file && (
                     <BothEditorTypes
@@ -140,3 +142,11 @@ const BothEditorTypes = ({ diffEnabled, file, handleEditorDidMount }) =>
             options={{ readOnly: true }}
         ></DiffEditor>
     )
+
+const PathDisplay = () => (
+    <div className="-mt-[1px] px-3 py-1">
+        <p className="text-xs text-neutral-500">
+            Users {'>'} josh {'>'} Documents {'>'} examples
+        </p>
+    </div>
+)

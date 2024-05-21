@@ -108,7 +108,7 @@
 
 @layer components {
     .smooth-hover {
-        @apply transition duration-200 hover:bg-gray-100 dark:hover:bg-night;
+        @apply transition duration-200 hover:bg-gray-100 dark:hover:bg-batman;
     }
 
     .text-ellipsis {

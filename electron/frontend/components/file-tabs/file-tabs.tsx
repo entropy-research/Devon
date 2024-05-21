@@ -25,34 +25,35 @@ const FileTabs = ({
     chatId: string | null
 }) => {
     return (
-        <div className="flex justify-between w-full">
+        <div className="flex justify-between bg-midnight mr-[13px] items-center">
             <div className="flex items-center justify-start">
                 {files.map((file: any) => (
                     <button
                         key={file.id}
-                        className={`px-5 py-3 text-md border-t-4 min-w-[150px] ${file.id === selectedFileId ? 'border-t-aqua outline outline-gray-500 outline-[1.5px] rounded-t-lg' : 'border-transparent'}`}
+                        className={`flex px-2 justify-center items-center px-1 py-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === selectedFileId ? 'border-t-primary rounded-t-sm bg-night' : 'border-transparent'}`}
                         onClick={() => updateSelectedFile(file)}
                     >
                         {file.name}
                     </button>
                 ))}
             </div>
-            <div className="flex px-2 pr-4 py-2 h-full gap-2">
+            <div className="flex pr-3 h-full gap-2 items-center">
                 <ActionItem
                     active={false}
-                    icon={<Maximize className="h-5 w-5 text-gray-450" />}
+                    icon={
+                        <Maximize className="h-[1.2rem] w-[1.2rem] text-gray-300" />
+                    }
                     dialogContent={
-                        <DialogContent className="h-full max-w-4xl block">
-                            <DialogHeader className="mb-4">
-                                <DialogTitle>Expanded Editor</DialogTitle>
-                            </DialogHeader>
-                            <EditorWidget isExpandedVariant chatId={chatId}/>
+                        <DialogContent className="h-full max-w-screen block p-0 pt-10">
+                            <EditorWidget isExpandedVariant chatId={chatId} />
                         </DialogContent>
                     }
                 />
                 <ActionItem
                     active={diffEnabled}
-                    icon={<FileDiff className="h-5 w-5 text-gray-300" />}
+                    icon={
+                        <FileDiff className="h-[1.2rem] w-[1.2rem] text-gray-300" />
+                    }
                     clickAction={() => setDiffEnabled(!diffEnabled)}
                 />
             </div>

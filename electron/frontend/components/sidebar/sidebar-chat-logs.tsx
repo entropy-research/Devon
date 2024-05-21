@@ -7,13 +7,15 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import handleNavigate from './handleNavigate'
 
 const SidebarChatLogs = () => {
     const { sessions, loading, error, refreshSessions } = useReadSessions()
     const { deleteSession } = useDeleteSession()
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const sessionId = searchParams.get('chat')
 
     useEffect(() => {
         refreshSessions()
@@ -47,10 +49,10 @@ const SidebarChatLogs = () => {
                 sessions.reverse().map((chatId: string, index: number) => (
                     <div
                         key={chatId}
-                        className="flex relative justify-between w-full group items-center smooth-hover rounded-md"
+                        className={`flex relative justify-between group items-center smooth-hover rounded-md mx-2 ${chatId === sessionId ? 'bg-night' : ''}`}
                     >
                         <button
-                            className="relative px-4 py-3 flex w-full"
+                            className="relative px-3 py-2 flex w-full items-center"
                             onClick={() => handleNavigate(chatId)}
                         >
                             <span className="text-ellipsis">
@@ -67,7 +69,7 @@ const SidebarChatLogs = () => {
                             <PopoverContent className="bg-night w-fit p-0">
                                 <button
                                     onClick={() => deleteChat(chatId)}
-                                    className="flex gap-2 justify-start items-center min-w-[180px] p-4"
+                                    className="flex gap-2 justify-start items-center p-2 pr-3 text-sm"
                                 >
                                     <Trash size={16} /> Delete chat
                                 </button>

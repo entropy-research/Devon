@@ -116,7 +116,7 @@ function Terminal({ messages }): JSX.Element {
             // is too large and switching tabs causes a layout shift.
             cols: 0,
             fontFamily: "Menlo, Monaco, 'Courier New', monospace",
-            fontSize: 14,
+            fontSize: 13,
             theme: {
                 // background: bgColor,
             },

@@ -45,7 +45,7 @@ const StyledButton = ({
     isTrigger ? (
         <DialogTrigger asChild>
             <button
-                className={`w-10 h-10 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${active ? 'bg-gray-100 dark:bg-batman' : ''}`}
+                className={`w-8 h-8 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${active ? 'bg-gray-100 dark:bg-batman' : ''}`}
             >
                 {icon}
             </button>
@@ -53,7 +53,7 @@ const StyledButton = ({
     ) : (
         <button
             onClick={clickAction}
-            className={`w-10 h-10 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${active ? 'bg-gray-100 dark:bg-batman' : ''}`}
+            className={`w-8 h-8 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${active ? 'bg-gray-100 dark:bg-batman' : ''}`}
         >
             {icon}
         </button>
