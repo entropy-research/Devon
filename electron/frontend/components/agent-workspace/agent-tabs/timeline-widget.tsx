@@ -60,10 +60,10 @@ export default function TimelineWidget({ className }: { className?: string }) {
         //         <p className="text-lg font-semibold">Timeline</p>
         //     </div>
         // </div>
-        <div className={`h-full pb-7 pr-5 ${className}`}>
-            <div className="bg-batman min-w-[300px] h-full p-5 rounded-lg overflow-y-scroll pr-5">
+        <div className={`flex h-full pb-[14px] ${className}`}>
+            <div className="flex bg-batman overflow-y-scroll border border-neutral-600 ml-3  rounded-md">
                 {/* <p className="text-lg font-semibold mb-3">Timeline</p> */}
-                <div className="timeline">
+                <div className="timeline pt-8">
                     <Gitgraph
                         options={{
                             template: templateExtend(TemplateName.Metro, {

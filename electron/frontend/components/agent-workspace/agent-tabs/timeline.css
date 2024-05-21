@@ -1,10 +1,10 @@
 .timeline {
-    transform: scale(0.5);
+    transform: scale(0.4);
     transform-origin: top left;
 }
 
 .timeline * {
-    font-size: 20pt !important;
+    font-size: 22pt !important;
 }
 
 .timeline rect {

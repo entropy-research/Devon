@@ -64,19 +64,13 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                         </ResizablePanel>
                     </ResizablePanelGroup> */}
                 <div className="w-full flex flex-row">
-                    <div className="flex flex-col w-full">
-                        {/* <div className="flex flex-col w-[800px]"> */}
-                        <EditorWidget chatId={chatProps.id ?? null} />
-                    </div>
+                    
                     <div
-                        className={`flex ${viewMode === ViewMode.Panel ? 'flex-col' : 'flex-row-reverse'} w-full`}
+                        className={`flex ${viewMode === ViewMode.Panel ? 'flex-col' : 'flex-row'} w-full`}
                     >
-                        {/* {showTimeline && viewMode === ViewMode.Panel && (
-                            <TimelineWidget />
-                        // )} */}
                         {showTimeline && <TimelineWidget
                             className={
-                                viewMode === ViewMode.Panel ? 'pl-5 w-full overflow-hidden' : 'w-[300px] mr-5'
+                                viewMode === ViewMode.Panel ? 'w-full overflow-hidden' : 'w-[275px]'
                             }
                         />}
                         {/* <div
@@ -87,9 +81,10 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                             <Chat chatProps={chatProps} />
                         </div> */}
                         <Chat chatProps={chatProps} />
-                        {/* {showTimeline && viewMode === ViewMode.Grid && (
-                            <TimelineWidget />
-                        )} */}
+                    </div>
+                    <div className="flex flex-col w-full">
+                        {/* <div className="flex flex-col w-[800px]"> */}
+                        <EditorWidget chatId={chatProps.id ?? null} />
                     </div>
 
                     {/* <div className="flex flex-2">

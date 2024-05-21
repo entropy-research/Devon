@@ -75,9 +75,9 @@ const EditorWidget = ({
 
     return (
         <CodeEditorContextProvider tabFiles={files}>
-            <div className="flex flex-col h-full w-full px-3 pb-3">
+            <div className={`flex flex-col h-full w-full ${showEditorBorders ? 'pb-3' : ''}`}>
                 <div
-                    className={`flex flex-row h-full py-2 ${showEditorBorders ? 'rounded-md border bg-midnight border-neutral-600' : ''}`}
+                    className={`flex flex-row h-full ${showEditorBorders ? 'rounded-md border bg-midnight border-neutral-600 py-2 mr-3' : ''}`}
                 >
                     <div className="flex-none w-48 bg-midnight">
                         <FileTree />
@@ -90,7 +90,7 @@ const EditorWidget = ({
                             />
                         </div>
                         <div
-                            className={`h-[23vh] ${showEditorBorders ? '' : 'mr-[12px]'}`}
+                            className={`h-[23vh] ${showEditorBorders ? '' : ''}`}
                         >
                             <ShellWidget />
                         </div>
