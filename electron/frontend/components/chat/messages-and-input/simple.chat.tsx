@@ -68,7 +68,6 @@ export function SimpleChat({
         let curIdx = eventIdx
         const intervalId = setInterval(async () => {
 			const newEvents = await fetchSessionEvents(id);
-            console.log('NEW', eventIdx, newEvents)
 			if (newEvents) {
 				const newMessages = handleEvents(
 					newEvents,
@@ -210,15 +209,32 @@ const handleEvents = (
             messages.push({ text: content.thought, type: 'thought' })
         }
 
-        if (event.type == 'EnvironmentRequest') {
-            tool_message = 'Running command: ' + event.content
-        }
+        // Example: ask_user "What would you like to do next?" create a game
+        // if (event.type == 'ToolRequest') {
+        //     tool_message = 'Running command: ' + event.content.raw_command;
+        // }
+
+        // if (event.type == 'EnvironmentRequest') {
+        //     tool_message = 'Running command: ' + event.content;
+        // }
 
         if (event.type == 'EnvironmentResponse') {
-            tool_message += '\n> ' + event.content
-            messages.push({ text: tool_message, type: 'tool' })
-            tool_message = ''
+            // this is the project path
+            // console.log(event.content)
         }
+        
+
+
+        if (event.type == 'ToolResponse') {
+            console.log("TOOL RESPONSE", event.content)
+			tool_message += '\n> ' + event.content;
+			if (tool_message.length > 2000) {
+				messages.push({text: tool_message.slice(0, 2000), type: 'tool'});
+			} else {
+				messages.push({text: tool_message, type: 'tool'});
+			}
+			tool_message = '';
+		}
 
         if (event.type == 'Task') {
             messages.push({ text: event.content, type: 'task' })

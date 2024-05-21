@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { fetchSessionEvents } from '@/lib/services/sessionService/use-fetch-session-events'
 import { useSearchParams } from 'next/navigation'
 import FileTabs from '@/components/file-tabs/file-tabs'
+import { Terminal as TerminalIcon } from 'lucide-react'
 
 export default function ShellWidget() {
     const searchParams = useSearchParams()
@@ -34,10 +35,15 @@ export default function ShellWidget() {
 }
 
 function getOnlyToolResponse(messages) {
-    return messages?.filter(message => message.type === 'EnvironmentResponse')
+    return messages?.filter(
+        message =>
+            message.type === 'EnvironmentRequest' ||
+            message.type === 'EnvironmentResponse'
+    )
 }
 
 // Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/Terminal.tsx
+/*
 class JsonWebsocketAddon {
     _socket: WebSocket
 
@@ -76,6 +82,7 @@ class JsonWebsocketAddon {
         this._socket.removeEventListener('message', () => {})
     }
 }
+*/
 
 /**
  * The terminal's content is set by write messages. To avoid complicated state logic,
@@ -95,7 +102,7 @@ function Terminal({ messages }): JSX.Element {
             // "this._renderer.value is undefined"
             setTimeout(() => {
                 fitAddon.fit()
-            }, 1)
+            }, 100)
         }
 
         const bgColor = getComputedStyle(document.documentElement)
@@ -135,9 +142,12 @@ function Terminal({ messages }): JSX.Element {
         const terminal = terminalInstanceRef.current
         if (terminal) {
             terminal.clear() // Clear the existing content
-            messages.forEach(message => {
-                terminal.writeln(message.content)
-                terminal.write('\n> ') // Add prompt after each message
+            messages.forEach((message, idx) => {
+                let prefix = ''
+                if (message.type === 'EnvironmentRequest') {
+                    prefix = idx === 0 ? '> ' : '\n> '
+                }
+                terminal.writeln(`${prefix}${message.content}`)
             })
         }
     }, [messages])
@@ -145,18 +155,23 @@ function Terminal({ messages }): JSX.Element {
     return (
         <div className="h-full flex flex-col">
             <div className="flex items-center justify-start">
-            {[{ id: 1, name: 'Terminal' }].map(file => (
-                <button
-                    key={file.id}
-                    className={`bg-black px-1 pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 1 ? 'border-t-primary outline outline-neutral-500 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
-                    // onClick={() => updateSelectedFile(file)}
-                >
-                    {file.name}
-                </button>
-            ))}
+                {[{ id: 1, name: 'Terminal' }].map(file => (
+                    <button
+                        key={file.id}
+                        className={`flex px-2 items-center bg-black px-1 pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 1 ? 'border-t-primary outline outline-neutral-500 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
+                        // onClick={() => updateSelectedFile(file)}
+                    >
+                        <TerminalIcon size={16} className="mr-1 text-primary mb-[1px]" />
+                        {file.name}
+                    </button>
+                ))}
             </div>
-            <div className="h-full bg-black rounded-b-lg">
+            <div
+                id="terminal-wrapper"
+                className="h-full bg-black rounded-b-lg w-full"
+            >
                 <div
+                    id="terminal-ref"
                     ref={terminalRef}
                     className="w-full px-3 pt-3 h-full overflow-scroll"
                 />
