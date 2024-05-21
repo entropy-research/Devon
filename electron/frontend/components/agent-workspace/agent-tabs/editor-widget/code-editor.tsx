@@ -9,8 +9,10 @@ import { useSearchParams } from 'next/navigation'
 // Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/CodeEditor.tsx
 export default function CodeEditor({
     isExpandedVariant = false,
+    showEditorBorders,
 }: {
     isExpandedVariant?: boolean
+    showEditorBorders: boolean
 }): JSX.Element {
     const searchParams = useSearchParams()
     const chatId = searchParams.get('chat')
@@ -51,7 +53,7 @@ export default function CodeEditor({
                     setDiffEnabled={setDiffEnabled}
                     chatId={chatId}
                 />
-                <PathDisplay />
+                {files && <PathDisplay />}
                 <div className="w-full bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
                     {file && (
                         <BothEditorTypes
@@ -103,8 +105,9 @@ export default function CodeEditor({
                 diffEnabled={diffEnabled}
                 setDiffEnabled={setDiffEnabled}
                 chatId={chatId}
+                className={showEditorBorders ? '' : 'mr-[13px]'}
             />
-            <PathDisplay />
+            {files && <PathDisplay />}
             <div className="flex w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
                 {file && (
                     <BothEditorTypes
@@ -133,7 +136,7 @@ const BothEditorTypes = ({ diffEnabled, file, handleEditorDidMount }) =>
         />
     ) : (
         <DiffEditor
-            height="100%"
+            className="h-full"
             theme="vs-dark"
             original={file.value.lines}
             modified={file.value.lines}
@@ -144,7 +147,7 @@ const BothEditorTypes = ({ diffEnabled, file, handleEditorDidMount }) =>
     )
 
 const PathDisplay = () => (
-    <div className="-mt-[1px] px-3 py-1">
+    <div className="-mt-[1px] px-3 py-1 bg-night">
         <p className="text-xs text-neutral-500">
             Users {'>'} josh {'>'} Documents {'>'} examples
         </p>

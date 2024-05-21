@@ -16,16 +16,18 @@ const FileTabs = ({
     diffEnabled,
     setDiffEnabled,
     chatId,
+    className,
 }: {
     files: any[]
     selectedFileId: string
     updateSelectedFile: (file: any) => void
     diffEnabled: boolean
     setDiffEnabled: (value: boolean) => void
-    chatId: string | null
+    chatId: string | null,
+    className?: string
 }) => {
     return (
-        <div className="flex justify-between bg-midnight mr-[13px] items-center">
+        <div className={`flex justify-between bg-midnight items-center ${className}`}>
             <div className="flex items-center justify-start">
                 {files.map((file: any) => (
                     <button

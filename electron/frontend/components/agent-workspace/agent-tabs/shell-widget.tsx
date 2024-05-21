@@ -102,7 +102,7 @@ function Terminal({ messages }): JSX.Element {
             // "this._renderer.value is undefined"
             setTimeout(() => {
                 fitAddon.fit()
-            }, 100)
+            }, 1)
         }
 
         const bgColor = getComputedStyle(document.documentElement)
@@ -158,22 +158,25 @@ function Terminal({ messages }): JSX.Element {
                 {[{ id: 1, name: 'Terminal' }].map(file => (
                     <button
                         key={file.id}
-                        className={`flex px-2 items-center bg-black px-1 pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 1 ? 'border-t-primary outline outline-neutral-500 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
+                        className={`flex px-2 items-center bg-black pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 1 ? 'border-t-primary outline outline-neutral-500 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
                         // onClick={() => updateSelectedFile(file)}
                     >
-                        <TerminalIcon size={16} className="mr-1 text-primary mb-[1px]" />
+                        <TerminalIcon
+                            size={16}
+                            className="mr-1 text-primary mb-[1px]"
+                        />
                         {file.name}
                     </button>
                 ))}
             </div>
             <div
                 id="terminal-wrapper"
-                className="h-full bg-black rounded-b-lg w-full"
+                className="flex-grow flex bg-black w-full p-3 overflow-hidden"
             >
                 <div
                     id="terminal-ref"
                     ref={terminalRef}
-                    className="w-full px-3 pt-3 h-full overflow-scroll"
+                    className="w-full overflow-auto"
                 />
             </div>
         </div>

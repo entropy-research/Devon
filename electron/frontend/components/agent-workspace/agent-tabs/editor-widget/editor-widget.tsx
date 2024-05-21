@@ -12,7 +12,8 @@ const boilerplateFile = {
     path: 'main.py',
     language: 'python',
     value: {
-        lines: `# Welcome to Devon!`,
+        lines: `# Welcome to Devon!
+        `,
     },
 }
 const boilerplateFile2 = {
@@ -70,18 +71,27 @@ const EditorWidget = ({
         }
     }, [chatId])
 
+    const showEditorBorders = true
+
     return (
         <CodeEditorContextProvider tabFiles={files}>
-            <div className="flex flex-col h-full w-full pr-[2px]">
-                <div className="flex flex-row h-full w-full">
+            <div className="flex flex-col h-full w-full px-3 pb-3">
+                <div
+                    className={`flex flex-row h-full py-2 ${showEditorBorders ? 'rounded-md border bg-midnight border-neutral-600' : ''}`}
+                >
                     <div className="flex-none w-48 bg-midnight">
                         <FileTree />
                     </div>
-                    <div className="flex-grow w-full h-full">
-                        <div className="h-2/3 -mr-[13px]">
-                            <CodeEditor isExpandedVariant={isExpandedVariant} />
+                    <div className="flex flex-col flex-grow w-full h-full">
+                        <div className="flex-grow overflow-auto">
+                            <CodeEditor
+                                isExpandedVariant={isExpandedVariant}
+                                showEditorBorders={showEditorBorders}
+                            />
                         </div>
-                        <div className="">
+                        <div
+                            className={`h-[23vh] ${showEditorBorders ? '' : 'mr-[12px]'}`}
+                        >
                             <ShellWidget />
                         </div>
                     </div>

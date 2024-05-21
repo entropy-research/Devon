@@ -67,7 +67,7 @@ export default function TimelineWidget({ className }: { className?: string }) {
                     <Gitgraph
                         options={{
                             template: templateExtend(TemplateName.Metro, {
-                                colors: ['white', 'white', 'white'],
+                                colors: ['#d4d4d4', '#d4d4d4', '#d4d4d4'],
                             }),
                             author: ' ',
                             // generateCommitHash: () => ' ',
@@ -79,7 +79,7 @@ export default function TimelineWidget({ className }: { className?: string }) {
                                 style: {
                                     label: {
                                         bgColor: 'black',
-                                        color: 'white',
+                                        color: '#d4d4d4',
                                     },
                                 },
                             })
@@ -96,7 +96,7 @@ export default function TimelineWidget({ className }: { className?: string }) {
                                     // color: 'black',
                                     label: {
                                         bgColor: 'black',
-                                        color: 'white',
+                                        color: '#d4d4d4',
                                     },
                                 },
                             })
