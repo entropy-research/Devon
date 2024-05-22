@@ -107,6 +107,8 @@ const spawnAppWindow = async () => {
   appWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 15, y: 10 },
     icon: getAssetPath('icon.png'),
     show: false,
     webPreferences: {
@@ -158,11 +160,11 @@ app.on('ready', () => {
       serverProcess.stdout.on('data', (data: unknown) => {
         console.log(`Server: ${data}`)
       })
- 
+
       if (appWindow) {
         appWindow.webContents.send('server-port', port)
       }
-      
+
       serverProcess.stderr.on('data', (data: unknown) => {
         console.error(`Server Error: ${data}`)
       })

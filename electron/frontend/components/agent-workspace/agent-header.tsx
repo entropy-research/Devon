@@ -84,7 +84,7 @@ export const ToggleTimelineHeader = ({
     setShowTimeline: (show: boolean) => void
 }) => {
     return (
-        <div className="flex flex-row gap-2 items-center mr-5">
+        <div className="flex flex-row gap-2 items-center mr-5 absolute right-0">
             <button
                 className={`border border-neutral-500 rounded-md pl-4 pr-3 flex p-2 items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${showTimeline ? 'bg-gray-100 dark:bg-batman' : ''}`}
                 onClick={() => setShowTimeline(!showTimeline)}

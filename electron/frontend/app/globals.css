@@ -43,7 +43,7 @@
 
     .dark {
         color: white;
-        --background: hsl(0, 0%, 14%);
+        --background: #1e1e1e;
         --foreground: hsl(210 40% 98%);
 
         --card: var(--dark-primary-background);
@@ -128,6 +128,18 @@
     .bg-fade-bottom-to-top2 {
         /* TODO don't hardcode color */
         /* background-image: linear-gradient(to top, #2e2e2e 50%, transparent 100%); */
-        background-image: linear-gradient(to top, #1e1e1e 50%, transparent 100%);
+        background-image: linear-gradient(
+            to top,
+            #1e1e1e 50%,
+            transparent 100%
+        );
     }
+}
+
+#header-drag-region {
+    -webkit-app-region: drag;
+}
+
+.no-drag {
+    -webkit-app-region: no-drag;
 }

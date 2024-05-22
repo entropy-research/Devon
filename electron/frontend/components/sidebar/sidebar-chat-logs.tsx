@@ -49,7 +49,7 @@ const SidebarChatLogs = () => {
                 sessions.reverse().map((chatId: string, index: number) => (
                     <div
                         key={chatId}
-                        className={`flex relative justify-between group items-center smooth-hover rounded-md mx-2 ${chatId === sessionId ? 'bg-night' : ''}`}
+                        className={`flex relative justify-between group items-center smooth-hover rounded-sm mx-2 ${chatId === sessionId ? 'bg-night border-l-2 border-primary' : ''}`}
                     >
                         <button
                             className="relative px-3 py-2 flex w-full items-center"
@@ -71,7 +71,7 @@ const SidebarChatLogs = () => {
                                     onClick={() => deleteChat(chatId)}
                                     className="flex gap-2 justify-start items-center p-2 pr-3 text-sm"
                                 >
-                                    <Trash size={16} /> Delete chat
+                                    <Trash size={16} /> Delete session
                                 </button>
                             </PopoverContent>
                         </Popover>

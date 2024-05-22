@@ -41,7 +41,7 @@ const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
     'save-data',
     'load-data',
     'delete-encrypted-data',
-    'check-has-encrypted-data'
+    'check-has-encrypted-data',
   ],
   receive: ['file-path-response', 'server-port'],
 }

@@ -9,24 +9,37 @@ const HeaderSidebar = () => {
 
     return (
         <>
-            <div className="flex w-full absolute top-0 px-4 pt-3 items-center gap-2 pb-1">
-                <button onClick={() => setExpanded(!expanded)} className="p-2">
-                    <PanelsTopLeft size="1.4rem"/>
+            <header
+                id="header"
+                className="flex w-full absolute top-0 px-3 items-center gap-1 pb-1 pt-12 h-14"
+            >
+                <div
+                    id="header-drag-region"
+                    className="absolute w-full h-full top-0 left-0"
+                ></div>
+                <button
+                    onClick={() => setExpanded(!expanded)}
+                    className="no-drag relative p-2 z-10"
+                >
+                    <PanelsTopLeft size="1.4rem" />
                 </button>
-                <a href="/" className="text-white text-xl font-semibold">
+                <a
+                    href="/"
+                    className="no-drag text-white text-xl font-semibold z-10"
+                >
                     Devon
                 </a>
                 <SelectProjectDirectoryModal
                     trigger={
                         <button
-                            className={`ml-[96px] p-2 ${expanded ? 'visible' : 'hidden'}`}
+                            className={`no-drag ml-[7rem] p-2 ${expanded ? 'visible' : 'hidden'} z-10`}
                         >
-                            <SquarePen size="1.3rem" className="text-primary" />
+                            <SquarePen size="1.4rem" className="no-drag text-primary" />
                         </button>
                     }
                     header={<h1 className="text-2xl font-bold mb-5">Create new chat</h1>}
                 />
-            </div>
+            </header>
             <Sidebar expanded={expanded} setExpanded={setExpanded} />
         </>
     )
