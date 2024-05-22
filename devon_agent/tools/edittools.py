@@ -2,6 +2,7 @@ import os
 from devon_agent.tool import Tool, ToolContext
 from devon_agent.tools.utils import make_abs_path, check_lint, check_lint_entry_in_list, read_file, write_file
 from devon_agent.udiff import Hallucination, apply_file_context_diffs, extract_all_diffs, log_failed_diff, log_successful_diff
+from devon_agent.vgit import commit_files
 
 
 def apply_diff(ctx, multi_file_diffs):
@@ -132,9 +133,9 @@ def real_write_diff(ctx, diff):
             for rst in diff_results:
                 lint_error_message += f"{rst['type']}: {rst['message']} on line {rst['line']} column {rst['column']}. Line {result[1].splitlines()[int(rst['line'])-1]} \n"
 
-            return f"Successfully edited file(s): {paths}. Please review the new contents of the files. Your change introduced the following linting errors. Please address them before you submit. \n{lint_error_message}"
+            return f"Successfully edited file(s): {paths} : Please review the new contents of the files. Your change introduced the following linting errors. Please address them before you submit. \n{lint_error_message}"
 
-        return f"Successfully edited file(s): {paths}. Please review the new contents of the files."
+        return f"Successfully edited file(s): {paths}: Please review the new contents of the files."
 
     return "\n".join(["Failed to edit file"] + [f[1].args[0] for f in failures])
 
@@ -208,3 +209,14 @@ class EditFileTool(Tool):
         #write files
 
         return real_write_diff(ctx, ctx["raw_command"])
+
+
+def save_edit_file(ctx, response):
+    """
+    save_edit_file - post func for edit_file
+    """
+    if "Successfully edited file(s)" in response:
+        files = response.split(":")[1].split(", ")
+        commit_files(ctx["environment"], files, "Edit files " + " ".join(files))
+    return response
+

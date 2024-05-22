@@ -2,6 +2,7 @@ import inspect
 import json
 import logging
 import os
+import random
 import traceback
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
@@ -12,8 +13,8 @@ from devon_agent.tool import  ToolNotFoundException
 from devon_agent.tools import (
     parse_command,
 )
-from devon_agent.tools.editortools import CreateFileTool, DeleteFileTool, OpenFileTool, ScrollDownTool, ScrollToLineTool, ScrollUpTool
-from devon_agent.tools.edittools import EditFileTool
+from devon_agent.tools.editortools import CreateFileTool, DeleteFileTool, OpenFileTool, ScrollDownTool, ScrollToLineTool, ScrollUpTool, save_create_file, save_delete_file
+from devon_agent.tools.edittools import EditFileTool, save_edit_file
 from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, ListDirsRecursiveTool, SearchDirTool
 from devon_agent.tools.filetools import SearchFileTool
 from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
@@ -21,6 +22,7 @@ from devon_agent.tools.shelltool import ShellTool
 from devon_agent.tools.usertools import AskUserTool
 
 from devon_agent.utils import DotDict, Event
+from devon_agent.vgit import  get_current_diff, get_or_create_repo, make_new_branch, stash_and_commit_changes, subtract_diffs
 
 
 @dataclass(frozen=False)
@@ -112,23 +114,25 @@ class Session:
         self.get_user_input = args.user_input
         self.telemetry_client = Posthog()
         self.name = args.name
+        self.agent_branch = "devon_agent_" + self.name
+
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
-            "create_file" : CreateFileTool(),
+            "create_file" : CreateFileTool().register_post_hook(save_create_file),
             "open_file" : OpenFileTool(),
             "scroll_up" : ScrollUpTool(),
             "scroll_down" : ScrollDownTool(),
             "scroll_to_line" : ScrollToLineTool(),
             "search_file" : SearchFileTool(),
-            "edit_file" : EditFileTool(),
+            "edit_file" : EditFileTool().register_post_hook(save_edit_file),
             "search_dir" : SearchDirTool(),
             "find_file" : FindFileTool(),
             # "list_dirs_recursive" : ListDirsRecursiveTool(),
             "get_cwd" : GetCwdTool(),
             "no_op" : NoOpTool(),
             "submit" : SubmitTool(),
-            "delete_file" : DeleteFileTool(),
+            "delete_file" : DeleteFileTool().register_post_hook(save_delete_file),
         })
         local_environment.set_default_tool(ShellTool())
         self.default_environment = local_environment
@@ -139,74 +143,16 @@ class Session:
             "ask_user" : AskUserTool(),
         })
 
+        print(user_environment.tools["ask_user"].post_funcs)
+
         self.environments = {
             "local" : local_environment,
             "user" : user_environment,
         }
 
-
-
         self.path = args.path
         self.base_path = args.path
-        # self.environment_type = args.environment
 
-        # if args.environment == "local":
-        #     self.default_environment = LocalEnvironment(args.path)
-        # else:
-        #     raise ValueError("Unknown environment type")
-
-
-
-    def to_dict(self):
-        return {
-            "path": self.path,
-            "environment": self.environment_type,
-            "event_history": [event for event in self.event_log],
-            "state": self.state.to_dict(),
-            "cwd": self.environment.get_cwd(),
-            "agent": {
-                "name": self.agent.name,
-                "model": self.agent.model,
-                "temperature": self.agent.temperature,
-                "chat_history": self.agent.chat_history,
-            },
-        }
-
-    @classmethod
-    def from_dict(cls, data):
-        instance = cls(
-            args=SessionArguments(
-                path=data["path"],
-                environment=data["environment"],
-                user_input=data["user_input"],
-            ),
-            agent=TaskAgent(
-                name=data["agent"]["name"],
-                model=data["agent"]["model"],
-                temperature=data["agent"]["temperature"],
-                chat_history=data["agent"]["chat_history"],
-            ),
-        )
-
-        instance.state = DotDict(data["state"])
-        instance.state.editor = {}
-        instance.event_log = data["event_history"]
-        instance.environment.communicate("cd " + data["cwd"])
-
-        return instance
-
-    # def step(self, action: str, thought: str) -> tuple[str, bool]:
-    #     # parse command
-    #     # run command/tool
-    #     # return reponse as observation
-
-    #     if action == "exit":
-    #         return "Exited task", True
-
-    #     try:
-    #         return self.parse_command_to_function(command_string=action)
-    #     except Exception as e:
-    #         return e.args[0], False
 
     def get_last_task(self):
         for event in self.event_log[::-1]:
@@ -318,6 +264,7 @@ class Session:
                             if not env:
                                 raise ToolNotFoundException(toolname, self.environments)
 
+                            print(tool_name, args) 
                             response = env.tools[toolname]({
                                 "environment": env,
                                 "session": self,
@@ -528,10 +475,26 @@ class Session:
                     "state" : self.state,
                 })
 
+        # get_or_create_repo(
+        #     self.default_environment,
+        #     self.base_path,
+        # )
+        self.original_branch = self.default_environment.execute("git branch --show-current")[0]
+        self.agent_branch = self.agent_branch + "-" + self.original_branch + "-" + str(random.randint(0, 1000))
+        make_new_branch(self.default_environment, self.agent_branch)
+        stash_and_commit_changes(self.default_environment, self.agent_branch,"test")
+
+        # base_diff = get_current_diff(self.default_environment)
+        # print(base_diff,file=open("base_diff.txt", "w"))
+        
+
         self.telemetry_client.capture(SessionStartEvent(self.name))
         
 
     def exit(self):
+
+        self.default_environment.execute("git checkout " + self.original_branch)
+
         for env in self.environments.values():
             env.teardown()
             for tool in env.tools.values():
@@ -540,3 +503,5 @@ class Session:
                     "session" : self,
                     "state" : self.state,
                 })
+
+        

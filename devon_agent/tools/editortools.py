@@ -1,6 +1,7 @@
 from devon_agent.tool import PreTool, Tool, ToolContext
 from devon_agent.tools.utils import make_abs_path, file_exists, read_file, cwd_normalize_path
 from devon_agent.utils import DotDict
+from devon_agent.vgit import commit_files
 
 def load_file_to_editor(ctx, file_path):
     """
@@ -660,3 +661,24 @@ SCROLL_TO_LINE(1)         April 2024         SCROLL_TO_LINE(1)
         window_start_line = window_number * ctx["state"].editor.PAGE_SIZE + 1
         return f"Scrolled to window containing line {line_number} in file {abs_path}. Window starts at line {window_start_line}."
 
+
+
+def save_create_file(ctx, response):
+    """
+    save_create_file - post func for create_file
+    """
+
+    if "Successfully created file " in response:
+        files = response.split("Successfully created file ")[1].split(" ")
+        commit_files(ctx["environment"], files[0], "Create file")
+        return f"Successfully saved file {files[0]} to git repository"
+    
+def save_delete_file(ctx, response):
+    """
+    save_delete_file - post func for delete_file
+    """
+    if "Successfully deleted file " in response:
+        files = response.split("Successfully deleted file ")[1].split(" ")
+        commit_files(ctx["environment"], files[0], "Delete file")
+        return f"Successfully saved file {files[0]} to git repository"
+    
