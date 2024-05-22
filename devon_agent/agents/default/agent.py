@@ -14,6 +14,7 @@ from devon_agent.agents.default.anthropic_prompts import (
 from devon_agent.agents.default.llama3_prompts import llama3_commands_to_command_docs, llama3_history_to_bash_history, llama3_last_user_prompt_template_v1, llama3_parse_response, llama3_system_prompt_template_v1
 
 from devon_agent.tools.utils import get_cwd
+from devon_agent.tools.memory import VLiteMemoryTool
 
 from devon_agent.udiff import Hallucination
 from devon_agent.utils import LOGGER_NAME, DotDict
@@ -33,7 +34,7 @@ class Agent:
     name: str
     model: str
     temperature: float = 0.0
-    chat_history: list[dict[str, str]] = field(default_factory=list)
+    chat_history: VLiteMemoryTool
     interrupt: str = ""
     api_key: Optional[str] = None
     scratchpad = None
@@ -104,7 +105,7 @@ class TaskAgent(Agent):
                 session.state.editor.files, session.state.editor.PAGE_SIZE
             )
 
-            self.chat_history.append(
+            self.chat_history.add(observation, metadata=
                 {"role": "user", "content": observation, "agent": self.name}
             )
 
@@ -116,15 +117,15 @@ class TaskAgent(Agent):
             last_observation = None
             second_last_observation = None
             if len(self.chat_history) > 2:
-                last_observation = self.chat_history[-1]["content"]
-                second_last_observation = self.chat_history[-3]["content"]
+                last_observation = self.chat_history.get_last_item(1)["text"]
+                second_last_observation = self.chat_history.get_last_item(3)["text"]
             if (
                 last_observation
                 and second_last_observation
                 and "Failed to edit file" in last_observation
                 and "Failed to edit file" in second_last_observation
             ):
-                self.chat_history = self.chat_history[:-6]
+                self.chat_history = self.chat_history.get_last_item(6)
                 self.current_model.args.temperature += (
                     0.2 if self.current_model.args.temperature < 0.8 else 0
                 )

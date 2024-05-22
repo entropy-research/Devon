@@ -28,7 +28,7 @@ def editor_repr(editor):
     return editor
 
 
-def anthropic_history_to_bash_history(history):
+def anthropic_history_to_bash_history(memory_tool):
     # self.history.append(
     # {
     #     "role": "assistant",
@@ -37,10 +37,10 @@ def anthropic_history_to_bash_history(history):
     #     "action": action,
     #     "agent": self.name,
 
-    bash_history = ""
+    history = memory_tool.get_all_items()  
     for entry in history:
         if entry["role"] == "user":
-            result = entry["content"].strip() if entry["content"] else "" + "\n"
+            result = entry["content"].strip() + "\n"  # Fixed concatenation issue
             bash_history += f"<RESULT>\n{result}\n</RESULT>"
         elif entry["role"] == "assistant":
             bash_history += f"""

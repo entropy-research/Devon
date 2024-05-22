@@ -8,7 +8,7 @@
 # Action
 
 from typing import Dict, List, Union
-
+from devon_agent.tools.memory import VLiteMemoryTool
 
 def commands_to_command_docs(commands: List[Dict]):
     doc = """"""
@@ -247,7 +247,7 @@ def system_prompt_template_v2(command_docs: str):
 """
 
 
-def history_to_bash_history(history):
+def history_to_bash_history(memory_tool):
     # self.history.append(
     # {
     #     "role": "assistant",
@@ -257,9 +257,11 @@ def history_to_bash_history(history):
     #     "agent": self.name,
 
     bash_history = ""
+    # Assuming get_all_items retrieves all history items in order they were added
+    history = memory_tool.get_all_items()  
     for entry in history:
         if entry["role"] == "user":
-            result = entry["content"].strip() if entry["content"] else "" + "\n"
+            result = entry["content"].strip() + "\n"  # Fixed concatenation issue
             bash_history += f"<RESULT>\n{result}\n</RESULT>"
         elif entry["role"] == "assistant":
             bash_history += f"""

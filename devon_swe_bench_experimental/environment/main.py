@@ -1,6 +1,7 @@
 def main():
     from devon_swe_bench_experimental.environment.agent import TaskAgent
     from devon_swe_bench_experimental.environment.session import Session, SessionArguments
+    from devon_agent.tools.memory import VLiteMemoryTool
 
     args = SessionArguments(
         path="/Users/mihirchintawar/agent/examples",
@@ -10,7 +11,7 @@ def main():
         user_input=input,
     )
 
-    chat_history = []
+    chat_history = VLiteMemoryTool()
 
     task = (
         "Make a python application that can read a json file and covert it a csv file"
