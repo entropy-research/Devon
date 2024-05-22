@@ -178,4 +178,4 @@ Join our Discord server and say hi!
 
 # License
 
-Distributed under the Apache 2.0 License. See [`LICENSE`](./LICENSE) for more information.
+Distributed under the AGPL License. See [`LICENSE`](./LICENSE) for more information.
