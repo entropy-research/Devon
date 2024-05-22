@@ -276,7 +276,7 @@ ask_user "Hi, What can I help you with?"
 
     def forward(self, observation, available_actions, env):
         try:
-            system_prompt_template = f"""You are a user-facing software engineer. Your job is to communicate with the user, understand user needs, plan and delegate. You may perform actions to acheive this.
+            system_prompt_template = f"""You are a user-facing software engineer. Your job is to communicate with the user, understand user needs, plan and delegate. You may perform actions to achieve this.
 Actions:
 {available_actions}
 
