@@ -37,6 +37,8 @@ class Agent:
     chat_history: list[dict[str, str]] = field(default_factory=list)
     interrupt: str = ""
     api_key: Optional[str] = None
+    api_base: Optional[str] = None
+    prompt_type: Optional[str] = None
     scratchpad = None
 
     def run(self, session: "Session", observation: str = None): ...
