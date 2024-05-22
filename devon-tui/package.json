@@ -20,6 +20,7 @@
 		"dist"
 	],
 	"dependencies": {
+		"@xstate/react": "^4.1.1",
 		"axios": "^1.6.8",
 		"ink": "^4.1.0",
 		"ink-spinner": "^5.0.0",

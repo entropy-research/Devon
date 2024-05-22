@@ -36,8 +36,21 @@ Teardown
 """
 
 
-from devon_agent.environment import EnvironmentModule
+from devon_agent.environment import EnvironmentModule, LocalEnvironment
 
+def get_git_root(fpath=None):
+    path = fpath
+
+    if path is None:
+        path = os.getcwd()
+
+    while True:
+        if os.path.exists(os.path.join(path, ".git")):
+            return path
+        parent_dir = os.path.dirname(path)
+        if parent_dir == path:
+            return fpath
+        path = parent_dir
 
 def get_or_create_repo(env : EnvironmentModule, repo_path):
     """
@@ -58,8 +71,59 @@ def get_or_create_repo(env : EnvironmentModule, repo_path):
         env.execute(f'cd {repo_path} && git init')
         print("Initialized a new git repository at:", repo_path)
 
-    
 
+def simple_stash_and_commit_changes(env: EnvironmentModule, branch_name, commit_message):
+    current_branch = env.execute("git rev-parse --abbrev-ref HEAD")[0].strip()
+    branch_name = f"{branch_name}"
+    
+    # Stash changes (including untracked files)
+    _, rc = env.execute("git stash push")
+    if rc != 0:
+        raise Exception("Failed to stash changes")
+    
+    commit_hash = None
+    
+    try:
+        # Checkout the specified branch
+        # check if branch exists
+        _, rc = env.execute(f"git rev-parse --verify {branch_name}")
+        if rc == 0:
+            _, rc = env.execute(f"git checkout {branch_name}")
+        else:
+            _, rc = env.execute(f"git checkout -b {branch_name}")
+        if rc != 0:
+            raise Exception("Failed to checkout branch")
+        
+        # Apply the stashed changes
+        _, rc = env.execute("git stash apply")
+        if rc != 0:
+            raise Exception("Failed to apply stashed changes")
+        
+        # Stage all files
+        _,rc = env.execute("git add $(git rev-parse --show-toplevel)")
+        if rc != 0:
+            raise Exception("Failed to stage all files")
+        
+        # Commit the changes
+        _, rc = env.execute(f"git commit -m '{commit_message}'")
+        if rc != 0:
+            raise Exception("Failed to commit changes")
+        
+        # Get the commit hash
+        commit_hash = env.execute("git rev-parse HEAD")[0].strip()
+    
+    finally:
+        # Checkout the original branch
+        _, rc = env.execute(f"git checkout {current_branch}")
+        if rc != 0:
+            raise Exception("Failed to checkout original branch")
+        
+        # Pop the stash
+        _, rc = env.execute("git stash pop")
+        if rc != 0:
+            raise Exception("Failed to pop stash")
+    
+    return commit_hash
 
 def stash_and_commit_changes(env: EnvironmentModule, branch_name, commit_message):
     # Get the current branch
@@ -184,10 +248,41 @@ def subtract_diffs(env : EnvironmentModule, diff1_path, diff2_path, output_path)
     env.execute(f"interdiff {diff1_path} {diff2_path} > {output_path}")
     
 
-def commit_files(env : EnvironmentModule, files, commit_message):
-    env.execute(f"git add {files}")
-    env.execute(f"git commit -m '{commit_message}'")
+def safely_revert_to_commit(env : EnvironmentModule,commit_to_revert : str, commit_to_go_to : str):
+    # get the diff between the two commits
+    # get temp file
+    temp_file = env.execute("mktemp")[0].strip()
+    env.execute(f"git diff {commit_to_revert} {commit_to_go_to} > {temp_file}")
+    files = env.execute(f"git diff {commit_to_revert} {commit_to_go_to} --name-only")[0].splitlines()
+    print(env.execute(f"cat {temp_file}"))
+    env.execute(f"git apply {temp_file}")
 
+    env.execute(f"rm {temp_file}")
+
+    env.execute(f"git reset --soft {commit_to_go_to}")
+
+    # add all files to working tree
+    print(files)
+    git_root = get_git_root()
+    files = [os.path.join(git_root, f) for f in files]
+    env.execute(f"git add {' '.join(files)}")
+    print(f"git add {' '.join(files)}")
+
+def get_last_commit(env : EnvironmentModule):
+    return env.execute("git rev-parse HEAD")[0].strip()
+
+def commit_files(env : EnvironmentModule, files, commit_message):
+
+    _,rc = env.execute(f"git add {' '.join(files)}")
+    if rc != 0:
+        raise Exception("Failed to add files")
+    _,rc = env.execute(f"git commit -m '{commit_message}'")
+    if rc != 0:
+        raise Exception("Failed to commit files")
+    
+    commit_hash = env.execute("git rev-parse HEAD")[0].strip()
+    return commit_hash
+    
 def delete_last_commit(env : EnvironmentModule):
     # soft reset latest commit
     env.execute(f"git reset --soft HEAD~1")
@@ -228,4 +323,22 @@ def get_diff_last_commit(env : EnvironmentModule, files):
 #     """ Subtract diff2 from diff1 """
 #     reversed_diff2 = reverse_diff(diff2)
 #     return combine_diffs(diff1, reversed_diff2)
+
+
+if __name__ == "__main__":
+    import os
+    from devon_agent.session import Session, SessionArguments
+    session = Session(
+        args=SessionArguments(
+            path=os.getcwd(),
+            user_input=None,
+            name="dummy"
+        ),
+        agent = None
+
+    )
+    # env = LocalEnvironment(os.getcwd())
+    # session.default_environment.session = session
+    session.default_environment.setup(session)
+    safely_revert_to_commit(session.default_environment, "415cc8021ba520bff77144e018346cce25e09d4e", "fae10f9c98d2eaf16ba7704418ce59a7de40b4ae")
 

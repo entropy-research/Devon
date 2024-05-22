@@ -22,7 +22,7 @@ from devon_agent.tools.shelltool import ShellTool
 from devon_agent.tools.usertools import AskUserTool
 
 from devon_agent.utils import DotDict, Event
-from devon_agent.vgit import  get_current_diff, get_or_create_repo, make_new_branch, stash_and_commit_changes, subtract_diffs
+from devon_agent.vgit import  get_current_diff, get_last_commit, get_or_create_repo, make_new_branch, safely_revert_to_commit, stash_and_commit_changes, subtract_diffs
 
 
 @dataclass(frozen=False)
@@ -85,19 +85,7 @@ stateDiagram
 """
 
 
-def get_git_root(fpath=None):
-    path = fpath
 
-    if path is None:
-        path = os.getcwd()
-
-    while True:
-        if os.path.exists(os.path.join(path, ".git")):
-            return path
-        parent_dir = os.path.dirname(path)
-        if parent_dir == path:
-            return fpath
-        path = parent_dir
 
 
 class Session:
@@ -119,20 +107,20 @@ class Session:
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
-            "create_file" : CreateFileTool(),
+            "create_file" : CreateFileTool().register_post_hook(save_create_file),
             "open_file" : OpenFileTool(),
             "scroll_up" : ScrollUpTool(),
             "scroll_down" : ScrollDownTool(),
             "scroll_to_line" : ScrollToLineTool(),
             "search_file" : SearchFileTool(),
-            "edit_file" : EditFileTool(),
+            "edit_file" : EditFileTool().register_post_hook(save_edit_file),
             "search_dir" : SearchDirTool(),
             "find_file" : FindFileTool(),
             # "list_dirs_recursive" : ListDirsRecursiveTool(),
             "get_cwd" : GetCwdTool(),
             "no_op" : NoOpTool(),
             "submit" : SubmitTool(),
-            "delete_file" : DeleteFileTool(),
+            "delete_file" : DeleteFileTool().register_post_hook(save_delete_file),
         })
         local_environment.set_default_tool(ShellTool())
         self.default_environment = local_environment
@@ -200,6 +188,11 @@ class Session:
                         "consumer": "user",
                     }
                 )
+
+            case "GitRequest" :
+                if event["content"]["type"] == "revert_to_commit":
+                    
+                    safely_revert_to_commit(self.default_environment, event["content"]["commit_to_revert"], event["content"]["commit_to_go_to"])
 
             case "ModelRequest":
                 thought, action, output = self.agent.predict(
@@ -475,6 +468,8 @@ class Session:
                     "state" : self.state,
                 })
 
+        
+
         # get_or_create_repo(
         #     self.default_environment,
         #     self.base_path,
@@ -486,6 +481,14 @@ class Session:
 
         # base_diff = get_current_diff(self.default_environment)
         # print(base_diff,file=open("base_diff.txt", "w"))
+
+        self.event_log.append({
+            "type": "GitEvent",
+            "content" : {
+                "commit" : get_last_commit(self.default_environment),
+                "files" : [],
+            }
+        })
         
 
         self.telemetry_client.capture(SessionStartEvent(self.name))

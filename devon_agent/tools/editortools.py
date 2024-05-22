@@ -1,7 +1,7 @@
 from devon_agent.tool import PreTool, Tool, ToolContext
 from devon_agent.tools.utils import make_abs_path, file_exists, read_file, cwd_normalize_path
 from devon_agent.utils import DotDict
-from devon_agent.vgit import commit_files
+from devon_agent.vgit import commit_files, simple_stash_and_commit_changes, stash_and_commit_changes
 
 def load_file_to_editor(ctx, file_path):
     """
@@ -670,7 +670,15 @@ def save_create_file(ctx, response):
 
     if "Successfully created file " in response:
         files = response.split("Successfully created file ")[1].split(" ")
-        commit_files(ctx["environment"], files[0], "Create file")
+        commit = commit_files(ctx["environment"], files, "created file(s) " + " ".join(files))
+        if commit:
+            ctx["session"].event_log.append({
+                "type": "GitEvent",
+                "content" : {
+                    "commit" : commit,
+                    "files" : files,
+                }
+            })
         return f"Successfully saved file {files[0]} to git repository"
     
 def save_delete_file(ctx, response):
@@ -679,6 +687,14 @@ def save_delete_file(ctx, response):
     """
     if "Successfully deleted file " in response:
         files = response.split("Successfully deleted file ")[1].split(" ")
-        commit_files(ctx["environment"], files[0], "Delete file")
+        commit = commit_files(ctx["environment"], files, "Deleted file(s) " + " ".join(files))
+        if commit:
+            ctx["session"].event_log.append({
+                "type": "GitEvent",
+                "content" : {
+                    "commit" : commit,
+                    "files" : files,
+                }
+            })
         return f"Successfully saved file {files[0]} to git repository"
     
