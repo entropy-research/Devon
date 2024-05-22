@@ -34,7 +34,7 @@ class Agent:
     name: str
     model: str
     temperature: float = 0.0
-    chat_history: VLiteMemoryTool
+    chat_history: VLiteMemoryTool()
     interrupt: str = ""
     api_key: Optional[str] = None
     scratchpad = None
@@ -165,7 +165,7 @@ class TaskAgent(Agent):
                     + "\n"
                 )
 
-                history = [entry for entry in self.chat_history if entry["role"] == "user" or entry["role"] == "assistant"]
+                history = self.chat_history.get_entries_by_metadata({"role": ["user", "assistant"]})
                 system_prompt = openai_system_prompt_template_v3(command_docs)
                 last_user_prompt = openai_last_user_prompt_template_v3(
                     task,

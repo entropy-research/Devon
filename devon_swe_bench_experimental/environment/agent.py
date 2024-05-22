@@ -13,6 +13,7 @@ from devon_swe_bench_experimental.environment.prompt import (
 )
 
 from devon_swe_bench_experimental.environment.utils import LOGGER_NAME, Event
+from devon_agent.tools.memory import VLiteMemoryTool
 from tenacity import RetryError
 
 from typing import TYPE_CHECKING
@@ -31,7 +32,7 @@ class Agent:
     name: str
     model: str
     temperature: float = 0.0
-    chat_history: VLiteMemoryTool
+    chat_history: VLiteMemoryTool()
     interrupt: str = ""
 
     def run(self, session: "Session", observation: str = None): ...
