@@ -2,7 +2,7 @@ import os
 from devon_agent.tool import Tool, ToolContext
 from devon_agent.tools.utils import make_abs_path, check_lint, check_lint_entry_in_list, read_file, write_file
 from devon_agent.udiff import Hallucination, apply_file_context_diffs, extract_all_diffs, log_failed_diff, log_successful_diff
-from devon_agent.vgit import commit_files
+from devon_agent.vgit import commit_files, simple_stash_and_commit_changes, stash_and_commit_changes
 
 
 def apply_diff(ctx, multi_file_diffs):
@@ -200,8 +200,20 @@ class EditFileTool(Tool):
     
     def function(self, ctx : ToolContext, diff: str) -> str:
         """
-        edit_file file_path <<<udiff>>>
-        Writes the given diff to the codebase.
+        command_name: edit_file
+        description: Applies a unified diff to files in the file system
+        signature: edit_file [DIFF]
+        example: `edit_file <<<
+        --- file1.txt
+        +++ file1.txt
+        @@ -1,5 +1,5 @@
+        Line 1
+        -Line 2
+        +Line Two
+        Line 3
+        Line 4
+        Line 5
+        >>>`
         """
         #extract diff
         #apply diff
@@ -217,6 +229,14 @@ def save_edit_file(ctx, response):
     """
     if "Successfully edited file(s)" in response:
         files = response.split(":")[1].split(", ")
-        commit_files(ctx["environment"], files, "Edit files " + " ".join(files))
+        commit = commit_files(ctx["environment"],files, "Deleted file(s) " + " ".join(files))
+        if commit:
+            ctx["session"].event_log.append({
+                "type": "GitEvent",
+                "content" : {
+                    "commit" : commit,
+                    "files" : files,
+                }
+            })
     return response
 

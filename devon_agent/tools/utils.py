@@ -7,11 +7,12 @@ import tempfile
 from devon_agent.tool import ToolContext
 
 
-def normalize_path(path, specified_path):
+def normalize_path(path : str, specified_path : str):
     if path == os.sep:
         return specified_path
     elif os.path.isabs(path):
-        if path.startswith(specified_path):
+
+        if path.lower().startswith(specified_path.lower()):
             path = Path(path)
             return path.absolute().as_posix()
         else:

@@ -14,16 +14,7 @@ class SubmitTool(Tool):
         
         match format:
             case "docstring":
-                return """NAME
-            submit - submit your solution once you think you have resolved the issue
-        
-        SYNOPSIS
-            submit
-        
-        DESCRIPTION
-            The submit command submits your solution. It is used to indicate that you have resolved the issue and are ready to submit your
-            solution.
-        """
+                return self.function.__doc__
             case "manpage":
                 return """NAME
             submit - submit your solution once you think you have resolved the issue

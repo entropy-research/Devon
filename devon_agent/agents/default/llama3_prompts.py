@@ -143,10 +143,17 @@ Instructions:
 """
 
 def llama3_parse_response(response):
-    thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
-    action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
-    scratchpad = None
-    if "<SCRATCHPAD>" in response:
-        scratchpad = response.split("<SCRATCHPAD>")[1].split("</SCRATCHPAD>")[0]
+    if "<thought>" in response:
+        thought = response.split("<thought>")[1].split("</thought>")[0]
+        action = response.split("<command>")[1].split("</command>")[0]
+        scratchpad = None
+        if "<scratchpad>" in response:
+            scratchpad = response.split("<scratchpad>")[1].split("</scratchpad>")[0]
+    else:
+        thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
+        action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
+        scratchpad = None
+        if "<SCRATCHPAD>" in response:
+            scratchpad = response.split("<SCRATCHPAD>")[1].split("</SCRATCHPAD>")[0]
 
     return thought, action, scratchpad

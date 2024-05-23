@@ -60,8 +60,10 @@ class SearchDirTool(Tool):
     
     def function(self,ctx : ToolContext, search_term: str, dir: str = "./"):
         """
-        search_dir search_term dir
-        Searches for the term in all files in the specified directory.
+        command_name: search_dir
+        description: Searches for the term in all files in the specified directory.
+        signature: search_dir [SEARCH_TERM] [SEARCH_DIR]
+        example: `search_dir "hello" ./docs`
         """
         if search_term.startswith("--"):
             search_term = '"' + search_term + '"'
@@ -153,8 +155,10 @@ class FindFileTool(Tool):
             
     def function(self,ctx : ToolContext, file_path: str):
         """
-        find_file file_path
-        Finds a file by its name within the file system.
+        command_name: find_file
+        description: Finds a file by its name within the file system.
+        signature: find_file [FILE_NAME] 
+        example: `find_file README.md`
         """
         filename = os.path.basename(file_path)
         base_path = get_cwd(ctx)
@@ -219,15 +223,10 @@ class ListDirsRecursiveTool(Tool):
             
     def function(self,ctx : ToolContext, file_path: str):
         """
-        Returns the entire directory tree in its entirety from the file system.
-
-        list_recursive_dirs .
-
-        Args:
-            path: the path to list the folder subtree from.
-
-        Returns:
-            A JSON document representing the directory tree
+        command_name: list_recursive_dirs
+        description: Returns the entire directory tree in its entirety from the file system.
+        signature: list_recursive_dirs [DIR_PATH] 
+        example: `list_recursive_dirs .`
         """
 
         abs_path = make_abs_path(ctx, file_path)
