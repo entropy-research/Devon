@@ -85,6 +85,34 @@ To run in *debug* mode, the command is:
 devon --debug
 ```
 
+To run in *local* mode:
+> [!WARNING]
+> The current version of local model support is not mature, proceed with caution, and expect the performance to degrade significantly compared to the other options.
+
+1. Get deepseek running with [ollama](https://ollama.com/library/deepseek-coder:6.7b)
+
+2. Start the local ollama server by running
+```
+ollama run deepseek-coder:6.7b
+```
+
+4. Then configure devon to use the model
+```bash
+devon configure
+
+Configuring Devon CLI...
+? Select the model name: 
+  claude-opus 
+  gpt4-o 
+  llama-3-70b 
+❯ ollama/deepseek-coder:6.7b
+```
+
+4. And finally, run it with:
+```
+devon --api_key=FOSS
+```
+
 For a list of all commands available:
 ```bash
 devon --help
@@ -97,13 +125,14 @@ devon --help
 - Test writing
 - Bug fixing
 - Architecture exploration
+- Local Model Support
 
 ### Limitations
 - Minimal functionality for non-Python languages
 - Sometimes have to specify the file where you want the change to happen
+- Local mode is not good right now. Please try to avoid using it.
 
 # Progress
-
 
 ### This project is still super early and <ins>we would love your help</ins> to make it great!
 
@@ -112,7 +141,7 @@ devon --help
   - [x] Claude 3 Opus
   - [x] GPT4-o
   - [x] Groq llama3-70b
-  - [ ] Ollama llama3-70b + 7b
+  - [x] Ollama deepseek-6.7b
   - [ ] Google Gemini 1.5 Pro
 - Launch plugin system for tool and agent builders
 - Create self-hostable Electron app
