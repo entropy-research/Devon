@@ -158,7 +158,7 @@ function Terminal({ messages }): JSX.Element {
                 {[{ id: 1, name: 'Terminal' }].map(file => (
                     <button
                         key={file.id}
-                        className={`flex px-2 items-center bg-black pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 1 ? 'border-t-primary outline outline-neutral-500 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
+                        className={`flex px-2 items-center bg-black pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 1 ? 'border-t-primary outline outline-neutral-700 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
                         // onClick={() => updateSelectedFile(file)}
                     >
                         <TerminalIcon

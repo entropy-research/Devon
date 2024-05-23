@@ -77,7 +77,7 @@ const EditorWidget = ({
         <CodeEditorContextProvider tabFiles={files}>
             <div className={`flex flex-col h-full w-full ${showEditorBorders ? 'pb-3' : ''}`}>
                 <div
-                    className={`flex flex-row h-full ${showEditorBorders ? 'rounded-md border bg-midnight border-neutral-600 py-2 mr-3' : ''}`}
+                    className={`flex flex-row h-full ${showEditorBorders ? 'rounded-md border bg-midnight border-neutral-600 pt-2 mr-3 overflow-hidden' : ''}`}
                 >
                     <div className="flex-none w-48 bg-midnight">
                         <FileTree />
