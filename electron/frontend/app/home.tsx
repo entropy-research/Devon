@@ -20,7 +20,7 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
     const [showPlanner, setShowPlanner] = useState<boolean>(true)
-    const [showTimeline, setShowTimeline] = useState<boolean>(false)
+    const [showTimeline, setShowTimeline] = useState<boolean>(true)
 
     const toggleViewMode = () => {
         setViewMode(
@@ -85,15 +85,14 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                         // >
                             <Chat chatProps={chatProps} />
                         </div> */}
-                        <Chat
+                        {/* <Chat
                             chatProps={chatProps}
                             // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
-                        />
+                        /> */}
                     </div>
-                    <div className="flex flex-col w-full">
-                        {/* <div className="flex flex-col w-[800px]"> */}
+                    {/* <div className="flex flex-col w-full">
                         <EditorWidget chatId={chatProps.id ?? null} />
-                    </div>
+                    </div> */}
 
                     {/* <div className="flex flex-2">
                             <AgentWorkspace
