@@ -246,7 +246,8 @@ class TaskAgent(Agent):
             prompts = {
                 "anthropic": self._prepare_anthropic,
                 "openai": self._prepare_openai,
-                "llama3": self._prepare_llama3
+                "llama3": self._prepare_llama3,
+                "ollama": self._prepare_ollama
             }
 
             messages, system_prompt = prompts[self.prompt_type](task, editor, session)

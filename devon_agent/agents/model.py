@@ -168,6 +168,7 @@ class OllamaModel:
         }
 
         self.api_key = "ollama"
+        self.prompt_type = 'ollama'
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
