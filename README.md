@@ -15,7 +15,10 @@
 
 https://github.com/entropy-research/Devon/assets/61808204/d42a8b9a-0211-4624-9804-d24df1d4dbf6
 </div>
-<a href="https://discord.gg/p5YpZ5vjd9"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=for-the-badge" alt="Join our Discord community"></a> <-- We have a **community-driven Dev Team** for this repo. Come join us! It's great.
+
+<a href="https://discord.gg/p5YpZ5vjd9"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=for-the-badge" alt="Join our Discord community"></a> 
+^ We have a **community-driven Dev Team** for this repo. Come join us! It's great.
+  
 # Installation
 
 ## Prerequisites
