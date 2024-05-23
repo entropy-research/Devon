@@ -59,8 +59,10 @@ class DeleteFileTool(Tool):
     
     def function(self,ctx : ToolContext, file_path: str) -> str:
         """
-        delete_file file_path
-        Deletes a file at the specified file path.
+        command_name: delete_file
+        description: Deletes a file at the specified file path.
+        signature: delete_file [FILE_PATH]
+        example: `delete_file ./README.md`
         """
 
         try:
@@ -144,10 +146,7 @@ class CreateFileTool(Tool):
 
             To create a file at "/path/to/script.py" with initial content:
 
-                    create_file "/path/to/script.py" <<<
-                    import os
-                    import asyncio
-                    >>>
+                    
 
     SEE ALSO
             touch(1), echo(1)
@@ -159,8 +158,13 @@ class CreateFileTool(Tool):
     
     def function(self,ctx : ToolContext, file_path: str, content: str = "") -> str:
         """
-        create_file file_path <<<content>>>
-        Creates a new file at the specified file path with optional initial content.
+        command_name: create_file
+        description: Creates a new file at the specified file path with optional initial content.
+        signature: create_file [FILE_PATH] <<<CONTENT>>>
+        example: `create_file "/path/to/script.py" <<<
+import os
+import asyncio
+>>>`
         """
         try:
             # Check if file already exists to avoid overwriting
@@ -244,8 +248,10 @@ class ListFilesTool(Tool):
             
     def function(self,ctx : ToolContext, folder_path: str = ".") -> list:
         """
-        list_files folder_path
-        Lists all files in the specified folder.
+        command_name: list_files
+        description: Lists all files in the specified folder.
+        signature: list_files [FOLDER_PATH]
+        example: `list_files .`
         """
         abs_path = cwd_normalize_path(ctx, folder_path)
 
@@ -305,8 +311,10 @@ class ReadFileTool(Tool):
     
     def function(self, ctx : ToolContext, file_path: str) -> str:
         """
-        read_file file_path
-        Reads the contents of a file at the specified file path.
+        command_name: read_file
+        description: Reads the contents of a file at the specified file path.
+        signature: read_file [FILE_PATH]
+        example: `read_file ./README.md`
         """
         try:
             # Check if file exists to avoid reading from non-existent files
@@ -379,8 +387,10 @@ class SearchFileTool(Tool):
     
     def function(self,ctx : ToolContext, search_term: str, file_path: str):
         """
-        search_file search_term file_path
-        Searches for the term in the specified file.
+        command_name: search_file
+        description: Searches for the term in the specified file.
+        signature: search_file [SEARCH_TERM] [DIR_PATH] 
+        example: `search_file "Hello" .`
         """
         abs_path = cwd_normalize_path(ctx, file_path)
 

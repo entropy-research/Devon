@@ -200,8 +200,20 @@ class EditFileTool(Tool):
     
     def function(self, ctx : ToolContext, diff: str) -> str:
         """
-        edit_file file_path <<<udiff>>>
-        Writes the given diff to the codebase.
+        command_name: edit_file
+        description: Applies a unified diff to files in the file system
+        signature: edit_file [DIFF]
+        example: `edit_file <<<
+        --- file1.txt
+        +++ file1.txt
+        @@ -1,5 +1,5 @@
+        Line 1
+        -Line 2
+        +Line Two
+        Line 3
+        Line 4
+        Line 5
+        >>>`
         """
         #extract diff
         #apply diff

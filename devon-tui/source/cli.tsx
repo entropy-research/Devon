@@ -5,7 +5,7 @@ import meow from 'meow';
 import fs from 'fs';
 import path from 'path';
 import inquirer from 'inquirer';
-import {App} from './app.js';
+import {App} from './app_sm.js';
 import portfinder from 'portfinder';
 import childProcess from 'node:child_process';
 // import {writeLogLine} from './utils.js';
@@ -77,7 +77,7 @@ if (input[0] === 'configure') {
           type: 'list',
           name: 'modelName',
           message: 'Select the model name:',
-          choices: ['claude-opus', 'gpt4-o', 'llama-3-70b'],
+          choices: ['claude-opus', 'gpt4-o', 'llama-3-70b', 'ollama/deepseek-coder:6.7b'],
         },
       ])
       .then((answers) => {
@@ -116,8 +116,8 @@ if (input[0] === 'configure') {
 
     let api_key = undefined
     let modelName = undefined
-
-    if (cli.flags['api_key']){
+  
+    if (cli.flags.apiKey){
       api_key = cli.flags['apiKey'];
     } else if (process.env['OPENAI_API_KEY']){
       api_key = process.env['OPENAI_API_KEY'];
@@ -125,6 +125,9 @@ if (input[0] === 'configure') {
     } else if (process.env['ANTHROPIC_API_KEY']){
       api_key = process.env['ANTHROPIC_API_KEY'];
       modelName = "claude-opus"
+    } else if (process.env['GROQ_API_KEY']){
+      api_key = process.env['GROQ_API_KEY'];
+      modelName = "llama-3-70b"
     } else {
         console.log('Please provide an API key using the --api_key option or by setting OPENAI_API_KEY or ANTHROPIC_API_KEY.');
         process.exit(1);

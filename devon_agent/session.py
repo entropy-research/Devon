@@ -19,7 +19,7 @@ from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, ListDirs
 from devon_agent.tools.filetools import SearchFileTool
 from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
 from devon_agent.tools.shelltool import ShellTool
-from devon_agent.tools.usertools import AskUserTool
+from devon_agent.tools.usertools import AskUserTool, SetTaskTool
 
 from devon_agent.utils import DotDict, Event
 from devon_agent.vgit import  get_current_diff, get_last_commit, get_or_create_repo, make_new_branch, safely_revert_to_commit, stash_and_commit_changes, subtract_diffs
@@ -129,6 +129,7 @@ class Session:
 
         user_environment.register_tools({
             "ask_user" : AskUserTool(),
+            "set_task" : SetTaskTool()
         })
 
         print(user_environment.tools["ask_user"].post_funcs)
@@ -141,11 +142,11 @@ class Session:
         self.path = args.path
         self.base_path = args.path
 
+        self.task = None
 
     def get_last_task(self):
-        for event in self.event_log[::-1]:
-            if event["type"] == "Task":
-                return event["content"]
+        if self.task:
+            return self.task
         return "Task unspecified ask user to specify task"
     
     def run_event_loop(self):
@@ -230,15 +231,6 @@ class Session:
                                 "content": "Stopped task",
                                 "producer": event["producer"],
                                 "consumer": "user",
-                            }
-                        )
-                    case "set_task":
-                        new_events.append(
-                            {
-                                "type": "Task",
-                                "content": args[0],
-                                "producer": event["producer"],
-                                "consumer": self.agent.name,
                             }
                         )
                     case _:        

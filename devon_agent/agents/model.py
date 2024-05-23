@@ -151,10 +151,9 @@ class GroqModel:
 
 
 class OllamaModel:
-
     def __init__(self, args: ModelArguments):
         self.args = args
-        self.api_model = args.model
+        self.api_model = args.model_name
         self.model_metadata = {
             "max_tokens": 4096,
         }
@@ -167,9 +166,9 @@ class OllamaModel:
                 max_tokens=self.model_metadata["max_tokens"],
                 model=self.api_model,
                 temperature=self.args.temperature,
-                stop=["</COMMAND>"],
+                stop=["</command>"],
                 api_base="http://localhost:11434"
             )
-        
-        response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
-        return response + "</COMMAND>"
+
+        response = model_completion.choices[0].message.content.rstrip("</command>")
+        return response + "</command>"

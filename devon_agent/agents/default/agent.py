@@ -5,13 +5,14 @@ from dataclasses import dataclass, field
 import traceback
 from typing import Optional, Tuple
 
-from devon_agent.agents.model import AnthropicModel, GroqModel, ModelArguments, OpenAiModel
+from devon_agent.agents.model import AnthropicModel, GroqModel, ModelArguments, OllamaModel, OpenAiModel
 from devon_agent.agents.default.anthropic_prompts import anthropic_history_to_bash_history, anthropic_last_user_prompt_template_v3, anthropic_system_prompt_template_v3, anthropic_commands_to_command_docs
 from devon_agent.agents.default.openai_prompts import openai_last_user_prompt_template_v3, openai_system_prompt_template_v3, openai_commands_to_command_docs
 from devon_agent.agents.default.anthropic_prompts import (
     parse_response
 )
 from devon_agent.agents.default.llama3_prompts import llama3_commands_to_command_docs, llama3_history_to_bash_history, llama3_last_user_prompt_template_v1, llama3_parse_response, llama3_system_prompt_template_v1
+from devon_agent.agents.default.codegemma_prompts import llama3_7b_commands_to_command_docs, llama3_7b_history_to_bash_history, llama3_7b_last_user_prompt_template_v1, llama3_7b_parse_response, llama3_7b_system_prompt_template_v1
 
 from devon_agent.tools.utils import get_cwd
 
@@ -45,7 +46,8 @@ class TaskAgent(Agent):
     supported_models = {
         "gpt4-o": OpenAiModel,
         "claude-opus": AnthropicModel,
-        "llama-3-70b": GroqModel
+        "llama-3-70b": GroqModel,
+        "ollama/deepseek-coder:6.7b": OllamaModel
     }
 
     def _format_editor_entry(self, k, v, PAGE_SIZE=50):
@@ -108,9 +110,6 @@ class TaskAgent(Agent):
                 {"role": "user", "content": observation, "agent": self.name}
             )
 
-
-            command_docs = list(session.generate_command_docs().values())
-
             output = ""
 
             last_observation = None
@@ -130,6 +129,8 @@ class TaskAgent(Agent):
                 )
             
             if self.model == "claude-opus":
+
+                command_docs = list(session.generate_command_docs().values())
 
                 command_docs = (
                     "Custom Commands Documentation:\n"
@@ -153,6 +154,8 @@ class TaskAgent(Agent):
 
                 messages = [{"role": "user", "content": last_user_prompt}]
             elif self.model == "gpt4-o":
+
+                command_docs = list(session.generate_command_docs().values())
                 
                 time.sleep(3)
 
@@ -183,6 +186,8 @@ class TaskAgent(Agent):
                 messages = history + [{"role": "user", "content": last_user_prompt}]
             elif self.model == "llama-3-70b":  
                 time.sleep(3)
+
+                command_docs = list(session.generate_command_docs().values())
             
                 command_docs = (
                     "Custom Commands Documentation:\n"
@@ -206,6 +211,35 @@ class TaskAgent(Agent):
 
                 messages = [{"role": "user", "content": last_user_prompt}]
             
+            elif self.model.startswith("ollama"):
+                time.sleep(3)
+
+                command_docs = list(session.generate_command_docs(format="docstring").values())
+
+                command_docs = (
+                    "Custom Commands Documentation:\n"
+                    + llama3_7b_commands_to_command_docs(
+                        command_docs
+                    )
+                    + "\n"
+                )
+
+                system_prompt = llama3_7b_system_prompt_template_v1(command_docs)
+                last_user_prompt = llama3_7b_last_user_prompt_template_v1(
+                    task, editor, get_cwd(
+                        {
+                            "session" : session,
+                            "environment" : session.default_environment,
+                            "state" : session.state
+                        }
+                    ), session.base_path, self.scratchpad
+                )
+
+                if len(self.chat_history) < 3:
+                    messages = self.chat_history + [{"role": "user", "content": last_user_prompt}]
+                else:
+                    messages = self.chat_history + [{"role": "user", "content": last_user_prompt}]
+
             output = self.current_model.query(messages, system_message=system_prompt)
 
             thought = None

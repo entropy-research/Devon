@@ -82,10 +82,10 @@ class OpenFileTool(Tool):
 
     def function(self, ctx, file_path):
         """
-        Opens a file, and displays it in the editor.
-
-        Args:
-            file_path (str): The path of the file to open.
+        command_name: open_file
+        description: opens a file in your editor interface so you can see it
+        signature: open_file [FILE_PATH]
+        example: `open_file ./README.md`
         """
         try:
             abs_path = cwd_normalize_path(ctx, file_path)
@@ -173,13 +173,10 @@ class CloseFileTool(Tool):
 
     def function(self, ctx, file_path):
         """
-        Removes the target file from the editor.
-
-        Args:
-            file_path (str): The path of the file to delete from the editor.
-
-        Returns:
-            bool: True if the file was successfully deleted, False otherwise.
+        command_name: close_file
+        description: closes a file in your editor interface
+        signature: close_file [FILE_PATH]
+        example: `close_file ./README.md`
         """
 
         abs_path = cwd_normalize_path(ctx, file_path)
@@ -250,8 +247,10 @@ class DeleteFileTool(Tool):
     
     def function(self,ctx : ToolContext, file_path: str) -> str:
         """
-        delete_file file_path
-        Deletes a file at the specified file path.
+        command_name: delete_file
+        description: deletes a file
+        signature: delete_file [FILE_PATH]
+        example: `delete_file ./README.md`
         """
 
         try:
@@ -353,8 +352,13 @@ class CreateFileTool(Tool):
     
     def function(self,ctx : ToolContext, file_path: str, content: str = "") -> str:
         """
-        create_file file_path <<<content>>>
-        Creates a new file at the specified file path with optional initial content.
+        command_name: create_file
+        description: creates a file in your editor interface and file system
+        signature: create_file file_path <<<content>>>
+        example: `create_file README.md <<<
+        # HEADER 1
+        This is a good readme
+        >>>`
         """
         try:
             # Check if file already exists to avoid overwriting
@@ -455,7 +459,10 @@ class ScrollUpTool(Tool):
 
     def function(self, ctx, file_path):
         """
-        scroll_up - scroll up by one page in the specified file
+        command_name: scroll_up
+        description: scroll up by one page in the specified file in the editor
+        signature: scroll_up [FILE_PATH]
+        example: `scroll_up ./README.md`
         """
         
         abs_path = cwd_normalize_path(ctx, file_path)
@@ -543,7 +550,10 @@ class ScrollDownTool(Tool):
 
     def function(self, ctx, file_path):
         f"""
-        scroll_down - scroll down by one window of size {ctx["state"].editor.PAGE_SIZE} in the specified file
+        command_name: scroll_down
+        description: scroll down by one window of size {ctx["state"].editor.PAGE_SIZE} in the specified file
+        signature: scroll_down [FILE_PATH]
+        example: `scroll_down ./README.md`
         """
 
         abs_path = cwd_normalize_path(ctx, file_path)
@@ -635,7 +645,10 @@ SCROLL_TO_LINE(1)         April 2024         SCROLL_TO_LINE(1)
 
     def function(self, ctx, file_path, line_number):
         """
-        scroll_to_line - scroll to the window containing the specified line in the file
+        command_name: scroll_to_line
+        description: scroll to the window containing the specified line in the file
+        signature: scroll_to_line [FILE_PATH] [LINE_NO]
+        example: `scroll_down ./README.md 20`
         """
         abs_path = cwd_normalize_path(ctx, file_path)
 
