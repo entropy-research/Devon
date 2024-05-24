@@ -100,6 +100,11 @@ const steps = [
                 label: 'Create project files',
                 subtitle: 'Setup basic file structure',
             },
+            {
+                id: 1.3,
+                label: 'Create project files',
+                subtitle: 'Setup basic file structure',
+            },
         ],
     },
     {
@@ -148,15 +153,22 @@ const steps = [
 
 const VerticalStepper = () => {
     const [activeStep, setActiveStep] = useState(0)
+    const [subStepFinished, setSubStepFinished] = useState(false)
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if (activeStep < steps.length) {
-                setActiveStep(activeStep + 1)
-            }
-        }, 2000)
-        return () => clearTimeout(timer)
-    }, [activeStep])
+        if (activeStep < steps.length) {
+            const timer = setTimeout(() => {
+                if (
+                    subStepFinished ||
+                    steps[activeStep].subSteps.length === 0
+                ) {
+                    setActiveStep(activeStep + 1)
+                    setSubStepFinished(false)
+                }
+            }, 2000)
+            return () => clearTimeout(timer)
+        }
+    }, [activeStep, subStepFinished])
 
     return (
         <div className="flex flex-col h-full w-full px-5 mt-10">
@@ -168,6 +180,7 @@ const VerticalStepper = () => {
                             step={step}
                             index={index}
                             activeStep={activeStep}
+                            setSubStepFinished={setSubStepFinished}
                         />
                     ))}
                 </div>
@@ -178,8 +191,8 @@ const VerticalStepper = () => {
 
 export default VerticalStepper
 
-const Step = ({ step, index, activeStep }) => {
-    const [subStepActiveIndex, setSubStepActiveIndex] = useState(0)
+const Step = ({ step, index, activeStep, setSubStepFinished }) => {
+    const [subStepActiveIndex, setSubStepActiveIndex] = useState(-1)
 
     useEffect(() => {
         if (activeStep === index && step.subSteps.length > 0) {
@@ -189,12 +202,15 @@ const Step = ({ step, index, activeStep }) => {
                         return prevIndex + 1
                     }
                     clearInterval(interval)
+                    setSubStepFinished(true)
                     return prevIndex
                 })
             }, 1000)
             return () => clearInterval(interval)
+        } else if (activeStep === index) {
+            setSubStepFinished(true)
         }
-    }, [activeStep, index, step.subSteps.length])
+    }, [activeStep, index, setSubStepFinished, step.subSteps.length])
 
     return (
         <div className="flex flex-row">
@@ -230,6 +246,7 @@ const Step = ({ step, index, activeStep }) => {
                                     showLine={
                                         subIndex < step.subSteps.length - 1
                                     }
+                                    active={subStepActiveIndex >= subIndex}
                                 />
                             ))}
                         </div>
@@ -240,14 +257,18 @@ const Step = ({ step, index, activeStep }) => {
     )
 }
 
-const SubStep = ({ subStep, showLine }) => {
+const SubStep = ({ subStep, showLine, active }) => {
     return (
         <div className="relative flex flex-col pb-3">
             <div className="flex">
-                <div className="z-10 flex items-center justify-center w-4 h-4 bg-gray-400 rounded-full translate-y-1">
+                <div
+                    className={`z-10 flex items-center justify-center w-4 h-4 bg-gray-400 rounded-full translate-y-1 ${active ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000`}
+                >
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
-                <div className="ml-3">
+                <div
+                    className={`ml-3 ${active ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 delay-800`}
+                >
                     <span className="text-white">{subStep.label}</span>
                     <span className="block mt-1 text-gray-400">
                         {subStep.subtitle}
@@ -255,7 +276,9 @@ const SubStep = ({ subStep, showLine }) => {
                 </div>
             </div>
             {showLine && (
-                <div className="absolute w-px h-full bg-gray-400 left-2 transform -translate-x-1/2 translate-y-1"></div>
+                <div
+                    className={`absolute w-px ${active ? 'h-full' : 'h-0'} bg-gray-400 left-2 transform -translate-x-1/2 translate-y-3 transition-all duration-1000`}
+                ></div>
             )}
         </div>
     )
