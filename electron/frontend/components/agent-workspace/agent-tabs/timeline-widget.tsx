@@ -75,7 +75,7 @@ const steps: StepType[] = [
     },
 ]
 
-const VerticalStepper: React.FC = () => {
+const TimelineWidget: React.FC = () => {
     const [activeStep, setActiveStep] = useState(0)
     const [subStepFinished, setSubStepFinished] = useState(false)
 
@@ -123,7 +123,8 @@ const Step: React.FC<{
     const [connectorHeight, setConnectorHeight] = useState(0)
     const contentRef: RefObject<HTMLDivElement> = useRef(null)
     const pathRef: RefObject<SVGPathElement> = useRef(null)
-    const CURVE_SVG_WIDTH = 50
+    const PADDING_OFFSET = 10
+    const CURVE_SVG_WIDTH = 0 + PADDING_OFFSET
     const CURVE_SVG_HEIGHT_OFFSET = 50 // Dynamic height not really working yet... this is needed if there's no subtitle
     const CURVE_SVG_ANIMATION_DURATION = 1000
 
@@ -271,4 +272,4 @@ const SubStep: React.FC<{
     )
 }
 
-export default VerticalStepper
+export default TimelineWidget
