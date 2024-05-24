@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, RefObject } from 'react'
 import {
     Gitgraph,
     TemplateName,
@@ -83,8 +83,20 @@ export function TimelineWidget({ className }: { className?: string }) {
         </div>
     )
 }
+type SubStepType = {
+    id: number
+    label: string
+    subtitle: string
+}
 
-const steps = [
+type StepType = {
+    id: number
+    label: string
+    subtitle: string
+    subSteps: SubStepType[]
+}
+
+const steps: StepType[] = [
     {
         id: 1,
         label: 'Initialize the project',
@@ -97,11 +109,6 @@ const steps = [
             },
             {
                 id: 1.2,
-                label: 'Create project files',
-                subtitle: 'Setup basic file structure',
-            },
-            {
-                id: 1.3,
                 label: 'Create project files',
                 subtitle: 'Setup basic file structure',
             },
@@ -151,7 +158,7 @@ const steps = [
     },
 ]
 
-const VerticalStepper = () => {
+const VerticalStepper: React.FC = () => {
     const [activeStep, setActiveStep] = useState(0)
     const [subStepFinished, setSubStepFinished] = useState(false)
 
@@ -189,10 +196,25 @@ const VerticalStepper = () => {
     )
 }
 
-export default VerticalStepper
-
-const Step = ({ step, index, activeStep, setSubStepFinished }) => {
+const Step: React.FC<{
+    step: StepType
+    index: number
+    activeStep: number
+    setSubStepFinished: (value: boolean) => void
+}> = ({ step, index, activeStep, setSubStepFinished }) => {
     const [subStepActiveIndex, setSubStepActiveIndex] = useState(-1)
+    const [connectorHeight, setConnectorHeight] = useState(0)
+    const contentRef: RefObject<HTMLDivElement> = useRef(null)
+    const pathRef: RefObject<SVGPathElement> = useRef(null)
+    const CURVE_SVG_WIDTH = 65
+    const CURVE_SVG_HEIGHT_OFFSET = 50
+
+    useEffect(() => {
+        if (contentRef.current) {
+            const totalHeight = contentRef.current.clientHeight + CURVE_SVG_HEIGHT_OFFSET
+            setConnectorHeight(totalHeight)
+        }
+    }, [contentRef.current])
 
     useEffect(() => {
         if (activeStep === index && step.subSteps.length > 0) {
@@ -212,6 +234,23 @@ const Step = ({ step, index, activeStep, setSubStepFinished }) => {
         }
     }, [activeStep, index, setSubStepFinished, step.subSteps.length])
 
+    useEffect(() => {
+        if (pathRef.current) {
+            const pathLength = pathRef.current.getTotalLength()
+            pathRef.current.style.strokeDasharray = `${CURVE_SVG_WIDTH}`
+            pathRef.current.style.strokeDashoffset = `${CURVE_SVG_WIDTH}`
+            pathRef.current.getBoundingClientRect()
+            pathRef.current.style.transition =
+                'stroke-dashoffset 2s ease-in-out'
+            pathRef.current.style.strokeDashoffset = '0'
+        }
+    }, [connectorHeight])
+
+    const connectorPath = `
+        M 12 0
+        Q 12 ${connectorHeight / 2} ${CURVE_SVG_WIDTH} ${connectorHeight / 2}
+    `
+
     return (
         <div className="flex flex-row">
             <div className="relative flex-start">
@@ -230,13 +269,32 @@ const Step = ({ step, index, activeStep, setSubStepFinished }) => {
                         className={`absolute w-px ${activeStep > index ? 'h-full' : 'h-0'} bg-white top-6 left-1/2 transform -translate-x-1/2 transition-all duration-1000`}
                     ></div>
                 )}
+                {step.subSteps.length > 0 && subStepActiveIndex >= 0 && (
+                    <svg
+                        width={CURVE_SVG_WIDTH}
+                        height={connectorHeight}
+                        className="absolute"
+                    >
+                        <path
+                            ref={pathRef}
+                            d={connectorPath}
+                            stroke="white"
+                            fill="transparent"
+                            strokeWidth="2"
+                        />
+                    </svg>
+                )}
             </div>
             <div
                 className={`flex items-center ml-5 mb-3 ${activeStep >= index ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 delay-800`}
             >
                 <div className="flex flex-col">
-                    <span className="text-white">{step.label}</span>
-                    <span className="mt-1 text-gray-400">{step.subtitle}</span>
+                    <div ref={contentRef} className="flex flex-col">
+                        <span className="text-white">{step.label}</span>
+                        <span className="mt-1 text-gray-400">
+                            {step.subtitle}
+                        </span>
+                    </div>
                     {activeStep >= index && step.subSteps.length > 0 && (
                         <div className="ml-5 mt-3">
                             {step.subSteps.map((subStep, subIndex) => (
@@ -257,7 +315,11 @@ const Step = ({ step, index, activeStep, setSubStepFinished }) => {
     )
 }
 
-const SubStep = ({ subStep, showLine, active }) => {
+const SubStep: React.FC<{
+    subStep: SubStepType
+    showLine: boolean
+    active: boolean
+}> = ({ subStep, showLine, active }) => {
     return (
         <div className="relative flex flex-col pb-3">
             <div className="flex">
@@ -277,9 +339,11 @@ const SubStep = ({ subStep, showLine, active }) => {
             </div>
             {showLine && (
                 <div
-                    className={`absolute w-px ${active ? 'h-full' : 'h-0'} bg-gray-400 left-2 transform -translate-x-1/2 translate-y-3 transition-all duration-1000`}
+                    className={`absolute w-px ${active ? 'h-full' : 'h-0'} bg-gray-400 left-2 transform translate-y-3 -translate-x-1/2 transition-all duration-1000`}
                 ></div>
             )}
         </div>
     )
 }
+
+export default VerticalStepper
