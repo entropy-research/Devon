@@ -86,13 +86,13 @@ export function TimelineWidget({ className }: { className?: string }) {
 type SubStepType = {
     id: number
     label: string
-    subtitle: string
+    subtitle?: string
 }
 
 type StepType = {
     id: number
     label: string
-    subtitle: string
+    subtitle?: string
     subSteps: SubStepType[]
 }
 
@@ -206,12 +206,16 @@ const Step: React.FC<{
     const [connectorHeight, setConnectorHeight] = useState(0)
     const contentRef: RefObject<HTMLDivElement> = useRef(null)
     const pathRef: RefObject<SVGPathElement> = useRef(null)
-    const CURVE_SVG_WIDTH = 65
-    const CURVE_SVG_HEIGHT_OFFSET = 50
+    const CURVE_SVG_WIDTH = 50
+    const CURVE_SVG_HEIGHT_OFFSET = 50 // Dynamic height not really working yet... this is needed if there's no subtitle
+    const CURVE_SVG_ANIMATION_DURATION = 1000
+
+    const SUBITEM_LEFT_MARGIN = 50 // Only change this if you change the padding of each substep item
 
     useEffect(() => {
         if (contentRef.current) {
-            const totalHeight = contentRef.current.clientHeight + CURVE_SVG_HEIGHT_OFFSET
+            const totalHeight =
+                contentRef.current.clientHeight + CURVE_SVG_HEIGHT_OFFSET
             setConnectorHeight(totalHeight)
         }
     }, [contentRef.current])
@@ -237,14 +241,13 @@ const Step: React.FC<{
     useEffect(() => {
         if (pathRef.current) {
             const pathLength = pathRef.current.getTotalLength()
-            pathRef.current.style.strokeDasharray = `${CURVE_SVG_WIDTH}`
-            pathRef.current.style.strokeDashoffset = `${CURVE_SVG_WIDTH}`
+            pathRef.current.style.strokeDasharray = `${pathLength}`
+            pathRef.current.style.strokeDashoffset = `${pathLength}`
             pathRef.current.getBoundingClientRect()
-            pathRef.current.style.transition =
-                'stroke-dashoffset 2s ease-in-out'
+            pathRef.current.style.transition = `stroke-dashoffset ${CURVE_SVG_ANIMATION_DURATION}ms ease-in-out`
             pathRef.current.style.strokeDashoffset = '0'
         }
-    }, [connectorHeight])
+    }, [connectorHeight, subStepActiveIndex])
 
     const connectorPath = `
         M 12 0
@@ -278,7 +281,7 @@ const Step: React.FC<{
                         <path
                             ref={pathRef}
                             d={connectorPath}
-                            stroke="white"
+                            className="stroke-gray-400"
                             fill="transparent"
                             strokeWidth="2"
                         />
@@ -296,7 +299,12 @@ const Step: React.FC<{
                         </span>
                     </div>
                     {activeStep >= index && step.subSteps.length > 0 && (
-                        <div className="ml-5 mt-3">
+                        <div
+                            style={{
+                                marginLeft: `calc(${CURVE_SVG_WIDTH}px - ${SUBITEM_LEFT_MARGIN}px)`,
+                            }}
+                            className="mt-3"
+                        >
                             {step.subSteps.map((subStep, subIndex) => (
                                 <SubStep
                                     key={subStep.id}
@@ -339,7 +347,7 @@ const SubStep: React.FC<{
             </div>
             {showLine && (
                 <div
-                    className={`absolute w-px ${active ? 'h-full' : 'h-0'} bg-gray-400 left-2 transform translate-y-3 -translate-x-1/2 transition-all duration-1000`}
+                    className={`absolute w-px ${active ? 'h-full' : 'h-0'} bg-gray-400 left-2 transform translate-y-3 -translate-x-1/2 transition-all duration-1000 delay-800`}
                 ></div>
             )}
         </div>
