@@ -74,6 +74,9 @@ const config: Config = {
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
+      transitionDelay: {
+        '800': '800ms',
+      },
       animation: {
         pulse: 'pulse 4s infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',

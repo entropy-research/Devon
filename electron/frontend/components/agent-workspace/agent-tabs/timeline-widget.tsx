@@ -159,8 +159,7 @@ const VerticalStepper = () => {
     }, [activeStep])
 
     return (
-        <div className="flex flex-col h-full w-full px-5">
-            <h2 className="text-white mb-5">Mini Map</h2>
+        <div className="flex flex-col h-full w-full px-5 mt-10">
             <div className="relative">
                 <div className="absolute inset-0 flex flex-col w-full">
                     {steps.map((step, index) => (
@@ -204,7 +203,7 @@ const Step = ({ step, index, activeStep }) => {
                     className={`z-10 flex items-center justify-center w-6 h-6 bg-white rounded-full ${activeStep >= index ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000`}
                 >
                     {index === 0 && (
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <div className="w-3 h-3 bg-primary rounded-full"></div>
                     )}
                     {index !== 0 && (
                         <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -217,7 +216,7 @@ const Step = ({ step, index, activeStep }) => {
                 )}
             </div>
             <div
-                className={`flex items-center ml-5 mb-3 ${activeStep >= index ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000`}
+                className={`flex items-center ml-5 mb-3 ${activeStep >= index ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 delay-800`}
             >
                 <div className="flex flex-col">
                     <span className="text-white">{step.label}</span>
@@ -243,9 +242,9 @@ const Step = ({ step, index, activeStep }) => {
 
 const SubStep = ({ subStep, showLine }) => {
     return (
-        <div className="relative flex flex-col mb-3">
-            <div className="flex items-center">
-                <div className="z-10 flex items-center justify-center w-4 h-4 bg-gray-400 rounded-full">
+        <div className="relative flex flex-col pb-3">
+            <div className="flex">
+                <div className="z-10 flex items-center justify-center w-4 h-4 bg-gray-400 rounded-full translate-y-1">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
                 <div className="ml-3">
@@ -256,7 +255,7 @@ const SubStep = ({ subStep, showLine }) => {
                 </div>
             </div>
             {showLine && (
-                <div className="absolute w-px h-12 bg-gray-400 top-6 left-2 transform -translate-x-1/2"></div>
+                <div className="absolute w-px h-full bg-gray-400 left-2 transform -translate-x-1/2 translate-y-1"></div>
             )}
         </div>
     )
