@@ -13,6 +13,7 @@ from devon_agent.prompt import (
     system_prompt_template_v3,
 )
 from devon_agent.tools.utils import get_cwd
+from devon_agent.tools.memory import VLiteMemoryTool
 
 from devon_agent.udiff import Hallucination
 from devon_agent.utils import LOGGER_NAME, DotDict
@@ -34,7 +35,7 @@ class Agent:
     name: str
     model: str
     temperature: float = 0.0
-    chat_history: list[dict[str, str]] = field(default_factory=list)
+    chat_history: VLiteMemoryTool()
     interrupt: str = ""
     api_key: Optional[str] = None
     scratchpad = None
@@ -97,9 +98,7 @@ class TaskAgent(Agent):
                 session.state.editor.files, session.state.editor.PAGE_SIZE
             )
 
-            self.chat_history.append(
-                {"role": "user", "content": observation, "agent": self.name}
-            )
+            self.chat_history.add(observation, metadata={"role": "user", "content": observation, "agent": self.name})
 
             commands = (
                 "Avaliable Custom Commands:\n"
@@ -122,15 +121,15 @@ class TaskAgent(Agent):
             last_observation = None
             second_last_observation = None
             if len(self.chat_history) > 2:
-                last_observation = self.chat_history[-1]["content"]
-                second_last_observation = self.chat_history[-3]["content"]
+                last_observation = self.chat_history.get_last_item(1)["text"]
+                second_last_observation = self.chat_history.get_last_item(3)["text"]
             if (
                 last_observation
                 and second_last_observation
                 and "Failed to edit file" in last_observation
                 and "Failed to edit file" in second_last_observation
             ):
-                self.chat_history = self.chat_history[:-6]
+                self.chat_history = self.chat_history.get_last_item(6)
                 history = history_to_bash_history(self.chat_history)
                 self.current_model.args.temperature += (
                     0.2 if self.current_model.args.temperature < 0.8 else 0
@@ -175,16 +174,14 @@ class TaskAgent(Agent):
             
             if not thought or not action:
                 raise Hallucination("Agent failed to follow response format instructions")
-
-            self.chat_history.append(
-                {
+            
+            self.chat_history.add(output, metadata={
                     "role": "assistant",
                     "content": output,
                     "thought": thought,
                     "action": action,
                     "agent": self.name,
-                }
-            )
+                })
 
             logger.info(f"""
 \n\n\n\n****************\n\n

@@ -8,6 +8,7 @@ from typing import Any, Dict
 from devon_swe_bench_experimental.environment.agent import TaskAgent
 from devon_swe_bench_experimental.environment.environment import TaskEnvironment
 from devon_swe_bench_experimental.environment.utils import LOGGER_NAME
+from devon_agent.tools.memory import VLiteMemoryTool
 
 
 def extract_signature_and_docstring(function_code: str) -> tuple:
@@ -59,11 +60,11 @@ class ChatEnvironment:
     def __init__(self, base_path):
         self.planner: Dict[str, str] = {}
         self.task_agents: Dict[str, Any] = {}
-        self.chat_history = []
+        self.chat_history = VLiteMemoryTool()
         self.base_path = base_path
 
     def step(self, action: str, thought: str):
-        self.chat_history.append({"role": "assistant", "content": thought})
+        self.chat_history.add(thought, metadata={"role": "assistant", "content": thought})
 
         observation = ""
         try:

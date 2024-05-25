@@ -28,7 +28,7 @@ def editor_repr(editor):
     return editor
 
 
-def anthropic_history_to_bash_history(history):
+def anthropic_history_to_bash_history(memory_tool):
     # self.history.append(
     # {
     #     "role": "assistant",
@@ -38,20 +38,20 @@ def anthropic_history_to_bash_history(history):
     #     "agent": self.name,
 
     bash_history = ""
+    history = memory_tool.get_all_items()
     for entry in history:
-        if entry["role"] == "user":
-            result = entry["content"].strip() if entry["content"] else "" + "\n"
+        if entry["metadata"].get("role") == "user":
+            result = entry["text"].strip() + "\n"
             bash_history += f"<RESULT>\n{result}\n</RESULT>"
-        elif entry["role"] == "assistant":
+        elif entry["metadata"].get("role") == "assistant":
             bash_history += f"""
 <YOU>
-<THOUGHT>{entry['thought']}</THOUGHT>
+<THOUGHT>{entry['metadata'].get('thought', '')}</THOUGHT>
 <COMMAND>
-{entry['action'][1:]}
+{entry['metadata'].get('action', '')[1:]}
 </COMMAND>
 </YOU>
 """
-    return bash_history
 
 
 def object_to_xml(data: Union[dict, bool], root="object"):

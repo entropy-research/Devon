@@ -15,6 +15,7 @@ from devon_agent.agents.default.llama3_prompts import llama3_commands_to_command
 from devon_agent.agents.default.codegemma_prompts import llama3_7b_commands_to_command_docs, llama3_7b_history_to_bash_history, llama3_7b_last_user_prompt_template_v1, llama3_7b_parse_response, llama3_7b_system_prompt_template_v1
 
 from devon_agent.tools.utils import get_cwd
+from devon_agent.tools.memory import VLiteMemoryTool
 
 from devon_agent.udiff import Hallucination
 from devon_agent.utils import LOGGER_NAME, DotDict
@@ -34,7 +35,7 @@ class Agent:
     name: str
     model: str
     temperature: float = 0.0
-    chat_history: list[dict[str, str]] = field(default_factory=list)
+    chat_history: VLiteMemoryTool()
     interrupt: str = ""
     api_key: Optional[str] = None
     scratchpad = None
@@ -106,7 +107,7 @@ class TaskAgent(Agent):
                 session.state.editor.files, session.state.editor.PAGE_SIZE
             )
 
-            self.chat_history.append(
+            self.chat_history.add(observation, metadata=
                 {"role": "user", "content": observation, "agent": self.name}
             )
 
@@ -115,15 +116,15 @@ class TaskAgent(Agent):
             last_observation = None
             second_last_observation = None
             if len(self.chat_history) > 2:
-                last_observation = self.chat_history[-1]["content"]
-                second_last_observation = self.chat_history[-3]["content"]
+                last_observation = self.chat_history.get_last_item(1)["text"]
+                second_last_observation = self.chat_history.get_last_item(3)["text"]
             if (
                 last_observation
                 and second_last_observation
                 and "Failed to edit file" in last_observation
                 and "Failed to edit file" in second_last_observation
             ):
-                self.chat_history = self.chat_history[:-6]
+                self.chat_history = self.chat_history.get_last_item(6)
                 self.current_model.args.temperature += (
                     0.2 if self.current_model.args.temperature < 0.8 else 0
                 )
@@ -167,7 +168,7 @@ class TaskAgent(Agent):
                     + "\n"
                 )
 
-                history = [entry for entry in self.chat_history if entry["role"] == "user" or entry["role"] == "assistant"]
+                history = self.chat_history.get_entries_by_metadata({"role": ["user", "assistant"]})
                 system_prompt = openai_system_prompt_template_v3(command_docs)
                 last_user_prompt = openai_last_user_prompt_template_v3(
                     task,

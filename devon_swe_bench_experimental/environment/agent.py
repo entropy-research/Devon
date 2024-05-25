@@ -13,6 +13,7 @@ from devon_swe_bench_experimental.environment.prompt import (
 )
 
 from devon_swe_bench_experimental.environment.utils import LOGGER_NAME, Event
+from devon_agent.tools.memory import VLiteMemoryTool
 from tenacity import RetryError
 
 from typing import TYPE_CHECKING
@@ -31,7 +32,7 @@ class Agent:
     name: str
     model: str
     temperature: float = 0.0
-    chat_history: list[dict[str, str]] = field(default_factory=list)
+    chat_history: VLiteMemoryTool()
     interrupt: str = ""
 
     def run(self, session: "Session", observation: str = None): ...
@@ -85,7 +86,7 @@ class TaskAgent(Agent):
                 session.state.editor, session.state.PAGE_SIZE
             )
 
-            self.chat_history.append(
+            self.chat_history.add(observation,metadata=
                 {"role": "user", "content": observation, "agent": self.name}
             )
 
@@ -110,15 +111,15 @@ class TaskAgent(Agent):
             last_observation = None
             second_last_observation = None
             if len(self.chat_history) > 2:
-                last_observation = self.chat_history[-1]["content"]
-                second_last_observation = self.chat_history[-3]["content"]
+                last_observation = self.chat_history.get_last_item(1)["text"]
+                second_last_observation = self.chat_history.get_last_item(3)["text"]
             if (
                 last_observation
                 and second_last_observation
                 and "Failed to edit file" in last_observation
                 and "Failed to edit file" in second_last_observation
             ):
-                self.chat_history = self.chat_history[:-6]
+                self.chat_history = self.chat_history.get_last_item(6)
                 history = history_to_bash_history(self.chat_history)
                 self.current_model.args.temperature += (
                     0.2 if self.current_model.args.temperature < 0.8 else 0
@@ -142,7 +143,7 @@ class TaskAgent(Agent):
 
             thought, action = parse_response(output)
 
-            self.chat_history.append(
+            self.chat_history.add(output,metadata=
                 {
                     "role": "assistant",
                     "content": output,
