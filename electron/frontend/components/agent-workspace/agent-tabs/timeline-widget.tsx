@@ -211,9 +211,9 @@ const Step: React.FC<{
                         <path
                             ref={pathRef}
                             d={connectorPath}
-                            className="stroke-gray-400"
+                            className="stroke-white"
                             fill="transparent"
-                            strokeWidth="2"
+                            strokeWidth="1.5"
                         />
                     </svg>
                 )}
