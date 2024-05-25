@@ -29,6 +29,11 @@ const steps: StepType[] = [
                 label: 'Create project files',
                 subtitle: 'Setup basic file structure',
             },
+            {
+                id: 1.3,
+                label: 'Initialize the project',
+                subtitle: 'Setup the project configuration',
+            },
         ],
     },
     {
@@ -124,7 +129,7 @@ const Step: React.FC<{
     const contentRef: RefObject<HTMLDivElement> = useRef(null)
     const pathRef: RefObject<SVGPathElement> = useRef(null)
     const PADDING_OFFSET = 10
-    const CURVE_SVG_WIDTH = 0 + PADDING_OFFSET
+    const CURVE_SVG_WIDTH = 40 + PADDING_OFFSET
     const CURVE_SVG_HEIGHT_OFFSET = 50 // Dynamic height not really working yet... this is needed if there's no subtitle
     const CURVE_SVG_ANIMATION_DURATION = 1000
 
@@ -136,7 +141,7 @@ const Step: React.FC<{
                 contentRef.current.clientHeight + CURVE_SVG_HEIGHT_OFFSET
             setConnectorHeight(totalHeight)
         }
-    }, [contentRef.current])
+    }, [contentRef])
 
     useEffect(() => {
         if (activeStep === index && step.subSteps.length > 0) {
@@ -146,7 +151,14 @@ const Step: React.FC<{
                         return prevIndex + 1
                     }
                     clearInterval(interval)
-                    setSubStepFinished(true)
+                    /**
+                     * This setTimeout ensures setSubStepFinished is called after the state update
+                        Or else you get the error:
+                        Cannot update a component (`TimelineWidget`) while rendering a different component (`Step`). To locate the bad setState() call inside `Step`,
+                     */
+                    setTimeout(() => {
+                        setSubStepFinished(true)
+                    }, 0)
                     return prevIndex
                 })
             }, 1000)
