@@ -1,10 +1,12 @@
 import asyncio
+from contextlib import asynccontextmanager
 import json
 import os
 from time import sleep
 from typing import Dict, List
 
 import fastapi
+from sqlalchemy import create_engine, text
 from devon_agent.agents.default.agent import TaskAgent
 from devon_agent.session import (
     Event,
@@ -36,7 +38,73 @@ origins = [
 
 sessions: Dict[str, Session] = {}
 
-app = fastapi.FastAPI()
+DATABASE_PATH = "./devon_environment.db"
+DATABASE_URL = "sqlite:///" + DATABASE_PATH
+
+
+sessions: Dict[str, Session] = {}
+
+add_or_update_sessions_sql = """
+INSERT INTO sessions (name, JSON_STATE) VALUES (:name, :JSON_STATE)
+ON CONFLICT(name) DO UPDATE SET JSON_STATE = excluded.JSON_STATE
+"""
+
+delete_session_sql = """
+DELETE FROM sessions WHERE name = :name
+"""
+
+get_session_sql = """
+SELECT * FROM sessions WHERE name = :name
+"""
+
+get_sessions_sql = """
+SELECT * FROM sessions
+"""
+
+
+@asynccontextmanager
+async def lifespan(app: fastapi.FastAPI):
+    print("lifespan")
+    engine = create_engine(DATABASE_URL, echo=True)
+
+    # session table SQL DDL
+    session_table_sql = """
+
+    CREATE TABLE IF NOT EXISTS sessions (
+        name TEXT PRIMARY KEY,
+        JSON_STATE TEXT NOT NULL
+    );
+    """
+
+    # run the SQL DDL statement
+    with engine.connect() as conn:
+        conn.execute(text(session_table_sql))
+
+    # get all sessions and load them into sessions dictionary
+    with engine.connect() as conn:
+        ses = conn.execute(text(get_sessions_sql)).fetchall()
+        for session in ses:
+            print(session)
+            state = json.loads(session[1])
+            state["user_input"] = lambda: get_user_input(session[0])
+            sessions[session[0]] = Session.from_dict(state)
+    print("statup done")
+    yield
+    print("cleanup")
+    session_states = [(name, session.to_dict()) for name, session in sessions.items()]
+    with engine.connect() as conn:
+        for name, state in session_states:
+            conn.execute(
+                text(add_or_update_sessions_sql),
+                {"name": name, "JSON_STATE": json.dumps(state)},
+            )
+        conn.commit()
+    print("cleanup done")
+
+
+app = fastapi.FastAPI(
+    lifespan=lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,

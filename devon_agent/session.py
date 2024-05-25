@@ -144,6 +144,45 @@ class Session:
 
         self.task = None
 
+        def to_dict(self):
+            return {
+                "path": self.path,
+                "environment": self.environment_type,
+                "event_history": [event for event in self.event_log],
+                "state": self.state.to_dict(),
+                "cwd": self.environment.get_cwd(),
+                "agent": {
+                    "name": self.agent.name,
+                    "model": self.agent.model,
+                    "temperature": self.agent.temperature,
+                    "chat_history": self.agent.chat_history,
+                },
+            }
+
+    @classmethod
+    def from_dict(cls, data):
+        instance = cls(
+            args=SessionArguments(
+                path=data["path"],
+                environment=data["environment"],
+                user_input=data["user_input"],
+            ),
+            agent=TaskAgent(
+                name=data["agent"]["name"],
+                model=data["agent"]["model"],
+                temperature=data["agent"]["temperature"],
+                chat_history=data["agent"]["chat_history"],
+            ),
+        )
+
+        instance.state = DotDict(data["state"])
+        instance.state.editor = {}
+        instance.event_log = data["event_history"]
+        instance.environment.communicate("cd " + data["cwd"])
+
+        return instance
+
+
     def get_last_task(self):
         if self.task:
             return self.task
