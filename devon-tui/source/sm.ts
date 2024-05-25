@@ -121,7 +121,7 @@ export const eventHandlingLogic = fromTransition((state : {
     toolMessage : string;
     userRequest : boolean;
 }, event : Event) => {
-    console.log(event);
+
     switch (event.type) {
         case 'Stop': {
             return {...state, ended: true };

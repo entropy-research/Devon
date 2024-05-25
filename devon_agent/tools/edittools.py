@@ -97,7 +97,7 @@ def real_write_diff(ctx, diff):
                     tgt_file=success[0],
                 )
 
-    if len(failures) == 0:
+    if len(failures) == 0 and len(successes) > 0:
         file_paths = []
         diff_results = []
         for result in successes:
@@ -198,7 +198,7 @@ class EditFileTool(Tool):
             case _:
                 raise ValueError(f"Invalid format: {format}")
     
-    def function(self, ctx : ToolContext, diff: str) -> str:
+    def function(self, ctx : ToolContext, *args, **kwargs) -> str:
         """
         command_name: edit_file
         description: Applies a unified diff to files in the file system

@@ -107,20 +107,20 @@ class Session:
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
-            "create_file" : CreateFileTool().register_post_hook(save_create_file),
+            "create_file" : CreateFileTool(),
             "open_file" : OpenFileTool(),
             "scroll_up" : ScrollUpTool(),
             "scroll_down" : ScrollDownTool(),
             "scroll_to_line" : ScrollToLineTool(),
             "search_file" : SearchFileTool(),
-            "edit_file" : EditFileTool().register_post_hook(save_edit_file),
+            "edit_file" : EditFileTool(),
             "search_dir" : SearchDirTool(),
             "find_file" : FindFileTool(),
             # "list_dirs_recursive" : ListDirsRecursiveTool(),
             "get_cwd" : GetCwdTool(),
             "no_op" : NoOpTool(),
             "submit" : SubmitTool(),
-            "delete_file" : DeleteFileTool().register_post_hook(save_delete_file),
+            "delete_file" : DeleteFileTool(),
         })
         local_environment.set_default_tool(ShellTool())
         self.default_environment = local_environment
