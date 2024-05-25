@@ -80,10 +80,14 @@ It's as easy as that.
 > [!NOTE]
 > Don't worry, the agent will be able to only access files and folders in the directory you started it from. You can also correct it while it's performing actions.
 
+---
+
 To run in *debug* mode, the command is:
 ```bash
 devon --debug
 ```
+
+---
 
 To run in *local* mode:
 > [!WARNING]
@@ -112,6 +116,8 @@ Configuring Devon CLI...
 ```
 devon --api_key=FOSS
 ```
+
+---
 
 For a list of all commands available:
 ```bash
