@@ -22,6 +22,15 @@ import useFetchSessionEvents, {
 } from '@/lib/services/sessionService/use-fetch-session-events'
 import SessionEventsDisplay from '@/components/events'
 
+// For session state
+import {
+    useEventService,
+    useSessionService,
+    useFetchEvents,
+} from '@/lib/services/stateMachineService/stateMachineContext'
+import { Message as MessageType, Event } from '@/lib/services/stateMachineService/stateMachine'
+import { useActor } from '@xstate/react'
+
 export interface ChatProps extends React.ComponentProps<'div'> {
     initialMessages?: Message[]
     id?: string
@@ -48,11 +57,14 @@ export function SimpleChat({
     const { toast } = useToast()
     // const [_, setNewChatId] = useLocalStorage('newChatId', id) // TODO prob delete this later
 
-    // Clean later
     const [userRequested, setUserRequested] = useState(false)
-
     const [modelLoading, setModelLoading] = useState(false)
-    const [eventIdx, setEventIdx] = useState(0);
+    const [eventIdx, setEventIdx] = useState(0)
+
+    // For session state
+    const fetchEvents = useFetchEvents()
+    const eventService = useEventService()
+    const [eventState] = useActor(eventService)
 
     // TODO: Actually use this to load chat from backend
     useEffect(() => {
@@ -66,32 +78,27 @@ export function SimpleChat({
     useEffect(() => {
         if (!id || id === 'New') return
         let curIdx = eventIdx
+
         const intervalId = setInterval(async () => {
-			const newEvents = await fetchSessionEvents(id);
-			if (newEvents) {
-				const newMessages = handleEvents(
-					newEvents,
-					setUserRequested,
-					setModelLoading,
-                    () => {}
-					// exit,
-				);
-				for (let i = eventIdx; i < newMessages.length; i++) {
-					setMessages(messages => [...messages, newMessages[i] as MessageType]);
-					curIdx += 1
-				}
-			}
-            setEventIdx(curIdx);
-		}, 2000);
+            console.log('fetching events')
+            const newEvents = await fetchSessionEvents(id)
+            if (newEvents) {
+                for (let i = eventIdx; i < newEvents.length; i++) {
+                    eventService.send(newEvents[i])
+                    curIdx++
+                }
+                setMessages(messages => [
+                    ...messages,
+                    ...eventState.context.messages,
+                ])
+            }
+            setEventIdx(curIdx)
+        }, 2000)
 
         return () => {
             clearInterval(intervalId)
         }
-    }, [eventIdx, id, messages])
-
-    // useEffect(() => {
-    //     setNewChatId(id)
-    // })
+    }, [eventIdx, eventService, eventState?.context?.messages, id, messages])
 
     useEffect(() => {
         missingKeys?.map(key => {
@@ -102,33 +109,36 @@ export function SimpleChat({
     }, [toast, missingKeys])
 
     return (
-        <div className="flex flex-col flex-2 relative h-full overflow-y-auto" ref={scrollRef}>
+        <div
+            className="flex flex-col flex-2 relative h-full overflow-y-auto"
+            ref={scrollRef}
+        >
             <div className="flex-1">
                 {/* <div
                     className={cn('pt-4 md:pt-10 bg-red-500', className)}
                     ref={messagesRef}
                 > */}
-                    {/* <SessionEventsDisplay
+                {/* <SessionEventsDisplay
                         sessionId={id}
                         setMessages={setMessages}
                     /> */}
-                    {messages?.length ? (
-                        // <ChatList
-                        //     messages={messages}
-                        //     isShared={false}
-                        //     session={session}
-                        // />
-                        <ChatList2
-                            messages={messages}
-                            isShared={false}
-                            session={session}
-                            spinning={modelLoading}
-                        />
-                    ) : (
-                        <></>
-                    )}
-                    {/* {!viewOnly && <div className="h-[150px]"></div>} */}
-                    <div className="h-px w-full" ref={visibilityRef}></div>
+                {messages?.length ? (
+                    // <ChatList
+                    //     messages={messages}
+                    //     isShared={false}
+                    //     session={session}
+                    // />
+                    <ChatList2
+                        messages={messages}
+                        isShared={false}
+                        session={session}
+                        spinning={modelLoading}
+                    />
+                ) : (
+                    <></>
+                )}
+                {/* {!viewOnly && <div className="h-[150px]"></div>} */}
+                <div className="h-px w-full" ref={visibilityRef}></div>
                 {/* </div> */}
             </div>
             {/* {!viewOnly && ( */}
@@ -143,7 +153,7 @@ export function SimpleChat({
                         scrollToBottom={scrollToBottom}
                     /> */}
                     <RegularInput
-                        sessionId={id}
+                        sessionId={id ?? ''}
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                         setUserRequested={setUserRequested}
@@ -159,46 +169,46 @@ export function SimpleChat({
     )
 }
 
-type Event = {
-    type:
-        | 'ModelResponse'
-        | 'ToolResponse'
-        | 'Task'
-        | 'Interrupt'
-        | 'UserRequest'
-        | 'Stop'
-        | 'EnvironmentRequest'
-        | 'EnvironmentResponse'
-        | 'ModelRequest'
-        | 'ToolRequest'
-        | 'UserResponse'
-    content: string
-    identifier: string | null
-}
+// type Event = {
+//     type:
+//         | 'ModelResponse'
+//         | 'ToolResponse'
+//         | 'Task'
+//         | 'Interrupt'
+//         | 'UserRequest'
+//         | 'Stop'
+//         | 'EnvironmentRequest'
+//         | 'EnvironmentResponse'
+//         | 'ModelRequest'
+//         | 'ToolRequest'
+//         | 'UserResponse'
+//     content: string
+//     identifier: string | null
+// }
 
-type MessageType = {
-    text: string
-    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought'
-}
+// type MessageType = {
+//     text: string
+//     type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought'
+// }
 
 const handleEvents = (
     events: Event[],
     setUserRequested: (value: boolean) => void,
     setModelLoading: (value: boolean) => void,
-    exit: () => void,
+    exit: () => void
 ) => {
     const messages: MessageType[] = []
     let user_request = false
     let model_loading = false
     let tool_message = ''
-    let idx = 0;
-	let error = false;
+    let idx = 0
+    let error = false
 
     for (const event of events) {
         if (event.type == 'Stop') {
-			// console.log('Devon has left the chat.');
-			// exit();
-		}
+            // console.log('Devon has left the chat.');
+            // exit();
+        }
         if (event.type == 'ModelRequest') {
             model_loading = true
         }
@@ -218,23 +228,24 @@ const handleEvents = (
         //     tool_message = 'Running command: ' + event.content;
         // }
 
-        if (event.type == 'EnvironmentResponse') {
+        // if (event.type == 'EnvironmentResponse') {
             // this is the project path
             // console.log(event.content)
-        }
-        
-
+        // }
 
         if (event.type == 'ToolResponse') {
-            console.log("TOOL RESPONSE", event.content)
-			tool_message += '\n> ' + event.content;
-			if (tool_message.length > 2000) {
-				messages.push({text: tool_message.slice(0, 2000), type: 'tool'});
-			} else {
-				messages.push({text: tool_message, type: 'tool'});
-			}
-			tool_message = '';
-		}
+            console.log('TOOL RESPONSE', event.content)
+            tool_message += '\n> ' + event.content
+            if (tool_message.length > 2000) {
+                messages.push({
+                    text: tool_message.slice(0, 2000),
+                    type: 'tool',
+                })
+            } else {
+                messages.push({ text: tool_message, type: 'tool' })
+            }
+            tool_message = ''
+        }
 
         if (event.type == 'Task') {
             messages.push({ text: event.content, type: 'task' })

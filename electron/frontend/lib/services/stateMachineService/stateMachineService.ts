@@ -4,8 +4,12 @@ import axios from 'axios'
 import { sessionMachine, eventHandlingLogic } from './stateMachine'
 
 // Custom hooks to use the machines
-export const useSessionMachine = () => {
-    const [state, service] = useMachine(sessionMachine)
+export const useSessionMachine = (input: {
+    port: number
+    name: string
+    path: string
+}) => {
+    const [state, service] = useMachine(sessionMachine, { input })
     return { state, service }
 }
 
