@@ -15,6 +15,7 @@ import { getChat, createChat } from '@/lib/services/chatService2'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { useEffect } from 'react'
 import { BackendUrlProvider } from '../contexts/BackendUrlContext'
+import { StateMachineProvider } from '@/lib/services/stateMachineService/stateMachineContext'
 
 const queryClient = new QueryClient()
 
@@ -115,9 +116,11 @@ export default function IndexPage() {
     return (
         <QueryClientProvider client={queryClient}>
             <BackendUrlProvider>
-                {/* <AI initialAIState={{ chatId: chat.id, messages: chat.messages }}> */}
-                <Landing chatProps={chatProps} />
-                {/* </AI> */}
+                <StateMachineProvider>
+                    {/* <AI initialAIState={{ chatId: chat.id, messages: chat.messages }}> */}
+                    <Landing chatProps={chatProps} />
+                    {/* </AI> */}
+                </StateMachineProvider>
             </BackendUrlProvider>
         </QueryClientProvider>
     )

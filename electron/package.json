@@ -39,6 +39,7 @@
     "@tailwindcss/container-queries": "^0.1.1",
     "@tanstack/react-virtual": "^3.5.0",
     "@vercel/kv": "^1.0.1",
+    "@xstate/react": "^4.1.1",
     "@xterm/xterm": "^5.4.0",
     "ai": "^3.0.34",
     "better-sqlite3": "^9.6.0",
@@ -65,6 +66,7 @@
     "remark-math": "^5.1.1",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
+    "xstate": "^5.13.0",
     "zod": "^3.23.4"
   },
   "devDependencies": {

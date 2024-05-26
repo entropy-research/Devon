@@ -69,7 +69,7 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                     <div
                         className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative`}
                     >
-                        {showTimeline && (
+                        {/* {showTimeline && (
                             <TimelineWidget
                                 className={
                                     viewMode === ViewMode.Panel
@@ -77,7 +77,7 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                                         : 'w-full overflow-hidden'
                                 }
                             />
-                        )}
+                        )} */}
                         {/* <div
                             // Set chat size for now
                             // className={`transition-all duration-500 ${showPlanner ? 'w-1/2' : 'w-full'}`}
@@ -85,14 +85,14 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                         // >
                             <Chat chatProps={chatProps} />
                         </div> */}
-                        {/* <Chat
+                        <Chat
                             chatProps={chatProps}
                             // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
-                        /> */}
+                        />
                     </div>
-                    {/* <div className="flex flex-col w-full">
+                    <div className="flex flex-col w-full">
                         <EditorWidget chatId={chatProps.id ?? null} />
-                    </div> */}
+                    </div>
 
                     {/* <div className="flex flex-2">
                             <AgentWorkspace
