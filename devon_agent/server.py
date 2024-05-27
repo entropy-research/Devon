@@ -72,7 +72,7 @@ async def lifespan(app: fastapi.FastAPI):
     async with AsyncSessionLocal() as db_session:
         app.db_session = db_session
         data = await load_data(db_session)
-        data = { k:Session.from_dict(v, lambda: get_user_input(k)) for (k,v) in data.items()} 
+        data = { k:Session.from_dict(v, lambda: get_user_input(k), config=app.config) for (k,v) in data.items()} 
         sessions = data
         yield
 
@@ -130,6 +130,7 @@ def create_session(session: str, path: str):
                 path,
                 user_input=lambda: get_user_input(session),
                 name=session,
+                config=app.config
             ),
             agent,
         )

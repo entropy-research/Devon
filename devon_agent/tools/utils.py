@@ -37,6 +37,11 @@ def make_abs_path(ctx : ToolContext, fpath: str) -> str:
         str: The absolute path of the file.
     """
 
+    for path in ctx["session"].excludes:
+        _base = str(Path(path).resolve())
+        if _base in fpath:
+            raise Exception(f"Cannot access file: {fpath}, {_base} is a protected path without read or write permission")
+
     return normalize_path(fpath, ctx["session"].base_path)
 
 def get_cwd(ctx) -> str:

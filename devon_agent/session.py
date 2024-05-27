@@ -36,6 +36,7 @@ class SessionArguments:
     user_input: Any
     name: str
     task: Optional[str] = None
+    config: Optional[Dict[str, Any]] = None
 
 
 """
@@ -107,7 +108,8 @@ class Session:
         self.telemetry_client = Posthog()
         self.name = args.name
         self.agent_branch = "devon_agent_" + self.name
-
+        self.global_config = args.config
+        self.excludes = self.global_config["excludes"] if self.global_config else []
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
@@ -154,6 +156,7 @@ class Session:
             "task": self.task,
             "path": self.path,
             "name": self.name,
+            "config": self.global_config,
             "event_history": [event for event in self.event_log],
             "cwd": self.environments["local"].get_cwd(),
             "agent": {
@@ -165,7 +168,7 @@ class Session:
         }
 
     @classmethod
-    def from_dict(cls, data, user_input):
+    def from_dict(cls, data, user_input, config):
         print(data)
         instance = cls(
             args=SessionArguments(
@@ -173,11 +176,12 @@ class Session:
                 # environment=data["environment"],
                 user_input=user_input,
                 name=data["name"],
-                task=data["task"]
+                task=data["task"] if "task" in data else None,
+                config=config,
             ),
             agent=TaskAgent(
                 name=data["agent"]["name"],
-                model=data["agent"]["model"],
+                model=config["modelName"],
                 temperature=data["agent"]["temperature"],
                 chat_history=data["agent"]["chat_history"],
             )

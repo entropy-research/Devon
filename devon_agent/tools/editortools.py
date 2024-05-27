@@ -105,8 +105,8 @@ class OpenFileTool(Tool):
             return f"File {abs_path} opened in editor"
 
         except Exception as e:
-            ctx["session"].logger.error(f"Failed to open file: {abs_path}. Error: {str(e)}")
-            return f"Failed to open file: {abs_path}. Error: {str(e)}"
+            ctx["session"].logger.error(f"Failed to open file: {file_path}. Error: {str(e)}")
+            return f"Failed to open file: {file_path}. Error: {str(e)}"
 
 
 
@@ -270,8 +270,8 @@ class DeleteFileTool(Tool):
             return f"Successfully deleted file {abs_path}"
 
         except Exception as e:
-            ctx["session"].logger.error(f"Failed to delete file: {abs_path}. Error: {str(e)}")
-            return f"Failed to delete file: {abs_path}. Error: {str(e)}"
+            ctx["session"].logger.error(f"Failed to delete file: {file_path}. Error: {str(e)}")
+            return f"Failed to delete file: {file_path}. Error: {str(e)}"
 
 
 class CreateFileTool(Tool):
