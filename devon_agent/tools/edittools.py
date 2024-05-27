@@ -234,6 +234,7 @@ def save_edit_file(ctx, response):
             ctx["session"].event_log.append({
                 "type": "GitEvent",
                 "content" : {
+                    "type" : "commit",
                     "commit" : commit,
                     "files" : files,
                 }

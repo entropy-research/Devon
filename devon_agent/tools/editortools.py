@@ -688,6 +688,7 @@ def save_create_file(ctx, response):
             ctx["session"].event_log.append({
                 "type": "GitEvent",
                 "content" : {
+                    "type" : "commit",
                     "commit" : commit,
                     "files" : files,
                 }
@@ -705,6 +706,7 @@ def save_delete_file(ctx, response):
             ctx["session"].event_log.append({
                 "type": "GitEvent",
                 "content" : {
+                    "type" : "commit",
                     "commit" : commit,
                     "files" : files,
                 }

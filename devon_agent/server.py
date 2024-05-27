@@ -4,9 +4,10 @@ import json
 import os
 from time import sleep
 import time
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import fastapi
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 import json
@@ -229,6 +230,19 @@ def delete_session(session: str):
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
     del sessions[session]
     return session
+
+class ServerEvent(BaseModel):
+    type: str  # types: ModelResponse, ToolResponse, UserRequest, Interrupt, Stop
+    content: Any
+    producer: str | None
+    consumer: str | None
+
+@app.post("/session/{session}/event")
+def create_event(session: str, event: ServerEvent):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    sessions[session].event_log.append(event.model_dump())
+    return event
 
 
 @app.get("/session/{session}/events")

@@ -75,6 +75,25 @@ const sendInterrupt = async (port: number, res: string) => {
 	}
 };
 
+type SessionEvent = {
+	type: string
+	content: any
+	producer: string
+	consumer: string
+}
+
+const sendSessionEvent = async (port: number, event: SessionEvent) => {
+	try {
+		const response = await axios.post(
+			`http://localhost:${port}/session/cli/event`,
+			event,
+		);
+		return response.data;
+	} catch (error: any) {
+		// console.error('Error:', error.message);
+	}
+};
+
 // type Event = {
 // 	type:
 // 		| 'ModelResponse'
@@ -231,6 +250,13 @@ export const App = ({port, reset}: {port: number, reset: boolean}) => {
 			setInputValue('');
 			if (inputValue.toLowerCase() == 'exit') {
 				exit();
+			}
+			if (inputValue.toLowerCase() == '/reset') {
+				sendSessionEvent(port, {type: 'GitRequest', content: {
+					type: 'revert_to_commit',
+					commit_to_revert: eventState.context.gitData.commits[eventState.context.gitData.commits.length - 1],
+					commit_to_go_to: eventState.context.gitData.base_commit
+				}, producer: 'cli', consumer: 'cli'})
 			}
 
 			if (eventState.context.userRequest) {

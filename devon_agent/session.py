@@ -114,20 +114,20 @@ class Session:
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
-            "create_file" : CreateFileTool(),
+            "create_file" : CreateFileTool().register_post_hook(save_create_file),
             "open_file" : OpenFileTool(),
             "scroll_up" : ScrollUpTool(),
             "scroll_down" : ScrollDownTool(),
             "scroll_to_line" : ScrollToLineTool(),
             "search_file" : SearchFileTool(),
-            "edit_file" : EditFileTool(),
+            "edit_file" : EditFileTool().register_post_hook(save_edit_file),
             "search_dir" : SearchDirTool(),
             "find_file" : FindFileTool(),
             # "list_dirs_recursive" : ListDirsRecursiveTool(),
             "get_cwd" : GetCwdTool(),
             "no_op" : NoOpTool(),
             "submit" : SubmitTool(),
-            "delete_file" : DeleteFileTool(),
+            "delete_file" : DeleteFileTool().register_post_hook(save_delete_file),
         })
         local_environment.set_default_tool(ShellTool())
         self.default_environment = local_environment
@@ -228,8 +228,9 @@ class Session:
             events = self.step_event(event)
             self.event_log.extend(events)
 
-            self.event_id += 1
-
+            event_id += 1
+        return self.run_event_loop()
+            
 
     def step_event(self, event):
         
@@ -247,8 +248,16 @@ class Session:
 
             case "GitRequest" :
                 if event["content"]["type"] == "revert_to_commit":
-                    
                     safely_revert_to_commit(self.default_environment, event["content"]["commit_to_revert"], event["content"]["commit_to_go_to"])
+
+                    new_events.append({
+                        "type": "GitEvent",
+                        "content" : {
+                            "type" : "revert",
+                            "commit" : event["content"]["commit_to_go_to"],
+                            "files" : [],
+                        }
+                    })
 
             case "ModelRequest":
 
@@ -522,6 +531,7 @@ class Session:
         self.event_log.append({
             "type": "GitEvent",
             "content" : {
+                "type" : "base_commit",
                 "commit" : get_last_commit(self.default_environment),
                 "files" : [],
             }

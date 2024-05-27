@@ -113,7 +113,7 @@ class LocalEnvironment:
                 "producer" : "tool",
                 "consumer" : self.name,
             })
-            
+
             self.process.stdin.write(input + '\n')
             self.process.stdin.write('echo "$?"\n')
             self.process.stdin.write("echo 'EOL'\n")
@@ -125,7 +125,7 @@ class LocalEnvironment:
 
             while (line := self.process.stdout.readline()) != 'EOL\n':
                 output += line
-            
+
             while (line := self.process.stderr.readline()) != 'EOL\n':
                 error += line
 

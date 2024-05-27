@@ -118,7 +118,8 @@ type Event = {
 		| 'ModelRequest'
 		| 'ToolRequest'
 		| 'Error'
-		| 'UserResponse';
+		| 'UserResponse'
+		| 'GitEvent';
 	content: any;
 	identifier: string | null;
 };
@@ -129,6 +130,10 @@ export const eventHandlingLogic = fromTransition((state : {
     modelLoading : boolean;
     toolMessage : string;
     userRequest : boolean;
+    gitData : {
+        base_commit : string | null;
+        commits : string[];
+    }
 }, event : Event) => {
     switch (event.type) {
         case 'Stop': {
@@ -168,11 +173,38 @@ export const eventHandlingLogic = fromTransition((state : {
             console.error(event.content);
             return {...state, messages: [...state.messages, { text: event.content, type: 'error' } as Message] };
         }
+        case 'GitEvent': {
+            if (event.content.type === 'base_commit') {
+                return {...state, gitData: {
+                    base_commit: event.content.commit,
+                    commits: [event.content.commit]
+                }};
+            }
+            else if (event.content.type === 'commit') {
+                return {...state, gitData: {
+                    base_commit: state.gitData.base_commit,
+                    commits: [...state.gitData.commits, event.content.commit]
+                }};
+            }
+            else if (event.content.type === 'revert') {
+                return {...state, gitData: {
+                    base_commit: event.content.commit,
+                    commits: state.gitData.commits.slice(0, state.gitData.commits.indexOf(event.content.commit_to_go_to) + 1)
+                }};
+            }
+            else {
+                return state;
+            }
+        }
+
         default: {
             return state;
         }
     }
-}, { messages: [], ended: false, modelLoading: false, toolMessage: "", userRequest: false}); // Initial state
+}, { messages: [], ended: false, modelLoading: false, toolMessage: "", userRequest: false, gitData : {
+    base_commit : null,
+    commits : [],
+}}); // Initial state
 
 // type Message = {
 // 	text: string;

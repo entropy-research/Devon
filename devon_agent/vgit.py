@@ -37,7 +37,7 @@ Teardown
 
 
 from devon_agent.environment import EnvironmentModule, LocalEnvironment
-
+import os
 def get_git_root(fpath=None):
     path = fpath
 
@@ -341,4 +341,3 @@ if __name__ == "__main__":
     # session.default_environment.session = session
     session.default_environment.setup(session)
     safely_revert_to_commit(session.default_environment, "415cc8021ba520bff77144e018346cce25e09d4e", "fae10f9c98d2eaf16ba7704418ce59a7de40b4ae")
-

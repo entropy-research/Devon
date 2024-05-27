@@ -12,6 +12,7 @@ class Event(TypedDict):
     content: Any
     producer: str
     consumer: str
+    trajectory_id: str
     metadata: Dict[str, Any]
     timestamp: Optional[str]
     
