@@ -77,21 +77,21 @@ class SetTaskTool(Tool):
             case "manpage":
                 return """
                 NAME
-                    ask_user - ask the user for their input
+                    set_task - asks the user for the task and persists it
 
                 SYNOPSIS
-                    ask_user
+                    set_task
 
                 DESCRIPTION
-                    The ask_user command asks the user for their input
+                    The set_task command asks the user for their specified task
 
                 RETURN VALUE
-                    The ask_user command returns a string indicating the user's input.
+                    The set_task command returns a string indicating the user's input.
 
                 EXAMPLES
                     To ask the user for their input, run the following command:
 
-                        ask_user
+                        set_task
                 """
             case _:
                 raise ValueError(f"Invalid format: {format}")

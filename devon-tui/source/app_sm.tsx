@@ -176,7 +176,7 @@ const sendInterrupt = async (port: number, res: string) => {
 // 	return messages;
 // };
 
-export const App = ({port}: {port: number}) => {
+export const App = ({port, reset}: {port: number, reset: boolean}) => {
 	const [inputValue, setInputValue] = useState('');
 	// const [userRequested, setUserRequested] = useState(false);
 	const [eventState,sendEvent] = useActor(eventHandlingLogic)
@@ -186,6 +186,7 @@ export const App = ({port}: {port: number}) => {
 			port: port,
 			name: 'cli',
 			path: process.cwd(),
+			reset: reset
 		}
 	})
 	let status = '';
@@ -204,19 +205,20 @@ export const App = ({port}: {port: number}) => {
 	}
 
 	React.useEffect(() => {
-
 		const interval = setInterval(async () => {
-			const newEvents = await fetchEvents(port);
-			if (newEvents) {
-				for (let i = eventI; i < newEvents.length; i++) {
-					sendEvent(newEvents[i]);
-					eventI++;
+			if(state.matches('running')){
+				const newEvents = await fetchEvents(port);
+				if (newEvents) {
+					for (let i = eventI; i < newEvents.length; i++) {
+						sendEvent(newEvents[i]);
+						eventI++;
+					}
 				}
 			}
 		}, 1000);
 
 		return () => clearInterval(interval);
-	}, []);
+	}, [state]);
 
 	useInput((_: any, key: any) => {
 		if (key.escape) {
