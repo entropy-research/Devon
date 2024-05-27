@@ -160,32 +160,47 @@ if (input[0] === 'configure') {
       process.exit(1);
     }
 
-    const subProcess = childProcess.spawn(
-      'devon_agent',
-      ['server', '--port', port.toString(), '--model', modelName, '--api_key', api_key],
-      {
-        signal: controller.signal
-      },
-    );
+    let reset = false
 
-    if(cli.flags.debug) {
-      subProcess.stdout.on('data', (newOutput: Buffer) => {
-          console.log(newOutput.toString('utf8'));
+    inquirer
+      .prompt([
+        {
+          type: 'list',
+          name: 'continue',
+          message: 'Continue previous session?',
+          choices: ['yes', 'no'],
+        },
+      ])
+      .then((answers) => {
+        reset = (answers.continue === "no")
+
+        const subProcess = childProcess.spawn(
+          'devon_agent',
+          ['server', '--port', port.toString(), '--model', modelName, '--api_key', api_key],
+          {
+            signal: controller.signal
+          },
+        );
+    
+        if(cli.flags.debug) {
+          subProcess.stdout.on('data', (newOutput: Buffer) => {
+              console.log(newOutput.toString('utf8'));
+          });
+    
+          subProcess.stderr.on('data', (newOutput: Buffer) => {
+              console.error(newOutput.toString('utf8'));
+          });
+        }
+
+        const { waitUntilExit } = render(<App port={port} reset={reset}/>, {
+          exitOnCtrlC: true,
+        });
+
+        waitUntilExit().then(() => {
+          console.log('Exiting...');
+          subProcess.kill('SIGKILL');
+          process.exit(0);
+        });
       });
-
-      subProcess.stderr.on('data', (newOutput: Buffer) => {
-          console.error(newOutput.toString('utf8'));
-      });
-    }
-
-    const { waitUntilExit } = render(<App port={port} />, {
-      exitOnCtrlC: true,
-    });
-
-    waitUntilExit().then(() => {
-      console.log('Exiting...');
-      subProcess.kill('SIGKILL');
-      process.exit(0);
-    });
   });
 }

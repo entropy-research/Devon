@@ -35,6 +35,8 @@ posthog = "^3.5.0"
 litellm = "^1.37.9"
 dspy-ai = {version = "^2.4.9", optional = true}
 
+aiosqlite = "^0.20.0"
+greenlet = "^3.0.3"
 [tool.poetry.extras]
 swebench = ["swebench", "datasets", "gymnasium"]
 experimental = ["dspy-ai"]

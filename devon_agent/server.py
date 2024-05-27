@@ -3,11 +3,16 @@ from contextlib import asynccontextmanager
 import json
 import os
 from time import sleep
+import time
 from typing import Dict, List
 
 import fastapi
-from sqlalchemy import create_engine, text
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
+import json
+from contextlib import asynccontextmanager
 from devon_agent.agents.default.agent import TaskAgent
+from devon_agent.models import ENGINE, Base, init_db, load_data
 from devon_agent.session import (
     Event,
     Session,
@@ -38,86 +43,6 @@ origins = [
 
 sessions: Dict[str, Session] = {}
 
-DATABASE_PATH = "./devon_environment.db"
-DATABASE_URL = "sqlite:///" + DATABASE_PATH
-
-
-sessions: Dict[str, Session] = {}
-
-add_or_update_sessions_sql = """
-INSERT INTO sessions (name, JSON_STATE) VALUES (:name, :JSON_STATE)
-ON CONFLICT(name) DO UPDATE SET JSON_STATE = excluded.JSON_STATE
-"""
-
-delete_session_sql = """
-DELETE FROM sessions WHERE name = :name
-"""
-
-get_session_sql = """
-SELECT * FROM sessions WHERE name = :name
-"""
-
-get_sessions_sql = """
-SELECT * FROM sessions
-"""
-
-
-@asynccontextmanager
-async def lifespan(app: fastapi.FastAPI):
-    print("lifespan")
-    engine = create_engine(DATABASE_URL, echo=True)
-
-    # session table SQL DDL
-    session_table_sql = """
-
-    CREATE TABLE IF NOT EXISTS sessions (
-        name TEXT PRIMARY KEY,
-        JSON_STATE TEXT NOT NULL
-    );
-    """
-
-    # run the SQL DDL statement
-    with engine.connect() as conn:
-        conn.execute(text(session_table_sql))
-
-    # get all sessions and load them into sessions dictionary
-    with engine.connect() as conn:
-        ses = conn.execute(text(get_sessions_sql)).fetchall()
-        for session in ses:
-            print(session)
-            state = json.loads(session[1])
-            state["user_input"] = lambda: get_user_input(session[0])
-            sessions[session[0]] = Session.from_dict(state)
-    print("statup done")
-    yield
-    print("cleanup")
-    session_states = [(name, session.to_dict()) for name, session in sessions.items()]
-    with engine.connect() as conn:
-        for name, state in session_states:
-            conn.execute(
-                text(add_or_update_sessions_sql),
-                {"name": name, "JSON_STATE": json.dumps(state)},
-            )
-        conn.commit()
-    print("cleanup done")
-
-
-app = fastapi.FastAPI(
-    lifespan=lifespan,
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-session_buffers: Dict[str, str] = {}
-running_sessions: List[str] = []
-
-
 def get_user_input(session: str):
     if session not in session_buffers:
         while True:
@@ -135,6 +60,37 @@ def get_user_input(session: str):
         del session_buffers[session]
         return result
 
+@asynccontextmanager
+async def lifespan(app: fastapi.FastAPI):
+
+    #Hacky but it works
+    global sessions
+
+    await init_db()
+
+    AsyncSessionLocal = sessionmaker(bind=ENGINE, class_=AsyncSession, expire_on_commit=False)
+    async with AsyncSessionLocal() as db_session:
+        app.db_session = db_session
+        data = await load_data(db_session)
+        data = { k:Session.from_dict(v, lambda: get_user_input(k)) for (k,v) in data.items()} 
+        sessions = data
+        yield
+
+
+app = fastapi.FastAPI(
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+session_buffers: Dict[str, str] = {}
+running_sessions: List[str] = []
 
 @app.get("/")
 def read_root():
@@ -157,15 +113,26 @@ def create_session(session: str, path: str):
         temperature=0.0,
         api_key=app.api_key,
     )
-    sessions[session] = Session(
-        SessionArguments(
-            path,
-            # environment="local",
-            user_input=lambda: get_user_input(session),
-            name=session,
-        ),
-        agent,
-    )
+
+    if session not in sessions:
+        sessions[session] = Session(
+            SessionArguments(
+                path,
+                user_input=lambda: get_user_input(session),
+                name=session,
+            ),
+            agent,
+        )
+
+    return session
+
+
+@app.post("/session/{session}/reset")
+def reset_session(session: str):
+    global sessions
+
+    if session in sessions:
+        del sessions[session]
 
     return session
 
@@ -179,14 +146,25 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
         raise fastapi.HTTPException(status_code=304, detail="Session already running")
 
     sessions[session].enter()
-    sessions[session].event_log.append(
-        Event(
-            type="Task",
-            content="ask user for what to do",
-            producer="system",
-            consumer="devon",
+    if len(sessions[session].event_log) == 0 or sessions[session].task == None:
+        sessions[session].event_log.append(
+            Event(
+                type="Task",
+                content="ask user for what to do",
+                producer="system",
+                consumer="devon",
+            )
         )
-    )
+    else:
+        sessions[session].event_log.append(
+            Event(
+                type="ModelRequest",
+                content="Your interaction with the user was paused, please resume.",
+                producer="system",
+                consumer="devon",
+            )
+        )
+
     background_tasks.add_task(sessions[session].run_event_loop)
     running_sessions.append(session)
     return session
@@ -231,7 +209,6 @@ def continue_session(session: str):
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    print(session_obj.state)
     return session_obj.state.to_dict()
 
 

@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import json
 import logging
@@ -6,8 +7,11 @@ import random
 import traceback
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
-from devon_agent.agent import TaskAgent
+
+from sqlalchemy import create_engine, text
+from devon_agent.agents.default.agent import TaskAgent
 from devon_agent.environment import EnvironmentModule, LocalEnvironment, UserEnvironment
+from devon_agent.models import _save_data, _save_session_util, get_async_session, save_data
 from devon_agent.telemetry import Posthog, SessionEventEvent, SessionStartEvent
 from devon_agent.tool import  ToolNotFoundException
 from devon_agent.tools import (
@@ -31,6 +35,7 @@ class SessionArguments:
     # environments: List[str]
     user_input: Any
     name: str
+    task: Optional[str] = None
 
 
 """
@@ -98,7 +103,6 @@ class Session:
         self.agent: TaskAgent = agent
         self.base_path = args.path
         self.event_log: List[Event] = []
-        self.event_index = 0
         self.get_user_input = args.user_input
         self.telemetry_client = Posthog()
         self.name = args.name
@@ -142,46 +146,52 @@ class Session:
         self.path = args.path
         self.base_path = args.path
 
-        self.task = None
+        self.task = args.task
+        self.event_id = 0
 
-        def to_dict(self):
-            return {
-                "path": self.path,
-                "environment": self.environment_type,
-                "event_history": [event for event in self.event_log],
-                "state": self.state.to_dict(),
-                "cwd": self.environment.get_cwd(),
-                "agent": {
-                    "name": self.agent.name,
-                    "model": self.agent.model,
-                    "temperature": self.agent.temperature,
-                    "chat_history": self.agent.chat_history,
-                },
-            }
+    def to_dict(self):
+        return {
+            "task": self.task,
+            "path": self.path,
+            "name": self.name,
+            "event_history": [event for event in self.event_log],
+            "cwd": self.environments["local"].get_cwd(),
+            "agent": {
+                "name": self.agent.name,
+                "model": self.agent.model,
+                "temperature": self.agent.temperature,
+                "chat_history": self.agent.chat_history,
+            },
+        }
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, user_input):
+        print(data)
         instance = cls(
             args=SessionArguments(
                 path=data["path"],
-                environment=data["environment"],
-                user_input=data["user_input"],
+                # environment=data["environment"],
+                user_input=user_input,
+                name=data["name"],
+                task=data["task"]
             ),
             agent=TaskAgent(
                 name=data["agent"]["name"],
                 model=data["agent"]["model"],
                 temperature=data["agent"]["temperature"],
                 chat_history=data["agent"]["chat_history"],
-            ),
+            )
         )
 
-        instance.state = DotDict(data["state"])
+        # instance.state = DotDict(data["state"])
+        instance.state = DotDict({})
         instance.state.editor = {}
         instance.event_log = data["event_history"]
-        instance.environment.communicate("cd " + data["cwd"])
+        instance.event_id = len(data["event_history"])
+
+        # instance.environments["local"].communicate("cd " + data["cwd"])
 
         return instance
-
 
     def get_last_task(self):
         if self.task:
@@ -189,11 +199,9 @@ class Session:
         return "Task unspecified ask user to specify task"
     
     def run_event_loop(self):
-        event_id = 0
-        #current event
-        while True and not (event_id == len(self.event_log)):
+        while True and not (self.event_id == len(self.event_log)):
 
-            event = self.event_log[event_id]
+            event = self.event_log[self.event_id]
 
             self.logger.info(f"Event: {event}")
             self.logger.info(f"State: {self.state}")
@@ -212,8 +220,8 @@ class Session:
             events = self.step_event(event)
             self.event_log.extend(events)
 
-            event_id += 1
-            
+            self.event_id += 1
+
 
     def step_event(self, event):
         
@@ -235,6 +243,10 @@ class Session:
                     safely_revert_to_commit(self.default_environment, event["content"]["commit_to_revert"], event["content"]["commit_to_go_to"])
 
             case "ModelRequest":
+
+                #Need some quantized timestep for saving persistence that isn't literally every 0.1s
+
+                asyncio.run(_save_session_util(self.name, self.to_dict()))
                 thought, action, output = self.agent.predict(
                     self.get_last_task(), event["content"], self
                 )
@@ -499,20 +511,6 @@ class Session:
                     "state" : self.state,
                 })
 
-        
-
-        # get_or_create_repo(
-        #     self.default_environment,
-        #     self.base_path,
-        # )
-        # self.original_branch = self.default_environment.execute("git branch --show-current")[0]
-        # self.agent_branch = self.agent_branch + "-" + self.original_branch + "-" + str(random.randint(0, 1000))
-        # make_new_branch(self.default_environment, self.agent_branch)
-        # stash_and_commit_changes(self.default_environment, self.agent_branch,"test")
-
-        # base_diff = get_current_diff(self.default_environment)
-        # print(base_diff,file=open("base_diff.txt", "w"))
-
         self.event_log.append({
             "type": "GitEvent",
             "content" : {
@@ -520,10 +518,8 @@ class Session:
                 "files" : [],
             }
         })
-        
 
         self.telemetry_client.capture(SessionStartEvent(self.name))
-        
 
     def exit(self):
 
@@ -538,4 +534,3 @@ class Session:
                     "state" : self.state,
                 })
 
-        

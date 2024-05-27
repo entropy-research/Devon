@@ -107,7 +107,6 @@ class LocalEnvironment:
     def execute(self, input: str, timeout_duration=25):
         try:
 
-
             self.session.event_log.append({
                 "type" : "EnvironmentRequest",
                 "content" : input,

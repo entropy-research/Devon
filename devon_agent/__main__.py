@@ -1,4 +1,6 @@
+import asyncio
 import os
+import signal
 import click
 from devon_agent.server import app
 
@@ -16,8 +18,6 @@ def cli():
 def server(port, model, api_key):
     """Start the Devon Agent server."""
     import uvicorn
-
-    import sys
 
     if api_key is None:
         raise Exception("Could not find api key")

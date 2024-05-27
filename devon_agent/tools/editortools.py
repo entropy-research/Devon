@@ -366,7 +366,7 @@ class CreateFileTool(Tool):
 
             exists = file_exists(ctx, abs_path)
             if exists:
-                raise Exception(f"Could not create file, file already exists: {abs_path}")
+                raise Exception(f"Could not create file, file already exists: {file_path}")
 
             # Creating the file with initial content
 
@@ -383,12 +383,12 @@ class CreateFileTool(Tool):
 
             # Verify file creation
             if not exists:
-                raise Exception(f"Command failed to create file: {abs_path}")
+                raise Exception(f"Command failed to create file: {file_path}")
 
             ctx["state"].editor.files[abs_path] = {} 
             ctx["state"].editor.files[abs_path]["lines"] = content
             ctx["state"].editor.files[abs_path]["page"] = 0
-            return f"Successfully created file {abs_path}"
+            return f"Successfully created file {file_path}"
 
         except Exception as e:
             ctx["session"].logger.error(f"Failed to create file: {file_path}. Error: {str(e)}")

@@ -9,8 +9,10 @@ export const sessionMachine = setup({
             retryCount: number;
             name: string;
             path: string;
+            reset: boolean;
         },
         input: {} as {
+            reset: boolean;
             port: number;
             name: string;
             path: string;
@@ -18,7 +20,13 @@ export const sessionMachine = setup({
     },
 
     actors: {
-        createSession: fromPromise(async ({ input }: { input: { port: number, name: string, path: string } }) => {
+        createSession: fromPromise(async ({ input }: { input: { port: number, name: string, path: string, reset: boolean } }) => {
+            if(input?.reset === true){
+                await axios.post(
+                    `http://localhost:${input?.port}/session/${input?.name}/reset`,
+                );
+            }
+
             const encodedPath = encodeURIComponent(input?.path);
             const response = await axios.post(
                 `http://localhost:${input?.port}/session?session=${input?.name}&path=${encodedPath}`,
@@ -39,14 +47,15 @@ export const sessionMachine = setup({
         port: input.port,
         retryCount: 0,
         name: input.name,
-        path: input.path
+        path: input.path,
+        reset: input.reset
     }),
     states: {
         initial: {
             invoke: {
                 id: 'createSession',
                 src: 'createSession',
-                input: ({ context: { port, name, path } }) => ({ port, name, path }),
+                input: ({ context: { port, name, path, reset } }) => ({ port, name, path, reset }),
                 onDone: {
                     target: 'sessionCreated',
                 },
@@ -121,7 +130,6 @@ export const eventHandlingLogic = fromTransition((state : {
     toolMessage : string;
     userRequest : boolean;
 }, event : Event) => {
-
     switch (event.type) {
         case 'Stop': {
             return {...state, ended: true };
