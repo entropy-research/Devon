@@ -18,7 +18,8 @@ class ModelArguments:
     temperature: float = 1.0
     top_p: float = 1.0
     api_key: Optional[str] = None
-
+    api_base: Optional[str] = None
+    prompt_type: Optional[str] = None
 
 class HumanModel:
     def __init__(self, args: ModelArguments):
@@ -55,7 +56,7 @@ class AnthropicModel:
         self.args = args
         self.api_model = self.SHORTCUTS.get(args.model_name, args.model_name)
         self.model_metadata = self.MODELS[self.api_model]
-
+        self.prompt_type = 'anthropic'
         if args.api_key is not None:
             self.api = args.api_key
         else:
@@ -96,17 +97,25 @@ class OpenAiModel:
     def __init__(self, args: ModelArguments):
         self.args = args
         self.api_model = self.SHORTCUTS.get(args.model_name, args.model_name)
-        self.model_metadata = self.MODELS[self.api_model]
+        self.model_metadata = self.MODELS.get(self.api_model, {})
+        self.prompt_type = 'openai'
 
         if args.api_key is not None:
             self.api_key = args.api_key
         else:
             self.api_key = os.getenv("OPENAI_API_KEY")
 
+        if args.api_base is not None:
+            self.api_base = args.api_base
+
+        if args.prompt_type is not None:
+            self.prompt_type = args.prompt_type
+        
+
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
                 messages=[{"role": "system", "content": system_message}] + messages,
-                max_tokens=self.model_metadata["max_tokens"],
+                max_tokens=self.model_metadata.get("max_tokens", 4096),
                 model=self.api_model,
                 temperature=self.args.temperature,
                 stop=["</COMMAND>"],
@@ -131,7 +140,7 @@ class GroqModel:
         self.args = args
         self.api_model = self.SHORTCUTS.get(args.model_name, args.model_name)
         self.model_metadata = self.MODELS[self.api_model]
-
+        self.prompt_type = 'llama3'
         if args.api_key is not None:
             self.api_key = args.api_key
         else:
@@ -159,6 +168,7 @@ class OllamaModel:
         }
 
         self.api_key = "ollama"
+        self.prompt_type = 'ollama'
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(

@@ -107,12 +107,22 @@ def create_session(session: str, path: str):
     if not os.path.exists(path):
         raise fastapi.HTTPException(status_code=404, detail="Path not found")
 
-    agent = TaskAgent(
-        name="Devon",
-        model=app.model,
-        temperature=0.0,
-        api_key=app.api_key,
-    )
+    if not app.api_base:
+        agent = TaskAgent(
+            name="Devon",
+            model=app.model,
+            temperature=0.0,
+                api_key=app.api_key,
+            )
+    else:
+        agent = TaskAgent(
+            name="Devon",
+            model=app.model,
+            temperature=0.0,
+            api_key=app.api_key,
+            api_base=app.api_base,
+            prompt_type=app.prompt_type,
+        )
 
     if session not in sessions:
         sessions[session] = Session(

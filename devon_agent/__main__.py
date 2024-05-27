@@ -15,7 +15,9 @@ def cli():
 @click.option("--port", default=8000, help="Port number for the server.")
 @click.option("--model", required=False, default=None, help="Model for authentication.")
 @click.option("--api_key", required=False, default=None, help="API key for authentication.")
-def server(port, model, api_key):
+@click.option("--prompt_type", required=False, default=None, help="Specify prompt type for the model.")
+@click.option("--api_base", required=False, default=None, help="Specify API base url for the model.")
+def server(port, model, api_key, prompt_type, api_base):
     """Start the Devon Agent server."""
     import uvicorn
 
@@ -24,9 +26,11 @@ def server(port, model, api_key):
     elif model is None:
         raise Exception("Could not find default model, please run devon `configure`")
 
-    app.api_key = api_key
-    app.model = model
 
+    app.api_key = api_key
+    app.api_base = api_base
+    app.prompt_type = prompt_type
+    app.model = model
     uvicorn.run(app, host="0.0.0.0", port=port)
 
 

@@ -16,6 +16,14 @@ import childProcess from 'node:child_process';
 // - [ ] handle debug console
 // - [ ] if window big show editor and cli
 // - [ ] paginate outputs
+
+type Config = {
+    modelName: string,
+    apiBase?: string,
+    promptType?: string
+    apiKey?: string
+}
+
 const cli = meow(
     `
     Usage
@@ -29,11 +37,18 @@ const cli = meow(
       --version     Show version
       --port, -p    Set the port number (default: 10000)
       --api_key     Set the API key
+      --model       Set the model name
+      --api_base    Set the API base url
+      --prompt_type Set the prompt type
       --debug       Turn on debug mode
   
     Examples
-      $ devon start --api_key=YOUR_API_KEY
+      $ devon start --api_key=YOUR_API_KEY 
       $ devon start --port 8080 --api_key=YOUR_API_KEY
+      $ devon start --model=gpt4-o --api_key=YOUR_API_KEY
+      $ devon start --model=claude-opus --api_key=YOUR_API_KEY
+      $ devon start --model=llama-3-70b --api_key=YOUR_API_KEY
+      $ devon start --model=custom --api_base=https://api.example.com --prompt_type=anthropic --api_key=YOUR_API_KEY
       $ devon configure
   `,
     {
@@ -77,9 +92,38 @@ if (input[0] === 'configure') {
           type: 'list',
           name: 'modelName',
           message: 'Select the model name:',
-          choices: ['claude-opus', 'gpt4-o', 'llama-3-70b', 'ollama/deepseek-coder:6.7b'],
+          choices: ['claude-opus', 'gpt4-o', 'llama-3-70b', 'ollama/deepseek-coder:6.7b', 'custom'],
         },
       ])
+      .then((answers) => {
+        if(answers.modelName === 'custom') {
+          return inquirer.prompt([
+            {
+              type: 'input',
+              name: 'modelName',
+              message: 'Enter the model name:',
+            },
+            {
+              type: 'input',
+              name: 'apiBase',
+              message: 'Enter the API base url:',
+            },
+            {
+              type: 'input',
+              name: 'apiKey',
+              message: 'Enter the API key:',
+            },
+            {
+              type: 'list',
+              name: 'promptType',
+              message: 'Enter the prompt type:',
+              choices: ['openai', 'anthropic', 'llama3'],
+            },
+          ]);
+          
+        }
+        return Promise.resolve(answers);
+      })
       .then((answers) => {
         const modelName = answers.modelName;
         console.log(`Selected model name: ${modelName}`);
@@ -87,9 +131,15 @@ if (input[0] === 'configure') {
         // Save the selected model name to .devon.config file in the package directory
         const packageDir = process.cwd();
         const configPath = path.join(packageDir, '.devon.config');
-        const config = {
-        modelName,
-        };
+        const config: Config = {
+          modelName: modelName,
+        }
+
+        if (answers.apiBase) {
+          config.apiKey = answers.apiKey;
+          config.apiBase = answers.apiBase;
+          config.promptType = answers.promptType;
+        }
 
         fs.writeFile(configPath, JSON.stringify(config, null, 2), (err) => {
         if (err) {
@@ -114,9 +164,11 @@ if (input[0] === 'configure') {
     // 	process.exit(1);
     // }
 
-    let api_key = undefined
-    let modelName = undefined
-  
+    let api_key: string | undefined = undefined
+    let modelName: string | undefined = undefined
+    let api_base: string | undefined = undefined
+    let prompt_type: string | undefined = undefined
+
     if (cli.flags.apiKey){
       api_key = cli.flags['apiKey'];
     } else if (process.env['OPENAI_API_KEY']){
@@ -133,17 +185,24 @@ if (input[0] === 'configure') {
         process.exit(1);
     }
 
-  // Use the provided API key
-//   const apiKey = cli.flags['apiKey'];
-
     const packageDir = process.cwd()
     const configPath = path.join(packageDir, '.devon.config');
 
     try {
         if(fs.existsSync(configPath)){
           const configData = fs.readFileSync(configPath, 'utf8');
-          const config = JSON.parse(configData);
+          const config: Config = JSON.parse(configData);
           modelName = config.modelName ? config.modelName : modelName;
+          api_key = config.apiKey ? config.apiKey : api_key;
+    
+          if (config.apiBase) {
+            api_base = config.apiBase;
+            console.log('Using api base:', api_base);
+          }
+          if (config.promptType) {
+            prompt_type = config.promptType;
+            console.log('Using prompt type:', prompt_type);
+          }
         }
         console.log('Using model name:', modelName);
     } catch (err) {
@@ -159,6 +218,7 @@ if (input[0] === 'configure') {
       );
       process.exit(1);
     }
+    console.log( ['server', '--port', port.toString(), '--model', modelName as string, '--api_key', api_key as string, '--api_base', api_base as string, '--prompt_type', prompt_type as string])
 
     let reset = false
 
@@ -176,7 +236,7 @@ if (input[0] === 'configure') {
 
         const subProcess = childProcess.spawn(
           'devon_agent',
-          ['server', '--port', port.toString(), '--model', modelName, '--api_key', api_key],
+          ['server', '--port', port.toString(), '--model', modelName as string, '--api_key', api_key as string, '--api_base', api_base as string, '--prompt_type', prompt_type as string],
           {
             signal: controller.signal
           },

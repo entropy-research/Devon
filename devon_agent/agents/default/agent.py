@@ -37,18 +37,64 @@ class Agent:
     chat_history: list[dict[str, str]] = field(default_factory=list)
     interrupt: str = ""
     api_key: Optional[str] = None
+    api_base: Optional[str] = None
+    prompt_type: Optional[str] = None
     scratchpad = None
 
     def run(self, session: "Session", observation: str = None): ...
 
 
 class TaskAgent(Agent):
-    supported_models = {
+    default_models = {
         "gpt4-o": OpenAiModel,
         "claude-opus": AnthropicModel,
         "llama-3-70b": GroqModel,
         "ollama/deepseek-coder:6.7b": OllamaModel
     }
+
+    default_model_configs = {
+        "gpt4-o": {
+            "prompt_type": "openai",
+        },
+        "claude-opus": {
+            "prompt_type": "anthropic",
+        },
+        "llama-3-70b": {
+            "prompt_type": "llama3",
+        },
+        "ollama/deepseek-coder:6.7b": {
+            "prompt_type": "ollama",
+        }
+    }
+
+    def _initialize_model(self):
+        is_custom_model = self.model not in self.default_models
+        if is_custom_model:
+            if not self.api_key:
+                raise Exception("API key not specified for custom model")
+            if not self.api_base:
+                raise Exception("API base not specified for custom model")
+            if not self.prompt_type:
+                raise Exception("Prompt type not specified for custom model")
+            
+            # Assume it is openai-compatible
+            return OpenAiModel(
+                args=ModelArguments(
+                    model_name=self.model,
+                    temperature=self.temperature,
+                    api_key=self.api_key,
+                    api_base=self.api_base,
+                    prompt_type=self.prompt_type
+                )
+            )
+
+        return self.default_models[self.model](
+                args=ModelArguments(
+                    model_name=self.model,
+                    temperature=self.temperature,
+                    api_key=self.api_key,
+                )
+            )
 
     def _format_editor_entry(self, k, v, PAGE_SIZE=50):
         path = k
@@ -79,6 +125,117 @@ class TaskAgent(Agent):
             [self._format_editor_entry(k, v, PAGE_SIZE) for k, v in editor.items()]
         )
 
+    def _prepare_anthropic(self, task, editor, session):
+        command_docs = (
+            "Custom Commands Documentation:\n"
+            + anthropic_commands_to_command_docs(
+                list(session.generate_command_docs().values())
+            )
+            + "\n"
+        )
+
+        history = anthropic_history_to_bash_history(self.chat_history)
+        system_prompt = anthropic_system_prompt_template_v3(command_docs)
+        last_user_prompt = anthropic_last_user_prompt_template_v3(
+            task, history, editor, get_cwd(
+                {
+                    "session": session,
+                    "environment": session.default_environment,
+                    "state": session.state
+                }
+            ), session.base_path, self.scratchpad
+        )
+
+        messages = [{"role": "user", "content": last_user_prompt}]
+        return messages, system_prompt
+
+    def _prepare_openai(self, task, editor, session):
+        time.sleep(3)
+
+        command_docs = (
+            "Custom Commands Documentation:\n"
+            + openai_commands_to_command_docs(
+                list(session.generate_command_docs().values())
+            )
+            + "\n"
+        )
+
+        history = [entry for entry in self.chat_history if entry["role"] == "user" or entry["role"] == "assistant"]
+        system_prompt = openai_system_prompt_template_v3(command_docs)
+        last_user_prompt = openai_last_user_prompt_template_v3(
+            task,
+            editor,
+            get_cwd(
+                {
+                    "session": session,
+                    "environment": session.default_environment,
+                    "state": session.state
+                }
+            ),
+            session.base_path,
+            self.scratchpad
+        )
+
+        messages = history + [{"role": "user", "content": last_user_prompt}]
+        return messages, system_prompt
+
+    def _prepare_llama3(self, task, editor, session):
+        time.sleep(3)
+
+        command_docs = (
+            "Custom Commands Documentation:\n"
+            + llama3_commands_to_command_docs(
+                list(session.generate_command_docs().values())
+            )
+            + "\n"
+        )
+
+        history = llama3_history_to_bash_history(self.chat_history)
+        system_prompt = llama3_system_prompt_template_v1(command_docs)
+        last_user_prompt = llama3_last_user_prompt_template_v1(
+            task, history, editor, get_cwd(
+                {
+                    "session": session,
+                    "environment": session.default_environment,
+                    "state": session.state
+                }
+            ), session.base_path, self.scratchpad
+        )
+
+        messages = [{"role": "user", "content": last_user_prompt}]
+        return messages, system_prompt
+
+    def  _prepare_ollama(self, task, editor, session):
+        time.sleep(3)
+
+        command_docs = list(session.generate_command_docs(format="docstring").values())
+
+        command_docs = (
+            "Custom Commands Documentation:\n"
+            + llama3_7b_commands_to_command_docs(
+                command_docs
+            )
+            + "\n"
+        )
+
+        system_prompt = llama3_7b_system_prompt_template_v1(command_docs)
+        last_user_prompt = llama3_7b_last_user_prompt_template_v1(
+            task, editor, get_cwd(
+                {
+                    "session" : session,
+                    "environment" : session.default_environment,
+                    "state" : session.state
+                }
+            ), session.base_path, self.scratchpad
+        )
+
+        if len(self.chat_history) < 3:
+            messages = self.chat_history + [{"role": "user", "content": last_user_prompt}]
+        else:
+            messages = self.chat_history + [{"role": "user", "content": last_user_prompt}]
+        
+        return messages, system_prompt
+
     def predict(
         self,
         task: str,
@@ -86,16 +243,7 @@ class TaskAgent(Agent):
         session: "Session",
     ) -> Tuple[str, str, str]:
 
-        if self.model not in self.supported_models:
-            raise Exception("Model not supported")
-
-        self.current_model = self.supported_models[self.model](
-            args=ModelArguments(
-                model_name=self.model,
-                temperature=self.temperature,
-                api_key=self.api_key,
-            )
-        )
+        self.current_model = self._initialize_model()
 
         if self.interrupt:
             observation = observation + ". also " + self.interrupt
@@ -110,136 +258,18 @@ class TaskAgent(Agent):
                 {"role": "user", "content": observation, "agent": self.name}
             )
 
-            output = ""
+            prompts = {
+                "anthropic": self._prepare_anthropic,
+                "openai": self._prepare_openai,
+                "llama3": self._prepare_llama3,
+                "ollama": self._prepare_ollama
+            }
 
-            last_observation = None
-            second_last_observation = None
-            if len(self.chat_history) > 2:
-                last_observation = self.chat_history[-1]["content"]
-                second_last_observation = self.chat_history[-3]["content"]
-            if (
-                last_observation
-                and second_last_observation
-                and "Failed to edit file" in last_observation
-                and "Failed to edit file" in second_last_observation
-            ):
-                self.chat_history = self.chat_history[:-6]
-                self.current_model.args.temperature += (
-                    0.2 if self.current_model.args.temperature < 0.8 else 0
-                )
-            
-            if self.model == "claude-opus":
+            if not self.prompt_type:
+                self.prompt_type = self.default_model_configs[self.model]["prompt_type"]
 
-                command_docs = list(session.generate_command_docs().values())
-
-                command_docs = (
-                    "Custom Commands Documentation:\n"
-                    + anthropic_commands_to_command_docs(
-                        command_docs
-                    )
-                    + "\n"
-                )
-
-                history = anthropic_history_to_bash_history(self.chat_history)
-                system_prompt = anthropic_system_prompt_template_v3(command_docs)
-                last_user_prompt = anthropic_last_user_prompt_template_v3(
-                    task, history, editor, get_cwd(
-                        {
-                            "session" : session,
-                            "environment" : session.default_environment,
-                            "state" : session.state
-                        }
-                    ), session.base_path, self.scratchpad
-                )
-
-                messages = [{"role": "user", "content": last_user_prompt}]
-            elif self.model == "gpt4-o":
-
-                command_docs = list(session.generate_command_docs().values())
-                
-                time.sleep(3)
-
-                command_docs = (
-                    "Custom Commands Documentation:\n"
-                    + openai_commands_to_command_docs(
-                        command_docs
-                    )
-                    + "\n"
-                )
-
-                history = [entry for entry in self.chat_history if entry["role"] == "user" or entry["role"] == "assistant"]
-                system_prompt = openai_system_prompt_template_v3(command_docs)
-                last_user_prompt = openai_last_user_prompt_template_v3(
-                    task,
-                    editor,
-                    get_cwd(
-                        {
-                            "session" : session,
-                            "environment" : session.default_environment,
-                            "state" : session.state
-                        }
-                    ),
-                    session.base_path,
-                    self.scratchpad
-                )
-
-                messages = history + [{"role": "user", "content": last_user_prompt}]
-            elif self.model == "llama-3-70b":  
-                time.sleep(3)
-
-                command_docs = list(session.generate_command_docs().values())
-            
-                command_docs = (
-                    "Custom Commands Documentation:\n"
-                    + llama3_commands_to_command_docs(
-                        command_docs
-                    )
-                    + "\n"
-                )
-
-                history = llama3_history_to_bash_history(self.chat_history)
-                system_prompt = llama3_system_prompt_template_v1(command_docs)
-                last_user_prompt = llama3_last_user_prompt_template_v1(
-                    task, history, editor, get_cwd(
-                        {
-                            "session" : session,
-                            "environment" : session.default_environment,
-                            "state" : session.state
-                        }
-                    ), session.base_path, self.scratchpad
-                )
-
-                messages = [{"role": "user", "content": last_user_prompt}]
-            
-            elif self.model.startswith("ollama"):
-                time.sleep(3)
-
-                command_docs = list(session.generate_command_docs(format="docstring").values())
-
-                command_docs = (
-                    "Custom Commands Documentation:\n"
-                    + llama3_7b_commands_to_command_docs(
-                        command_docs
-                    )
-                    + "\n"
-                )
-
-                system_prompt = llama3_7b_system_prompt_template_v1(command_docs)
-                last_user_prompt = llama3_7b_last_user_prompt_template_v1(
-                    task, editor, get_cwd(
-                        {
-                            "session" : session,
-                            "environment" : session.default_environment,
-                            "state" : session.state
-                        }
-                    ), session.base_path, self.scratchpad
-                )
-
-                if len(self.chat_history) < 3:
-                    messages = self.chat_history + [{"role": "user", "content": last_user_prompt}]
-                else:
-                    messages = self.chat_history + [{"role": "user", "content": last_user_prompt}]
-
+            messages, system_prompt = prompts[self.prompt_type](task, editor, session)
+  
             output = self.current_model.query(messages, system_message=system_prompt)
 
             thought = None
