@@ -37,6 +37,7 @@ class SessionArguments:
     name: str
     task: Optional[str] = None
     config: Optional[Dict[str, Any]] = None
+    headless: Optional[bool] = False
 
 
 """
@@ -131,24 +132,27 @@ class Session:
         local_environment.set_default_tool(ShellTool())
         self.default_environment = local_environment
 
-        user_environment = UserEnvironment(args.user_input)
+        if args.headless:
+            self.task = args.headless
 
-        user_environment.register_tools({
-            "ask_user" : AskUserTool(),
-            "set_task" : SetTaskTool()
-        })
+            self.environments = {
+                "local" : local_environment
+            }
+        else:
+            self.task = args.task
+            user_environment = UserEnvironment(args.user_input)
+            user_environment.register_tools({
+                "ask_user" : AskUserTool(),
+                "set_task" : SetTaskTool()
+            })
 
-        print(user_environment.tools["ask_user"].post_funcs)
-
-        self.environments = {
-            "local" : local_environment,
-            "user" : user_environment,
-        }
+            self.environments = {
+                "local" : local_environment,
+                "user" : user_environment,
+            }
 
         self.path = args.path
         self.base_path = args.path
-
-        self.task = args.task
         self.event_id = 0
 
     def to_dict(self):
