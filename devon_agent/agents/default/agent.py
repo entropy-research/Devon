@@ -52,6 +52,21 @@ class TaskAgent(Agent):
         "ollama/deepseek-coder:6.7b": OllamaModel
     }
 
+    default_model_configs = {
+        "gpt4-o": {
+            "prompt_type": "openai",
+        },
+        "claude-opus": {
+            "prompt_type": "anthropic",
+        },
+        "llama-3-70b": {
+            "prompt_type": "llama3",
+        },
+        "ollama/deepseek-coder:6.7b": {
+            "prompt_type": "ollama",
+        }
+    }
+
     def _initialize_model(self):
         is_custom_model = self.model not in self.default_models
         if is_custom_model:
@@ -249,6 +264,9 @@ class TaskAgent(Agent):
                 "llama3": self._prepare_llama3,
                 "ollama": self._prepare_ollama
             }
+
+            if not self.prompt_type:
+                self.prompt_type = self.default_model_configs[self.model]["prompt_type"]
 
             messages, system_prompt = prompts[self.prompt_type](task, editor, session)
   
