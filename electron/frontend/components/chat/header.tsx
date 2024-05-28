@@ -2,7 +2,7 @@ export default function Header({
     sessionId,
     headerIcon,
 }: {
-    sessionId?: string
+    sessionId?: string | null
     headerIcon?: JSX.Element
 }) {
     // if (!sessionId || sessionId === 'New') {

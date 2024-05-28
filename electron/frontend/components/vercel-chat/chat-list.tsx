@@ -63,7 +63,7 @@ export interface ChatList2 {
     messages: any[]
     session?: Session
     isShared: boolean
-    spinning: boolean
+    spinning?: boolean
 }
 
 export function ChatList2({

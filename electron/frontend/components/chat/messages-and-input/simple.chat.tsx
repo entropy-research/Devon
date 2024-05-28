@@ -1,35 +1,12 @@
 'use client'
-
-import { cn } from '@/lib/utils'
-import { ChatList, ChatList2 } from '@/components/vercel-chat/chat-list'
-import { useLocalStorage } from '@/lib/hooks/chat.use-local-storage'
 import { useEffect, useState } from 'react'
-// import { useUIState, useAIState } from 'ai/rsc'
 import { Session } from '@/lib/chat.types'
-import { usePathname, useRouter } from 'next/navigation'
 import { Message } from '@/lib/chat/chat.actions'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
-import { VercelInput, RegularInput } from './input'
 import { useToast } from '@/components/ui/use-toast'
-import { ButtonScrollToBottom } from './button-scroll-to-bottom'
-import { getChatById, getChats, createChat } from '@/lib/services/chatService'
-import { Chat } from '@/lib/chat.types'
-import { AI } from '@/lib/chat/chat.actions'
-import EventStream from '@/components/event-stream'
-// import useCreateSession from '@/lib/services/sessionService/use-create-session'
-import useFetchSessionEvents, {
-    fetchSessionEvents,
-} from '@/lib/services/sessionService/use-fetch-session-events'
-import SessionEventsDisplay from '@/components/events'
-
-// For session state
-import {
-    useEventService,
-    useSessionService,
-    useFetchEvents,
-} from '@/lib/services/stateMachineService/stateMachineContext'
-import { Message as MessageType, Event } from '@/lib/services/stateMachineService/stateMachine'
-import { useActor } from '@xstate/react'
+import ChatMessages from './chat-messages'
+import { useSearchParams } from 'next/navigation'
+import { RegularInput } from './input'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
     initialMessages?: Message[]
@@ -38,15 +15,7 @@ export interface ChatProps extends React.ComponentProps<'div'> {
     missingKeys?: string[]
 }
 
-export function SimpleChat({
-    viewOnly,
-    id,
-    className,
-    session,
-    missingKeys,
-}: { viewOnly: boolean } & ChatProps) {
-    const path = usePathname()
-    const [messages, setMessages] = useState<MessageType[]>([])
+export function SimpleChat({ viewOnly }: { viewOnly: boolean }) {
     const {
         // messagesRef,
         scrollRef,
@@ -55,58 +24,31 @@ export function SimpleChat({
         scrollToBottom,
     } = useScrollAnchor()
     const { toast } = useToast()
-    // const [_, setNewChatId] = useLocalStorage('newChatId', id) // TODO prob delete this later
-
+    const searchParams = useSearchParams()
+    const [sessionMachineProps, setSessionMachineProps] = useState<any>(null)
     const [userRequested, setUserRequested] = useState(false)
     const [modelLoading, setModelLoading] = useState(false)
-    const [eventIdx, setEventIdx] = useState(0)
-
-    // For session state
-    const fetchEvents = useFetchEvents()
-    const eventService = useEventService()
-    const [eventState] = useActor(eventService)
-
-    // TODO: Actually use this to load chat from backend
-    useEffect(() => {
-        if (session?.user) {
-            if (!path.includes('chat') && messages.length === 1) {
-                window.history.replaceState({}, '', `?chat=${id}`)
-            }
-        }
-    }, [id, path, session?.user, messages])
 
     useEffect(() => {
-        if (!id || id === 'New') return
-        let curIdx = eventIdx
-
-        const intervalId = setInterval(async () => {
-            console.log('fetching events')
-            const newEvents = await fetchSessionEvents(id)
-            if (newEvents) {
-                for (let i = eventIdx; i < newEvents.length; i++) {
-                    eventService.send(newEvents[i])
-                    curIdx++
-                }
-                setMessages(messages => [
-                    ...messages,
-                    ...eventState.context.messages,
-                ])
-            }
-            setEventIdx(curIdx)
-        }, 2000)
-
-        return () => {
-            clearInterval(intervalId)
-        }
-    }, [eventIdx, eventService, eventState?.context?.messages, id, messages])
-
-    useEffect(() => {
-        missingKeys?.map(key => {
-            toast({
-                title: `Missing ${key} environment variable!`,
+        // Get session id and path from url
+        const sessionId = searchParams.get('chat')
+        const encodedPath = searchParams.get('path')
+        if (sessionId && encodedPath) {
+            setSessionMachineProps({
+                port: 10001,
+                name: sessionId,
+                path: decodeURIComponent(encodedPath),
             })
-        })
-    }, [toast, missingKeys])
+        }
+    }, [])
+
+    // useEffect(() => {
+    //     missingKeys?.map(key => {
+    //         toast({
+    //             title: `Missing ${key} environment variable!`,
+    //         })
+    //     })
+    // }, [toast, missingKeys])
 
     return (
         <div
@@ -118,26 +60,9 @@ export function SimpleChat({
                     className={cn('pt-4 md:pt-10 bg-red-500', className)}
                     ref={messagesRef}
                 > */}
-                {/* <SessionEventsDisplay
-                        sessionId={id}
-                        setMessages={setMessages}
-                    /> */}
-                {messages?.length ? (
-                    // <ChatList
-                    //     messages={messages}
-                    //     isShared={false}
-                    //     session={session}
-                    // />
-                    <ChatList2
-                        messages={messages}
-                        isShared={false}
-                        session={session}
-                        spinning={modelLoading}
-                    />
-                ) : (
-                    <></>
+                {sessionMachineProps?.name && (
+                    <ChatMessages sessionMachineProps={sessionMachineProps} />
                 )}
-                {/* {!viewOnly && <div className="h-[150px]"></div>} */}
                 <div className="h-px w-full" ref={visibilityRef}></div>
                 {/* </div> */}
             </div>
@@ -148,12 +73,7 @@ export function SimpleChat({
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                     /> */}
-                    {/* <VercelInput
-                        isAtBottom={isAtBottom}
-                        scrollToBottom={scrollToBottom}
-                    /> */}
                     <RegularInput
-                        sessionId={id ?? ''}
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                         setUserRequested={setUserRequested}
@@ -164,110 +84,6 @@ export function SimpleChat({
                 </div>
             </div>
             {/* )} */}
-            {/* <EventStream sessionId={'1'} /> */}
         </div>
     )
-}
-
-// type Event = {
-//     type:
-//         | 'ModelResponse'
-//         | 'ToolResponse'
-//         | 'Task'
-//         | 'Interrupt'
-//         | 'UserRequest'
-//         | 'Stop'
-//         | 'EnvironmentRequest'
-//         | 'EnvironmentResponse'
-//         | 'ModelRequest'
-//         | 'ToolRequest'
-//         | 'UserResponse'
-//     content: string
-//     identifier: string | null
-// }
-
-// type MessageType = {
-//     text: string
-//     type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought'
-// }
-
-const handleEvents = (
-    events: Event[],
-    setUserRequested: (value: boolean) => void,
-    setModelLoading: (value: boolean) => void,
-    exit: () => void
-) => {
-    const messages: MessageType[] = []
-    let user_request = false
-    let model_loading = false
-    let tool_message = ''
-    let idx = 0
-    let error = false
-
-    for (const event of events) {
-        if (event.type == 'Stop') {
-            // console.log('Devon has left the chat.');
-            // exit();
-        }
-        if (event.type == 'ModelRequest') {
-            model_loading = true
-        }
-
-        if (event.type == 'ModelResponse') {
-            let content = JSON.parse(event.content)
-            model_loading = false
-            messages.push({ text: content.thought, type: 'thought' })
-        }
-
-        // Example: ask_user "What would you like to do next?" create a game
-        // if (event.type == 'ToolRequest') {
-        //     tool_message = 'Running command: ' + event.content.raw_command;
-        // }
-
-        // if (event.type == 'EnvironmentRequest') {
-        //     tool_message = 'Running command: ' + event.content;
-        // }
-
-        // if (event.type == 'EnvironmentResponse') {
-            // this is the project path
-            // console.log(event.content)
-        // }
-
-        if (event.type == 'ToolResponse') {
-            console.log('TOOL RESPONSE', event.content)
-            tool_message += '\n> ' + event.content
-            if (tool_message.length > 2000) {
-                messages.push({
-                    text: tool_message.slice(0, 2000),
-                    type: 'tool',
-                })
-            } else {
-                messages.push({ text: tool_message, type: 'tool' })
-            }
-            tool_message = ''
-        }
-
-        if (event.type == 'Task') {
-            messages.push({ text: event.content, type: 'task' })
-        }
-
-        if (event.type == 'Interrupt') {
-            // writeLogLine('interrupt: ' + event.content);
-            messages.push({ text: event.content, type: 'user' })
-        }
-
-        if (event.type == 'UserResponse') {
-            messages.push({ text: event.content, type: 'user' })
-            user_request = false
-        }
-
-        if (event.type == 'UserRequest') {
-            messages.push({ text: event.content, type: 'agent' })
-            user_request = true
-        }
-    }
-    setUserRequested(user_request)
-    setModelLoading(model_loading)
-    // return messages.slice(2, messages.length)
-    return messages
 }

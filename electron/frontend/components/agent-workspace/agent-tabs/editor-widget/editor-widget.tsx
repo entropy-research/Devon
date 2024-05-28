@@ -41,20 +41,21 @@ const EditorWidget = ({
         async function getSessionState() {
             const res = await fetchSessionState(chatId)
             console.log(res.data)
+            if (!res.data || !res.data?.editor) return
             const editor = res.editor
-            const ed = editor.files
+            const f = editor.files
             // Editor is a dictionary. Get the keys and values
             const _files: any = []
 
-            for (let key in ed) {
-                if (ed.hasOwnProperty(key)) {
+            for (let key in f) {
+                if (f.hasOwnProperty(key)) {
                     // This check is necessary to exclude properties from the prototype chain
                     _files.push({
                         id: key,
                         name: key.split('/').pop(),
                         path: key,
                         language: 'python',
-                        value: ed[key],
+                        value: f[key],
                     })
                 }
             }

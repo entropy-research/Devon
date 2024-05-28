@@ -15,8 +15,11 @@ import AgentWorkspaceHeader, {
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-widget'
 // import ShellWidget from '@/components/agent-workspace/agent-tabs/shell-widget'
+import { useSearchParams } from 'next/navigation'
 
-export default function Home({ chatProps }: { chatProps: ChatProps }) {
+export default function Home() {
+    const searchParams = useSearchParams()
+    const [sessionId, setSessionId] = useState<string | null>(null)
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
     const [showPlanner, setShowPlanner] = useState<boolean>(true)
@@ -40,6 +43,20 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
     const toggleAgentWorkspace = () => {
         setAgentWorkspaceVisible(!isAgentWorkspaceVisible)
     }
+
+    // Basically listens for change
+    useEffect(() => {
+        const chatId = searchParams.get('chat')
+        // Handle when the chatId is 'New', which means the session hasn't been made yet, and we should prompt the select project modal
+        if (chatId && chatId === 'New') {
+            return
+        }
+
+        if (!chatId) {
+            return
+        }
+        setSessionId(chatId)
+    }, [])
 
     return (
         <>
@@ -86,12 +103,12 @@ export default function Home({ chatProps }: { chatProps: ChatProps }) {
                             <Chat chatProps={chatProps} />
                         </div> */}
                         <Chat
-                            chatProps={chatProps}
+                            sessionId={sessionId}
                             // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
                         />
                     </div>
                     <div className="flex flex-col w-full">
-                        <EditorWidget chatId={chatProps.id ?? null} />
+                        <EditorWidget chatId={sessionId ?? null} />
                     </div>
 
                     {/* <div className="flex flex-2">

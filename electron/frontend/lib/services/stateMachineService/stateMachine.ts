@@ -23,22 +23,17 @@ export const sessionMachine = setup({
             }: {
                 input: { port: number; name: string; path: string }
             }) => {
-                console.log("attempting to create create", input.port, input.name, input.path)
-                const encodedPath = encodeURIComponent("/Users/josh/Documents/cs/entropy/examples")
+                const encodedPath = encodeURIComponent(input.path)
                 const response = await axios.post(
-                    `http://localhost:10001/session?session=test&path=${encodedPath}`
+                    `http://localhost:${input.port}/session?session=${input.name}&path=${encodedPath}`
                 )
-                // const response = await axios.post(
-                //     `http://localhost:${input?.port}/session?session=${input?.name}&path=${encodedPath}`
-                // )
                 return response
             }
         ),
         startSession: fromPromise(
             async ({ input }: { input: { port: number; name: string } }) => {
-                console.log("attempting to start")
                 const response = await axios.post(
-                    `http://localhost:${input?.port}/session/${input?.name}/start`
+                    `http://localhost:${input.port}/session/${input.name}/start`
                 )
                 return response
             }

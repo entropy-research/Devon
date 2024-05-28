@@ -20,10 +20,10 @@ export const useEventHandlingMachine = () => {
 }
 
 // Function to fetch events
-export const fetchEvents = async (port: number) => {
+export const fetchEvents = async (port: number, sessionId: string) => {
     try {
         const response = await axios.get(
-            `http://localhost:${port}/session/cli/events`
+            `http://localhost:${port}/session/${sessionId}/events`
         )
         return response.data
     } catch (error: any) {

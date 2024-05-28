@@ -1,8 +1,9 @@
 import FolderPicker from '@/components/ui/folder-picker'
 import { useState, lazy, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import useCreateSession from '@/lib/services/sessionService/use-create-session'
 import handleNavigate from '@/components/sidebar/handleNavigate'
+import { nanoid } from '@/lib/chat.utils'
+
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -107,13 +108,12 @@ export const SelectProjectDirectoryComponent = ({
 }
 
 export const StartChatButton = ({ onClick, disabled, folderPath }) => {
-    const { createSession, sessionId, loading, error } = useCreateSession()
 
     function handleStartChat() {
         async function session() {
             try {
-                const newSessionId = await createSession(folderPath)
-                handleNavigate(newSessionId)
+                const newSessionId = nanoid()
+                handleNavigate(newSessionId, folderPath)
             } catch (error) {
                 console.error('Error starting session:', error)
             }

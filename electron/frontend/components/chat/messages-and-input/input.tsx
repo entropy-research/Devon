@@ -104,7 +104,6 @@ export function VercelInput({
 export function RegularInput({
     isAtBottom,
     scrollToBottom,
-    sessionId,
     setUserRequested,
     userRequested,
     modelLoading,
@@ -112,7 +111,6 @@ export function RegularInput({
 }: {
     isAtBottom: boolean
     scrollToBottom: () => void
-    sessionId: string
     setUserRequested: (value: boolean) => void
     userRequested: boolean
     modelLoading: boolean

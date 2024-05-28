@@ -169,22 +169,6 @@ export async function shareChat(id: string) {
     return payload
 }
 
-// export async function saveChat(chat: Chat) {
-//     const session = await auth()
-
-//     if (session && session.user) {
-//         const pipeline = kv.pipeline()
-//         pipeline.hmset(`chat:${chat.id}`, chat)
-//         pipeline.zadd(`user:chat:${chat.userId}`, {
-//             score: Date.now(),
-//             member: `chat:${chat.id}`,
-//         })
-//         await pipeline.exec()
-//     } else {
-//         return
-//     }
-// }
-import { updateChat } from '@/lib/services/chatService2'
 
 export async function saveChat(chat: Chat) {
     // await createOrUpdateChat(chat)
@@ -197,7 +181,6 @@ export async function saveChat(chat: Chat) {
     } else {
         chats.push(chat)
     }
-    updateChat(chat.id, chat)
     saveChatData(chats)
 
     return chats
