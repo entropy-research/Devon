@@ -17,17 +17,21 @@ const FileTabs = ({
     setDiffEnabled,
     chatId,
     className,
+    isExpandedVariant,
 }: {
     files: any[]
     selectedFileId: string
     updateSelectedFile: (file: any) => void
     diffEnabled: boolean
     setDiffEnabled: (value: boolean) => void
-    chatId: string | null,
+    chatId: string | null
     className?: string
+    isExpandedVariant: boolean
 }) => {
     return (
-        <div className={`flex justify-between bg-midnight items-center ${className}`}>
+        <div
+            className={`flex justify-between bg-midnight items-center ${className}`}
+        >
             <div className="flex items-center justify-start">
                 {files.map((file: any) => (
                     <button
@@ -39,18 +43,23 @@ const FileTabs = ({
                     </button>
                 ))}
             </div>
-            <div className="flex pr-3 h-full gap-2 items-center">
-                <ActionItem
-                    active={false}
-                    icon={
-                        <Maximize className="h-[1.2rem] w-[1.2rem] text-gray-300" />
-                    }
-                    dialogContent={
-                        <DialogContent className="h-full max-w-screen block p-0 pt-10">
-                            <EditorWidget isExpandedVariant chatId={chatId} />
-                        </DialogContent>
-                    }
-                />
+            <div className="flex pr-3 h-full gap-2 items-center pb-1">
+                {!isExpandedVariant && (
+                    <ActionItem
+                        active={false}
+                        icon={
+                            <Maximize className="h-[1.2rem] w-[1.2rem] text-gray-300" />
+                        }
+                        dialogContent={
+                            <DialogContent className="h-full max-w-screen block p-0 mt-10 pt-10">
+                                <EditorWidget
+                                    isExpandedVariant
+                                    chatId={chatId}
+                                />
+                            </DialogContent>
+                        }
+                    />
+                )}
                 <ActionItem
                     active={diffEnabled}
                     icon={

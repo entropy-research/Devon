@@ -53,6 +53,7 @@ export default function CodeEditor({
                     setDiffEnabled={setDiffEnabled}
                     chatId={chatId}
                     className={showEditorBorders ? '' : 'mr-[13px]'}
+                    isExpandedVariant={isExpandedVariant}
                 />
                 {files && <PathDisplay />}
                 <div className="w-full bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
@@ -107,6 +108,7 @@ export default function CodeEditor({
                 setDiffEnabled={setDiffEnabled}
                 chatId={chatId}
                 className={showEditorBorders ? '' : ''}
+                isExpandedVariant={isExpandedVariant}
             />
             {files && <PathDisplay />}
             <div className="flex w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
