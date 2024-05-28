@@ -5,8 +5,14 @@ import { Message } from '@/lib/chat/chat.actions'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
 import { useToast } from '@/components/ui/use-toast'
 import ChatMessages from './chat-messages'
+import Input from './input'
+import { useActor, useMachine } from '@xstate/react'
+import {
+    sessionMachine,
+    eventHandlingLogic,
+} from '@/lib/services/stateMachineService/stateMachine'
+import { fetchEvents } from '@/lib/services/stateMachineService/stateMachineService'
 import { useSearchParams } from 'next/navigation'
-import { RegularInput } from './input'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
     initialMessages?: Message[]
@@ -15,7 +21,17 @@ export interface ChatProps extends React.ComponentProps<'div'> {
     missingKeys?: string[]
 }
 
-export function SimpleChat({ viewOnly }: { viewOnly: boolean }) {
+export function SimpleChat({
+    viewOnly,
+    sessionMachineProps,
+}: {
+    viewOnly: boolean
+    sessionMachineProps: {
+        port: number
+        name: string
+        path: string
+    }
+}) {
     const {
         // messagesRef,
         scrollRef,
@@ -24,23 +40,45 @@ export function SimpleChat({ viewOnly }: { viewOnly: boolean }) {
         scrollToBottom,
     } = useScrollAnchor()
     const { toast } = useToast()
-    const searchParams = useSearchParams()
-    const [sessionMachineProps, setSessionMachineProps] = useState<any>(null)
+
     const [userRequested, setUserRequested] = useState(false)
     const [modelLoading, setModelLoading] = useState(false)
 
+    const searchParams = useSearchParams()
+    const [eventState, sendEvent] = useActor(eventHandlingLogic)
+    let messages = eventState.context.messages
+    // This inits the state machine and starts the session
+    const [state] = useMachine(sessionMachine, { input: sessionMachineProps })
+    let status = ''
+
+    if (!state.matches('running')) {
+        status = 'Initializing...'
+        console.log(status)
+    } else {
+        console.log('Running!')
+    }
+    let eventI = 0
+
     useEffect(() => {
-        // Get session id and path from url
-        const sessionId = searchParams.get('chat')
-        const encodedPath = searchParams.get('path')
-        if (sessionId && encodedPath) {
-            setSessionMachineProps({
-                port: 10001,
-                name: sessionId,
-                path: decodeURIComponent(encodedPath),
-            })
+        const intervalId = setInterval(async () => {
+            const _sessionId = searchParams.get('chat')
+            if (!_sessionId || _sessionId === 'New') return
+            if (state.matches('running')) {
+                const newEvents = await fetchEvents(10001, _sessionId)
+                if (newEvents) {
+                    console.log(newEvents)
+                    for (let i = eventI; i < newEvents.length; i++) {
+                        sendEvent(newEvents[i])
+                        eventI++
+                    }
+                }
+            }
+        }, 2000)
+
+        return () => {
+            clearInterval(intervalId)
         }
-    }, [])
+    }, [state])
 
     // useEffect(() => {
     //     missingKeys?.map(key => {
@@ -60,8 +98,8 @@ export function SimpleChat({ viewOnly }: { viewOnly: boolean }) {
                     className={cn('pt-4 md:pt-10 bg-red-500', className)}
                     ref={messagesRef}
                 > */}
-                {sessionMachineProps?.name && (
-                    <ChatMessages sessionMachineProps={sessionMachineProps} />
+                {messages && messages.length > 0 && (
+                    <ChatMessages messages={messages} />
                 )}
                 <div className="h-px w-full" ref={visibilityRef}></div>
                 {/* </div> */}
@@ -73,13 +111,15 @@ export function SimpleChat({ viewOnly }: { viewOnly: boolean }) {
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                     /> */}
-                    <RegularInput
+                    <Input
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                         setUserRequested={setUserRequested}
                         userRequested={userRequested}
                         modelLoading={modelLoading}
                         viewOnly={viewOnly}
+                        isRunning={state.matches('running')}
+                        eventContext={eventState.context}
                     />
                 </div>
             </div>
