@@ -44,7 +44,6 @@ It has two lines.
         ("ls", ["-l"])
     ]
     output = parse_commands(commands)
-    print(output)
     assert output == expected_output
 
 # Test case 5: Multiple commands with missing closing fence
@@ -64,10 +63,12 @@ def test_6():
     # Test case 6: Empty command string
     commands = ""
     expected_output = []
-    assert parse_commands(commands) == expected_output
+    actual_output = parse_commands(commands)
+    assert actual_output == expected_output
 
 def test_7():
     # Test case 7: Command string with only whitespace
     commands = "   \n   \t   "
     expected_output = []
-    assert parse_commands(commands) == expected_output
+    actual_output = parse_commands(commands)
+    assert actual_output == expected_output

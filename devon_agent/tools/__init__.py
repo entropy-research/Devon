@@ -70,6 +70,33 @@ def parse_command(command: str) -> tuple:
     args = [arg.strip('"').strip("'") for arg in args]
     return fn_name, args
 
+def get_commands(input_string: str):
+
+    command = ""
+    remainder = input_string
+
+    while True:
+        pre_command, sep1, command_content_block = remainder.strip().partition("<<<")
+        pre_command = pre_command.strip()
+        command_content, sep2, res = command_content_block.partition(">>>")
+
+        arg_lines = pre_command.splitlines()
+
+        if len(arg_lines) >= 1 and command == "":
+            command += arg_lines[0]
+            remainder = "\n".join(arg_lines[1:]) + sep1 + command_content_block
+        elif command_content != "" and len(arg_lines) == 0:
+            if not sep2:
+                raise ValueError("No closing fence found")
+            command += " <<<\n" + command_content.strip() + "\n>>>"
+            remainder = res
+        elif command != "":
+            yield command
+            command = ""
+        else:
+            break
+
+
 def parse_commands(commands: str) -> list:
     """
     Parses a string containing multiple commands into a list of tuples.
@@ -80,28 +107,8 @@ def parse_commands(commands: str) -> list:
     Returns:
         list: A list of tuples, where each tuple contains the function name (str) and a list of arguments (list).
     """
-    command_list = []
-    commands = commands.strip()
-
-    while commands:
-        if "<<<" in commands.split("\n", 1)[0]:
-            if ">>>" not in commands:
-                raise ValueError(f"Error parsing command: {commands}, No '>>>' closing fence found")
-            
-            pre_command, _, post_command = commands.partition("<<<")
-            command, _, remainder = post_command.partition(">>>")
-            command = pre_command.strip() + " <<< " + command.strip() + " >>>"
-        else:
-            command, _, remainder = commands.partition("\n")
-
-        command = command.strip()
-        if command:
-            command_list.append(command)
-
-        commands = remainder.strip()
-
     parsed_commands = []
-    for command in command_list:
+    for command in get_commands(commands):
         try:
             fn_name, args = parse_command(command)
             parsed_commands.append((fn_name, args))
