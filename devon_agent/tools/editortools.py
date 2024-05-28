@@ -671,7 +671,7 @@ SCROLL_TO_LINE(1)         April 2024         SCROLL_TO_LINE(1)
         window_number = (line_number) // ctx["state"].editor.PAGE_SIZE
         ctx["state"].editor.files[abs_path]["page"] = window_number
 
-        window_start_line = window_number * ctx["state"].editor.PAGE_SIZE + 1
+        window_start_line = window_number * ctx["state"].editor.PAGE_SIZE
         return f"Scrolled to window containing line {line_number} in file {abs_path}. Window starts at line {window_start_line}."
 
 

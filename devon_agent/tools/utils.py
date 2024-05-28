@@ -95,6 +95,9 @@ def write_file(ctx, file_path: str, content: str = "") -> str:
         exists = file_exists(ctx, abs_path)
         if not exists:
             raise Exception(f"Could not write to file, file does not exist: {abs_path}")
+        
+        if abs_path not in ctx["state"].editor.files:
+            raise Exception(f"Could not write to file, file not open in editor: {abs_path}")
 
         create_command = f"cat << 'DELIM' > {abs_path} \n" + content + "\nDELIM"
         result = ctx["environment"].execute(create_command)

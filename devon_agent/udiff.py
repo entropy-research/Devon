@@ -408,7 +408,8 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
                         and not lines[i].startswith("@@")
                         and not lines[i].startswith("---")
                     ):
-                        content = lines[i][1:]
+                        # content = lines[i][1:]
+                        content = lines[i][:]
 
                         if lines[i].startswith("-"):
                             hunk_lines.append(HunkLine(type="removed", content=content))

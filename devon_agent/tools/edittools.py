@@ -174,7 +174,7 @@ class EditFileTool(Tool):
             to calling `diff --git "diff string"` where "diff string" is the argument you
             would pass to the edit_file command.
 
-            You ALWAYS need to provide a source and target file represented with `---` and `+++`.
+            You ALWAYS need to provide a source AND target file represented with `---` and `+++` even if the source is empty.
 
             ALWAYS make sure that the code STARTS on its own line.
 
