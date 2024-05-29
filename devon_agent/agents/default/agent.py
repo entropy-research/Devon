@@ -5,14 +5,13 @@ from dataclasses import dataclass, field
 import traceback
 from typing import Optional, Tuple
 
-from devon_agent.agents.model import AnthropicModel, GroqModel, ModelArguments, OllamaModel, OpenAiModel
+from devon_agent.agents.model import AnthropicModel, GroqModel, ModelArguments, OllamaModel, OpenAiModel, GeminiModel
 from devon_agent.agents.default.anthropic_prompts import anthropic_history_to_bash_history, anthropic_last_user_prompt_template_v3, anthropic_system_prompt_template_v3, anthropic_commands_to_command_docs
 from devon_agent.agents.default.openai_prompts import openai_last_user_prompt_template_v3, openai_system_prompt_template_v3, openai_commands_to_command_docs
-from devon_agent.agents.default.anthropic_prompts import (
-    parse_response
-)
 from devon_agent.agents.default.llama3_prompts import llama3_commands_to_command_docs, llama3_history_to_bash_history, llama3_last_user_prompt_template_v1, llama3_parse_response, llama3_system_prompt_template_v1
+from devon_agent.agents.default.gemini_prompts import gemini_commands_to_command_docs, gemini_history_to_bash_history, gemini_last_user_prompt_template_v1, gemini_parse_response, gemini_system_prompt_template_v1
 from devon_agent.agents.default.codegemma_prompts import llama3_7b_commands_to_command_docs, llama3_7b_history_to_bash_history, llama3_7b_last_user_prompt_template_v1, llama3_7b_parse_response, llama3_7b_system_prompt_template_v1
+
 
 from devon_agent.tools.utils import get_cwd
 
@@ -47,6 +46,7 @@ class Agent:
 class TaskAgent(Agent):
     default_models = {
         "gpt4-o": OpenAiModel,
+        "gemini-pro": GeminiModel,
         "claude-opus": AnthropicModel,
         "llama-3-70b": GroqModel,
         "ollama/deepseek-coder:6.7b": OllamaModel
@@ -55,6 +55,9 @@ class TaskAgent(Agent):
     default_model_configs = {
         "gpt4-o": {
             "prompt_type": "openai",
+        },
+        "gemini-pro": {
+            "prompt_type": "gemini",
         },
         "claude-opus": {
             "prompt_type": "anthropic",
@@ -204,6 +207,32 @@ class TaskAgent(Agent):
 
         messages = [{"role": "user", "content": last_user_prompt}]
         return messages, system_prompt
+    
+    def _prepare_gemini(self, task, editor, session):
+        time.sleep(3)
+
+        command_docs = (
+            "Custom Commands Documentation:\n"
+            + gemini_commands_to_command_docs(
+                list(session.generate_command_docs().values())
+            )
+            + "\n"
+        )
+
+        history = gemini_history_to_bash_history(self.chat_history)
+        system_prompt = gemini_system_prompt_template_v1(command_docs)
+        last_user_prompt = gemini_last_user_prompt_template_v1(
+            task, history, editor, get_cwd(
+                {
+                    "session": session,
+                    "environment": session.default_environment,
+                    "state": session.state
+                }
+            ), session.base_path, self.scratchpad
+        )
+
+        messages = [{"role": "user", "content": last_user_prompt}]
+        return messages, system_prompt
 
     def  _prepare_ollama(self, task, editor, session):
         time.sleep(3)
@@ -262,7 +291,8 @@ class TaskAgent(Agent):
                 "anthropic": self._prepare_anthropic,
                 "openai": self._prepare_openai,
                 "llama3": self._prepare_llama3,
-                "ollama": self._prepare_ollama
+                "ollama": self._prepare_ollama,
+                "gemini": self._prepare_gemini,
             }
 
             if not self.prompt_type:

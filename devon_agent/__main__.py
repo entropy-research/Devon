@@ -35,9 +35,11 @@ def server(port, model, api_key, prompt_type, api_base):
     app.prompt_type = prompt_type
     app.model = model
 
-    with open(os.path.join(os.getcwd(), ".devon.config"), "r") as f:
-        config = f.read()
-        app.config = json.loads(config)
+    config_path = os.path.join(os.getcwd(), ".devon.config")
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            config = f.read()
+            app.config = json.loads(config)
 
     uvicorn.run(app, host="0.0.0.0", port=port)
 
@@ -63,9 +65,11 @@ def headless(model, api_key, prompt_type, api_base, headless):
     app.model = model
     app.headless = headless
 
-    with open(os.path.join(os.getcwd(), ".devon.config"), "r") as f:
-        config = f.read()
-        app.config = json.loads(config)
+    config_path = os.path.join(os.getcwd(), ".devon.config")
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            config = f.read()
+            app.config = json.loads(config)
 
     agent = TaskAgent(
             name="Devon",

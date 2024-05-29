@@ -275,6 +275,9 @@ if __name__ == "__main__":
         if os.environ.get("OPENAI_API_KEY"):
             app.api_key = os.environ.get("OPENAI_API_KEY")
             app.model = "gpt4-o"
+        if os.environ.get("GEMINI_API_KEY"):
+            app.api_key = os.environ.get("GEMINI_API_KEY")
+            app.model = "gemini-pro"
         elif os.environ.get("ANTHROPIC_API_KEY"):
             app.api_key = os.environ.get("ANTHROPIC_API_KEY")
             app.model = "claude-opus"

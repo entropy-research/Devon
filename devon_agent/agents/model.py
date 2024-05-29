@@ -158,6 +158,59 @@ class GroqModel:
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
         return response + "</COMMAND>"
 
+class GeminiModel:
+    MODELS = {
+        "gemini/gemini-1.5-pro": {
+            "max_tokens": 4096,
+        }
+    }
+
+    SHORTCUTS = {
+        "gemini-pro": "gemini/gemini-1.5-pro"
+    }
+    def __init__(self, args: ModelArguments):
+        self.args = args
+        self.api_model = self.SHORTCUTS.get(args.model_name, args.model_name)
+        self.model_metadata = self.MODELS[self.api_model]
+        self.prompt_type = 'gemini'
+        if args.api_key is not None:
+            self.api_key = args.api_key
+        else:
+            self.api_key = os.getenv("GEMINI_API_KEY")
+
+    def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
+
+        print(self.api_model);
+
+        model_completion = completion(
+                messages=[{"role": "system", "content": system_message}] + messages,
+                max_tokens=self.model_metadata["max_tokens"],
+                model=self.api_model,
+                temperature=self.args.temperature,
+                stop=["</COMMAND>"],
+                safety_settings=[
+                    {
+                        "category": "HARM_CATEGORY_HARASSMENT",
+                        "threshold": "BLOCK_NONE",
+                    },
+                    {
+                        "category": "HARM_CATEGORY_HATE_SPEECH",
+                        "threshold": "BLOCK_NONE",
+                    },
+                    {
+                        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        "threshold": "BLOCK_NONE",
+                    },
+                    {
+                        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        "threshold": "BLOCK_NONE",
+                    },
+                ]
+            )
+        
+        response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
+        return response + "</COMMAND>"
+
 
 class OllamaModel:
     def __init__(self, args: ModelArguments):

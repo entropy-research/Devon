@@ -46,6 +46,7 @@ const cli = meow(
       $ devon start --api_key=YOUR_API_KEY 
       $ devon start --port 8080 --api_key=YOUR_API_KEY
       $ devon start --model=gpt4-o --api_key=YOUR_API_KEY
+      $ devon start --model=gemini-pro --api_key=YOUR_API_KEY
       $ devon start --model=claude-opus --api_key=YOUR_API_KEY
       $ devon start --model=llama-3-70b --api_key=YOUR_API_KEY
       $ devon start --model=custom --api_base=https://api.example.com --prompt_type=anthropic --api_key=YOUR_API_KEY
@@ -67,7 +68,8 @@ const cli = meow(
           type: 'string',
         },
         debug: {
-          type: 'boolean'
+          type: 'boolean',
+          default: false
         },
       },
     },
@@ -85,14 +87,14 @@ const { input } = cli;
 if (input[0] === 'configure') {
     // Handle the configure subcommand
     console.log('Configuring Devon CLI...');
-  
+
     inquirer
       .prompt([
         {
           type: 'list',
           name: 'modelName',
           message: 'Select the model name:',
-          choices: ['claude-opus', 'gpt4-o', 'llama-3-70b', 'ollama/deepseek-coder:6.7b', 'custom'],
+          choices: ['claude-opus', 'gpt4-o', 'gemini-pro', 'llama-3-70b', 'ollama/deepseek-coder:6.7b', 'custom'],
         },
       ])
       .then((answers) => {
@@ -169,19 +171,31 @@ if (input[0] === 'configure') {
     let api_base: string | undefined = undefined
     let prompt_type: string | undefined = undefined
 
-    if (cli.flags.apiKey){
-      api_key = cli.flags['apiKey'];
-    } else if (process.env['OPENAI_API_KEY']){
+    if (process.env['OPENAI_API_KEY']){
       api_key = process.env['OPENAI_API_KEY'];
       modelName = "gpt4-o"
+    } else if (process.env['GEMINI_API_KEY']){
+      api_key = process.env['GEMINI_API_KEY'];
+      modelName = "gemini-pro"
     } else if (process.env['ANTHROPIC_API_KEY']){
       api_key = process.env['ANTHROPIC_API_KEY'];
       modelName = "claude-opus"
     } else if (process.env['GROQ_API_KEY']){
       api_key = process.env['GROQ_API_KEY'];
       modelName = "llama-3-70b"
+    } else if (cli.flags['apiKey']){
+      api_key = cli.flags['apiKey'];
+
+      if(api_key != "FOSS") {
+        if(cli.flags['model']) {
+          modelName = cli.flags['model'] as string;
+        } else {
+          console.log('Please provide a model name. Allowed values are gpt4-o, gemini-pro, claude-opus, llama-3-70b or ollama.');
+          process.exit(1);
+        }
+      }
     } else {
-        console.log('Please provide an API key using the --api_key option or by setting OPENAI_API_KEY or ANTHROPIC_API_KEY.');
+        console.log('Please provide an API key using the --api_key option or by setting OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY or GROQ_API_KEY.');
         process.exit(1);
     }
 
@@ -218,7 +232,7 @@ if (input[0] === 'configure') {
       );
       process.exit(1);
     }
-    console.log( ['server', '--port', port.toString(), '--model', modelName as string, '--api_key', api_key as string, '--api_base', api_base as string, '--prompt_type', prompt_type as string])
+    console.log( ['server', '--port', port.toString(), '--model', modelName as string, '--api_key', api_key as string])
 
     let reset = false
 
@@ -236,7 +250,7 @@ if (input[0] === 'configure') {
 
         const subProcess = childProcess.spawn(
           'devon_agent',
-          ['server', '--port', port.toString(), '--model', modelName as string, '--api_key', api_key as string, '--api_base', api_base as string, '--prompt_type', prompt_type as string],
+          ['server', '--port', port.toString(), '--model', modelName as string, '--api_key', api_key as string],
           {
             signal: controller.signal
           },
