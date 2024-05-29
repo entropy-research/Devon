@@ -37,6 +37,7 @@ dspy-ai = {version = "^2.4.9", optional = true}
 
 aiosqlite = "^0.20.0"
 greenlet = "^3.0.3"
+google-generativeai = "^0.5.4"
 [tool.poetry.extras]
 swebench = ["swebench", "datasets", "gymnasium"]
 experimental = ["dspy-ai"]

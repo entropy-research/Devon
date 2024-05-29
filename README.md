@@ -108,6 +108,7 @@ Configuring Devon CLI...
 ? Select the model name: 
   claude-opus 
   gpt4-o 
+  gemini-pro
   llama-3-70b 
 ❯ ollama/deepseek-coder:6.7b
 ```

@@ -110,7 +110,7 @@ class Session:
         self.name = args.name
         self.agent_branch = "devon_agent_" + self.name
         self.global_config = args.config
-        self.excludes = self.global_config["excludes"] if self.global_config else []
+        self.excludes = self.global_config["excludes"] if "excludes" in self.global_config else []
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
