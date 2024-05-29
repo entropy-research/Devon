@@ -36,7 +36,7 @@ class FindFunctionTool(Tool):
 
     @property
     def name(self):
-        return "create_file"
+        return "find_function"
 
     def setup(self, ctx, **kwargs):
 
