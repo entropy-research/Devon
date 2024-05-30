@@ -40,8 +40,7 @@ const EditorWidget = ({
 
         async function getSessionState() {
             const res = await fetchSessionState(chatId)
-            console.log(res.data)
-            if (!res.data || !res.data?.editor) return
+            if (!res || !res?.editor || !res?.editor.files) return
             const editor = res.editor
             const f = editor.files
             // Editor is a dictionary. Get the keys and values
@@ -59,7 +58,7 @@ const EditorWidget = ({
                     })
                 }
             }
-            if (!_files.length) {
+            if (!files || _files?.length === 0) {
                 _files.push(boilerplateFile)
                 _files.push(boilerplateFile2)
             }

@@ -66,7 +66,6 @@ export function SimpleChat({
             if (state.matches('running')) {
                 const newEvents = await fetchEvents(10001, _sessionId)
                 if (newEvents) {
-                    console.log(newEvents)
                     for (let i = eventI; i < newEvents.length; i++) {
                         sendEvent(newEvents[i])
                         eventI++
