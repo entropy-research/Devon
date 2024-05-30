@@ -110,7 +110,7 @@ class Session:
         self.name = args.name
         self.agent_branch = "devon_agent_" + self.name
         self.global_config = args.config
-        self.excludes = self.global_config["excludes"] if self.global_config else []
+        self.excludes = self.global_config.get("excludes", [])
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
@@ -208,7 +208,7 @@ class Session:
     
     def run_event_loop(self):
         while True and not (self.event_id == len(self.event_log)):
-
+            
             event = self.event_log[self.event_id]
 
             self.logger.info(f"Event: {event}")
@@ -228,8 +228,8 @@ class Session:
             events = self.step_event(event)
             self.event_log.extend(events)
 
-            event_id += 1
-        return self.run_event_loop()
+            self.event_id += 1
+        # return self.run_event_loop()
             
 
     def step_event(self, event):
@@ -317,7 +317,6 @@ class Session:
                             if not env:
                                 raise ToolNotFoundException(toolname, self.environments)
 
-                            print(tool_name, args) 
                             response = env.tools[toolname]({
                                 "environment": env,
                                 "session": self,
@@ -415,6 +414,13 @@ class Session:
                             "consumer": event["consumer"],
                         }
                     )
+                except Exception as e:
+                    new_events.append({
+                        "type": "Error",
+                        "content" :str(e),
+                        "producer": event["producer"],
+                        "consumer": event["consumer"],
+                    })
 
             case "Interrupt":
                 if self.agent.interrupt:
@@ -444,49 +450,6 @@ class Session:
 
         return new_events
 
-    # def parse_command_to_function(self, command_string) -> tuple[str, bool]:
-    #     """
-    #     Parses a command string into its function name and arguments.
-    #     """
-    #     ctx = self
-
-    #     fn_name, args = parse_command(ctx, command_string)
-    #     if fn_name in ["vim", "nano"]:
-    #         return "Interactive Commands are not allowed", False
-
-    #     if (
-    #         fn_name == "python"
-    #         and len([line for line in command_string.splitlines() if line]) != 1
-    #     ):
-    #         return "Interactive Commands are not allowed", False
-
-    #     fn_names = [fn.__name__ for fn in self.tools]
-
-    #     try:
-    #         if fn_name == "edit_file":
-    #             try:
-    #                 return real_write_diff(self, command_string), False
-    #             except Exception as e:
-    #                 ctx.logger.error(traceback.print_exc())
-    #                 raise e
-    #         elif fn_name in fn_names:
-    #             for fn in self.tools:
-    #                 if fn.__name__ == fn_name:
-    #                     return fn(ctx, *args), False
-    #         else:
-    #             # try:
-    #             output, rc = ctx.environment.communicate(fn_name + " " + " ".join(args))
-    #             if rc != 0:
-    #                 raise Exception(output)
-    #             return output, False
-    #             # except Exception as e:
-    #             #     ctx.logger.error(
-    #             #         f"Failed to execute bash command '{fn_name}': {str(e)}"
-    #             #     )
-    #             #     return "Failed to execute bash command", False
-    #     except Exception as e:
-    #         ctx.logger.error(traceback.print_exc())
-    #         return e.args[0] if len(e.args) > 0 else "Failed to execute command due to internal error", False
 
     def get_available_actions(self) -> list[str]:
         # get all tools for all environments
@@ -541,7 +504,6 @@ class Session:
 
     def exit(self):
 
-        self.default_environment.execute("git checkout " + self.original_branch)
 
         for env in self.environments.values():
             env.teardown()

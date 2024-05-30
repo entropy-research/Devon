@@ -166,7 +166,6 @@ const handleEvents = (
 			}
 		}
 
-
 		idx += 1;
 	}
 	setUserRequested(user_request);

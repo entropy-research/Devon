@@ -113,8 +113,10 @@ def create_session(session: str, path: str):
             name="Devon",
             model=app.model,
             temperature=0.0,
-                api_key=app.api_key,
-            )
+            api_key=app.api_key,
+            prompt_type=app.prompt_type,
+        )
+
     else:
         agent = TaskAgent(
             name="Devon",
@@ -261,12 +263,12 @@ async def read_events_stream(session: str):
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
 
     async def event_generator():
-        initial_index = session_obj.event_index
+        initial_index = len(session_obj.event_log)
         while True:
-            current_index = session_obj.event_index
+            current_index = len(session_obj.event_log)
             if current_index > initial_index:
                 for event in session_obj.event_log[initial_index:current_index]:
-                    yield json.dumps(event) + "\n"
+                    yield f"data: {json.dumps(event)}\n\n"
                 initial_index = current_index
             else:
                 await asyncio.sleep(0.1)  # Sleep to prevent busy waiting
@@ -289,9 +291,11 @@ if __name__ == "__main__":
         if os.environ.get("OPENAI_API_KEY"):
             app.api_key = os.environ.get("OPENAI_API_KEY")
             app.model = "gpt4-o"
+            app.prompt_type = "openai"
         elif os.environ.get("ANTHROPIC_API_KEY"):
             app.api_key = os.environ.get("ANTHROPIC_API_KEY")
             app.model = "claude-opus"
+            app.prompt_type = "anthropic"
         else:
             raise ValueError("API key not provided.")
 

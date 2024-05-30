@@ -1,312 +1,474 @@
 import axios from 'axios';
-import { fromPromise, setup, assign, fromTransition } from 'xstate';
+import {
+    fromPromise,
+    setup,
+    assign,
+    fromTransition,
+    fromCallback,
+    EventObject,
+    sendTo,
+    enqueueActions
+    // createActor
+} from 'xstate';
+// const EventSource = require('eventsource');
+import EventSource from 'eventsource';
 
+// State Machine
+// Requirements:
+// Start the server
+// Given a session name, either make a session or load it if it already exists
+// Load all the events in the session and run the event handling logic on them
+// Then start the above session
+// start streaming the events from the server with http sse
+// process the events and update the state accordingly
+// Allow sending "events" to the server (and potentially support eager rendering of events)
+//
+// Invariants/properties
+// - allow multiple sessions
+// - allow CRUD of sessions
+// - allow event handling logic to be ovverriden
+// - state machine stuff should not support "persistence" directly, events should be loaded
+// - allow branching (need to figure this out)
+
+// Session Machine States
+// - initial
+// - createOrLoadSession
+// - create session
+// - retryCreateSession
+// - sessionCreated
+// - loadSession
+// - sessionReady
+// - loadEvents
+// - startEventListener
+// - startSession
+// - retryStartSession
+// - SessionRunning
+// - SessionEnded
+// - SendEventSession
+
+
+type Message = {
+    text: string;
+    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error';
+};
+
+type ServerEvent = {
+    type:
+    | 'ModelResponse'
+    | 'ToolResponse'
+    | 'Task'
+    | 'Interrupt'
+    | 'UserRequest'
+    | 'Stop'
+    | 'ModelRequest'
+    | 'ToolRequest'
+    | 'Error'
+    | 'UserResponse'
+    | 'GitEvent';
+    content: any;
+    identifier: string | null;
+};
+
+type ServerEventContext = {
+    messages: Message[];
+    ended: boolean;
+    modelLoading: boolean;
+    toolMessage: string;
+    userRequest: boolean;
+    gitData: {
+        base_commit: string | null;
+        commits: string[];
+    };
+}
+
+export const eventHandlingLogic = fromTransition(
+    (
+        state: ServerEventContext,
+        event: ServerEvent,
+    ) => {
+        switch (event.type) {
+            case 'Stop': {
+                return { ...state, ended: true };
+            }
+            case 'ModelRequest': {
+                return { ...state, modelLoading: true };
+            }
+            case 'ModelResponse': {
+                let content = JSON.parse(event.content);
+                return {
+                    ...state,
+                    modelLoading: false,
+                    messages: [
+                        ...state.messages,
+                        { text: content.thought, type: 'thought' } as Message,
+                    ],
+                };
+            }
+            case 'ToolRequest': {
+                return {
+                    ...state,
+                    toolMessage: 'Running command: ' + event.content.raw_command,
+                };
+            }
+            case 'ToolResponse': {
+                let tool_message = state.toolMessage + '\n> ' + event.content;
+                if (tool_message.length > 2000) {
+                    tool_message = tool_message.slice(2000);
+                }
+
+                return {
+                    ...state,
+                    toolMessage: '',
+                    messages: [
+                        ...state.messages,
+                        { text: tool_message, type: 'tool' } as Message,
+                    ],
+                };
+            }
+            case 'Task': {
+                return {
+                    ...state,
+                    messages: [
+                        ...state.messages,
+                        { text: event.content, type: 'task' } as Message,
+                    ],
+                };
+            }
+            case 'Interrupt': {
+                return {
+                    ...state,
+                    messages: [
+                        ...state.messages,
+                        { text: event.content, type: 'user' } as Message,
+                    ],
+                };
+            }
+            case 'UserRequest': {
+                return {
+                    ...state,
+                    userRequest: true,
+                    messages: [
+                        ...state.messages,
+                        { text: event.content, type: 'agent' } as Message,
+                    ],
+                };
+            }
+            case 'UserResponse': {
+                return {
+                    ...state,
+                    userRequest: false,
+                    messages: [
+                        ...state.messages,
+                        { text: event.content, type: 'user' } as Message,
+                    ],
+                };
+            }
+            case 'Error': {
+                console.error(event.content);
+                return {
+                    ...state,
+                    messages: [
+                        ...state.messages,
+                        { text: event.content, type: 'error' } as Message,
+                    ]
+                };
+            }
+            case 'GitEvent': {
+                if (event.content.type === 'base_commit') {
+                    return {
+                        ...state,
+                        gitData: {
+                            base_commit: event.content.commit,
+                            commits: [event.content.commit],
+                        },
+                    };
+                } else if (event.content.type === 'commit') {
+                    return {
+                        ...state,
+                        gitData: {
+                            base_commit: state.gitData.base_commit,
+                            commits: [...state.gitData.commits, event.content.commit],
+                        },
+                    };
+                } else if (event.content.type === 'revert') {
+                    return {
+                        ...state,
+                        gitData: {
+                            base_commit: event.content.commit,
+                            commits: state.gitData.commits.slice(
+                                0,
+                                state.gitData.commits.indexOf(event.content.commit_to_go_to) +
+                                1,
+                            ),
+                        },
+                    };
+                } else {
+                    return state;
+                }
+            }
+
+            default: {
+                return state;
+            }
+        }
+    },
+    {
+        messages: [],
+        ended: false,
+        modelLoading: false,
+        toolMessage: '',
+        userRequest: false,
+        gitData: {
+            base_commit: null,
+            commits: [],
+        },
+    },
+);
+
+export const eventSourceActor = fromCallback<
+    EventObject,
+    { host: string; name: string }
+>(({ input, receive, sendBack }) => {
+    let eventStream: EventSource | null = null
+
+    const eventHandler = ({ data }: { data: any }) => {
+        sendBack({ type: 'serverEvent', payload: JSON.parse(data) });
+    };
+
+    receive((event: any) => {
+        if (event.type === 'startStream') {
+            eventStream = new EventSource(
+                `${input.host}/session/${input.name}/events/stream`,
+            );
+            eventStream.addEventListener('message', eventHandler);
+        }
+        if (event.type === 'stopStream') {
+            eventStream?.removeEventListener('message', eventHandler);
+        }
+    });
+
+    return () => {
+        eventStream?.removeEventListener('message', eventHandler);
+    };
+});
 
 export const sessionMachine = setup({
     types: {
+        events: {} as
+            | { type: 'serverEvent'; payload: any }
+            | { type: 'startStream' }
+            | { type: 'stopStream' },
         context: {} as {
-            port: number;
+            host: string;
             retryCount: number;
             name: string;
             path: string;
             reset: boolean;
+            serverEventContext: ServerEventContext;
         },
         input: {} as {
             reset: boolean;
-            port: number;
+            host: string;
             name: string;
             path: string;
         },
     },
 
     actors: {
-        createSession: fromPromise(async ({ input }: { input: { port: number, name: string, path: string, reset: boolean } }) => {
-            if(input?.reset === true){
-                await axios.post(
-                    `http://localhost:${input?.port}/session/${input?.name}/reset`,
-                );
-            }
+        eventHandlingLogic,
+        eventSourceActor,
+        createSession: fromPromise(
+            async ({
+                input,
+            }: {
+                input: { host: string; name: string; path: string; reset: boolean };
+            }) => {
+                console.log("starting server")
+                // sleep for 5 sec
+                await new Promise(resolve => setTimeout(resolve, 5000));
 
-            const encodedPath = encodeURIComponent(input?.path);
-            const response = await axios.post(
-                `http://localhost:${input?.port}/session?session=${input?.name}&path=${encodedPath}`,
-            );
-            return response;
-        }),
-        startSession: fromPromise(async ({ input }: { input: { port: number, name: string } }) => {
-            const response = await axios.post(
-                `http://localhost:${input?.port}/session/${input?.name}/start`,
-            );
-            return response;
-        }),
+                if (input?.reset === true) {
+                    await axios.post(`${input?.host}/session/${input?.name}/reset`);
+                }
+
+
+                const encodedPath = encodeURIComponent(input?.path);
+                const response = await axios.post(
+                    `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
+                );
+                return response;
+            },
+        ),
+        startSession: fromPromise(
+            async ({ input }: { input: { host: string; name: string } }) => {
+                const response = await axios.post(
+                    `${input?.host}/session/${input?.name}/start`,
+                );
+                return response;
+            },
+        ),
+        checkSession: fromPromise(
+            async ({ input }: { input: { host: string; name: string } }) => {
+                const response = await axios.get(`${input?.host}/session`);
+
+                for (let i = 0; i < response.data.length; i++) {
+                    if (response.data[i].name === input.name) {
+                        return response.data[i];
+                    }
+                }
+                throw new Error('Session not found');
+            },
+        ),
+        loadEvents: fromPromise(
+            async ({
+                input,
+            }: {
+                input: { host: string; name: string };
+            }) => {
+                const newEvents = (
+                    await axios.get(`${input?.host}/session/${input?.name}/events`)
+                ).data;
+                return newEvents
+            },
+        ),
     },
 }).createMachine({
     id: 'session',
     initial: 'initial',
-    context: ({input}) => ({
-        port: input.port,
+    invoke: [
+        {
+            id: 'ServerEventSource',
+            src: 'eventSourceActor',
+            input: ({ context: { host, name } }) => ({ host, name }),
+            onDone: {
+                actions: ({ event }) => {
+                    console.log("event", event)
+                }
+            }
+        },
+        {
+            id: 'ServerEventHandler',
+            src: 'eventHandlingLogic',
+            input: ({ context: { host, name } }) => ({ host, name }),
+            onSnapshot: {
+                actions: assign({
+                    serverEventContext: ({ event }) => {
+                        return event.snapshot.context
+                    }
+                })
+            }
+        },
+    ],
+    context: ({ input }) => ({
+        host: input.host,
         retryCount: 0,
         name: input.name,
         path: input.path,
-        reset: input.reset
+        reset: input.reset,
+        serverEventContext: {
+            messages: [],
+            ended: false,
+            modelLoading: false,
+            toolMessage: '',
+            userRequest: false,
+            gitData: {
+                base_commit: null,
+                commits: [],
+            },
+        }
     }),
+
+
     states: {
         initial: {
             invoke: {
+                id: 'checkSession',
+                src: 'checkSession',
+                input: ({ context: { host, name } }) => ({ host, name }),
+                onDone: {
+                    target: 'sessionExists',
+                },
+                onError: {
+                    target: 'sessionDoesNotExist',
+                },
+            },
+        },
+        sessionDoesNotExist: {
+            invoke: {
                 id: 'createSession',
                 src: 'createSession',
-                input: ({ context: { port, name, path, reset } }) => ({ port, name, path, reset }),
+                input: ({ context: { host, name, path, reset } }) => ({
+                    host,
+                    name,
+                    path,
+                    reset,
+                }),
                 onDone: {
-                    target: 'sessionCreated',
+                    target: 'sessionExists',
+                    actions: sendTo('ServerEventSource', ({ self }) => {
+                        return {
+                            type: 'startStream',
+                            sender: self
+                        }
+                    }),
                 },
                 onError: {
                     target: 'retryCreateSession',
-                    actions: assign({
-                        retryCount: (event) => event.context.retryCount + 1
-                    }),
-                },
-
+                }
             },
         },
-        retryCreateSession: {
-            after: {
-                1000: 'initial'
-            }
+        sessionExists: {
+            invoke: {
+                id: 'loadEvents',
+                src: 'loadEvents',
+                input: ({ context: { host, name } }) => ({
+                    host,
+                    name,
+                }),
+                onDone: {
+                    target: 'sessionReady',
+                    actions: enqueueActions(({ enqueue, event }) => {
+                        for (let i = 0; i < event.output.length; i++) {
+                            enqueue.sendTo('ServerEventHandler', event.output[i]);
+                        }
+                    })
+                },
+            },
         },
-        sessionCreated: {
+        sessionReady: {
             invoke: {
                 id: 'startSession',
                 src: 'startSession',
-                input: ({ context: { port, name } }) => ({ port, name }),
+                input: ({ context: { host, name } }) => ({ host, name }),
                 onDone: {
                     target: 'running',
                 },
                 onError: {
                     target: 'retryStartSession',
                 },
-            }
+            },
         },
         retryStartSession: {
             after: {
-                1000: 'sessionCreated'
+                1000: 'sessionReady',
+            },
+        },
+        retryCreateSession: {
+            after: {
+                1000: 'sessionDoesNotExist',
             }
         },
-        running :{
+        running: {
             on: {
-                SESSION_ENDED: 'initial',
-            }
-        }
+                serverEvent: {
+                    target: 'running',
+                    actions: sendTo('ServerEventHandler', ({ event }) => {
+                        return event.payload
+                    }),
+                    reenter: true,
+                },
+            },
+            reenter: true,
+        },
     },
 });
-
-type Message = {
-	text: string;
-	type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error';
-};
-
-
-type Event = {
-	type:
-		| 'ModelResponse'
-		| 'ToolResponse'
-		| 'Task'
-		| 'Interrupt'
-		| 'UserRequest'
-		| 'Stop'
-		// | 'EnvironmentRequest'
-		// | 'EnvironmentResponse'
-		| 'ModelRequest'
-		| 'ToolRequest'
-		| 'Error'
-		| 'UserResponse'
-		| 'GitEvent';
-	content: any;
-	identifier: string | null;
-};
-
-export const eventHandlingLogic = fromTransition((state : {
-    messages : Message[];
-    ended : boolean;
-    modelLoading : boolean;
-    toolMessage : string;
-    userRequest : boolean;
-    gitData : {
-        base_commit : string | null;
-        commits : string[];
-    }
-}, event : Event) => {
-    switch (event.type) {
-        case 'Stop': {
-            return {...state, ended: true };
-        }
-        case 'ModelRequest': {
-            return {...state, modelLoading: true };
-        }
-        case 'ModelResponse': {
-            let content = JSON.parse(event.content);
-            return {...state, modelLoading: false, messages: [...state.messages, { text: content.thought, type: 'thought' } as Message] };
-        }
-        case 'ToolRequest': {
-            return {...state, toolMessage: 'Running command: ' + event.content.raw_command};
-        }
-        case 'ToolResponse': {
-            let tool_message = state.toolMessage + '\n> ' + event.content;
-			if (tool_message.length > 2000) {
-				tool_message = tool_message.slice(2000);
-			}
-
-            return {...state, toolMessage: "", messages: [...state.messages, { text: tool_message, type: 'tool' } as Message] };
-        }
-        case 'Task': {
-            return {...state, messages: [...state.messages, { text: event.content, type: 'task' } as Message] };
-        }
-        case 'Interrupt': {
-            return {...state, messages: [...state.messages, { text: event.content, type: 'user' } as Message] };
-        }
-        case 'UserRequest': {
-            return {...state, userRequest: true, messages: [...state.messages, { text: event.content, type: 'agent' } as Message] };
-        }
-        case 'UserResponse': {
-            return {...state, userRequest: false, messages: [...state.messages, { text: event.content, type: 'user' } as Message] };
-        }
-        case 'Error': {
-            console.error(event.content);
-            return {...state, messages: [...state.messages, { text: event.content, type: 'error' } as Message] };
-        }
-        case 'GitEvent': {
-            if (event.content.type === 'base_commit') {
-                return {...state, gitData: {
-                    base_commit: event.content.commit,
-                    commits: [event.content.commit]
-                }};
-            }
-            else if (event.content.type === 'commit') {
-                return {...state, gitData: {
-                    base_commit: state.gitData.base_commit,
-                    commits: [...state.gitData.commits, event.content.commit]
-                }};
-            }
-            else if (event.content.type === 'revert') {
-                return {...state, gitData: {
-                    base_commit: event.content.commit,
-                    commits: state.gitData.commits.slice(0, state.gitData.commits.indexOf(event.content.commit_to_go_to) + 1)
-                }};
-            }
-            else {
-                return state;
-            }
-        }
-
-        default: {
-            return state;
-        }
-    }
-}, { messages: [], ended: false, modelLoading: false, toolMessage: "", userRequest: false, gitData : {
-    base_commit : null,
-    commits : [],
-}}); // Initial state
-
-// type Message = {
-// 	text: string;
-// 	type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error';
-// };
-
-
-// let eventMachine = setup({
-//     types: {
-//         context: {} as {
-//             messages : Message[];
-//             toolMessage : string;
-            
-//         },
-//         events: {} as {
-//             type: 'ModelRequest' | 'ModelResponse' | 'ToolRequest' | 'ToolResponse' | 'UserRequest' | 'UserResponse' | 'Interrupt' | 'Error' | 'Stop';
-//             content: string;
-//         }
-
-//     },
-// }).createMachine({
-//     context: {
-//         messages : [],
-//         toolMessage : ""
-//     },
-//     initial: 'initial',
-//     states: {
-//         initial : {
-//             on: {
-//                 'ModelRequest': {
-//                     target: 'model',
-//                 },
-//                 'ToolRequest' : {
-//                     target : 'tool',
-//                     actions: assign({
-//                         toolMessage: ({event}) => event.content
-//                     })
-//                 },
-//                 'Interrupt': {
-//                     actions: assign({
-//                         messages: ({context, event}) => [...context.messages, { text: event.content, type: 'user' }]
-//                     })
-//                 },
-//                 'UserRequest': {
-//                     target: 'userRequest',
-//                     actions: assign({
-//                         messages: ({context, event}) => [...context.messages, { text: event.content, type: 'agent' }]
-//                     })
-//                 },
-
-//                 'Error': {
-//                     actions: assign({
-//                         messages: ({context, event}) => [...context.messages, { text: event.content, type: 'error' }]
-//                     })
-//                 },
-//                 'Stop': {
-//                     target: 'stop',
-//                 }
-//             }
-//         },
-//         model : {
-//             on: {
-//                 'ModelResponse': {
-//                     target: 'initial',
-//                     actions: assign({
-//                         messages: ({context, event}) => [...context.messages, { text: event.content, type: 'agent' }]
-//                     })
-//                 }
-//             }
-//         },
-//         tool : {
-//             on: {
-//                 'ToolResponse': {
-//                     target: 'initial',
-//                     actions: assign({
-//                         messages: ({context, event}) => [...context.messages, { text: event.content, type: 'agent' }]
-//                     })
-//                 }
-//             }
-//         },
-//         userRequest: {
-//             on: {
-//                 'UserResponse': {
-//                     target: 'initial',
-//                     actions:assign({
-//                         messages: ({context, event}) => [...context.messages, { text: event.content, type: 'user' }]
-//                     })
-//                 }
-//             }
-//         },
-//         stop : {
-//             type: 'final'
-//         }
-//     }
-// });
-
-
-// const sessionActor = createActor(sessionMachine, {
-//     input: {
-//         port: 10000,
-//         name: 'cli',
-//         path: '/'
-//     },
-// });
-
