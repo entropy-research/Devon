@@ -39,10 +39,6 @@ export function SimpleChat({
         isAtBottom,
         scrollToBottom,
     } = useScrollAnchor()
-    const { toast } = useToast()
-
-    const [userRequested, setUserRequested] = useState(false)
-    const [modelLoading, setModelLoading] = useState(false)
 
     const searchParams = useSearchParams()
     const [eventState, sendEvent] = useActor(eventHandlingLogic)
@@ -113,11 +109,8 @@ export function SimpleChat({
                     <Input
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
-                        setUserRequested={setUserRequested}
-                        userRequested={userRequested}
-                        modelLoading={modelLoading}
                         viewOnly={viewOnly}
-                        isRunning={state.matches('running')}
+                        // isRunning={state.matches('running')}
                         eventContext={eventState.context}
                     />
                 </div>

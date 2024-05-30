@@ -11,20 +11,12 @@ import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 const Input = ({
     isAtBottom,
     scrollToBottom,
-    setUserRequested,
-    userRequested,
-    modelLoading,
     viewOnly,
-    isRunning,
     eventContext,
 }: {
     isAtBottom: boolean
     scrollToBottom: () => void
-    setUserRequested: (value: boolean) => void
-    userRequested: boolean
-    modelLoading: boolean
     viewOnly: boolean
-    isRunning: boolean
     eventContext: any
 }) => {
     const [focused, setFocused] = useState(false)
@@ -41,7 +33,7 @@ const Input = ({
         const chatId = searchParams.get('chat')
         // Distinguish between user request vs interrupt
         if (eventContext.userRequest) {
-            setUserRequested(false)
+            // setUserRequested(false)
             return createResponse(chatId, value)
         }
         return interruptSession(chatId, value)
@@ -64,10 +56,10 @@ const Input = ({
         <div
             className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
         >
-            {(modelLoading || userRequested) && (
+            {(eventContext.modelLoading || eventContext.userRequest) && (
                 <InformationBox
-                    modelLoading={modelLoading}
-                    userRequested={userRequested}
+                    modelLoading={eventContext.modelLoading}
+                    userRequested={eventContext.userRequest}
                 />
             )}
             {!viewOnly && (
