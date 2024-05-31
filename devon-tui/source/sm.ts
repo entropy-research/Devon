@@ -249,6 +249,7 @@ export const eventSourceActor = fromCallback<
 
     return () => {
         eventStream?.removeEventListener('message', eventHandler);
+        eventStream?.close();
     };
 });
 
