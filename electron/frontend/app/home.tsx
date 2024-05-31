@@ -1,20 +1,14 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Chat from '@/components/chat/chat'
-import AgentWorkspace from '@/components/agent-workspace/agent-workspace'
 import {
     ResizableHandle,
     ResizablePanel,
     ResizablePanelGroup,
 } from '@/components/ui/resizable'
 import { ViewMode } from '@/lib/types'
-import { ChatProps } from '@/lib/chat.types'
-import AgentWorkspaceHeader, {
-    ToggleTimelineHeader,
-} from '@/components/agent-workspace/agent-header'
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-widget'
-// import ShellWidget from '@/components/agent-workspace/agent-tabs/shell-widget'
 import { useSearchParams } from 'next/navigation'
 
 export default function Home() {
@@ -59,34 +53,12 @@ export default function Home() {
     }, [])
 
     return (
-        <>
-            {/* <AgentWorkspaceHeader
-                viewMode={viewMode}
-                toggleViewMode={toggleViewMode}
-                visibilityProps={visibilityProps}
-            /> */}
-
-            {/* {viewMode === ViewMode.Panel ? ( */}
-            <>
-                {/* <ResizablePanelGroup direction="horizontal">
-                        <ResizablePanel className="w-full">
-                            <Chat chatProps={chatProps} />
-                        </ResizablePanel>
-                        <ResizableHandle withHandle className="px-3" />
-                        <ResizablePanel>
-                            <AgentWorkspace
-                                viewMode={viewMode}
-                                toggleViewMode={toggleViewMode}
-                                chatProps={chatProps}
-                                visibilityProps={visibilityProps}
-                            />
-                        </ResizablePanel>
-                    </ResizablePanelGroup> */}
-                <div className="w-full flex flex-row">
-                    <div
-                        className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative`}
-                    >
-                        {/* {showTimeline && (
+        <div className="w-full flex flex-row">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel
+                    className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center`}
+                >
+                    {/* {showTimeline && (
                             <TimelineWidget
                                 className={
                                     viewMode === ViewMode.Panel
@@ -95,40 +67,16 @@ export default function Home() {
                                 }
                             />
                         )} */}
-                        {/* <div
-                            // Set chat size for now
-                            // className={`transition-all duration-500 ${showPlanner ? 'w-1/2' : 'w-full'}`}
-                        //     className={`transition-all duration-500 w-[500px] flex justify-center`}
-                        // >
-                            <Chat chatProps={chatProps} />
-                        </div> */}
-                        <Chat
-                            sessionId={sessionId}
-                            // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
-                        />
-                    </div>
-                    <div className="flex flex-col w-full">
-                        <EditorWidget chatId={sessionId ?? null} />
-                    </div>
-
-                    {/* <div className="flex flex-2">
-                            <AgentWorkspace
-                                viewMode={viewMode}
-                                toggleViewMode={toggleViewMode}
-                                chatProps={chatProps}
-                                visibilityProps={visibilityProps}
-                            />
-                        </div> */}
-                </div>
-            </>
-            {/* ) : (
-                <AgentWorkspace
-                    viewMode={viewMode}
-                    toggleViewMode={toggleViewMode}
-                    chatProps={chatProps}
-                    visibilityProps={visibilityProps}
-                />
-            )} */}
-        </>
+                    <Chat
+                        sessionId={sessionId}
+                        // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
+                    />
+                </ResizablePanel>
+                <ResizableHandle className="" />
+                <ResizablePanel className="flex flex-col w-full">
+                    <EditorWidget chatId={sessionId ?? null} />
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
     )
 }

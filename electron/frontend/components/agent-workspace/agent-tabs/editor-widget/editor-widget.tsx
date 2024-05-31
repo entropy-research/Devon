@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import CodeEditor from './code-editor'
 import { CodeEditorContextProvider } from '@/contexts/CodeEditorContext'
-import { ChatProps } from '@/lib/chat.types'
-import { fetchSessionState } from '@/lib/services/sessionService/use-session-state'
+import { fetchSessionState } from '@/lib/services/sessionService/sessionService'
 import FileTree from './file-tree/file-tree'
 import ShellWidget from '@/components/agent-workspace/agent-tabs/shell-widget'
 

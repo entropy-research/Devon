@@ -1,4 +1,4 @@
-export default function Header({
+export default function ChatHeader({
     sessionId,
     headerIcon,
 }: {

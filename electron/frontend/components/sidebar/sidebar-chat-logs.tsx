@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { Ellipsis, Trash } from 'lucide-react'
-import useReadSessions from '@/lib/services/sessionService/use-read-sessions'
-import useDeleteSession from '@/lib/services/sessionService/use-delete-session'
+import { useReadSessions, useDeleteSession } from '@/lib/services/sessionService/sessionHooks'
 import {
     Popover,
     PopoverContent,

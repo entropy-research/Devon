@@ -12,9 +12,7 @@ export default function IndexPage() {
         <QueryClientProvider client={queryClient}>
             <BackendUrlProvider>
                 <StateMachineProvider>
-                    {/* <AI initialAIState={{ chatId: chat.id, messages: chat.messages }}> */}
                     <Landing />
-                    {/* </AI> */}
                 </StateMachineProvider>
             </BackendUrlProvider>
         </QueryClientProvider>

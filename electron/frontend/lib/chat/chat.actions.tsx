@@ -16,7 +16,7 @@ import {
     BotMessage,
     //   Stock,
     //   Purchase
-} from '@/components/vercel-chat/message'
+} from '@/components/chat/chat-messages-and-input/messages/chat.message-types'
 
 // import {
 //   spinner,
@@ -40,7 +40,10 @@ import {
     nanoid,
 } from '@/lib/chat.utils'
 import { saveChat } from '@/app/chat.actions'
-import { SpinnerMessage, UserMessage } from '@/components/vercel-chat/message'
+import {
+    SpinnerMessage,
+    UserMessage,
+} from '@/components/chat/chat-messages-and-input/messages/chat.message-types'
 import { Chat } from '@/lib/chat.types'
 import { auth } from '@/chat.auth'
 

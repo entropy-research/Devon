@@ -4,26 +4,8 @@ import { app, BrowserWindow, ipcMain, dialog, safeStorage } from 'electron'
 import log from 'electron-log'
 import electronUpdater from 'electron-updater'
 import electronIsDev from 'electron-is-dev'
-// import ElectronStore from 'electron-store'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
-import {
-  Message,
-  // StoreSchema
-} from './types.js'
-// import {
-// addMessageToHistory,
-// getConversationHistory,
-// } from './electronStoreUtils.js'
-import { readFile, writeFile } from 'fs/promises'
-import {
-  addMessage,
-  getMessages,
-  createOrUpdateChat,
-  getChats,
-  createChat,
-  getChatById,
-} from './database.js'
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
 import portfinder from 'portfinder'
 
@@ -31,24 +13,6 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const { autoUpdater } = electronUpdater
 let appWindow: BrowserWindow | null = null
-
-// const schema: ElectronStore.Schema<StoreSchema> = {
-//   conversationHistory: {
-//     type: 'array',
-//     default: [],
-//     items: {
-//       type: 'object',
-//       properties: {
-//         id: { type: 'string' },
-//         role: { type: 'string' },
-//         content: { type: 'string' },
-//       },
-//       required: ['id', 'role', 'content'],
-//     },
-//   },
-// }
-
-// const store = new ElectronStore<StoreSchema>({ schema })
 
 process.on('uncaughtException', error => {
   console.error('Uncaught Exception:', error)
@@ -131,8 +95,6 @@ const spawnAppWindow = async () => {
   })
 }
 
-let CHAT_DATA_PATH: string
-
 let serverProcess: ChildProcessWithoutNullStreams
 
 const controller = new AbortController()
@@ -176,9 +138,6 @@ app.on('ready', () => {
     .catch(error => {
       console.error('Failed to find a free port:', error)
     })
-
-  // CHAT_DATA_PATH = path.join(app.getPath('userData'), 'store', 'chatData.json')
-  // mkdir(path.dirname(CHAT_DATA_PATH), { recursive: true }).catch(console.error)
   spawnAppWindow()
 })
 
@@ -197,11 +156,6 @@ app.on('before-quit', () => {
  *                                IPC Main Events
  * ======================================================================================
  */
-
-ipcMain.handle('sample:ping', () => {
-  console.log('PONG!')
-  return 'pong'
-})
 
 ipcMain.handle('ping', () => {
   console.log('PONG!')
@@ -224,122 +178,6 @@ ipcMain.on('get-file-path', event => {
       console.error('Failed to open dialog:', err)
       event.reply('file-path-response', 'error')
     })
-})
-
-// ipcMain.handle('add-message', (event, message: Message) => {
-//   addMessageToHistory(store, message)
-//   console.log('SUCCESS!', event, message)
-//   return { success: true }
-// })
-
-ipcMain.handle('add-message', async (event, message: Message) => {
-  try {
-    addMessage(message.id, message.role, message.content)
-    return { success: true }
-  } catch (error) {
-    console.error('Error adding message to database', error)
-    if (error instanceof Error) {
-      return { success: false, error: error.message }
-    }
-    return { success: false, error: 'An unknown error occurred' }
-  }
-})
-
-ipcMain.handle('create-or-update-chat', async (event, chat) => {
-  try {
-    createOrUpdateChat(chat)
-    return { success: true }
-  } catch (error) {
-    console.error('Error creating or updating chat in database', error)
-    if (error instanceof Error) {
-      return { success: false, error: error.message }
-    }
-    return { success: false, error: 'An unknown error occurred' }
-  }
-})
-
-ipcMain.handle('get-chats', async () => {
-  try {
-    const chats = getChats()
-    return { success: true, data: chats }
-  } catch (error) {
-    console.error('Error fetching chats from database', error)
-    if (error instanceof Error) {
-      return { success: false, error: error.message }
-    }
-    return { success: false, error: 'An unknown error occurred' }
-  }
-})
-
-ipcMain.handle('create-chat', async (event, chat) => {
-  try {
-    createChat(chat)
-    return { success: true }
-  } catch (error) {
-    console.error('Error creating chat in database', error)
-    if (error instanceof Error) {
-      return { success: false, error: error.message }
-    }
-    return { success: false, error: 'An unknown error occurred' }
-  }
-})
-
-ipcMain.handle('get-messages', async () => {
-  try {
-    const messages = getMessages()
-    return { success: true, data: messages }
-  } catch (error) {
-    console.error('Error fetching messages from database', error)
-    if (error instanceof Error) {
-      return { success: false, error: error.message }
-    }
-    return { success: false, error: 'An unknown error occurred' }
-  }
-})
-
-// ipcMain.handle('get-conversation-history', () => {
-//   const history = getConversationHistory(store)
-//   console.log(history)
-//   return history
-// })
-
-ipcMain.handle('get-user-data-path', () => {
-  return app.getPath('userData')
-})
-
-// Function to load chat data
-export async function loadChatData() {
-  try {
-    const data = await readFile(CHAT_DATA_PATH, 'utf8')
-    return JSON.parse(data)
-  } catch (error: unknown) {
-    // if (error.code === 'ENOENT') {
-    //   // File not found, return default empty array
-    //   return []
-    // } else {
-    //   throw error // Rethrow unexpected errors
-    // }
-    console.error('Failed to read chat data:', error)
-  }
-}
-
-// Function to save chat data
-export async function saveChatData(chatData: unknown) {
-  const data = JSON.stringify(chatData, null, 4) // Pretty print JSON
-  await writeFile(CHAT_DATA_PATH, data, 'utf8')
-}
-
-ipcMain.handle('get-chat-by-id', async (event, id) => {
-  try {
-    const chat = getChatById(id)
-    return { success: true, data: chat }
-  } catch (error) {
-    console.error('Error fetching chat by ID from database', error)
-    if (error instanceof Error) {
-      return { success: false, error: error.message }
-    }
-    return { success: false, error: 'An unknown error occurred' }
-  }
 })
 
 // IPC handlers for encrypting and decrypting data

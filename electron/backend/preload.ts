@@ -6,36 +6,22 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 type Channel =
-  | 'get-file-path'
-  | 'add-message'
-  | 'get-messages'
   | 'ping'
-  | 'get-conversation-history'
+  | 'get-file-path'
   | 'file-path-response'
-  | 'create-chat'
-  | 'create-or-update-chat'
-  | 'get-chats'
-  | 'get-chat-by-id'
   | 'encrypt-data'
   | 'decrypt-data'
   | 'save-data'
   | 'load-data'
-  | 'delete-encrypted-data'
   | 'check-has-encrypted-data'
+  | 'delete-encrypted-data'
   | 'server-port'
 
 const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
-  send: ['get-file-path', 'add-message', 'ping', 'server-port'],
+  send: ['get-file-path', 'ping', 'server-port'],
   invoke: [
-    'get-file-path',
-    'add-message',
-    'get-messages',
     'ping',
-    'get-conversation-history',
-    'create-chat',
-    'create-or-update-chat',
-    'get-chats',
-    'get-chat-by-id',
+    'get-file-path',
     'encrypt-data',
     'decrypt-data',
     'save-data',

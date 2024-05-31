@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Session } from '@/lib/chat.types'
 import { Message } from '@/lib/chat/chat.actions'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
 import { useToast } from '@/components/ui/use-toast'
-import ChatMessages from './chat-messages'
-import Input from './input'
+import ChatMessages from './messages/chat.messages'
+import Input from './input/input'
 import { useActor, useMachine } from '@xstate/react'
 import {
     sessionMachine,
@@ -21,7 +21,7 @@ export interface ChatProps extends React.ComponentProps<'div'> {
     missingKeys?: string[]
 }
 
-export function SimpleChat({
+export default function ChatMessagesAndInput({
     viewOnly,
     sessionMachineProps,
 }: {
@@ -94,7 +94,10 @@ export function SimpleChat({
                     ref={messagesRef}
                 > */}
                 {messages && messages.length > 0 && (
-                    <ChatMessages messages={messages} />
+                    <ChatMessages
+                        messages={messages}
+                        spinning={eventState.context.modelLoading}
+                    />
                 )}
                 <div className="h-px w-full" ref={visibilityRef}></div>
                 {/* </div> */}

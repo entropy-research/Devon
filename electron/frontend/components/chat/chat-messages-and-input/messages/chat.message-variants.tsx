@@ -1,11 +1,10 @@
 'use client'
 
-// import { IconOpenAI, IconUser } from '@/components/ui/icons'
 import { Bot, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { spinner } from './chat.spinner'
-import { CodeBlock } from '../ui/codeblock'
-import { MemoizedReactMarkdown } from './chat.markdown'
+import { CodeBlock } from '@/components/ui/codeblock'
+import { MemoizedReactMarkdown } from './chat.memoized-react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import { StreamableValue } from 'ai/rsc'
@@ -98,12 +97,11 @@ export const ThoughtMessage = ({
 }) => {
     const icon = (
         <div className="scale-x-[-1] translate-x-1 flex size-[32px] shrink-0 select-none items-center justify-center rounded-md text-primary-foreground shadow-sm">
-            <TfiThought size={28}/>
+            <TfiThought size={28} />
         </div>
     )
     return <StyledMessage content={content} className={className} icon={icon} />
 }
-
 
 export const ToolResponseMessage = ({
     content,

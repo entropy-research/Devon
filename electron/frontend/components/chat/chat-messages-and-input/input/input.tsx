@@ -2,8 +2,10 @@ import { useState, useRef } from 'react'
 import { Paperclip, ArrowRight } from 'lucide-react'
 import { AutoresizeTextarea } from '@/components/ui/textarea'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
-import useCreateResponse from '@/lib/services/sessionService/use-create-response'
-import useInterruptSession from '@/lib/services/sessionService/use-interrupt-session'
+import {
+    useCreateResponse,
+    useInterruptSession,
+} from '@/lib/services/sessionService/sendUserMessage'
 import { useSearchParams } from 'next/navigation'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
@@ -23,7 +25,7 @@ const Input = ({
     const { formRef, onKeyDown } = useEnterSubmit()
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const [input, setInput] = useState('')
-    const { createResponse, responseData, loading, error } = useCreateResponse()
+    const { createResponse } = useCreateResponse()
     const { interruptSession } = useInterruptSession()
     // For blocking user with modal
     const searchParams = useSearchParams()

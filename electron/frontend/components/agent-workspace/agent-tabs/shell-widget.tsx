@@ -3,7 +3,7 @@ import '@xterm/xterm/css/xterm.css'
 import React, { useEffect, useRef, useState } from 'react'
 
 // import socket from "../socket/socket";
-import { fetchSessionEvents } from '@/lib/services/sessionService/use-fetch-session-events'
+import { fetchSessionEvents } from '@/lib/services/sessionService/sessionService'
 import { useSearchParams } from 'next/navigation'
 import FileTabs from '@/components/file-tabs/file-tabs'
 import { Terminal as TerminalIcon } from 'lucide-react'
