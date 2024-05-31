@@ -39,6 +39,8 @@ const EditorWidget = ({
 
     let messages = SessionMachineContext.useSelector(state => state.context.serverEventContext.messages.filter(message => message.type === 'tool'))
     console.log(messages)
+    const state = SessionMachineContext.useSelector((state) => state);
+
     useEffect(()=>{
         async function getSessionState() {
             const res = await fetchSessionState(chatId)
@@ -87,6 +89,7 @@ const EditorWidget = ({
                             <CodeEditor
                                 isExpandedVariant={isExpandedVariant}
                                 showEditorBorders={showEditorBorders}
+                                path={state.context.path}
                             />
                         </div>
 

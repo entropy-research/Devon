@@ -10,9 +10,11 @@ import { useSearchParams } from 'next/navigation'
 export default function CodeEditor({
     isExpandedVariant = false,
     showEditorBorders,
+    path,
 }: {
     isExpandedVariant?: boolean
     showEditorBorders: boolean
+    path: string
 }): JSX.Element {
     const searchParams = useSearchParams()
     const chatId = searchParams.get('chat')
@@ -41,8 +43,6 @@ export default function CodeEditor({
 
         monaco.editor.setTheme('theme')
     }
-
-    
 
     if (!selectedFileId || !chatId || chatId === 'New') {
         return (
@@ -112,7 +112,7 @@ export default function CodeEditor({
                 className={showEditorBorders ? '' : ''}
                 isExpandedVariant={isExpandedVariant}
             />
-            {files && <PathDisplay />}
+            {files && <PathDisplay path={path} />}
             <div className="flex w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
                 {file && (
                     <BothEditorTypes
@@ -151,10 +151,25 @@ const BothEditorTypes = ({ diffEnabled, file, handleEditorDidMount }) =>
         ></DiffEditor>
     )
 
-const PathDisplay = () => (
+const PathDisplay = ({ path }: { path: string }) => (
     <div className="-mt-[1px] px-3 py-1 bg-night">
         <p className="text-xs text-neutral-500">
-            Users {'>'} josh {'>'} Documents {'>'} examples
+            {path ? convertPath(path) : ''}
         </p>
     </div>
 )
+
+function convertPath(path) {
+    // Split the path based on the separator, either "/" or "\"
+    const parts = path.split(/[/\\]/)
+
+    // Remove unwanted parts (e.g., initial "Users" or "C:" for Windows paths)
+    const filteredParts = parts.filter(
+        part => part && part !== 'Users' && !part.includes(':')
+    )
+
+    // Join the remaining parts with the custom separator
+    const customPath = filteredParts.join(' > ')
+
+    return customPath
+}
