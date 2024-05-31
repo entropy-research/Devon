@@ -36,7 +36,7 @@ class SessionArguments:
     user_input: Any
     name: str
     task: Optional[str] = None
-    config: Optional[Dict[str, Any]] = None
+    # config: Optional[Dict[str, Any]] = None
     headless: Optional[bool] = False
 
 
@@ -109,7 +109,7 @@ class Session:
         self.telemetry_client = Posthog()
         self.name = args.name
         self.agent_branch = "devon_agent_" + self.name
-        self.global_config = args.config
+        self.global_config = {}
         self.excludes = self.global_config.get("excludes", [])
 
         local_environment = LocalEnvironment(args.path)
@@ -172,7 +172,7 @@ class Session:
         }
 
     @classmethod
-    def from_dict(cls, data, user_input, config):
+    def from_dict(cls, data, user_input):
         print(data)
         instance = cls(
             args=SessionArguments(
@@ -181,11 +181,12 @@ class Session:
                 user_input=user_input,
                 name=data["name"],
                 task=data["task"] if "task" in data else None,
-                config=config,
+                # config=config,
             ),
             agent=TaskAgent(
                 name=data["agent"]["name"],
-                model=config["modelName"],
+                # model=config["modelName"],
+                model="gpt-4o",
                 temperature=data["agent"]["temperature"],
                 chat_history=data["agent"]["chat_history"],
             )
@@ -215,12 +216,12 @@ class Session:
             self.logger.info(f"State: {self.state}")
 
             # Collect only event name and content only in case of error
-            telemetry_event = SessionEventEvent(
-                event_type=event["type"],
-                message="" if not event["type"] == "Error" else event["content"],
-            )
+            # telemetry_event = SessionEventEvent(
+            #     event_type=event["type"],
+            #     message="" if not event["type"] == "Error" else event["content"],
+            # )
 
-            self.telemetry_client.capture(telemetry_event)
+            # self.telemetry_client.capture(telemetry_event)
 
             if event["type"] == "Stop":
                 break

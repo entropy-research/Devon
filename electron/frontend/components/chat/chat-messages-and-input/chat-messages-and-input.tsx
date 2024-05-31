@@ -8,10 +8,9 @@ import Input from './input/input'
 import { useActor, useMachine } from '@xstate/react'
 import {
     sessionMachine,
-    eventHandlingLogic,
 } from '@/lib/services/stateMachineService/stateMachine'
-import { fetchEvents } from '@/lib/services/stateMachineService/stateMachineService'
 import { useSearchParams } from 'next/navigation'
+import { SessionMachineContext } from '@/app/home'
 
 type Message = {
     role: 'user' | 'assistant' | 'system' | 'function' | 'data' | 'tool'
@@ -30,14 +29,14 @@ export interface ChatProps extends React.ComponentProps<'div'> {
 
 export default function ChatMessagesAndInput({
     viewOnly,
-    sessionMachineProps,
+    // sessionMachineProps,
 }: {
     viewOnly: boolean
-    sessionMachineProps: {
-        port: number
-        name: string
-        path: string
-    }
+    // sessionMachineProps: {
+    //     port: number
+    //     name: string
+    //     path: string
+    // }
 }) {
     const {
         // messagesRef,
@@ -48,39 +47,40 @@ export default function ChatMessagesAndInput({
     } = useScrollAnchor()
 
     const searchParams = useSearchParams()
-    const [eventState, sendEvent] = useActor(eventHandlingLogic)
-    let messages = eventState.context.messages
+    // const [eventState, sendEvent] = useActor(eventHandlingLogic)
+    // let messages = eventState.context.messages
     // This inits the state machine and starts the session
-    const [state] = useMachine(sessionMachine, { input: sessionMachineProps })
+
     let status = ''
 
-    if (!state.matches('running')) {
-        status = 'Initializing...'
-        console.log(status)
-    } else {
-        console.log('Running!')
-    }
-    let eventI = 0
+//     const [state] = useMachine(sessionMachine, { input: {
+//         host: 'http://localhost:' + sessionMachineProps.port,
+//         name: sessionMachineProps.name,
+//         path: sessionMachineProps.path,
+//         reset: false,
+//         },
+//     },
+// )
 
-    useEffect(() => {
-        const intervalId = setInterval(async () => {
-            const _sessionId = searchParams.get('chat')
-            if (!_sessionId || _sessionId === 'New') return
-            if (state.matches('running')) {
-                const newEvents = await fetchEvents(10001, _sessionId)
-                if (newEvents) {
-                    for (let i = eventI; i < newEvents.length; i++) {
-                        sendEvent(newEvents[i])
-                        eventI++
-                    }
-                }
-            }
-        }, 2000)
+    const state = SessionMachineContext.useSelector((state) => state);
 
-        return () => {
-            clearInterval(intervalId)
-        }
-    }, [state])
+    const eventState = SessionMachineContext.useSelector((state) => state.context.serverEventContext);
+
+    // const eventState = state.context.serverEventContext;
+    let messages = eventState.messages;
+
+	if (!state.matches('running')) {
+		status = 'Initializing...';
+	} else if (eventState.modelLoading) {
+		status = 'Waiting for Devon...';
+	} else if (eventState.userRequest) {
+		status = 'Type your message:';
+	} else {
+		status = 'Interrupt:';
+	}
+
+    console.log(state.value,state.context.retryCount)
+    console.log(state.context)
 
     // useEffect(() => {
     //     missingKeys?.map(key => {
@@ -89,6 +89,7 @@ export default function ChatMessagesAndInput({
     //         })
     //     })
     // }, [toast, missingKeys])
+    console.log(messages)
 
     return (
         <div
@@ -103,7 +104,7 @@ export default function ChatMessagesAndInput({
                 {messages && messages.length > 0 && (
                     <ChatMessages
                         messages={messages}
-                        spinning={eventState.context.modelLoading}
+                        spinning={eventState.modelLoading}
                     />
                 )}
                 <div className="h-px w-full" ref={visibilityRef}></div>
@@ -121,7 +122,7 @@ export default function ChatMessagesAndInput({
                         scrollToBottom={scrollToBottom}
                         viewOnly={viewOnly}
                         // isRunning={state.matches('running')}
-                        eventContext={eventState.context}
+                        eventContext={eventState}
                     />
                 </div>
             </div>

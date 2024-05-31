@@ -7,32 +7,36 @@ import { fetchSessionEvents } from '@/lib/services/sessionService/sessionService
 import { useSearchParams } from 'next/navigation'
 import FileTabs from '@/components/file-tabs/file-tabs'
 import { Terminal as TerminalIcon } from 'lucide-react'
+import { SessionMachineContext } from '@/app/home'
+import type { Message } from '@/lib/services/stateMachineService/stateMachine'
 
-export default function ShellWidget() {
-    const searchParams = useSearchParams()
-    const chatId = searchParams.get('chat')
+// export default function ShellWidget() {
+//     // const searchParams = useSearchParams()
+//     // const chatId = searchParams.get('chat')
 
-    const [messages, setMessages] = useState([])
-    useEffect(() => {
-        if (!chatId || chatId === 'New') return
-        const fetchAndUpdateMessages = () => {
-            fetchSessionEvents(chatId)
-                .then(data => {
-                    setMessages(getOnlyToolResponse(data))
-                })
-                .catch(error => {
-                    console.error('Error fetching session events:', error)
-                })
-        }
-        const intervalId = setInterval(fetchAndUpdateMessages, 4000)
+//     // const [messages, setMessages] = useState([])
 
-        return () => {
-            clearInterval(intervalId)
-        }
-    }, [chatId])
 
-    return <Terminal messages={messages} />
-}
+//     // useEffect(() => {
+//     //     if (!chatId || chatId === 'New') return
+//     //     const fetchAndUpdateMessages = () => {
+//     //         fetchSessionEvents(chatId)
+//     //             .then(data => {
+//     //                 setMessages(getOnlyToolResponse(data))
+//     //             })
+//     //             .catch(error => {
+//     //                 console.error('Error fetching session events:', error)
+//     //             })
+//     //     }
+//     //     const intervalId = setInterval(fetchAndUpdateMessages, 4000)
+
+//     //     return () => {
+//     //         clearInterval(intervalId)
+//     //     }
+//     // }, [chatId])
+
+//     return <Terminal />
+// }
 
 function getOnlyToolResponse(messages) {
     return messages?.filter(
@@ -89,9 +93,12 @@ class JsonWebsocketAddon {
  * we keep the terminal persistently open as a child of <App /> and hidden when not in use.
  */
 
-function Terminal({ messages }): JSX.Element {
+export default function ShellWidget({messages}: {messages: Message[]}): JSX.Element {
     const terminalRef = useRef<HTMLDivElement>(null)
     const terminalInstanceRef = useRef<XtermTerminal | null>(null)
+
+    // const messages = SessionMachineContext.useSelector(state => state.context.serverEventContext.messages).filter(message => message.type === 'tool')
+
 
     useEffect(() => {
         async function addOn() {
@@ -129,8 +136,6 @@ function Terminal({ messages }): JSX.Element {
 
         addOn()
 
-        // const jsonWebsocketAddon = new JsonWebsocketAddon(socket);
-        // terminal.loadAddon(jsonWebsocketAddon);
 
         return () => {
             terminal.dispose()
@@ -144,10 +149,14 @@ function Terminal({ messages }): JSX.Element {
             terminal.clear() // Clear the existing content
             messages.forEach((message, idx) => {
                 let prefix = ''
-                if (message.type === 'EnvironmentRequest') {
-                    prefix = idx === 0 ? '> ' : '\n> '
-                }
-                terminal.writeln(`${prefix}${message.content}`)
+                
+                let [command, response] = message.text.split('\n> ')
+                command = "bash>  " + command.slice(18,).trim()
+                // if (message.type === 'EnvironmentRequest') {
+                //     prefix = idx === 0 ? '> ' : '\n> '
+                // }
+                terminal.writeln(`${command}`)
+                terminal.writeln(`${response}`)
             })
         }
     }, [messages])

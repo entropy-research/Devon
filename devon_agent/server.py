@@ -73,7 +73,7 @@ async def lifespan(app: fastapi.FastAPI):
     async with AsyncSessionLocal() as db_session:
         app.db_session = db_session
         data = await load_data(db_session)
-        data = { k:Session.from_dict(v, lambda: get_user_input(k), config=app.config) for (k,v) in data.items()} 
+        data = { k:Session.from_dict(v, lambda: get_user_input(k)) for (k,v) in data.items()} 
         sessions = data
         yield
 
@@ -133,7 +133,7 @@ def create_session(session: str, path: str):
                 path,
                 user_input=lambda: get_user_input(session),
                 name=session,
-                config=app.config
+                # config=app.config
             ),
             agent,
         )
@@ -157,7 +157,8 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
 
     if session in running_sessions:
-        raise fastapi.HTTPException(status_code=304, detail="Session already running")
+        return "Session already running"
+        # raise fastapi.HTTPException(status_code=304, detail="Session already running")
 
     sessions[session].enter()
     if len(sessions[session].event_log) == 0 or sessions[session].task == None:

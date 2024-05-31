@@ -45,18 +45,116 @@ const installExtensions = async () => {
    * A possible workaround could be to downgrade the extension but you're on your own with that.
    */
   /*
-	const {
-		default: electronDevtoolsInstaller,
-		//REACT_DEVELOPER_TOOLS,
-		REDUX_DEVTOOLS,
-	} = await import('electron-devtools-installer')
-	// @ts-expect-error Weird behaviour
-	electronDevtoolsInstaller.default([REDUX_DEVTOOLS]).catch(console.log)
-	*/
+  const {
+    default: electronDevtoolsInstaller,
+    //REACT_DEVELOPER_TOOLS,
+    REDUX_DEVTOOLS,
+  } = await import('electron-devtools-installer')
+  // @ts-expect-error Weird behaviour
+  electronDevtoolsInstaller.default([REDUX_DEVTOOLS]).catch(console.log)
+  */
 }
-
+let serverProcess: ChildProcessWithoutNullStreams
+portfinder.setBasePort(10001)
+let use_port = NaN
 const spawnAppWindow = async () => {
   if (electronIsDev) await installExtensions()
+
+
+
+  let api_key: string | undefined = undefined;
+  let modelName: string | undefined = undefined;
+  // let api_base: string | undefined = undefined;
+  const prompt_type: string = "anthropic";
+
+  if (process.env['OPENAI_API_KEY']) {
+    api_key = process.env['OPENAI_API_KEY'];
+    modelName = 'gpt4-o';
+    // prompt_type = "openai";
+  } else if (process.env['ANTHROPIC_API_KEY']) {
+    api_key = process.env['ANTHROPIC_API_KEY'];
+    modelName = 'claude-opus';
+  } else if (process.env['GROQ_API_KEY']) {
+    api_key = process.env['GROQ_API_KEY'];
+    modelName = 'llama-3-70b';
+    // prompt_type = "llama3";
+  } else {
+    console.log(
+      'Please provide an API key using the --api_key option or by setting OPENAI_API_KEY or ANTHROPIC_API_KEY.',
+    );
+    process.exit(1);
+  }
+
+  // const packageDir = process.cwd();
+  // const configPath = path.join(packageDir, '.devon.config');
+
+  // try {
+  // 	// if (fs.existsSync(configPath)) {
+  // 	// 	const configData = fs.readFileSync(configPath, 'utf8');
+  // 	// 	const config: Config = JSON.parse(configData);
+  // 	// 	modelName = config.modelName ? config.modelName : modelName;
+  // 	// 	api_key = config.apiKey ? config.apiKey : api_key;
+
+  // 	// 	if (config.apiBase) {
+  // 	// 		api_base = config.apiBase;
+  // 	// 		console.log('Using api base:', api_base);
+  // 	// 	}
+  // 	// 	if (config.promptType) {
+  // 	// 		prompt_type = config.promptType;
+  // 	// 		console.log('Using prompt type:', prompt_type);
+  // 	// 	}
+  // 	// }
+  // 	console.log('Using model name:', modelName);
+  // } catch (err) {
+  // 	console.error('Error reading configuration:', err);
+  // 	process.exit(1);
+  // }
+
+
+
+
+  await portfinder
+    .getPortPromise()
+    .then((port: number) => {
+      use_port = port
+      serverProcess = spawn(
+        'devon_agent',
+        [
+          'server',
+          '--port',
+          port.toString(),
+          '--model',
+          modelName as string,
+          '--api_key',
+          api_key as string,
+          // '--api_base',
+          // api_base as string,
+          '--prompt_type',
+          prompt_type as string,
+        ],
+        {
+          signal: controller.signal,
+        },
+      );
+
+      serverProcess.stdout.on('data', (data: unknown) => {
+        console.log(`Server: ${data}`)
+      })
+
+
+      serverProcess.stderr.on('data', (data: unknown) => {
+        console.error(`Server Error: ${data}`)
+      })
+
+      serverProcess.on('close', (code: unknown) => {
+        console.log(`Server process exited with code ${code}`)
+      })
+    })
+    .catch(error => {
+      console.error('Failed to find a free port:', error)
+      return { success: false, message: 'Failed to find a free port.' }
+    })
+
 
   const RESOURCES_PATH = electronIsDev
     ? path.join(__dirname, '../../assets')
@@ -79,12 +177,13 @@ const spawnAppWindow = async () => {
       preload: PRELOAD_PATH,
       contextIsolation: true,
       nodeIntegration: false,
+      additionalArguments: [`--port=${use_port}`]
     },
   })
 
   appWindow.loadURL(
     electronIsDev
-      ? 'http://localhost:3000'
+      ? `http://localhost:3000?port=${use_port}`
       : `file://${path.join(__dirname, '../../frontend/build/index.html')}`
   )
   appWindow.maximize()
@@ -95,7 +194,6 @@ const spawnAppWindow = async () => {
   })
 }
 
-let serverProcess: ChildProcessWithoutNullStreams
 
 const controller = new AbortController()
 
@@ -111,8 +209,12 @@ app.on('ready', () => {
     )
   }
 
+
+
   spawnAppWindow()
 })
+
+
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -121,7 +223,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
-  serverProcess.kill() // Make sure to kill the server process when the app is closing
+  serverProcess.kill(9) // Make sure to kill the server process when the app is closing
 })
 
 /*
@@ -135,42 +237,10 @@ ipcMain.handle('ping', () => {
   return 'pong'
 })
 
-portfinder.setBasePort(10001)
-ipcMain.handle('spawn-devon-agent', async () => {
-  try {
-    portfinder
-      .getPortPromise()
-      .then((port: number) => {
-        serverProcess = spawn('devon', ['server', '--port', port.toString()], {
-          signal: controller.signal,
-        })
-
-        serverProcess.stdout.on('data', (data: unknown) => {
-          console.log(`Server: ${data}`)
-        })
-
-        if (appWindow) {
-          appWindow.webContents.send('server-port', port)
-        }
-
-        serverProcess.stderr.on('data', (data: unknown) => {
-          console.error(`Server Error: ${data}`)
-        })
-
-        serverProcess.on('close', (code: unknown) => {
-          console.log(`Server process exited with code ${code}`)
-        })
-      })
-      .catch(error => {
-        console.error('Failed to find a free port:', error)
-        return { success: false, message: 'Failed to find a free port.' }
-      })
-    return { success: true }
-  } catch (error) {
-    console.error('Failed to spawn Python agent:', error)
-    return { success: false, message: 'Failed to spawn Python agent.' }
-  }
+ipcMain.on("get-port", (event) => {
+  event.reply('get-port-response', use_port)
 })
+
 
 ipcMain.on('get-file-path', event => {
   dialog

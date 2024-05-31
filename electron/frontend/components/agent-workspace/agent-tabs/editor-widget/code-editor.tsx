@@ -42,6 +42,8 @@ export default function CodeEditor({
         monaco.editor.setTheme('theme')
     }
 
+    
+
     if (!selectedFileId || !chatId || chatId === 'New') {
         return (
             <>

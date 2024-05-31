@@ -35,9 +35,9 @@ def server(port, model, api_key, prompt_type, api_base):
     app.prompt_type = prompt_type
     app.model = model
 
-    with open(os.path.join(os.getcwd(), ".devon.config"), "r") as f:
-        config = f.read()
-        app.config = json.loads(config)
+    # with open(os.path.join(os.getcwd(), ".devon.config"), "r") as f:
+    #     config = f.read()
+    #     app.config = json.loads(config)
 
     uvicorn.run(app, host="0.0.0.0", port=port)
 
@@ -83,7 +83,7 @@ def headless(model, api_key, prompt_type, api_base, headless):
             os.getcwd(),
             user_input=lambda: get_user_input(name),
             name=name,
-            config=app.config,
+            # config=app.config,
             headless=app.headless
         ),
         agent,

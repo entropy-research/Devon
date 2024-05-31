@@ -22,9 +22,42 @@ export default function Landing() {
         }
     }, [hasAcceptedCheckbox, searchParams])
 
+
+    let [port, setPort] = useState<number>(NaN)
+
+    useEffect(() => {
+        window.api.send('get-port')
+        window.api.receive('get-port-response', (port) => {
+            setPort(port)
+        })
+
+    }, [])
+
+    const [sessionMachineProps, setSessionMachineProps] = useState<{
+        port: number
+        name: string
+        path: string
+    } | null>(null)
+
+
+    let sessionName = searchParams.get('chat')
+    const encodedPath = searchParams.get('path')
+    console.log(sessionName,encodedPath)
+    useEffect(() => {
+
+        if (sessionName && encodedPath && port) {
+            const stateMachineProps = {
+                port: port,
+                name: sessionName,
+                path: decodeURIComponent(encodedPath),
+            }
+            setSessionMachineProps(stateMachineProps)
+        }
+    }, [sessionName, encodedPath,port])
+
     return (
         <>
-            <Home />
+            <Home sessionMachineProps={sessionMachineProps} />
             <OnboardingModal
                 initialized={hasAcceptedCheckbox}
                 setInitialized={setHasAcceptedCheckbox}

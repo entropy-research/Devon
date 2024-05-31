@@ -8,61 +8,52 @@ export default function Chat({
     sessionId,
     viewOnly = false,
     headerIcon,
+    port,
 }: {
     sessionId: string | null
     viewOnly?: boolean
-    headerIcon?: JSX.Element
+    headerIcon?: JSX.Element,
+    port: number
 }) {
+
     const searchParams = useSearchParams()
-    const [sessionMachineProps, setSessionMachineProps] = useState<{
-        port: number
-        name: string
-        path: string
-    } | null>(null)
-    const [backendStarted, setBackendStarted] = useState(false)
 
-    useEffect(() => {
-        async function startPythonServer(port: number) {
-            try {
-                const res: {
-                    success: boolean
-                    message?: string
-                } = await spawnDevonAgent()
-                if (res.success) {
-                    setBackendStarted(true)
-                } else {
-                    console.error('Failed to spawn Python agent:', res.message)
-                }
-            } catch (error) {
-                console.error('Failed to spawn Python agent:', error)
-            }
-        }
+    // const [sessionMachineProps, setSessionMachineProps] = useState<{
+    //     port: number
+    //     name: string
+    //     path: string
+    // } | null>(null)
 
-        // Get session id and path from url
-        const sessionId = searchParams.get('chat')
-        const encodedPath = searchParams.get('path')
-        if (sessionId && encodedPath) {
-            const PORT = 10001
-            setSessionMachineProps({
-                port: PORT,
-                name: sessionId,
-                path: decodeURIComponent(encodedPath),
-            })
-            startPythonServer(PORT)
-        }
-    }, [])
+
+    // let sessionName = searchParams.get('chat')
+    // const encodedPath = searchParams.get('path')
+    // console.log(sessionName,encodedPath)
+    // useEffect(() => {
+
+    //     if (sessionName && encodedPath) {
+    //         const stateMachineProps = {
+    //             port: port,
+    //             name: sessionName,
+    //             path: decodeURIComponent(encodedPath),
+    //         }
+    //         setSessionMachineProps(stateMachineProps)
+    //     }
+    // }, [sessionName, encodedPath,port])
+    
+
 
     return (
         <div className="rounded-lg h-full w-full max-w-4xl flex flex-col flex-2">
             <ChatHeader sessionId={sessionId} headerIcon={headerIcon} />
             <div className="flex-1 overflow-y-auto">
-                {!backendStarted && <div>Initializing...</div>}
-                {backendStarted && sessionMachineProps && (
-                    <ChatMessagesAndInput
-                        viewOnly={viewOnly}
-                        sessionMachineProps={sessionMachineProps}
-                    />
-                )}
+                {/* {!backendStarted && <div>Initializing...</div>} */}
+                {/* {backendStarted && sessionMachineProps && ( */}
+                {/* {sessionMachineProps && (    */}
+                <ChatMessagesAndInput
+                    viewOnly={viewOnly}
+                    // sessionMachineProps={sessionMachineProps}
+                />
+                {/* )} */}
             </div>
         </div>
     )

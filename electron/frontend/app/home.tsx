@@ -10,8 +10,19 @@ import { ViewMode } from '@/lib/types'
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-widget'
 import { useSearchParams } from 'next/navigation'
+import { createActorContext, useMachine } from '@xstate/react'
+import { sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 
-export default function Home() {
+
+    
+export const SessionMachineContext = createActorContext(sessionMachine);
+    
+
+export default function Home({sessionMachineProps}: {sessionMachineProps: {
+    port: number
+    name: string
+    path: string
+} | null}) {
     const searchParams = useSearchParams()
     const [sessionId, setSessionId] = useState<string | null>(null)
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
@@ -52,7 +63,36 @@ export default function Home() {
         setSessionId(chatId)
     }, [])
 
+
+
+    if (!sessionMachineProps) {
+        return <div>Loading...</div>
+    }
+
+//     const [state] = useMachine(sessionMachine, { input: {
+//         host: 'http://localhost:' + sessionMachineProps.port,
+//         name: sessionMachineProps.name,
+//         path: sessionMachineProps.path,
+//         reset: false,
+//         },
+//     },
+// )
+
+
+
+    // Get session id and path from url
+
+
+
     return (
+        <SessionMachineContext.Provider options={{
+            input : {
+                host: 'http://localhost:' + sessionMachineProps.port,
+                name: sessionMachineProps.name,
+                path: sessionMachineProps.path,
+                reset: false,
+            }
+        }}>
         <div className="w-full flex flex-row">
             <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel
@@ -67,16 +107,24 @@ export default function Home() {
                                 }
                             />
                         )} */}
-                    <Chat
-                        sessionId={sessionId}
-                        // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
+                        {/* {port ? ( */}
+                            <Chat
+                                sessionId={sessionId}
+                                port={sessionMachineProps.port}
+                                // sessionMachineProps={sessionMachineProps}
+                                // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
                     />
+                        {/* ) : ( */}
+                            {/* <div>Loading...</div> */}
+                        {/* )} */}
                 </ResizablePanel>
                 <ResizableHandle className="" />
                 <ResizablePanel className="flex flex-col w-full">
                     <EditorWidget chatId={sessionId ?? null} />
                 </ResizablePanel>
             </ResizablePanelGroup>
+         
         </div>
+        </SessionMachineContext.Provider>
     )
 }

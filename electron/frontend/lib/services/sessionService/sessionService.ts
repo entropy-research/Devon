@@ -21,8 +21,8 @@ export const fetchSessionState = async sessionId => {
 
 // Function to fetch session events
 export const fetchSessionEvents = async sessionId => {
-    const { data } = await axios.get(
-        `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/events`
-    )
-    return data
+    // const { data } = await axios.get(
+    //     `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/events`
+    // )
+    return []
 }

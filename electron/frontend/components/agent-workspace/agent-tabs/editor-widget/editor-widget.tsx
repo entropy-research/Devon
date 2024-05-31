@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import CodeEditor from './code-editor'
 import { CodeEditorContextProvider } from '@/contexts/CodeEditorContext'
 import { fetchSessionState } from '@/lib/services/sessionService/sessionService'
 import FileTree from './file-tree/file-tree'
 import ShellWidget from '@/components/agent-workspace/agent-tabs/shell-widget'
+import { SessionMachineContext } from '@/app/home'
 
 const boilerplateFile = {
     id: 'main.py',
@@ -32,11 +33,13 @@ const EditorWidget = ({
     chatId: string | null
     isExpandedVariant?: boolean
 }) => {
-    const [files, setFiles] = useState([])
+    // const [files, setFiles] = useState([])
 
-    useEffect(() => {
-        if (!chatId || chatId === 'New') return
+    let files = useRef([])
 
+    let messages = SessionMachineContext.useSelector(state => state.context.serverEventContext.messages.filter(message => message.type === 'tool'))
+    console.log(messages)
+    useEffect(()=>{
         async function getSessionState() {
             const res = await fetchSessionState(chatId)
             if (!res || !res?.editor || !res?.editor.files) return
@@ -61,19 +64,17 @@ const EditorWidget = ({
                 _files.push(boilerplateFile)
                 _files.push(boilerplateFile2)
             }
-            setFiles(_files)
+            files.current = _files
         }
-        const intervalId = setInterval(getSessionState, 2000)
-
-        return () => {
-            clearInterval(intervalId)
-        }
-    }, [chatId])
+        getSessionState()
+    },[messages])
+    
+    console.log(files.current)
 
     const showEditorBorders = true
 
     return (
-        <CodeEditorContextProvider tabFiles={files}>
+        <CodeEditorContextProvider tabFiles={files.current}>
             <div className={`flex flex-col h-full w-full ${showEditorBorders ? 'pb-3' : ''}`}>
                 <div
                     className={`flex flex-row h-full ${showEditorBorders ? 'rounded-md border bg-midnight border-neutral-600 pt-2 mr-3 overflow-hidden' : ''}`}
@@ -88,12 +89,14 @@ const EditorWidget = ({
                                 showEditorBorders={showEditorBorders}
                             />
                         </div>
-                        <div
-                            className={`h-[23vh] ${showEditorBorders ? '' : ''}`}
-                        >
-                            <ShellWidget />
-                        </div>
+
                     </div>
+
+                </div>
+                <div
+                    className={`h-[23vh] ${showEditorBorders ? '' : ''}`}
+                >
+                    <ShellWidget messages={messages} />
                 </div>
             </div>
         </CodeEditorContextProvider>
