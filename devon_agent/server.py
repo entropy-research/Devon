@@ -219,6 +219,26 @@ def stop_session(session: str):
     }))
     return session_obj
 
+@app.post("/session/{session}/pause")
+def pause_session(session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj = sessions.get(session)
+    if not session_obj:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj.pause()
+    return session
+
+@app.post("/session/{session}/resume")
+def resume_session(session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj = sessions.get(session)
+    if not session_obj:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj.resume()
+    return session
+
 
 @app.get("/session/{session}/state")
 def continue_session(session: str):

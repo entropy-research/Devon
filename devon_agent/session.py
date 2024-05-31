@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import random
+import time
 import traceback
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
@@ -111,6 +112,7 @@ class Session:
         self.agent_branch = "devon_agent_" + self.name
         self.global_config = {}
         self.excludes = self.global_config.get("excludes", [])
+        self.status = "created"
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
@@ -207,8 +209,23 @@ class Session:
             return self.state.task
         return "Task unspecified ask user to specify task"
     
+    def get_status(self):
+        return self.status
+    
+    def pause(self):
+        self.status = "paused"
+    
+    def resume(self):
+        self.status = "running"
+    
     def run_event_loop(self):
+        self.status = "running"
         while True and not (self.event_id == len(self.event_log)):
+
+            if self.status == "paused":
+                # self.logger.info("Session paused, waiting for resume")
+                time.sleep(2)
+                continue
             
             event = self.event_log[self.event_id]
 
@@ -224,6 +241,7 @@ class Session:
             # self.telemetry_client.capture(telemetry_event)
 
             if event["type"] == "Stop" and event["content"]["type"] != "submit":
+                self.status = "stopped"
                 break
             elif event["type"] == "Stop" and event["content"]["type"] == "submit":
                 self.state.task = "You have completed your task, ask user for revisions or a new one."
