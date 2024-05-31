@@ -1,0 +1,86 @@
+{
+  "name": "hello-world-react-vite",
+  "displayName": "hello-world-react-vite",
+  "description": "A hello world sample extension to demonstrate using React + Vite with the Webview UI Toolkit for VS Code.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "devon-sidebar",
+          "title": "Kino",
+          "icon": "assets/sidebar-icon.png"
+        }
+      ]
+    },
+    "views": {
+      "devon-sidebar": [
+        {
+          "type": "webview",
+          "id": "devon.chatView",
+          "name": "Devon Chat"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "devon.start",
+        "title": "Start Devon Server"
+      },
+      {
+        "command": "devon.configure",
+        "title": "Configure Devon"
+      }
+    ],
+    "configuration": {
+      "title": "Devon Configuration",
+      "properties": {
+        "devon.apiKey": {
+          "type": "string",
+          "description": "API key for Devon"
+        },
+        "devon.modelName": {
+          "type": "string",
+          "description": "Model name for Devon"
+        },
+        "devon.apiBase": {
+          "type": "string",
+          "description": "API base URL for Devon"
+        },
+        "devon.promptType": {
+          "type": "string",
+          "description": "Prompt type for Devon"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "install:all": "pnpm install && cd webview-ui && pnpm install",
+    "start:webview": "cd webview-ui && pnpm run start",
+    "build:webview": "cd webview-ui && pnpm run build",
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "pnpm run compile && pnpm run lint",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/node": "^12.11.7",
+    "@types/vscode": "^1.46.0",
+    "@typescript-eslint/eslint-plugin": "^4.14.1",
+    "@typescript-eslint/parser": "^4.14.1",
+    "eslint": "^7.19.0",
+    "glob": "^7.1.6",
+    "prettier": "^2.2.1",
+    "typescript": "^4.1.3",
+    "vscode-test": "^1.5.0"
+  },
+  "dependencies": {
+    "portfinder": "^1.0.32"
+  }
+}
