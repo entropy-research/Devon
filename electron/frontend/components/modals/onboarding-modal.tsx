@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/popover'
 import { useSafeStorage } from '@/lib/services/safeStorageService'
 import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
+import Combobox from '@/components/ui/combobox'
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -35,6 +36,24 @@ const DialogContent = lazy(() =>
     }))
 )
 
+const models = [
+    {
+        value: 'gpt4-o',
+        label: 'GPT4-o',
+        company: 'OpenAI',
+    },
+    {
+        value: 'claude-opus',
+        label: 'Claude Opus',
+        company: 'Anthropic',
+    },
+    {
+        value: 'llama-3-70b',
+        label: 'Llama 3.70b',
+        company: 'Groq',
+    },
+]
+
 const OnboardingModal = ({
     initialized,
     setInitialized,
@@ -45,6 +64,11 @@ const OnboardingModal = ({
     const [folderPath, setFolderPath] = useState('')
     const [isChecked, setIsChecked] = useState(false)
     const [apiKey, setApiKey] = useState('')
+    const [selectedModel, setSelectedModel] = useState<{
+        value: string
+        label: string
+        company: string
+    }>(models[0])
 
     const { saveData, deleteData, checkHasEncryptedData } = useSafeStorage()
     const [hasEncryptedData, setHasEncryptedData] = useState(false)
@@ -108,17 +132,37 @@ const OnboardingModal = ({
                             className="w-full"
                         >
                             <div className="flex flex-col mt-10 w-full">
+                                <div className="flex items-center mb-4 gap-3">
+                                    <p className="text-lg font-semibold">
+                                        {`Choose your model:`}
+                                    </p>
+                                    <Combobox
+                                        items={models}
+                                        itemType="model"
+                                        selectedItem={selectedModel}
+                                        setSelectedItem={setSelectedModel}
+                                    />
+                                </div>
+
                                 <div className="flex gap-1 items-center mb-4">
                                     {/* <Key size={20} className="mb-1" /> */}
                                     <p className="text-xl font-bold">
-                                        Anthropic API Key
+                                        {`${selectedModel.company} API Key`}
                                     </p>
                                     <Popover>
                                         <PopoverTrigger className="ml-1">
                                             <CircleHelp size={20} />
                                         </PopoverTrigger>
-                                        {hasEncryptedData ? <PopoverContent side='top' className="bg-night w-fit p-2">To edit, go to settings</PopoverContent>
-                                        : <SafeStoragePopoverContent/>}
+                                        {hasEncryptedData ? (
+                                            <PopoverContent
+                                                side="top"
+                                                className="bg-night w-fit p-2"
+                                            >
+                                                To edit, go to settings
+                                            </PopoverContent>
+                                        ) : (
+                                            <SafeStoragePopoverContent />
+                                        )}
                                     </Popover>
                                 </div>
                                 <Input

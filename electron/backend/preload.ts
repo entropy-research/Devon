@@ -16,6 +16,7 @@ type Channel =
   | 'check-has-encrypted-data'
   | 'delete-encrypted-data'
   | 'server-port'
+  | 'spawn-devon-agent'
 
 const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
   send: ['get-file-path', 'ping', 'server-port'],
@@ -28,6 +29,7 @@ const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
     'load-data',
     'delete-encrypted-data',
     'check-has-encrypted-data',
+    'spawn-devon-agent',
   ],
   receive: ['file-path-response', 'server-port'],
 }

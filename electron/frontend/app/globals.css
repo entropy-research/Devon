@@ -49,7 +49,7 @@
         --card: var(--dark-primary-background);
         --card-foreground: white;
 
-        --popover: hsl(222.2 84% 4.9%);
+        --popover: #111111;
         --popover-foreground: hsl(210 40% 98%);
 
         --primary: hsl(210 40% 98%);

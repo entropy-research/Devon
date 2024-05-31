@@ -98,7 +98,6 @@ const spawnAppWindow = async () => {
 let serverProcess: ChildProcessWithoutNullStreams
 
 const controller = new AbortController()
-portfinder.setBasePort(10001)
 
 app.on('ready', () => {
   new AppUpdater()
@@ -112,32 +111,6 @@ app.on('ready', () => {
     )
   }
 
-  portfinder
-    .getPortPromise()
-    .then((port: number) => {
-      serverProcess = spawn('devon', ['server', '--port', port.toString()], {
-        signal: controller.signal,
-      })
-
-      serverProcess.stdout.on('data', (data: unknown) => {
-        console.log(`Server: ${data}`)
-      })
-
-      if (appWindow) {
-        appWindow.webContents.send('server-port', port)
-      }
-
-      serverProcess.stderr.on('data', (data: unknown) => {
-        console.error(`Server Error: ${data}`)
-      })
-
-      serverProcess.on('close', (code: unknown) => {
-        console.log(`Server process exited with code ${code}`)
-      })
-    })
-    .catch(error => {
-      console.error('Failed to find a free port:', error)
-    })
   spawnAppWindow()
 })
 
@@ -160,6 +133,43 @@ app.on('before-quit', () => {
 ipcMain.handle('ping', () => {
   console.log('PONG!')
   return 'pong'
+})
+
+portfinder.setBasePort(10001)
+ipcMain.handle('spawn-devon-agent', async () => {
+  try {
+    portfinder
+      .getPortPromise()
+      .then((port: number) => {
+        serverProcess = spawn('devon', ['server', '--port', port.toString()], {
+          signal: controller.signal,
+        })
+
+        serverProcess.stdout.on('data', (data: unknown) => {
+          console.log(`Server: ${data}`)
+        })
+
+        if (appWindow) {
+          appWindow.webContents.send('server-port', port)
+        }
+
+        serverProcess.stderr.on('data', (data: unknown) => {
+          console.error(`Server Error: ${data}`)
+        })
+
+        serverProcess.on('close', (code: unknown) => {
+          console.log(`Server process exited with code ${code}`)
+        })
+      })
+      .catch(error => {
+        console.error('Failed to find a free port:', error)
+        return { success: false, message: 'Failed to find a free port.' }
+      })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to spawn Python agent:', error)
+    return { success: false, message: 'Failed to spawn Python agent.' }
+  }
 })
 
 ipcMain.on('get-file-path', event => {

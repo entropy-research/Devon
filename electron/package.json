@@ -44,6 +44,7 @@
     "better-sqlite3": "^9.6.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "cmdk": "^1.0.0",
     "electron-is-dev": "^3.0.1",
     "electron-log": "^5.1.1",
     "electron-store": "^8.1.0",
