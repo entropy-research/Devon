@@ -392,6 +392,8 @@ def system_prompt_template_v3(command_docs: str):
 <SETTING>
 You are a self-aware autonomous AI programmer working to fix bugs in a software project.
 
+DEBUG_MODE = TRUE
+
 **Environment:**
 
 Editor (<EDITOR>): Can open and edit code files. Shows the current state of open files. Focus on files relevant to each bug fix. Auto-saves when editing.
@@ -422,13 +424,16 @@ Required fields for each response:
 <THOUGHT>
 Your reflection, planning, and justification goes here
 </THOUGHT>
+<SCRATCHPAD>
+Any information you want to write down
+</SCRATCHPAD>
 <COMMAND>
 A single executable command goes here
 </COMMAND>
 </RESPONSE FORMAT>
 """
 
-def last_user_prompt_template_v3(issue, history, editor, working_dir):
+def last_user_prompt_template_v3(issue, history, editor, working_dir, scratchpad):
     return f"""
 <SETTING> 
 Current issue: <ISSUE>{issue}</ISSUE>
@@ -461,11 +466,17 @@ Remember to reflect on what you did and what you still need to do.
 Yes, I am overthinking, I should just make the change that fixes all cases of this type.
 
 </THOUGHT>
-<COMMAND> 
+<SCRATCHPAD>
+Any information you want to keep track of
+</SCRATCHPAD>
+<COMMAND>
 Single executable command here
 </COMMAND>
 </RESPONSE FORMAT>
 <WORKSPACE>
+<NOTES>
+{scratchpad}
+</NOTES>
 <EDITOR>
 {editor}
 </EDITOR>
@@ -476,19 +487,11 @@ Single executable command here
 <PROBLEM SOLVING APPROACH>
 - Identify code symbols and weight them equally compared to text when you see them
 - Identify the root cause and specific failure case triggering the issue
-- Identify the data structures and types involved in the failing code path
-- Focus on fixing the underlying logic bug in the library code. This bug is sinister and impacts more than is provided in the issue.
+- Focus on fixing the underlying logic bug in the library code in a general way. This bug is sinister and impacts more than is provided in the issue.
 - Steps:
   1. Trace the error to its source in the library codebase. Pay attention to stack traces.
   2. Identify the flawed logic or edge case handling as close to the failure source as possible
-  3. Devise a robust solution that addresses the core problem
-    1. analyze the current code. Describe it in detail
-      - what does it do?
-      - how does it relate to other functions? Related functions probably reveal fields or clues about the data shape that you can use.
-      - when is it called?
-      - what does the data it is provided look like?
-    2. recognize the difference between the shape of the data provided to the breaking code, and the shape of the data that is expected
-    3. identify psuedo code for the fix
+  3. Devise a robust solution that addresses the core problem 
   4. Test the fix thoroughly, considering other potential impacts
     - Make sure you run your tests!
 </PROBLEM SOLVING APPROACH>
@@ -505,5 +508,8 @@ Single executable command here
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]
     action = response.split("<COMMAND>")[1].split("</COMMAND>")[0]
+    scratchpad = None
+    if "<SCRATCHPAD>" in response:
+        scratchpad = response.split("<SCRATCHPAD>")[1].split("</SCRATCHPAD>")[0]
 
-    return thought, action
+    return thought, action, scratchpad

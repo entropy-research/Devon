@@ -47,6 +47,7 @@ class Agent:
 
         self.name = name
         self.history = []
+        self.scratchpad = None
         self.max_steps = 15
 
     def _format_editor_entry(self, k, v):
@@ -120,7 +121,7 @@ class Agent:
         history = history_to_bash_history(self.history)
         # print("HISTORY: ", history)
         last_user_prompt = last_user_prompt_template_v3(
-            issue, history, editor, working_dir
+            issue, history, editor, working_dir, self.scratchpad
         )
 
         messages = [{"role": "user", "content": last_user_prompt}]
@@ -140,7 +141,9 @@ class Agent:
         }) + "<MODEL_OUT>")
 
         try:
-            thought, action = parse_response(output)
+            thought, action, scratchpad = parse_response(output)
+            if scratchpad:
+                self.scratchpad = scratchpad
         except Exception:
             raise ValueError(f"Multiple actions found in response: {output}")
 
@@ -277,13 +280,16 @@ I will take a deep breath and methodically make a sequence of changes.
             state = env.get_state()
             state["issue"] = setup_args["issue"]
 
-            thought, action, output = self.forward(
-                observation,
-                env.get_available_actions(),
-                state,
-                env.generate_command_docs(),
-                i
-            )
+            try:
+                thought, action, output = self.forward(
+                    observation,
+                    env.get_available_actions(),
+                    state,
+                    env.generate_command_docs(),
+                    i
+                )
+            except ValueError:
+                obs = "Response format not followed. Please follow the response format"
 
             observations = list()
             if action == "exit":
@@ -333,6 +339,8 @@ THOUGHT: {thought}
 ACTION: {action}
 
 OBSERVATION: {observation}
+
+SCRATCHPAD: {self.scratchpad}
 \n\n****************\n\n\n\n"""
             )
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "devon-agent"
-version = "0.1.6"
+version = "0.1.10"
 description = ""
 authors = ["killind-dev <61808204+killind-dev@users.noreply.github.com>","mihir1003 <mihir1003@gmail.com>"]
 readme = "README.md"
@@ -32,9 +32,14 @@ gymnasium = {version = "^0.29.1", optional = true}
 datasets = {version = ">=2.14.6,<2.15.0", optional = true}
 click = "^8.1.7"
 posthog = "^3.5.0"
+litellm = "^1.37.9"
+dspy-ai = {version = "^2.4.9", optional = true}
 
+aiosqlite = "^0.20.0"
+greenlet = "^3.0.3"
 [tool.poetry.extras]
 swebench = ["swebench", "datasets", "gymnasium"]
+experimental = ["dspy-ai"]
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.3.3"

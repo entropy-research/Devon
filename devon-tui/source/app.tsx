@@ -81,13 +81,13 @@ type Event = {
 		| 'Interrupt'
 		| 'UserRequest'
 		| 'Stop'
-		| 'EnvironmentRequest'
-		| 'EnvironmentResponse'
+		// | 'EnvironmentRequest'
+		// | 'EnvironmentResponse'
 		| 'ModelRequest'
 		| 'ToolRequest'
 		| 'Error'
 		| 'UserResponse';
-	content: string;
+	content: any;
 	identifier: string | null;
 };
 
@@ -125,11 +125,11 @@ const handleEvents = (
 			messages.push({text: content.thought, type: 'thought'});
 		}
 
-		if (event.type == 'EnvironmentRequest') {
-			tool_message = 'Running command: ' + event.content;
+		if (event.type == 'ToolRequest') {
+			tool_message = 'Running command: ' + event.content.raw_command;
 		}
 
-		if (event.type == 'EnvironmentResponse') {
+		if (event.type == 'ToolResponse') {
 			tool_message += '\n> ' + event.content;
 			if (tool_message.length > 2000) {
 				messages.push({text: tool_message.slice(0, 2000), type: 'tool'});
@@ -165,7 +165,6 @@ const handleEvents = (
 				error = true;
 			}
 		}
-
 
 		idx += 1;
 	}

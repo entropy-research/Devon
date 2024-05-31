@@ -16,17 +16,25 @@
 https://github.com/entropy-research/Devon/assets/61808204/d42a8b9a-0211-4624-9804-d24df1d4dbf6
 </div>
 
+### How do y'all ship so quickly?
+<a href="https://discord.gg/p5YpZ5vjd9"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=for-the-badge" alt="Join our Discord community"></a> 
+← We have a __**community-driven Dev Team**__ for this repo. Come join us! It's great.
+  
 # Installation
 
 ## Prerequisites
 
 1. `node.js` and `npm`
 2. `pipx`, if you don't have this go [here](https://pipx.pypa.io/stable/installation/)
-3. [**Anthropic**](https://console.anthropic.com/settings/keys) API Key
+3. API Key <samp>(just one is required)</samp>
+   - [**Anthropic**](https://console.anthropic.com/settings/keys)
+    - [**OpenAI**](https://platform.openai.com/api-keys)
+    - [**Groq**](https://console.groq.com/keys) (not released in package yet, run locally)
+> We're currently working on supporting Windows! (Let us know if you can help)
 
 ## Installation commands
 
-To use, simply run:
+To install, simply run:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/entropy-research/Devon/main/install.sh | bash
@@ -45,13 +53,21 @@ This installs the Python backend, and the cli command to run the tool
 ### Thats it! Happy building :)
 
 
-# Usage
+# Running the agent
 Navigate to your project folder and open the terminal.
 
-Set your Anthropic API key as an environment variable:
+Set your Anthropic API or OpenAI API key as an environment variable:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+#OR
+
+export OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+#OR
+
+export GROQ_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 Then to *run*, the command is:
@@ -64,6 +80,50 @@ It's as easy as that.
 > [!NOTE]
 > Don't worry, the agent will be able to only access files and folders in the directory you started it from. You can also correct it while it's performing actions.
 
+---
+
+To run in *debug* mode, the command is:
+```bash
+devon --debug
+```
+
+---
+
+To run in *local* mode:
+> [!WARNING]
+> The current version of local model support is not mature, proceed with caution, and expect the performance to degrade significantly compared to the other options.
+
+1. Get deepseek running with [ollama](https://ollama.com/library/deepseek-coder:6.7b)
+
+2. Start the local ollama server by running
+```
+ollama run deepseek-coder:6.7b
+```
+
+4. Then configure devon to use the model
+```bash
+devon configure
+
+Configuring Devon CLI...
+? Select the model name: 
+  claude-opus 
+  gpt4-o 
+  llama-3-70b 
+❯ ollama/deepseek-coder:6.7b
+```
+
+4. And finally, run it with:
+```
+devon --api_key=FOSS
+```
+
+---
+
+For a list of all commands available:
+```bash
+devon --help
+```
+
 # Features
 - Multi-file editing
 - Codebase exploration
@@ -71,18 +131,24 @@ It's as easy as that.
 - Test writing
 - Bug fixing
 - Architecture exploration
+- Local Model Support
 
 ### Limitations
 - Minimal functionality for non-Python languages
 - Sometimes have to specify the file where you want the change to happen
+- Local mode is not good right now. Please try to avoid using it.
 
 # Progress
-
 
 ### This project is still super early and <ins>we would love your help</ins> to make it great!
 
 ### Current goals
 - Multi-model support
+  - [x] Claude 3 Opus
+  - [x] GPT4-o
+  - [x] Groq llama3-70b
+  - [x] Ollama deepseek-6.7b
+  - [ ] Google Gemini 1.5 Pro
 - Launch plugin system for tool and agent builders
 - Create self-hostable Electron app
 - Set SOTA on [SWE-bench Lite](https://www.swebench.com/lite.html)
@@ -98,6 +164,7 @@ It's as easy as that.
 
 ### Past milestones
 
+- [x] **May 19, 2024** - GPT4o support + better interface support v0.1.7
 - [x] **May 10, 2024** - Complete interactive agent v0.1.0
 - [x] **May 10, 2024** - Add steerability features
 - [x] **May 8, 2024** - Beat AutoCodeRover on SWE-Bench Lite
@@ -129,8 +196,7 @@ From tackling issues to building features to creating datasets, there are many w
 
 For details, please check [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-If you would like to contribute to the project, please fill out our [Contribution Form](https://forms.gle/VU7RN7mwNvqEYe3B9)
-
+If you would like to contribute to the project, please join the discord: [Discord](https://discord.gg/p5YpZ5vjd9)
 
 # Feedback
 
@@ -151,4 +217,4 @@ Join our Discord server and say hi!
 
 # License
 
-Distributed under the Apache 2.0 License. See [`LICENSE`](./LICENSE) for more information.
+Distributed under the AGPL License. See [`LICENSE`](./LICENSE) for more information.

@@ -1,6 +1,6 @@
 {
 	"name": "devon-tui",
-	"version": "0.0.9",
+	"version": "0.0.12",
 	"license": "Apache-2.0",
 	"bin": {
 		"devon": "dist/cli.js"
@@ -20,16 +20,22 @@
 		"dist"
 	],
 	"dependencies": {
+		"@types/eventsource": "^1.1.15",
+		"@xstate/react": "^4.1.1",
 		"axios": "^1.6.8",
+		"eventsource": "^2.0.2",
 		"ink": "^4.1.0",
 		"ink-spinner": "^5.0.0",
 		"ink-text-input": "^5.0.1",
+		"inquirer": "^9.2.22",
 		"meow": "^11.0.0",
 		"portfinder": "^1.0.32",
-		"react": "^18.2.0"
+		"react": "^18.2.0",
+		"xstate": "^5.13.0"
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^3.0.1",
+		"@types/inquirer": "^9.0.7",
 		"@types/jest": "^29.5.12",
 		"@types/react": "^18.0.32",
 		"@vdemedes/prettier-config": "^2.0.1",

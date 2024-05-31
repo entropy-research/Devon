@@ -1,11 +1,19 @@
 import asyncio
+from contextlib import asynccontextmanager
 import json
 import os
 from time import sleep
-from typing import Dict, List
+import time
+from typing import Any, Dict, List
 
 import fastapi
-from devon_agent.agent import TaskAgent
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
+import json
+from contextlib import asynccontextmanager
+from devon_agent.agents.default.agent import TaskAgent
+from devon_agent.models import ENGINE, Base, init_db, load_data
 from devon_agent.session import (
     Event,
     Session,
@@ -36,24 +44,6 @@ origins = [
 
 sessions: Dict[str, Session] = {}
 
-
-API_KEY = None
-
-
-app = fastapi.FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-session_buffers: Dict[str, str] = {}
-running_sessions: List[str] = []
-
-
 def get_user_input(session: str):
     if session not in session_buffers:
         while True:
@@ -71,6 +61,37 @@ def get_user_input(session: str):
         del session_buffers[session]
         return result
 
+@asynccontextmanager
+async def lifespan(app: fastapi.FastAPI):
+
+    #Hacky but it works
+    global sessions
+
+    await init_db()
+
+    AsyncSessionLocal = sessionmaker(bind=ENGINE, class_=AsyncSession, expire_on_commit=False)
+    async with AsyncSessionLocal() as db_session:
+        app.db_session = db_session
+        data = await load_data(db_session)
+        data = { k:Session.from_dict(v, lambda: get_user_input(k), config=app.config) for (k,v) in data.items()} 
+        sessions = data
+        yield
+
+
+app = fastapi.FastAPI(
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+session_buffers: Dict[str, str] = {}
+running_sessions: List[str] = []
 
 @app.get("/")
 def read_root():
@@ -87,21 +108,45 @@ def create_session(session: str, path: str):
     if not os.path.exists(path):
         raise fastapi.HTTPException(status_code=404, detail="Path not found")
 
-    agent = TaskAgent(
-        name="Devon",
-        model="claude-opus",
-        temperature=0.0,
-        api_key=API_KEY,
-    )
-    sessions[session] = Session(
-        SessionArguments(
-            path,
-            environment="local",
-            user_input=lambda: get_user_input(session),
-            name=session,
-        ),
-        agent,
-    )
+    if not app.api_base:
+        agent = TaskAgent(
+            name="Devon",
+            model=app.model,
+            temperature=0.0,
+            api_key=app.api_key,
+            prompt_type=app.prompt_type,
+        )
+
+    else:
+        agent = TaskAgent(
+            name="Devon",
+            model=app.model,
+            temperature=0.0,
+            api_key=app.api_key,
+            api_base=app.api_base,
+            prompt_type=app.prompt_type,
+        )
+
+    if session not in sessions:
+        sessions[session] = Session(
+            SessionArguments(
+                path,
+                user_input=lambda: get_user_input(session),
+                name=session,
+                config=app.config
+            ),
+            agent,
+        )
+
+    return session
+
+
+@app.post("/session/{session}/reset")
+def reset_session(session: str):
+    global sessions
+
+    if session in sessions:
+        del sessions[session]
 
     return session
 
@@ -115,15 +160,26 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
         raise fastapi.HTTPException(status_code=304, detail="Session already running")
 
     sessions[session].enter()
-    sessions[session].event_log.append(
-        Event(
-            type="Task",
-            content="ask user for what to do",
-            producer="system",
-            consumer="devon",
+    if len(sessions[session].event_log) == 0 or sessions[session].task == None:
+        sessions[session].event_log.append(
+            Event(
+                type="Task",
+                content="ask user for what to do",
+                producer="system",
+                consumer="devon",
+            )
         )
-    )
-    background_tasks.add_task(sessions[session].step_event)
+    else:
+        sessions[session].event_log.append(
+            Event(
+                type="ModelRequest",
+                content="Your interaction with the user was paused, please resume.",
+                producer="system",
+                consumer="devon",
+            )
+        )
+
+    background_tasks.add_task(sessions[session].run_event_loop)
     running_sessions.append(session)
     return session
 
@@ -167,7 +223,6 @@ def continue_session(session: str):
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    print(session_obj.state)
     return session_obj.state.to_dict()
 
 
@@ -177,6 +232,19 @@ def delete_session(session: str):
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
     del sessions[session]
     return session
+
+class ServerEvent(BaseModel):
+    type: str  # types: ModelResponse, ToolResponse, UserRequest, Interrupt, Stop
+    content: Any
+    producer: str | None
+    consumer: str | None
+
+@app.post("/session/{session}/event")
+def create_event(session: str, event: ServerEvent):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    sessions[session].event_log.append(event.model_dump())
+    return event
 
 
 @app.get("/session/{session}/events")
@@ -195,12 +263,12 @@ async def read_events_stream(session: str):
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
 
     async def event_generator():
-        initial_index = session_obj.event_index
+        initial_index = len(session_obj.event_log)
         while True:
-            current_index = session_obj.event_index
+            current_index = len(session_obj.event_log)
             if current_index > initial_index:
                 for event in session_obj.event_log[initial_index:current_index]:
-                    yield json.dumps(event) + "\n"
+                    yield f"data: {json.dumps(event)}\n\n"
                 initial_index = current_index
             else:
                 await asyncio.sleep(0.1)  # Sleep to prevent busy waiting
@@ -220,12 +288,18 @@ if __name__ == "__main__":
         except ValueError:
             print("Warning: Invalid port number provided. Using default port 8000.")
 
-        try:
-            API_KEY = sys.argv[2]
-        except IndexError:
-            if os.environ.get("ANTHROPIC_API_KEY"):
-                api_key = os.environ.get("ANTHROPIC_API_KEY")
-            else:
-                raise ValueError("API key not provided.")
+        if os.environ.get("OPENAI_API_KEY"):
+            app.api_key = os.environ.get("OPENAI_API_KEY")
+            app.model = "gpt4-o"
+            app.prompt_type = "openai"
+        elif os.environ.get("ANTHROPIC_API_KEY"):
+            app.api_key = os.environ.get("ANTHROPIC_API_KEY")
+            app.model = "claude-opus"
+            app.prompt_type = "anthropic"
+        else:
+            raise ValueError("API key not provided.")
+
+        if os.environ.get("DEVON_MODEL"):
+            app.model = os.environ.get("DEVON_MODEL")
 
     uvicorn.run(app, host="0.0.0.0", port=port)
