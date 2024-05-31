@@ -4,6 +4,7 @@ import { useMachine } from '@xstate/react';
 import { sessionMachine } from './sm';
 import axios from 'axios';
 import { vscode } from './vscode';
+import {v4} from 'uuid';
 
 const giveUserResponse = async (res: string) => {
   try {
@@ -34,10 +35,10 @@ const ChatWindow: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [state] = useMachine(sessionMachine, {
     input: {
-      host: 'http://localhost:8080',
-      name: 'cli',
+      host: 'http://0.0.0.0:8080',
+      name: v4(),
       path: "/",
-      reset: false,
+      reset: true,
     },
   });
 

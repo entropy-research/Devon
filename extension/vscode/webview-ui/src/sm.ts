@@ -292,6 +292,7 @@ export const sessionMachine = setup({
 
 
                 const encodedPath = encodeURIComponent(input?.path);
+                console.log(`${input?.host}/session?session=${input?.name}&path=${encodedPath}`)
                 const response = await axios.post(
                     `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
                 );

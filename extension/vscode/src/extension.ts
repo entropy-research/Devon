@@ -13,7 +13,9 @@ export function activate(context: vscode.ExtensionContext) {
   // Create a sidebar view
   const sidebarProvider = new ChatViewProvider(context.extensionUri, startServer, configureExtension);
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(ChatViewProvider.viewType, sidebarProvider)
+    vscode.window.registerWebviewViewProvider(ChatViewProvider.viewType, sidebarProvider,{
+      webviewOptions: {
+    }})
   );
 
   // Add commands to the extension context
@@ -28,14 +30,14 @@ async function startServer() {
   const apiBase = config.get('apiBase') as string;
   const promptType = config.get('promptType') as string;
 
-  console.log("Starting server")
+  console.log("Starting server");
 
   // Find an available port
   // const port = await portfinder.getPortPromise();
 
-  const port = 8080
+  const port = 8080;
 
-  console.log("Port: ", port)
+  console.log("Port: ", port);
   // Spawn the server process
   try {
     const serverProcess = childProcess.spawn(
@@ -58,16 +60,16 @@ async function startServer() {
       }
     );
 
-    console.log(serverProcess.pid)
-    console.log(serverProcess.connected)
+    console.log(serverProcess.pid);
+    console.log(serverProcess.connected);
     // Handle server process output and errors
     serverProcess.stdout.on('data', (data: Buffer) => {
-      console.log(data.toString())
+      console.log(data.toString());
       // vscode.window.showInformationMessage(`Server output: ${data.toString()}`);
     });
 
     serverProcess.stderr.on('data', (data: Buffer) => {
-      console.log(data.toString())
+      console.log(data.toString());
       // vscode.window.showErrorMessage(`Server error: ${data.toString()}`);
     });
   } catch (error: any) {
@@ -75,7 +77,7 @@ async function startServer() {
     vscode.window.showErrorMessage(`Failed to start the server: ${error.message}`);
   }
 
-  console.log("Spawned server")
+  console.log("Spawned server");
 }
 
 function configureExtension() {

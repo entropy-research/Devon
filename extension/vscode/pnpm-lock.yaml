@@ -18,6 +18,9 @@ importers:
       '@types/node':
         specifier: ^12.11.7
         version: 12.20.55
+      '@types/uuid':
+        specifier: ^9.0.8
+        version: 9.0.8
       '@types/vscode':
         specifier: ^1.46.0
         version: 1.89.0
@@ -94,6 +97,9 @@ packages:
 
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
+
+  '@types/uuid@9.0.8':
+    resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
 
   '@types/vscode@1.89.0':
     resolution: {integrity: sha512-TMfGKLSVxfGfoO8JfIE/neZqv7QLwS4nwPwL/NwMvxtAY2230H2I4Z5xx6836pmJvMAzqooRQ4pmLm7RUicP3A==}
@@ -821,6 +827,8 @@ snapshots:
   '@types/minimatch@5.1.2': {}
 
   '@types/node@12.20.55': {}
+
+  '@types/uuid@9.0.8': {}
 
   '@types/vscode@1.89.0': {}
 
