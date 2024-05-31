@@ -113,7 +113,7 @@ class Session:
         self.global_config = {}
         self.excludes = self.global_config.get("excludes", [])
         self.status = "created"
-
+        self.state.task = None
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
             "create_file" : CreateFileTool().register_post_hook(save_create_file),
