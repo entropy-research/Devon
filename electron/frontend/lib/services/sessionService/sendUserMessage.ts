@@ -17,7 +17,6 @@ export const useCreateResponse = () => {
             const result = await axios.post(
                 `${backendUrl}/session/${encodeURIComponent(sessionId)}/response?response=${encodeURIComponent(response)}`
             )
-            console.log("SENDING RESPONSE", result)
             setResponseData(result.data)
             return result.data
         } catch (error) {

@@ -1,5 +1,4 @@
 import Editor, { Monaco } from '@monaco-editor/react'
-// import { useSelector } from "react-redux";
 import type { editor } from 'monaco-editor'
 import { DiffEditor } from '@monaco-editor/react'
 import FileTabs from '@/components/file-tabs/file-tabs'
@@ -20,8 +19,6 @@ export default function CodeEditor({
     const chatId = searchParams.get('chat')
     const {
         files,
-        file,
-        setFile,
         selectedFileId,
         setSelectedFileId,
         diffEnabled,
@@ -50,19 +47,21 @@ export default function CodeEditor({
                 <FileTabs
                     files={files}
                     selectedFileId={selectedFileId ?? files[0]?.id}
-                    updateSelectedFile={updateSelectedFile}
+                    setSelectedFileId={setSelectedFileId}
                     diffEnabled={diffEnabled}
                     setDiffEnabled={setDiffEnabled}
                     chatId={chatId}
                     className={showEditorBorders ? '' : 'mr-[13px]'}
                     isExpandedVariant={isExpandedVariant}
                 />
-                {files && <PathDisplay />}
+                {files.length > 0 && (
+                    <PathDisplay path={'/Users/devon/projects/hello_world'} />
+                )}
                 <div className="w-full bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
-                    {file && (
+                    {selectedFileId && (
                         <BothEditorTypes
                             diffEnabled={diffEnabled}
-                            file={file}
+                            file={files?.find(f => f.id === selectedFileId)}
                             handleEditorDidMount={handleEditorDidMount}
                         />
                     )}
@@ -79,11 +78,6 @@ export default function CodeEditor({
     //     )
     // }
 
-    function updateSelectedFile(file: any) {
-        setFile(file)
-        setSelectedFileId(file.id)
-    }
-
     const bgColor = getComputedStyle(document.documentElement)
         .getPropertyValue('--bg-workspace')
         .trim()
@@ -93,7 +87,7 @@ export default function CodeEditor({
             <div className="w-full bg-workspace rounded-b-lg overflow-hidden">
                 <BothEditorTypes
                     diffEnabled={diffEnabled}
-                    file={file}
+                    file={files?.find(f => f.id === selectedFileId)}
                     handleEditorDidMount={handleEditorDidMount}
                 />
             </div>
@@ -105,7 +99,7 @@ export default function CodeEditor({
             <FileTabs
                 files={files}
                 selectedFileId={selectedFileId}
-                updateSelectedFile={updateSelectedFile}
+                setSelectedFileId={setSelectedFileId}
                 diffEnabled={diffEnabled}
                 setDiffEnabled={setDiffEnabled}
                 chatId={chatId}
@@ -114,10 +108,10 @@ export default function CodeEditor({
             />
             {files && <PathDisplay path={path} />}
             <div className="flex w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
-                {file && (
+                {selectedFileId && (
                     <BothEditorTypes
                         diffEnabled={diffEnabled}
-                        file={file}
+                        file={files?.find(f => f.id === selectedFileId)}
                         handleEditorDidMount={handleEditorDidMount}
                     />
                 )}

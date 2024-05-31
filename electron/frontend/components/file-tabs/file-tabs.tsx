@@ -12,7 +12,7 @@ import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/
 const FileTabs = ({
     files,
     selectedFileId,
-    updateSelectedFile,
+    setSelectedFileId,
     diffEnabled,
     setDiffEnabled,
     chatId,
@@ -21,7 +21,7 @@ const FileTabs = ({
 }: {
     files: any[]
     selectedFileId: string
-    updateSelectedFile: (file: any) => void
+    setSelectedFileId: (id: string) => void
     diffEnabled: boolean
     setDiffEnabled: (value: boolean) => void
     chatId: string | null
@@ -37,13 +37,13 @@ const FileTabs = ({
                     <button
                         key={file.id}
                         className={`flex px-2 justify-center items-center px-1 py-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === selectedFileId ? 'border-t-primary rounded-t-sm bg-night' : 'border-transparent'}`}
-                        onClick={() => updateSelectedFile(file)}
+                        onClick={() => setSelectedFileId(file.id)}
                     >
                         {file.name}
                     </button>
                 ))}
             </div>
-            <div className="flex pr-3 h-full gap-2 items-center pb-1">
+            {/* <div className="flex pr-3 h-full gap-2 items-center pb-1">
                 {!isExpandedVariant && (
                     <ActionItem
                         active={false}
@@ -67,7 +67,7 @@ const FileTabs = ({
                     }
                     clickAction={() => setDiffEnabled(!diffEnabled)}
                 />
-            </div>
+            </div> */}
         </div>
     )
 }

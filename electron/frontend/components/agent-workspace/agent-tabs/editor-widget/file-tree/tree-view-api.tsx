@@ -76,7 +76,7 @@ const Tree = forwardRef<HTMLDivElement, TreeViewProps>(
         },
         ref
     ) => {
-        const { files, selectedFileId, setSelectedFileId, setFile } =
+        const { files, selectedFileId, setSelectedFileId } =
             useCodeEditorState()
 
         const [expendedItems, setExpendedItems] = useState<
@@ -103,12 +103,8 @@ const Tree = forwardRef<HTMLDivElement, TreeViewProps>(
                     return undefined
                 }
                 setSelectedFileId(id)
-                const file = findFileById(files, id)
-                if (file) {
-                    setFile(file)
-                }
             },
-            [files, setFile, setSelectedFileId]
+            [files, setSelectedFileId]
         )
 
         const handleExpand = useCallback((id: string) => {

@@ -1,44 +1,41 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import useSessionFiles from '@/lib/services/sessionService/useSessionFiles'
+import { File } from '@/lib/types'
 
-const CodeEditorContext = createContext({
+const context: {
+    files: File[]
+    selectedFileId: string
+    setSelectedFileId: (value: string) => void
+    diffEnabled: boolean
+    setDiffEnabled: (value: boolean) => void
+} = {
     files: [],
-    file: null,
-    setFile: value => {},
-    selectedFileId: null,
+    selectedFileId: '',
     setSelectedFileId: value => {},
     diffEnabled: false,
     setDiffEnabled: value => {},
-})
+}
 
-export const CodeEditorContextProvider = ({ children, tabFiles }) => {
-    // const [files, setFiles] = useState(tabFiles)
-    const [file, setFile] = useState(tabFiles.length > 0 ? tabFiles[0] : null)
-    const [selectedFileId, setSelectedFileId] = useState(
-        tabFiles.length > 0 ? tabFiles[0].id : null
-    )
+const CodeEditorContext = createContext(context)
+
+export const CodeEditorContextProvider = ({ children, chatId }) => {
+    const { files, selectedFileId, setSelectedFileId } = useSessionFiles(chatId)
     const [diffEnabled, setDiffEnabled] = useState(false)
 
     useEffect(() => {
-        if (tabFiles.length === 0) {
-            setFile(null)
-            setSelectedFileId(null)
+        if (files.length === 0) {
+            setSelectedFileId('')
             return
         }
-        // setFiles(tabFiles)
-        if (!file) {
-            setFile(tabFiles[0])
+        if (!selectedFileId && files.length > 0) {
+            setSelectedFileId(files[0].id)
         }
-        if (!selectedFileId && tabFiles.length > 0) {
-            setSelectedFileId(tabFiles[0].id)
-        }
-    }, [file, selectedFileId, tabFiles])
+    }, [selectedFileId, files])
 
     return (
         <CodeEditorContext.Provider
             value={{
-                files: tabFiles,
-                file,
-                setFile,
+                files,
                 selectedFileId,
                 setSelectedFileId,
                 diffEnabled,

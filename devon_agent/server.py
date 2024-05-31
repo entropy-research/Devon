@@ -161,7 +161,7 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
         # raise fastapi.HTTPException(status_code=304, detail="Session already running")
 
     sessions[session].enter()
-    if len(sessions[session].event_log) == 0 or sessions[session].task == None:
+    if len(sessions[session].event_log) == 0 or sessions[session].state.task == None:
         sessions[session].event_log.append(
             Event(
                 type="Task",

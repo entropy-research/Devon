@@ -66,7 +66,6 @@ export default function ChatMessagesAndInput({
 
     const eventState = SessionMachineContext.useSelector((state) => state.context.serverEventContext);
 
-    // const eventState = state.context.serverEventContext;
     let messages = eventState.messages;
 
 	if (!state.matches('running')) {
@@ -77,10 +76,7 @@ export default function ChatMessagesAndInput({
 		status = 'Type your message:';
 	} else {
 		status = 'Interrupt:';
-	}
-
-    console.log(state.value,state.context.retryCount)
-    console.log(state.context)
+    }
 
     // useEffect(() => {
     //     missingKeys?.map(key => {
@@ -89,7 +85,6 @@ export default function ChatMessagesAndInput({
     //         })
     //     })
     // }, [toast, missingKeys])
-    console.log(messages)
 
     return (
         <div
