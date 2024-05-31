@@ -133,13 +133,13 @@ class Session:
         self.default_environment = local_environment
 
         if args.headless:
-            self.task = args.headless
+            self.state.task = args.headless
 
             self.environments = {
                 "local" : local_environment
             }
         else:
-            self.task = args.task
+            self.state.task = args.task
             user_environment = UserEnvironment(args.user_input)
             user_environment.register_tools({
                 "ask_user" : AskUserTool(),
@@ -157,7 +157,7 @@ class Session:
 
     def to_dict(self):
         return {
-            "task": self.task,
+            "task": self.state.task,
             "path": self.path,
             "name": self.name,
             "config": self.global_config,
@@ -203,8 +203,8 @@ class Session:
         return instance
 
     def get_last_task(self):
-        if self.task:
-            return self.task
+        if self.state.task:
+            return self.state.task
         return "Task unspecified ask user to specify task"
     
     def run_event_loop(self):

@@ -103,5 +103,5 @@ class SetTaskTool(Tool):
         signature: set_task
         example: `set_task`
         """
-        context["session"].task = context["environment"].execute(input="what is my next task?")
-        return context["session"].task
+        context["session"].state.task = context["environment"].execute(input="what is my next task?")
+        return context["session"].state.task
