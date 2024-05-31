@@ -6,6 +6,10 @@ import axios from 'axios';
 import { vscode } from './vscode';
 import {v4} from 'uuid';
 
+const HEADERS = {
+  "Access-Control-Allow-Origin": "*"
+}
+
 const giveUserResponse = async (res: string) => {
   try {
     const response = await axios.post(`http://localhost:8080/session/cli/response?response=${res}`);
@@ -35,7 +39,7 @@ const ChatWindow: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [state] = useMachine(sessionMachine, {
     input: {
-      host: 'http://0.0.0.0:8080',
+      host: 'http://localhost:8080',
       name: v4(),
       path: "/",
       reset: true,
