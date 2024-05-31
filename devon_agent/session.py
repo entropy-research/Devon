@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import create_engine, text
-from devon_agent.agents.default.agent import TaskAgent
+from devon_agent.agents.default.agent import AgentArguments, TaskAgent
 from devon_agent.environment import EnvironmentModule, LocalEnvironment, UserEnvironment
 from devon_agent.models import _save_data, _save_session_util, get_async_session, save_data
 from devon_agent.telemetry import Posthog, SessionEventEvent, SessionStartEvent
@@ -110,7 +110,7 @@ class Session:
         self.name = args.name
         self.agent_branch = "devon_agent_" + self.name
         self.global_config = args.config
-        self.excludes = self.global_config.get("excludes", [])
+        # self.excludes = self.global_config.get("excludes", [])
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
@@ -165,7 +165,7 @@ class Session:
             "cwd": self.environments["local"].get_cwd(),
             "agent": {
                 "name": self.agent.name,
-                "model": self.agent.model,
+                "config": self.agent.args.model_dump_json(),
                 "temperature": self.agent.temperature,
                 "chat_history": self.agent.chat_history,
             },
@@ -185,7 +185,7 @@ class Session:
             ),
             agent=TaskAgent(
                 name=data["agent"]["name"],
-                model=config["modelName"],
+                args=AgentArguments(**data["agent"]["config"]),
                 temperature=data["agent"]["temperature"],
                 chat_history=data["agent"]["chat_history"],
             )

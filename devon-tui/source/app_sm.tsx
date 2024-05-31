@@ -4,7 +4,7 @@ import TextInput from 'ink-text-input';
 import axios from 'axios';
 import Spinner from 'ink-spinner';
 import {useMachine, } from '@xstate/react';
-import { sessionMachine} from './sm.js';
+import { sessionMachine, AgentConfig} from './sm.js';
 
 
 const giveUserReponse = async (port: number, res: string) => {
@@ -38,7 +38,7 @@ const sendSessionEvent = async (port: number, event: SessionEvent) => {
 	}
 };
 
-export const App = ({port, reset}: {port: number; reset: boolean}) => {
+export const App = ({port, reset, agentConfig}: {port: number; reset: boolean; agentConfig: AgentConfig}) => {
 	const [inputValue, setInputValue] = useState('');
 	// const [userRequested, setUserRequested] = useState(false);
 	// const [started, setStarted] = useState(false);
@@ -48,6 +48,7 @@ export const App = ({port, reset}: {port: number; reset: boolean}) => {
 			name: 'cli',
 			path: process.cwd(),
 			reset: reset,
+			agentConfig
 		},
 	});
 	let status = '';

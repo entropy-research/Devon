@@ -3,7 +3,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 import traceback
-from typing import Optional, Tuple
+from typing import Optional, Tuple, TypedDict
 
 from devon_agent.agents.model import AnthropicModel, GroqModel, ModelArguments, OllamaModel, OpenAiModel
 from devon_agent.agents.default.anthropic_prompts import anthropic_history_to_bash_history, anthropic_last_user_prompt_template_v3, anthropic_system_prompt_template_v3, anthropic_commands_to_command_docs
@@ -13,7 +13,7 @@ from devon_agent.agents.default.anthropic_prompts import (
 )
 from devon_agent.agents.default.llama3_prompts import llama3_commands_to_command_docs, llama3_history_to_bash_history, llama3_last_user_prompt_template_v1, llama3_parse_response, llama3_system_prompt_template_v1
 from devon_agent.agents.default.codegemma_prompts import llama3_7b_commands_to_command_docs, llama3_7b_history_to_bash_history, llama3_7b_last_user_prompt_template_v1, llama3_7b_parse_response, llama3_7b_system_prompt_template_v1
-
+from pydantic import BaseModel
 from devon_agent.tools.utils import get_cwd
 
 from devon_agent.udiff import Hallucination
@@ -28,26 +28,34 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(LOGGER_NAME)
 
+class AgentArguments(BaseModel):
+    model: str
+    api_key: Optional[str] = None
+    api_base: Optional[str] = None
+    prompt_type: Optional[str] = None
+    # temperature: float = 0.0
 
 @dataclass(frozen=False)
 class Agent:
     name: str
-    model: str
-    temperature: float = 0.0
+    args: AgentArguments
     chat_history: list[dict[str, str]] = field(default_factory=list)
     interrupt: str = ""
-    api_key: Optional[str] = None
-    api_base: Optional[str] = None
-    prompt_type: Optional[str] = None
-    scratchpad = None
+    temperature: float = 0.0
 
     def run(self, session: "Session", observation: str = None): ...
 
-
+@dataclass
 class TaskAgent(Agent):
+    scratchpad: str = None
+    
     default_models = {
         "gpt4-o": OpenAiModel,
         "claude-opus": AnthropicModel,
+        "claude-haiku": AnthropicModel,
+        "claude-sonnet": AnthropicModel,
+        "gpt4": OpenAiModel,
+        "gpt4-turbo": OpenAiModel,
         "llama-3-70b": GroqModel,
         "ollama/deepseek-coder:6.7b": OllamaModel
     }
@@ -56,7 +64,19 @@ class TaskAgent(Agent):
         "gpt4-o": {
             "prompt_type": "openai",
         },
+        "gpt4-turbo": {
+            "prompt_type": "openai",
+        },
+        "gpt4-0125-preview": {
+            "prompt_type": "openai",
+        },
         "claude-opus": {
+            "prompt_type": "anthropic",
+        },
+        "claude-haiku": {
+            "prompt_type": "anthropic",
+        },
+        "claude-sonnet": {
             "prompt_type": "anthropic",
         },
         "llama-3-70b": {
@@ -68,31 +88,31 @@ class TaskAgent(Agent):
     }
 
     def _initialize_model(self):
-        is_custom_model = self.model not in self.default_models
+        is_custom_model = self.args.model not in self.default_models
         if is_custom_model:
-            if not self.api_key:
+            if not self.args.api_key:
                 raise Exception("API key not specified for custom model")
-            if not self.api_base:
+            if not self.args.api_base:
                 raise Exception("API base not specified for custom model")
-            if not self.prompt_type:
+            if not self.args.prompt_type:
                 raise Exception("Prompt type not specified for custom model")
             
             # Assume it is openai-compatible
             return OpenAiModel(
                 args=ModelArguments(
-                    model_name=self.model,
-                    temperature=self.temperature,
-                    api_key=self.api_key,
-                    api_base=self.api_base,
-                    prompt_type=self.prompt_type
+                    model_name=self.args.model,
+                    temperature=self.args.temperature,
+                    api_key=self.args.api_key,
+                    api_base=self.args.api_base,
+                    prompt_type=self.args.prompt_type
                 )
             )
 
-        return self.default_models[self.model](
+        return self.default_models[self.args.model](
                 args=ModelArguments(
-                    model_name=self.model,
-                    temperature=self.temperature,
-                    api_key=self.api_key,
+                    model_name=self.args.model,
+                    temperature=self.args.temperature,
+                    api_key=self.args.api_key,
                 )
             )
 
@@ -265,10 +285,10 @@ class TaskAgent(Agent):
                 "ollama": self._prepare_ollama
             }
 
-            if not self.prompt_type:
-                self.prompt_type = self.default_model_configs[self.model]["prompt_type"]
+            if not self.args.prompt_type:
+                self.args.prompt_type = self.default_model_configs[self.args.model]["prompt_type"]
 
-            messages, system_prompt = prompts[self.prompt_type](task, editor, session)
+            messages, system_prompt = prompts[self.args.prompt_type](task, editor, session)
   
             output = self.current_model.query(messages, system_message=system_prompt)
 

@@ -30,21 +30,15 @@ import EventSource from 'eventsource';
 // - state machine stuff should not support "persistence" directly, events should be loaded
 // - allow branching (need to figure this out)
 
-// Session Machine States
-// - initial
-// - createOrLoadSession
-// - create session
-// - retryCreateSession
-// - sessionCreated
-// - loadSession
-// - sessionReady
-// - loadEvents
-// - startEventListener
-// - startSession
-// - retryStartSession
-// - SessionRunning
-// - SessionEnded
-// - SendEventSession
+
+
+
+export type AgentConfig = {
+    api_key: string;
+    model: string;
+    prompt_type: string | undefined;
+    api_base: string | undefined;
+}
 
 
 type Message = {
@@ -266,12 +260,14 @@ export const sessionMachine = setup({
             path: string;
             reset: boolean;
             serverEventContext: ServerEventContext;
+            agentConfig: AgentConfig;
         },
         input: {} as {
             reset: boolean;
             host: string;
             name: string;
             path: string;
+            agentConfig: AgentConfig;
         },
     },
 
@@ -282,7 +278,7 @@ export const sessionMachine = setup({
             async ({
                 input,
             }: {
-                input: { host: string; name: string; path: string; reset: boolean };
+                input: { host: string; name: string; path: string; reset: boolean, agentConfig: AgentConfig };
             }) => {
                 console.log("starting server")
                 // sleep for 5 sec
@@ -294,8 +290,15 @@ export const sessionMachine = setup({
 
 
                 const encodedPath = encodeURIComponent(input?.path);
+                console.log(
+                    "config",
+                    input.agentConfig
+                )
                 const response = await axios.post(
                     `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
+                    {
+                        ...input.agentConfig
+                    }
                 );
                 return response;
             },
@@ -376,7 +379,8 @@ export const sessionMachine = setup({
                 base_commit: null,
                 commits: [],
             },
-        }
+        },
+        agentConfig: input.agentConfig
     }),
 
 
@@ -398,11 +402,12 @@ export const sessionMachine = setup({
             invoke: {
                 id: 'createSession',
                 src: 'createSession',
-                input: ({ context: { host, name, path, reset } }) => ({
+                input: ({ context: { host, name, path, reset, agentConfig } }) => ({
                     host,
                     name,
                     path,
                     reset,
+                    agentConfig
                 }),
                 onDone: {
                     target: 'sessionExists',
