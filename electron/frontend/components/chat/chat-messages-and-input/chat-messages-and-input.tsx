@@ -1,7 +1,6 @@
 'use client'
 import { useEffect } from 'react'
 import { Session } from '@/lib/chat.types'
-import { Message } from '@/lib/chat/chat.actions'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
 import { useToast } from '@/components/ui/use-toast'
 import ChatMessages from './messages/chat.messages'
@@ -14,6 +13,14 @@ import {
 import { fetchEvents } from '@/lib/services/stateMachineService/stateMachineService'
 import { useSearchParams } from 'next/navigation'
 
+type Message = {
+    role: 'user' | 'assistant' | 'system' | 'function' | 'data' | 'tool'
+    content: string
+    id: string
+    name?: string
+}
+
+// TODO: Get rid of / correct this type later. Was from old chat component
 export interface ChatProps extends React.ComponentProps<'div'> {
     initialMessages?: Message[]
     id?: string
