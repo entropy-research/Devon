@@ -9,7 +9,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Register commands
   const startCommand = vscode.commands.registerCommand('devon.start', startServer);
   const configureCommand = vscode.commands.registerCommand('devon.configure', configureExtension);
-
+  console.log('Congratulations, your extension "devon" is now active!');
   // Create a sidebar view
   const sidebarProvider = new ChatViewProvider(context.extensionUri, startServer, configureExtension);
   context.subscriptions.push(
@@ -35,6 +35,7 @@ async function startServer() {
 
   const port = 8080
 
+  console.log("Port: ", port)
   // Spawn the server process
   try {
     const serverProcess = childProcess.spawn(
@@ -47,10 +48,10 @@ async function startServer() {
         modelName,
         '--api_key',
         apiKey,
-        '--api_base',
-        apiBase,
-        '--prompt_type',
-        promptType,
+        // '--api_base',
+        // apiBase,
+        // '--prompt_type',
+        // promptType,
       ],
       {
         cwd: vscode.workspace.rootPath,
@@ -58,13 +59,16 @@ async function startServer() {
     );
 
     console.log(serverProcess.pid)
+    console.log(serverProcess.connected)
     // Handle server process output and errors
     serverProcess.stdout.on('data', (data: Buffer) => {
-      vscode.window.showInformationMessage(`Server output: ${data.toString()}`);
+      console.log(data.toString())
+      // vscode.window.showInformationMessage(`Server output: ${data.toString()}`);
     });
 
     serverProcess.stderr.on('data', (data: Buffer) => {
-      vscode.window.showErrorMessage(`Server error: ${data.toString()}`);
+      console.log(data.toString())
+      // vscode.window.showErrorMessage(`Server error: ${data.toString()}`);
     });
   } catch (error: any) {
     console.error('Error starting the server:', error);

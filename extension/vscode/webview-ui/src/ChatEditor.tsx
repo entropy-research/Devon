@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 // @ts-ignore
 import { EditorContent, useEditor } from '@tiptap/react';
 // @ts-ignore
@@ -7,9 +7,11 @@ import { vscode } from './vscode';
 
 interface ChatEditorProps {
   onSendMessage: (message: string) => void;
+  status: string;
+  eventState: any;
 }
 
-const ChatEditor: React.FC<ChatEditorProps> = ({ onSendMessage }) => {
+const ChatEditor: React.FC<ChatEditorProps> = ({ onSendMessage, status, eventState }) => {
   const editor = useEditor({
     extensions: [StarterKit],
     content: '',
@@ -26,15 +28,14 @@ const ChatEditor: React.FC<ChatEditorProps> = ({ onSendMessage }) => {
     editor?.commands.focus();
   }, [editor]);
 
-  useEffect(() => {
-    console.log("starting server")
-    
-  }, [])
-
   return (
     <div>
       <EditorContent editor={editor} />
-      <button onClick={() => vscode.postMessage({ command: 'startServer' })}>Send</button>
+      <div>
+        {status}
+        {/* {eventState.modelLoading ? <Spinner type="simpleDots" /> : <></>} */}
+      </div>
+      <button onClick={handleSendMessage}>Send</button>
     </div>
   );
 };
