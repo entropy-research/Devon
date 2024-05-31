@@ -213,7 +213,10 @@ def stop_session(session: str):
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_obj.event_log.append(Event(type="stop", content="stop"))
+    session_obj.event_log.append(Event(type="stop", content={
+        "type": "UserStopped",
+        "message": "User stopped session"
+    }))
     return session_obj
 
 

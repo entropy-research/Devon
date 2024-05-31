@@ -223,8 +223,10 @@ class Session:
 
             # self.telemetry_client.capture(telemetry_event)
 
-            if event["type"] == "Stop":
+            if event["type"] == "Stop" and event["content"]["type"] != "submit":
                 break
+            elif event["type"] == "Stop" and event["content"]["type"] == "submit":
+                self.state.task = "You have completed your task, ask user for revisions or a new one."
 
             events = self.step_event(event)
             self.event_log.extend(events)
@@ -241,7 +243,10 @@ class Session:
                 new_events.append(
                     {
                         "type": "Stop",
-                        "content": "Stopped task",
+                        "content": {
+                            "type" : "error",
+                            "message": event["content"]
+                        },
                         "producer": event["producer"],
                         "consumer": "user",
                     }
@@ -297,7 +302,10 @@ class Session:
                         new_events.append(
                             {
                                 "type": "Stop",
-                                "content": "Stopped task",
+                                "content": {
+                                    "type" : tool_name,
+                                    "message": " ".join(args)
+                                },
                                 "producer": event["producer"],
                                 "consumer": "user",
                             }
