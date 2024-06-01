@@ -22,15 +22,13 @@ export default function Landing() {
         }
     }, [hasAcceptedCheckbox, searchParams])
 
-
-    let [port, setPort] = useState<number>(NaN)
+    const [port, setPort] = useState<number>(NaN)
 
     useEffect(() => {
         window.api.send('get-port')
-        window.api.receive('get-port-response', (port) => {
+        window.api.receive('get-port-response', port => {
             setPort(port)
         })
-
     }, [])
 
     const [sessionMachineProps, setSessionMachineProps] = useState<{
@@ -39,12 +37,10 @@ export default function Landing() {
         path: string
     } | null>(null)
 
-
     let sessionName = searchParams.get('chat')
     const encodedPath = searchParams.get('path')
-    console.log(sessionName,encodedPath)
+    console.log(sessionName, encodedPath, sessionMachineProps)
     useEffect(() => {
-
         if (sessionName && encodedPath && port) {
             const stateMachineProps = {
                 port: port,
@@ -53,7 +49,7 @@ export default function Landing() {
             }
             setSessionMachineProps(stateMachineProps)
         }
-    }, [sessionName, encodedPath,port])
+    }, [sessionName, encodedPath, port])
 
     return (
         <>

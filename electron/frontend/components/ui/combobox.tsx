@@ -45,7 +45,7 @@ const Combobox = ({
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
-                    variant="outline"
+                    variant="outline-thin"
                     role="combobox"
                     aria-expanded={open}
                     className={`w-[200px] justify-between ${className}`}
