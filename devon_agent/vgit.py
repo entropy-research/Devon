@@ -36,21 +36,34 @@ Teardown
 """
 
 
+import fnmatch
 from devon_agent.environment import EnvironmentModule, LocalEnvironment
 import os
-def get_git_root(fpath=None):
-    path = fpath
 
-    if path is None:
-        path = os.getcwd()
+from devon_agent.tool import ToolContext
 
-    while True:
-        if os.path.exists(os.path.join(path, ".git")):
-            return path
-        parent_dir = os.path.dirname(path)
-        if parent_dir == path:
-            return fpath
-        path = parent_dir
+def get_git_root(ctx : ToolContext):
+    output,rc = ctx["environment"].execute("git rev-parse --show-toplevel")
+    if rc != 0:
+        raise Exception("Failed to get git root")
+    return output.strip()
+
+
+def find_gitignore_files(ctx : ToolContext):
+    gitignore_paths = []
+    git_root = get_git_root(ctx)
+
+    if git_root:
+        current_dir = ctx["environment"].execute("pwd")[0].strip()
+
+        while current_dir.startswith(git_root):
+            gitignore_path = os.path.join(current_dir, '.gitignore')
+            if os.path.isfile(gitignore_path):
+                gitignore_paths.append(gitignore_path)
+            current_dir = os.path.dirname(current_dir)
+
+    return gitignore_paths
+
 
 def get_or_create_repo(env : EnvironmentModule, repo_path):
     """

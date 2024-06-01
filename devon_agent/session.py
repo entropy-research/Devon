@@ -24,9 +24,10 @@ from devon_agent.tools.filetools import SearchFileTool
 from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
 from devon_agent.tools.shelltool import ShellTool
 from devon_agent.tools.usertools import AskUserTool, SetTaskTool
+from devon_agent.tools.utils import get_ignored_files
 
 from devon_agent.utils import DotDict, Event
-from devon_agent.vgit import  get_current_diff, get_last_commit, get_or_create_repo, make_new_branch, safely_revert_to_commit, stash_and_commit_changes, subtract_diffs
+from devon_agent.vgit import  find_gitignore_files, get_current_diff, get_last_commit, get_or_create_repo, make_new_branch, safely_revert_to_commit, stash_and_commit_changes, subtract_diffs
 
 
 @dataclass(frozen=False)
@@ -109,6 +110,7 @@ class Session:
         self.telemetry_client = Posthog()
         self.name = args.name
         self.agent_branch = "devon_agent_" + self.name
+        self.exclude_files = True
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
@@ -485,6 +487,23 @@ class Session:
                     "session" : self,
                     "state" : self.state,
                 })
+
+        if self.exclude_files:
+            # check if devonignore exists, use default env
+            devonignore_path = os.path.join(self.base_path, ".devonignore")
+            _,rc = self.default_environment.execute("test -f " + devonignore_path)
+            if rc == 0:
+                self.state.exclude_files = get_ignored_files(devonignore_path)
+            
+            else:
+                gitignore_files = find_gitignore_files({
+                    "environment" : self.default_environment,
+                    "session" : self,
+                    "state" : self.state,
+                })
+                if gitignore_files:
+                    for file in gitignore_files:
+                        self.state.exclude_files += get_ignored_files(file)
 
         self.event_log.append({
             "type": "GitEvent",

@@ -1,3 +1,4 @@
+import fnmatch
 import io
 import json
 import os
@@ -5,6 +6,34 @@ from pathlib import Path
 import tempfile
 
 from devon_agent.tool import ToolContext
+
+
+def get_ignored_files(gitignore_path):
+    ignored_files = []
+
+    # Read the .gitignore file
+    with open(gitignore_path, 'r') as file:
+        gitignore_patterns = file.read().splitlines()
+
+    # Iterate over all files and directories in the current directory
+    for root, dirs, files in os.walk('.'):
+        for pattern in gitignore_patterns:
+            # Ignore empty lines and comments in .gitignore
+            if pattern.strip() == '' or pattern.startswith('#'):
+                continue
+
+            # Match files against the pattern
+            for file in fnmatch.filter(files, pattern):
+                ignored_files.append(os.path.join(root, file))
+
+            # Match directories against the pattern
+            for dir in fnmatch.filter(dirs, pattern):
+                ignored_files.append(os.path.join(root, dir))
+
+    return ignored_files
+
+
+
 
 
 def normalize_path(path : str, specified_path : str):
@@ -37,7 +66,9 @@ def make_abs_path(ctx : ToolContext, fpath: str) -> str:
         str: The absolute path of the file.
     """
 
-    # TODO: exclude with .gitignore or .devinignore use python file matching stdlib to match file patterns
+    if ctx["session"].state.exclude_files:
+        if fpath in ctx["session"].state.exclude_files:
+            return "You are not allowed to change this file"
 
     return normalize_path(fpath, ctx["session"].base_path)
 
