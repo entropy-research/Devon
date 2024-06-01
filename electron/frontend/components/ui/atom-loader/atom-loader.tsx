@@ -12,7 +12,7 @@ const AtomLoader: React.FC<AtomLoaderProps> = ({ size = 'sm' }) => {
     return (
         <div className="relative flex justify-center items-center">
             <div
-                className="absolute rounded-full bg-primary animate-pulse blur-sm"
+                className="absolute rounded-full bg-primary animate-pulse-size blur-sm"
                 style={{
                     width: blurSize,
                     height: blurSize,

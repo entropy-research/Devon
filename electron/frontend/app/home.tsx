@@ -22,7 +22,7 @@ export default function Home({
         port: number
         name: string
         path: string
-    } | null
+    }
 }) {
     const searchParams = useSearchParams()
     const [sessionId, setSessionId] = useState<string | null>(null)

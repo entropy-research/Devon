@@ -15,11 +15,13 @@ const Input = ({
     scrollToBottom,
     viewOnly,
     eventContext,
+    loading,
 }: {
     isAtBottom: boolean
     scrollToBottom: () => void
     viewOnly: boolean
     eventContext: any
+    loading: boolean
 }) => {
     const [focused, setFocused] = useState(false)
     const { formRef, onKeyDown } = useEnterSubmit()
@@ -58,10 +60,11 @@ const Input = ({
         <div
             className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
         >
-            {(eventContext.modelLoading || eventContext.userRequest) && (
+            {(loading || eventContext.modelLoading || eventContext.userRequest) && (
                 <InformationBox
                     modelLoading={eventContext.modelLoading}
                     userRequested={eventContext.userRequest}
+                    loading={loading}
                 />
             )}
             {!viewOnly && (
@@ -97,6 +100,7 @@ const Input = ({
                                 onKeyDown={onKeyDown}
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
+                                disabled={loading}
                             />
                             {/* <button
                                 onClick={toast}
@@ -126,7 +130,7 @@ const Input = ({
     )
 }
 
-const InformationBox = ({ modelLoading, userRequested }) => {
+const InformationBox = ({ modelLoading, userRequested, loading }) => {
     const types = {
         modelLoading: {
             text: 'Devon is working...',
@@ -134,9 +138,17 @@ const InformationBox = ({ modelLoading, userRequested }) => {
         userRequested: {
             text: 'Devon is waiting for your response',
         },
+        loading: {
+            text: 'Devon is gathering himself...',
+        },
     }
 
-    const currentType = modelLoading ? types.modelLoading : types.userRequested
+    let currentType
+    if (loading) {
+        currentType = types.loading
+    } else {
+        currentType = modelLoading ? types.modelLoading : types.userRequested
+    }
 
     return (
         <div className="bg-fade-bottom-to-top2 py-5 px-3">

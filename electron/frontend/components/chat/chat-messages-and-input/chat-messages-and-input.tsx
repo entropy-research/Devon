@@ -9,6 +9,7 @@ import { useActor, useMachine } from '@xstate/react'
 import { sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { useSearchParams } from 'next/navigation'
 import { SessionMachineContext } from '@/app/home'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Message = {
     role: 'user' | 'assistant' | 'system' | 'function' | 'data' | 'tool'
@@ -98,6 +99,17 @@ export default function ChatMessagesAndInput({
                     className={cn('pt-4 md:pt-10 bg-red-500', className)}
                     ref={messagesRef}
                 > */}
+                {!state.matches('running') ? (
+                    <LoadingSkeleton />
+                ) : (
+                    messages &&
+                    messages.length > 0 && (
+                        <ChatMessages
+                            messages={messages}
+                            spinning={eventState.modelLoading}
+                        />
+                    )
+                )}
                 {messages && messages.length > 0 && (
                     <ChatMessages
                         messages={messages}
@@ -118,12 +130,50 @@ export default function ChatMessagesAndInput({
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                         viewOnly={viewOnly}
-                        // isRunning={state.matches('running')}
                         eventContext={eventState}
+                        loading={!state.matches('running')}
                     />
                 </div>
             </div>
             {/* )} */}
         </div>
+    )
+}
+
+const LoadingSkeleton = () => {
+    return (
+        <>
+            <div className="flex flex-col flex-2 relative h-full overflow-y-auto mx-8 mt-8 mr-10">
+                <div className="flex-1">
+                    <div className="mb-8">
+                        <div className="flex gap-5">
+                            <Skeleton className="w-[32px] h-[32px]" />
+                            <div className="w-full flex flex-col justify-between">
+                                <Skeleton className="w-full h-[12px] rounded-[4px]" />
+                                <Skeleton className="w-2/3 h-[12px] rounded-[4px] bg-[#333333]" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mb-8">
+                    <div className="flex gap-5">
+                            <Skeleton className="w-[32px] h-[32px]" />
+                            <div className="w-full flex flex-col justify-between">
+                                <Skeleton className="w-full h-[12px] rounded-[4px]" />
+                                <Skeleton className="w-1/3 h-[12px] rounded-[4px] bg-[#333333]" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mb-8">
+                        <div className="flex gap-5">
+                            <Skeleton className="w-[32px] h-[32px]" />
+                            <div className="w-full flex flex-col justify-between">
+                                <Skeleton className="w-full h-[12px] rounded-[4px]" />
+                                <Skeleton className="w-4/5 h-[12px] rounded-[4px] bg-[#333333]" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
     )
 }
