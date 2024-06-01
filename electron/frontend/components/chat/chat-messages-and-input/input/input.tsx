@@ -140,13 +140,8 @@ const InformationBox = ({ modelLoading, userRequested }) => {
 
     return (
         <div className="bg-fade-bottom-to-top2 py-5 px-3">
-            <div className="flex items-center gap-4">
-                <div className="relative flex justify-center items-center">
-                    <div
-                        className={`absolute w-4 h-4 rounded-full bg-primary animate-pulse blur-sm`}
-                    ></div>
-                    <AtomLoader />
-                </div>
+            <div className="flex items-center gap-3">
+                <AtomLoader />
                 <p className="italic text-gray-400">{currentType.text}</p>
             </div>
         </div>

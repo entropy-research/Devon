@@ -6,9 +6,7 @@ import { useToast } from '@/components/ui/use-toast'
 import ChatMessages from './messages/chat.messages'
 import Input from './input/input'
 import { useActor, useMachine } from '@xstate/react'
-import {
-    sessionMachine,
-} from '@/lib/services/stateMachineService/stateMachine'
+import { sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { useSearchParams } from 'next/navigation'
 import { SessionMachineContext } from '@/app/home'
 
@@ -29,9 +27,11 @@ export interface ChatProps extends React.ComponentProps<'div'> {
 
 export default function ChatMessagesAndInput({
     viewOnly,
+    loading,
     // sessionMachineProps,
 }: {
     viewOnly: boolean
+    loading: boolean
     // sessionMachineProps: {
     //     port: number
     //     name: string
@@ -46,36 +46,38 @@ export default function ChatMessagesAndInput({
         scrollToBottom,
     } = useScrollAnchor()
 
-    const searchParams = useSearchParams()
+    // const searchParams = useSearchParams()
     // const [eventState, sendEvent] = useActor(eventHandlingLogic)
     // let messages = eventState.context.messages
     // This inits the state machine and starts the session
 
     let status = ''
 
-//     const [state] = useMachine(sessionMachine, { input: {
-//         host: 'http://localhost:' + sessionMachineProps.port,
-//         name: sessionMachineProps.name,
-//         path: sessionMachineProps.path,
-//         reset: false,
-//         },
-//     },
-// )
+    //     const [state] = useMachine(sessionMachine, { input: {
+    //         host: 'http://localhost:' + sessionMachineProps.port,
+    //         name: sessionMachineProps.name,
+    //         path: sessionMachineProps.path,
+    //         reset: false,
+    //         },
+    //     },
+    // )
 
-    const state = SessionMachineContext.useSelector((state) => state);
+    const state = SessionMachineContext.useSelector(state => state)
 
-    const eventState = SessionMachineContext.useSelector((state) => state.context.serverEventContext);
+    const eventState = SessionMachineContext.useSelector(
+        state => state.context.serverEventContext
+    )
 
-    let messages = eventState.messages;
+    let messages = eventState.messages
 
-	if (!state.matches('running')) {
-		status = 'Initializing...';
-	} else if (eventState.modelLoading) {
-		status = 'Waiting for Devon...';
-	} else if (eventState.userRequest) {
-		status = 'Type your message:';
-	} else {
-		status = 'Interrupt:';
+    if (!state.matches('running')) {
+        status = 'Initializing...'
+    } else if (eventState.modelLoading) {
+        status = 'Waiting for Devon...'
+    } else if (eventState.userRequest) {
+        status = 'Type your message:'
+    } else {
+        status = 'Interrupt:'
     }
 
     // useEffect(() => {

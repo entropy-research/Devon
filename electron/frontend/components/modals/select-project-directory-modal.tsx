@@ -171,9 +171,9 @@ const ExistingSessionFound = ({ sessions, setPage, onClick }) => {
                 if (searchParams.get('chat') === 'New chat') {
                     return
                 }
-                    // const newSessionId = nanoid()
-                    // Using a set session id for now: for single sessions
-                    const newSessionId = 'New chat'
+                // const newSessionId = nanoid()
+                // Using a set session id for now: for single sessions
+                const newSessionId = 'New chat'
                 handleNavigate(newSessionId)
             } catch (error) {
                 console.error('Error starting session:', error)

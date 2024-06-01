@@ -188,7 +188,7 @@ class Session:
             agent=TaskAgent(
                 name=data["agent"]["name"],
                 # model=config["modelName"],
-                model="gpt-4o",
+                model="gpt4-o",
                 temperature=data["agent"]["temperature"],
                 chat_history=data["agent"]["chat_history"],
             )

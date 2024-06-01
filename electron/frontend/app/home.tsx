@@ -64,19 +64,6 @@ export default function Home({
         setSessionId(chatId)
     }, [])
 
-    if (!sessionMachineProps) {
-        return <div>Loading...</div>
-    }
-
-    //     const [state] = useMachine(sessionMachine, { input: {
-    //         host: 'http://localhost:' + sessionMachineProps.port,
-    //         name: sessionMachineProps.name,
-    //         path: sessionMachineProps.path,
-    //         reset: false,
-    //         },
-    //     },
-    // )
-
     // Get session id and path from url
     return (
         <SessionMachineContext.Provider

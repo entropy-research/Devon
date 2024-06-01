@@ -8,14 +8,13 @@ export default function Chat({
     sessionId,
     viewOnly = false,
     headerIcon,
-    port,
+    loading = false,
 }: {
     sessionId: string | null
     viewOnly?: boolean
-    headerIcon?: JSX.Element,
-    port: number
+    headerIcon?: JSX.Element
+    loading?: boolean
 }) {
-
     const searchParams = useSearchParams()
 
     // const [sessionMachineProps, setSessionMachineProps] = useState<{
@@ -23,7 +22,6 @@ export default function Chat({
     //     name: string
     //     path: string
     // } | null>(null)
-
 
     // let sessionName = searchParams.get('chat')
     // const encodedPath = searchParams.get('path')
@@ -39,8 +37,6 @@ export default function Chat({
     //         setSessionMachineProps(stateMachineProps)
     //     }
     // }, [sessionName, encodedPath,port])
-    
-
 
     return (
         <div className="rounded-lg h-full w-full max-w-4xl flex flex-col flex-2">
@@ -49,10 +45,15 @@ export default function Chat({
                 {/* {!backendStarted && <div>Initializing...</div>} */}
                 {/* {backendStarted && sessionMachineProps && ( */}
                 {/* {sessionMachineProps && (    */}
-                <ChatMessagesAndInput
-                    viewOnly={viewOnly}
-                    // sessionMachineProps={sessionMachineProps}
-                />
+                {/* {loading ? (
+                    <p>Loading Chat Messages and Input</p>
+                ) : ( */}
+                    <ChatMessagesAndInput
+                        viewOnly={viewOnly}
+                        loading={loading}
+                        // sessionMachineProps={sessionMachineProps}
+                    />
+                {/* )} */}
                 {/* )} */}
             </div>
         </div>

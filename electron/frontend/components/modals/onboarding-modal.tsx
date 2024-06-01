@@ -98,7 +98,7 @@ const OnboardingModal = ({
     }
 
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<></>}>
             <Dialog open={!initialized} onOpenChange={setInitialized}>
                 <DialogContent hideclose={true.toString()}>
                     <div className="flex flex-col items-center justify-center my-8 mx-8">

@@ -7,7 +7,7 @@ import { fetchSessionEvents } from '@/lib/services/sessionService/sessionService
 import { useSearchParams } from 'next/navigation'
 import FileTabs from '@/components/file-tabs/file-tabs'
 import { Terminal as TerminalIcon } from 'lucide-react'
-import { SessionMachineContext } from '@/app/home'
+// import { SessionMachineContext } from '@/app/home'
 import type { Message } from '@/lib/services/stateMachineService/stateMachine'
 
 // export default function ShellWidget() {
