@@ -83,6 +83,10 @@
             'rlig' 1,
             'calt' 1;
     }
+
+    html {
+        font-size: 85%;
+    }
 }
 
 @layer utilities {
