@@ -109,8 +109,6 @@ class Session:
         self.telemetry_client = Posthog()
         self.name = args.name
         self.agent_branch = "devon_agent_" + self.name
-        self.global_config = args.config
-        # self.excludes = self.global_config.get("excludes", [])
 
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
@@ -123,7 +121,6 @@ class Session:
             "edit_file" : EditFileTool().register_post_hook(save_edit_file),
             "search_dir" : SearchDirTool(),
             "find_file" : FindFileTool(),
-            # "list_dirs_recursive" : ListDirsRecursiveTool(),
             "get_cwd" : GetCwdTool(),
             "no_op" : NoOpTool(),
             "submit" : SubmitTool(),
@@ -160,12 +157,11 @@ class Session:
             "task": self.task,
             "path": self.path,
             "name": self.name,
-            "config": self.global_config,
             "event_history": [event for event in self.event_log],
             "cwd": self.environments["local"].get_cwd(),
             "agent": {
                 "name": self.agent.name,
-                "config": self.agent.args.model_dump_json(),
+                "config": self.agent.args.model_dump(),
                 "temperature": self.agent.temperature,
                 "chat_history": self.agent.chat_history,
             },
@@ -181,7 +177,6 @@ class Session:
                 user_input=user_input,
                 name=data["name"],
                 task=data["task"] if "task" in data else None,
-                config=config,
             ),
             agent=TaskAgent(
                 name=data["agent"]["name"],

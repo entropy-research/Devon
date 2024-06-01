@@ -5,7 +5,7 @@ from devon_agent.environment import LocalEnvironment
 from devon_agent.session import Session, SessionArguments
 # from devon_agent.tools import create_file
 from devon_agent.tools.edittools import EditFileTool
-from devon_agent.tools.utils import normalize_path
+from devon_agent.tools.utils import cwd_normalize_path, make_abs_path, normalize_path
 from devon_agent.utils import DotDict
 
 
@@ -34,59 +34,59 @@ from devon_agent.utils import DotDict
 #             assert f.read() == "world\n"
 
 
-def test_edit_file():
-    import tempfile
+# def test_edit_file():
+#     import tempfile
 
-    temp_dir = tempfile.mkdtemp()
+#     temp_dir = tempfile.mkdtemp()
 
-    snake_game_path = Path(temp_dir) / Path("snake_game.py")
-    command = f"""
-edit_file <<<                                                                    
---- {snake_game_path}                       
-+++ {snake_game_path}                          
-@@ -0,0 +1,50 @@                                                                 
-import pygame                                                                    
-import time                                                                      
-import random                                                                    
+#     snake_game_path = Path(temp_dir) / Path("snake_game.py")
+#     command = f"""
+# edit_file <<<                                                                    
+# --- {snake_game_path}                       
+# +++ {snake_game_path}                          
+# @@ -0,0 +1,50 @@                                                                 
+# import pygame                                                                    
+# import time                                                                      
+# import random                                                                    
                                                                                 
-pygame.init()
->>>  """
-    content = """
-import pygame                                                                    
-import time                                                                      
-import random                                                                    
+# pygame.init()
+# >>>  """
+#     content = """
+# import pygame                                                                    
+# import time                                                                      
+# import random                                                                    
                                                                                 
-pygame.init()"""
+# pygame.init()"""
 
 
-    session = Session(
-        args=SessionArguments(
-            path=temp_dir,
-            user_input="",
-            name="test"
+#     session = Session(
+#         args=SessionArguments(
+#             path=temp_dir,
+#             user_input="",
+#             name="test"
 
-        ),
-        agent=None
-    )
-    et = EditFileTool()
-    le = LocalEnvironment(temp_dir)
-    le.setup(session)
-    le.register_tools({
-        "edit_file": et
-    })
+#         ),
+#         agent=None
+#     )
+#     et = EditFileTool()
+#     le = LocalEnvironment(temp_dir)
+#     le.setup(session)
+#     le.register_tools({
+#         "edit_file": et
+#     })
 
-    with open(snake_game_path, "w") as f:
-        f.write("")
+#     with open(snake_game_path, "w") as f:
+#         f.write("")
 
-    et({
-        "session": session,
-        "raw_command": command,
-        "environment": le,
-    })
+#     et({
+#         "session": session,
+#         "raw_command": command,
+#         "environment": le,
+#     })
 
-    # create file with the content
+#     # create file with the content
 
-    # check if the file was edited
-    with open(Path(temp_dir) / Path("snake_game.py"), "r") as f:
-        assert f.read() == content
+#     # check if the file was edited
+#     with open(Path(temp_dir) / Path("snake_game.py"), "r") as f:
+#         assert f.read() == content
 

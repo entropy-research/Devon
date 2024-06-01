@@ -101,7 +101,7 @@ class TaskAgent(Agent):
             return OpenAiModel(
                 args=ModelArguments(
                     model_name=self.args.model,
-                    temperature=self.args.temperature,
+                    temperature=self.temperature,
                     api_key=self.args.api_key,
                     api_base=self.args.api_base,
                     prompt_type=self.args.prompt_type
@@ -111,7 +111,7 @@ class TaskAgent(Agent):
         return self.default_models[self.args.model](
                 args=ModelArguments(
                     model_name=self.args.model,
-                    temperature=self.args.temperature,
+                    temperature=self.temperature,
                     api_key=self.args.api_key,
                 )
             )
