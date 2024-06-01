@@ -19,7 +19,7 @@ const HeaderSidebar = () => {
                 ></div>
                 <button
                     onClick={() => setExpanded(!expanded)}
-                    className="no-drag relative p-2 z-10"
+                    className="no-drag relative p-2 z-10 focus:outline-none"
                 >
                     <PanelsTopLeft size="1.4rem" />
                 </button>

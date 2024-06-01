@@ -25,7 +25,7 @@ export default function RootLayout({
         <html lang="en" className="dark h-full">
             <body className={`${dmSans.className} flex h-full flex-col`}>
                 <div className="flex w-full h-full overflow-hidden">
-                    <div className="relative w-full overflow-hidden bg-day transition-colors duration-200 dark:bg-night md:flex">
+                    <div className="relative w-full overflow-hidden bg-day transition-colors duration-200 dark:bg-night flex">
                         <BackendUrlProvider>
                             <HeaderSidebar />
                             <main className="mt-[54px] flex flex-row w-full">

@@ -57,7 +57,7 @@ export default function CodeEditor({
                 {files.length > 0 && (
                     <PathDisplay path={'/Users/devon/projects/hello_world'} />
                 )}
-                <div className="w-full bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
+                <div className="w-full bg-workspace rounded-b-lg mt-[-2px]">
                     {selectedFileId && (
                         <BothEditorTypes
                             diffEnabled={diffEnabled}
@@ -107,7 +107,7 @@ export default function CodeEditor({
                 isExpandedVariant={isExpandedVariant}
             />
             {files && <PathDisplay path={path} />}
-            <div className="flex w-full h-full bg-bg-workspace rounded-b-lg overflow-hidden mt-[-2px]">
+            <div className="flex w-full h-full bg-bg-workspace rounded-b-lg mt-[-2px]">
                 {selectedFileId && (
                     <BothEditorTypes
                         diffEnabled={diffEnabled}
@@ -131,7 +131,7 @@ const BothEditorTypes = ({ diffEnabled, file, handleEditorDidMount }) =>
             value={file.value.lines}
             onMount={handleEditorDidMount}
             path={file.path}
-            options={{ readOnly: true }}
+            options={{ readOnly: true, fontSize: 10 }}
         />
     ) : (
         <DiffEditor
@@ -141,7 +141,7 @@ const BothEditorTypes = ({ diffEnabled, file, handleEditorDidMount }) =>
             modified={file.value.lines}
             language={file.language}
             onMount={handleEditorDidMount}
-            options={{ readOnly: true }}
+            options={{ readOnly: true, fontSize: 10 }}
         ></DiffEditor>
     )
 

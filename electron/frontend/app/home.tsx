@@ -102,7 +102,7 @@ export default function Home({
                         {/* )} */}
                     </ResizablePanel>
                     <ResizableHandle className="" />
-                    <ResizablePanel className="flex flex-col w-full">
+                    <ResizablePanel className="flex-col w-full hidden md:flex">
                         <EditorWidget chatId={sessionId ?? null} />
                     </ResizablePanel>
                 </ResizablePanelGroup>
