@@ -4,8 +4,11 @@ import { ChatViewProvider } from './chatView';
 import * as childProcess from 'child_process';
 //@ts-ignore
 import * as portfinder from 'portfinder';
+import * as dotenv from 'dotenv';
+import * as pathlib from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
+
   // Register commands
   const startCommand = vscode.commands.registerCommand('devon.start', startServer);
   const configureCommand = vscode.commands.registerCommand('devon.configure', configureExtension);
@@ -24,6 +27,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 async function startServer() {
   // Get the configuration values
+
+  dotenv.config({ path: pathlib.join(vscode.workspace.rootPath as string, ".env") });
   const config = vscode.workspace.getConfiguration('devon');
   const apiKey = config.get('apiKey') as string;
   const modelName = config.get('modelName') as string;
@@ -37,7 +42,6 @@ async function startServer() {
 
   const port = 8080;
 
-  console.log("Port: ", port);
   // Spawn the server process
   try {
     const serverProcess = childProcess.spawn(
@@ -47,9 +51,9 @@ async function startServer() {
         '--port',
         port.toString(),
         '--model',
-        modelName,
+        process.env.DEVON_MODEL as string,
         '--api_key',
-        apiKey,
+        process.env.DEVON_API_KEY as string,
         // '--api_base',
         // apiBase,
         // '--prompt_type',
@@ -65,12 +69,12 @@ async function startServer() {
     // Handle server process output and errors
     serverProcess.stdout.on('data', (data: Buffer) => {
       console.log(data.toString());
-      // vscode.window.showInformationMessage(`Server output: ${data.toString()}`);
+      vscode.window.showInformationMessage(`Server output: ${data.toString()}`);
     });
 
     serverProcess.stderr.on('data', (data: Buffer) => {
       console.log(data.toString());
-      // vscode.window.showErrorMessage(`Server error: ${data.toString()}`);
+      vscode.window.showErrorMessage(`Server error: ${data.toString()}`);
     });
   } catch (error: any) {
     console.error('Error starting the server:', error);

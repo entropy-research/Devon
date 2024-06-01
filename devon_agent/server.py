@@ -269,7 +269,8 @@ async def read_events_stream(session: str):
             current_index = len(session_obj.event_log)
             if current_index > initial_index:
                 for event in session_obj.event_log[initial_index:current_index]:
-                    yield f"data: {json.dumps(event)}\n\n"
+                    print(json.dumps(event))
+                    yield f"{json.dumps(event)}\n\n"
                 initial_index = current_index
             else:
                 await asyncio.sleep(0.1)  # Sleep to prevent busy waiting

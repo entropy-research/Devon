@@ -53,8 +53,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none' http://0.0.0.0:8080; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
-          <meta http-equiv="Access-Control-Allow-Origin" content="http://localhost:8080">
+          <meta http-equiv="Content-Security-Policy" content="default-src http://localhost:8080; connect-src 'self' http://localhost:8080; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>Hello World</title>
         </head>

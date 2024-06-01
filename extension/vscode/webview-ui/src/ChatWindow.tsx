@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ChatEditor from './ChatEditor';
 import { useMachine } from '@xstate/react';
 import { sessionMachine } from './sm';
@@ -13,6 +13,7 @@ const HEADERS = {
 const giveUserResponse = async (res: string) => {
   try {
     const response = await axios.post(`http://localhost:8080/session/cli/response?response=${res}`);
+    console.log(response)
     return response.data;
   } catch (error: any) {
     console.error('Error:', error.message);
@@ -46,6 +47,10 @@ const ChatWindow: React.FC = () => {
     },
   });
 
+  // useEffect(() => {
+  //   console.log(state)
+  // }, [state])
+
   const eventState = state.context.serverEventContext;
   let status = '';
 
@@ -61,6 +66,8 @@ const ChatWindow: React.FC = () => {
 
   const handleSendMessage = (message: string) => {
     setInputValue(message);
+    console.log("STATE")
+    console.log(state)
     if (state.matches('running') && message.trim() !== '') {
       if (message.toLowerCase() === 'exit') {
         vscode.postMessage({ command: 'exit' });

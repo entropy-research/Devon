@@ -85,6 +85,7 @@ export const eventHandlingLogic = fromTransition(
         state: ServerEventContext,
         event: ServerEvent,
     ) => {
+        console.log('Received event in eventHandlingLogic:', event);
         switch (event.type) {
             case 'Stop': {
                 return { ...state, ended: true };
@@ -231,6 +232,12 @@ export const eventSourceActor = fromCallback<
     let eventStream: EventSource | null = null
 
     const eventHandler = ({ data }: { data: any }) => {
+        try {
+            console.log("DATA: ")
+            console.log(JSON.parse(data))
+        } catch (e) {
+            console.log(e)
+        }
         sendBack({ type: 'serverEvent', payload: JSON.parse(data) });
     };
 

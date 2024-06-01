@@ -82,6 +82,7 @@
     "vscode-test": "^1.5.0"
   },
   "dependencies": {
+    "dotenv": "^16.4.5",
     "portfinder": "^1.0.32"
   }
 }
