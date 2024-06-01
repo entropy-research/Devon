@@ -8,6 +8,7 @@ from devon_agent.tool import ToolContext
 
 
 def normalize_path(path : str, specified_path : str):
+    specified_path = Path(specified_path).absolute().as_posix()
     if path == os.sep:
         return specified_path
     elif os.path.isabs(path):

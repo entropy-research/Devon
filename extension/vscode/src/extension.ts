@@ -7,7 +7,11 @@ import * as portfinder from 'portfinder';
 import * as dotenv from 'dotenv';
 import * as pathlib from 'path';
 
+let serverProcess: childProcess.ChildProcess;
+
+
 export function activate(context: vscode.ExtensionContext) {
+  console.log(serverProcess)
 
   // Register commands
   const startCommand = vscode.commands.registerCommand('devon.start', startServer);
@@ -19,21 +23,32 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerWebviewViewProvider(ChatViewProvider.viewType, sidebarProvider,{
       webviewOptions: {
     }})
+
   );
+
 
   // Add commands to the extension context
   context.subscriptions.push(startCommand, configureCommand);
+
+  context.subscriptions.push(new vscode.Disposable(() => {
+    if (serverProcess) {
+      serverProcess.kill(9);
+      console.log('Server process killed');
+    }
+  }));
 }
+
+
 
 async function startServer() {
   // Get the configuration values
-
-  dotenv.config({ path: pathlib.join(vscode.workspace.rootPath as string, ".env") });
+  // console.log(pathlib.join(vscode.workspace.workspaceFolders?.[0] as unknown as string, ".env"))
+  // dotenv.config({ path: pathlib.join(vscode.workspace.workspaceFolders?.[0] as unknown as string, ".env") });
   const config = vscode.workspace.getConfiguration('devon');
-  const apiKey = config.get('apiKey') as string;
-  const modelName = config.get('modelName') as string;
-  const apiBase = config.get('apiBase') as string;
-  const promptType = config.get('promptType') as string;
+  const apiKey = "sk-"
+  const modelName = "gpt4-o";
+  const apiBase = undefined;
+  const promptType = undefined;
 
   console.log("Starting server");
 
@@ -42,18 +57,20 @@ async function startServer() {
 
   const port = 8080;
 
+  console.log(vscode.workspace.rootPath);
+
   // Spawn the server process
   try {
-    const serverProcess = childProcess.spawn(
+    serverProcess = childProcess.spawn(
       'devon_agent',
       [
         'server',
         '--port',
         port.toString(),
         '--model',
-        process.env.DEVON_MODEL as string,
+        modelName as string,
         '--api_key',
-        process.env.DEVON_API_KEY as string,
+        apiKey as string,
         // '--api_base',
         // apiBase,
         // '--prompt_type',
@@ -67,12 +84,12 @@ async function startServer() {
     console.log(serverProcess.pid);
     console.log(serverProcess.connected);
     // Handle server process output and errors
-    serverProcess.stdout.on('data', (data: Buffer) => {
+    serverProcess?.stdout?.on('data', (data: Buffer) => {
       console.log(data.toString());
       vscode.window.showInformationMessage(`Server output: ${data.toString()}`);
     });
 
-    serverProcess.stderr.on('data', (data: Buffer) => {
+    serverProcess?.stderr?.on('data', (data: Buffer) => {
       console.log(data.toString());
       vscode.window.showErrorMessage(`Server error: ${data.toString()}`);
     });

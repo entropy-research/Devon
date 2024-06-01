@@ -12,7 +12,7 @@ const HEADERS = {
 
 const giveUserResponse = async (res: string) => {
   try {
-    const response = await axios.post(`http://localhost:8080/session/cli/response?response=${res}`);
+    const response = await axios.post(`http://localhost:8080/session/extension/response?response=${res}`);
     console.log(response)
     return response.data;
   } catch (error: any) {
@@ -29,7 +29,7 @@ type SessionEvent = {
 
 const sendSessionEvent = async (event: SessionEvent) => {
   try {
-    const response = await axios.post(`http://localhost:8080/session/cli/event`, event);
+    const response = await axios.post(`http://localhost:8080/session/extension/event`, event);
     return response.data;
   } catch (error: any) {
     // console.error('Error:', error.message);
@@ -41,9 +41,9 @@ const ChatWindow: React.FC = () => {
   const [state] = useMachine(sessionMachine, {
     input: {
       host: 'http://localhost:8080',
-      name: v4(),
-      path: "/",
-      reset: true,
+      name: "extension",
+      path: ".",
+      reset: false,
     },
   });
 
@@ -98,6 +98,8 @@ const ChatWindow: React.FC = () => {
     }
   };
 
+
+  console.log(state.value)
   return (
     <div style={{ border: '1px solid #ccc', padding: '10px', width: '400px' }}>
       <div style={{ height: '300px', overflowY: 'scroll', marginBottom: '10px' }}>

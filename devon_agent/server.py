@@ -74,7 +74,7 @@ async def lifespan(app: fastapi.FastAPI):
     async with AsyncSessionLocal() as db_session:
         app.db_session = db_session
         data = await load_data(db_session)
-        data = { k:Session.from_dict(v, lambda: get_user_input(k), config=app.config) for (k,v) in data.items()} 
+        data = { k:Session.from_dict(v, lambda: get_user_input(k), config={}) for (k,v) in data.items()} 
         sessions = data
         yield
 
@@ -134,7 +134,8 @@ def create_session(session: str, path: str):
                 path,
                 user_input=lambda: get_user_input(session),
                 name=session,
-                config=app.config
+                # config=app.config
+                config ={}
             ),
             agent,
         )
@@ -148,6 +149,8 @@ def reset_session(session: str):
 
     if session in sessions:
         del sessions[session]
+    if session in running_sessions:
+        del running_sessions[running_sessions.index(session)]
 
     return session
 
@@ -266,11 +269,13 @@ async def read_events_stream(session: str):
     async def event_generator():
         initial_index = len(session_obj.event_log)
         while True:
+
             current_index = len(session_obj.event_log)
+            print(current_index,initial_index)
             if current_index > initial_index:
                 for event in session_obj.event_log[initial_index:current_index]:
                     print(json.dumps(event))
-                    yield f"{json.dumps(event)}\n\n"
+                    yield f"data: {json.dumps(event)}\n\n"
                 initial_index = current_index
             else:
                 await asyncio.sleep(0.1)  # Sleep to prevent busy waiting

@@ -230,9 +230,10 @@ export const eventSourceActor = fromCallback<
     { host: string; name: string }
 >(({ input, receive, sendBack }) => {
     let eventStream: EventSource | null = null
-
+    console.log("setting up event source")
     const eventHandler = ({ data }: { data: any }) => {
         try {
+            console.log("qhweqwD")
             console.log("DATA: ")
             console.log(JSON.parse(data))
         } catch (e) {
@@ -335,6 +336,7 @@ export const sessionMachine = setup({
                 const newEvents = (
                     await axios.get(`${input?.host}/session/${input?.name}/events`)
                 ).data;
+                console.log("newEvents", newEvents)
                 return newEvents
             },
         ),
