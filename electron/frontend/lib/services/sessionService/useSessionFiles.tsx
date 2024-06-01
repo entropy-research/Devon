@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { fetchSessionState } from '@/lib/services/sessionService/sessionService';
-import { File } from '@/lib/types';
+import { useEffect, useState } from 'react'
+import { fetchSessionState } from '@/lib/services/sessionService/sessionService'
+import { useBackendUrl } from '@/contexts/BackendUrlContext'
+import { File } from '@/lib/types'
 
 const boilerplateFile = {
     id: 'main.py',
@@ -10,7 +11,7 @@ const boilerplateFile = {
     value: {
         lines: `# Welcome to Devon!\n`,
     },
-};
+}
 
 const boilerplateFile2 = {
     id: 'hello.py',
@@ -20,22 +21,23 @@ const boilerplateFile2 = {
     value: {
         lines: `# Hello world!\n`,
     },
-};
+}
 
-const useSessionFiles = (chatId) => {
-    const [files, setFiles] = useState<File[]>([]);
-    const [selectedFileId, setSelectedFileId] = useState<string>('');
+const useSessionFiles = chatId => {
+    const [files, setFiles] = useState<File[]>([])
+    const [selectedFileId, setSelectedFileId] = useState<string>('')
+    const { backendUrl } = useBackendUrl()
 
     useEffect(() => {
-        let intervalId;
+        let intervalId
 
         async function getSessionState() {
             try {
-                const res = await fetchSessionState(chatId);
-                if (!res || !res.editor || !res.editor.files) return;
-                const editor = res.editor;
-                const f = editor.files;
-                const _files: File[] = [];
+                const res = await fetchSessionState(backendUrl, chatId)
+                if (!res || !res.editor || !res.editor.files) return
+                const editor = res.editor
+                const f = editor.files
+                const _files: File[] = []
 
                 for (let key in f) {
                     if (f.hasOwnProperty(key)) {
@@ -45,28 +47,31 @@ const useSessionFiles = (chatId) => {
                             path: key,
                             language: 'python',
                             value: f[key],
-                        });
+                        })
                     }
                 }
                 if (_files.length === 0) {
-                    _files.push(boilerplateFile);
-                    _files.push(boilerplateFile2);
+                    _files.push(boilerplateFile)
+                    _files.push(boilerplateFile2)
                 }
-                setFiles(_files);
-                if (!selectedFileId || !_files.find(f => f.id === selectedFileId)) {
-                    setSelectedFileId(_files[0].id);
+                setFiles(_files)
+                if (
+                    !selectedFileId ||
+                    !_files.find(f => f.id === selectedFileId)
+                ) {
+                    setSelectedFileId(_files[0].id)
                 }
             } catch (error) {
-                console.error('Error fetching session state:', error);
+                console.error('Error fetching session state:', error)
             }
         }
 
-        getSessionState();
-        intervalId = setInterval(getSessionState, 2000);
-        return () => clearInterval(intervalId);
-    }, [chatId, selectedFileId]);
+        getSessionState()
+        intervalId = setInterval(getSessionState, 2000)
+        return () => clearInterval(intervalId)
+    }, [chatId, selectedFileId])
 
-    return { files, selectedFileId, setSelectedFileId };
-};
+    return { files, selectedFileId, setSelectedFileId }
+}
 
-export default useSessionFiles;
+export default useSessionFiles

@@ -6,12 +6,14 @@ import Home from './home'
 import OnboardingModal from '@/components/modals/onboarding-modal'
 import { LocalStorageKey } from '@/lib/types'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
+import { useBackendUrl } from '@/contexts/BackendUrlContext'
 
 export default function Landing() {
     const searchParams = useSearchParams()
     const [hasAcceptedCheckbox, setHasAcceptedCheckbox] =
         useLocalStorage<boolean>(LocalStorageKey.hasAcceptedCheckbox, false)
     const [openProjectModal, setOpenProjectModal] = useState(false)
+    const { port, backendUrl } = useBackendUrl()
 
     useEffect(() => {
         const chatId = searchParams.get('chat')
@@ -21,15 +23,6 @@ export default function Landing() {
             window.history.replaceState({}, '', '/?chat=New')
         }
     }, [hasAcceptedCheckbox, searchParams])
-
-    const [port, setPort] = useState<number>(NaN)
-
-    useEffect(() => {
-        window.api.send('get-port')
-        window.api.receive('get-port-response', port => {
-            setPort(port)
-        })
-    }, [])
 
     const [sessionMachineProps, setSessionMachineProps] = useState<{
         port: number
@@ -47,6 +40,7 @@ export default function Landing() {
                 name: sessionName,
                 path: decodeURIComponent(encodedPath),
             }
+
             setSessionMachineProps(stateMachineProps)
         }
     }, [sessionName, encodedPath, port])

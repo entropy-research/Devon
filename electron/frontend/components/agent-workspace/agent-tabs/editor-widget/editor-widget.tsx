@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import CodeEditor from './code-editor'
 import { CodeEditorContextProvider } from '@/contexts/CodeEditorContext'
-import { fetchSessionState } from '@/lib/services/sessionService/sessionService'
 import FileTree from './file-tree/file-tree'
 import ShellWidget from '@/components/agent-workspace/agent-tabs/shell-widget'
 import { SessionMachineContext } from '@/app/home'

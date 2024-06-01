@@ -4,7 +4,7 @@ import { useBackendUrl } from '@/contexts/BackendUrlContext'
 import { createEventSource } from './sessionService'
 
 export const useReadSessions = () => {
-    const backendUrl = useBackendUrl()
+    const { backendUrl } = useBackendUrl()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [sessions, setSessions] = useState([])
@@ -13,9 +13,14 @@ export const useReadSessions = () => {
     const fetchSessions = async () => {
         setLoading(true)
         setError(null)
+        // Don't fetch if the backendUrl hasn't been set yet
+        if (!backendUrl) {
+            setLoading(false)
+            return
+        }
         try {
             const response = await axios.get(`${backendUrl}/session`)
-            setSessions(response.data) // Assuming the backend returns an array of session keys
+            setSessions(response.data)
         } catch (err) {
             setError(err.message || 'Unknown error')
             setSessions([]) // Reset session keys on error
@@ -32,7 +37,7 @@ export const useReadSessions = () => {
 }
 
 export const useDeleteSession = () => {
-    const backendUrl = useBackendUrl()
+    const { backendUrl } = useBackendUrl()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [response, setResponse] = useState(null)
@@ -59,7 +64,7 @@ export const useDeleteSession = () => {
 type EventData = Record<string, any>
 
 export const useEventStream = sessionId => {
-    const backendUrl = useBackendUrl()
+    const { backendUrl } = useBackendUrl()
     const [events, setEvents] = useState<EventData[]>([])
 
     useEffect(() => {

@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { BACKEND_URL } from '@/lib/config'
 
 export const createEventSource = url => {
     const eventSource = new EventSource(url)
@@ -12,9 +11,12 @@ export const createEventSource = url => {
     }
 }
 
-export const fetchSessionState = async sessionId => {
+export const fetchSessionState = async (backendUrl, sessionId) => {
+    if (!backendUrl || !sessionId) {
+        return null
+    }
     const { data } = await axios.get(
-        `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/state`
+        `${backendUrl}/session/${encodeURIComponent(sessionId)}/state`
     )
     return data
 }

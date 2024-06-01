@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { useBackendUrl } from '@/contexts/BackendUrlContext';
+import { useBackendUrl } from '@/contexts/BackendUrlContext'
 
 // Send over user response
 
 export const useCreateResponse = () => {
-    const backendUrl = useBackendUrl()
+    const { backendUrl } = useBackendUrl()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [responseData, setResponseData] = useState(null)
@@ -40,7 +40,7 @@ export const useCreateResponse = () => {
 }
 
 export const useInterruptSession = () => {
-    const backendUrl = useBackendUrl()
+    const { backendUrl } = useBackendUrl()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [interruptData, setInterruptData] = useState(null)
@@ -73,4 +73,3 @@ export const useInterruptSession = () => {
         error,
     }
 }
-

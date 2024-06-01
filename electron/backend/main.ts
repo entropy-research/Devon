@@ -55,34 +55,32 @@ const installExtensions = async () => {
   */
 }
 let serverProcess: ChildProcessWithoutNullStreams
-portfinder.setBasePort(10001)
+portfinder.setBasePort(10000)
 let use_port = NaN
 const spawnAppWindow = async () => {
   if (electronIsDev) await installExtensions()
 
-
-
-  let api_key: string | undefined = undefined;
-  let modelName: string | undefined = undefined;
+  let api_key: string | undefined = undefined
+  let modelName: string | undefined = undefined
   // let api_base: string | undefined = undefined;
-  const prompt_type: string = "anthropic";
+  const prompt_type: string = 'anthropic'
 
   if (process.env['OPENAI_API_KEY']) {
-    api_key = process.env['OPENAI_API_KEY'];
-    modelName = 'gpt4-o';
+    api_key = process.env['OPENAI_API_KEY']
+    modelName = 'gpt4-o'
     // prompt_type = "openai";
   } else if (process.env['ANTHROPIC_API_KEY']) {
-    api_key = process.env['ANTHROPIC_API_KEY'];
-    modelName = 'claude-opus';
+    api_key = process.env['ANTHROPIC_API_KEY']
+    modelName = 'claude-opus'
   } else if (process.env['GROQ_API_KEY']) {
-    api_key = process.env['GROQ_API_KEY'];
-    modelName = 'llama-3-70b';
+    api_key = process.env['GROQ_API_KEY']
+    modelName = 'llama-3-70b'
     // prompt_type = "llama3";
   } else {
     console.log(
-      'Please provide an API key using the --api_key option or by setting OPENAI_API_KEY or ANTHROPIC_API_KEY.',
-    );
-    process.exit(1);
+      'Please provide an API key using the --api_key option or by setting OPENAI_API_KEY or ANTHROPIC_API_KEY.'
+    )
+    process.exit(1)
   }
 
   // const packageDir = process.cwd();
@@ -110,9 +108,6 @@ const spawnAppWindow = async () => {
   // 	process.exit(1);
   // }
 
-
-
-
   await portfinder
     .getPortPromise()
     .then((port: number) => {
@@ -134,13 +129,12 @@ const spawnAppWindow = async () => {
         ],
         {
           signal: controller.signal,
-        },
-      );
+        }
+      )
 
       serverProcess.stdout.on('data', (data: unknown) => {
         console.log(`Server: ${data}`)
       })
-
 
       serverProcess.stderr.on('data', (data: unknown) => {
         console.error(`Server Error: ${data}`)
@@ -154,7 +148,6 @@ const spawnAppWindow = async () => {
       console.error('Failed to find a free port:', error)
       return { success: false, message: 'Failed to find a free port.' }
     })
-
 
   const RESOURCES_PATH = electronIsDev
     ? path.join(__dirname, '../../assets')
@@ -177,7 +170,7 @@ const spawnAppWindow = async () => {
       preload: PRELOAD_PATH,
       contextIsolation: true,
       nodeIntegration: false,
-      additionalArguments: [`--port=${use_port}`]
+      additionalArguments: [`--port=${use_port}`],
     },
   })
 
@@ -194,7 +187,6 @@ const spawnAppWindow = async () => {
   })
 }
 
-
 const controller = new AbortController()
 
 app.on('ready', () => {
@@ -209,12 +201,8 @@ app.on('ready', () => {
     )
   }
 
-
-
   spawnAppWindow()
 })
-
-
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -237,10 +225,9 @@ ipcMain.handle('ping', () => {
   return 'pong'
 })
 
-ipcMain.on("get-port", (event) => {
+ipcMain.on('get-port', event => {
   event.reply('get-port-response', use_port)
 })
-
 
 ipcMain.on('get-file-path', event => {
   dialog

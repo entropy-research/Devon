@@ -11,6 +11,7 @@ import handleNavigate from './handleNavigate'
 
 const SidebarChatLogs = () => {
     const { sessions, loading, error, refreshSessions } = useReadSessions()
+
     const { deleteSession } = useDeleteSession()
     const router = useRouter()
     const searchParams = useSearchParams()
