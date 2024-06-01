@@ -5,7 +5,7 @@ import {
     ThoughtMessage,
     SpinnerMessage,
 } from '@/components/chat/chat-messages-and-input/messages/chat.message-variants'
-
+import { NotebookPen } from 'lucide-react'
 export interface ChatMessages {
     messages: any[]
     spinning: boolean
@@ -72,10 +72,10 @@ const DisplayedChatMessage = ({ message }) => {
                 ) : message.type === 'user' ? (
                     <UserMessage>{message.text}</UserMessage>
                 ) : message.type === 'task' ? (
-                    <div className="border border-2 border-gray p-2 px-4 rounded-md">
+                    <div className="px-4 rounded-md border py-2">
                         <ChatTypeWrapper
                             type="Task"
-                            className="text-gray-400 italic"
+                            className="text-gray-400 flex italic"
                         >
                             {message.text}
                         </ChatTypeWrapper>
@@ -100,9 +100,18 @@ const ChatTypeWrapper = ({
     children: any
     className?: string
 }) => {
+    let pref: JSX.Element = <></>
+    if (type === 'Task') {
+        pref = (
+            <span className="font-bold mr-2 flex gap-2 items-center not-italic">
+                <NotebookPen size={16} />
+                Task:
+            </span>
+        )
+    }
     return (
         <p className={className}>
-            <span className="font-bold mr-2">{type}:</span>
+            {pref}
             {children}
         </p>
     )

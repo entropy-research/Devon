@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Paperclip, ArrowRight } from 'lucide-react'
+import { Paperclip, ArrowRight, CirclePause } from 'lucide-react'
 import { AutoresizeTextarea } from '@/components/ui/textarea'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import {
@@ -60,7 +60,9 @@ const Input = ({
         <div
             className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
         >
-            {(loading || eventContext.modelLoading || eventContext.userRequest) && (
+            {(loading ||
+                eventContext.modelLoading ||
+                eventContext.userRequest) && (
                 <InformationBox
                     modelLoading={eventContext.modelLoading}
                     userRequested={eventContext.userRequest}
@@ -131,15 +133,24 @@ const Input = ({
 }
 
 const InformationBox = ({ modelLoading, userRequested, loading }) => {
-    const types = {
+    let paused = false
+    const types: {
+        [key: string]: {
+            text: string
+            accessory: JSX.Element
+        }
+    } = {
         modelLoading: {
             text: 'Devon is working...',
+            accessory: <PauseButton paused={paused} />,
         },
         userRequested: {
             text: 'Devon is waiting for your response',
+            accessory: <></>,
         },
         loading: {
             text: 'Devon is gathering himself...',
+            accessory: <></>,
         },
     }
 
@@ -149,15 +160,45 @@ const InformationBox = ({ modelLoading, userRequested, loading }) => {
     } else {
         currentType = modelLoading ? types.modelLoading : types.userRequested
     }
+    currentType = types.modelLoading
+    if (paused) {
+        currentType.text = 'Devon is paused'
+    }
 
     return (
-        <div className="bg-fade-bottom-to-top2 py-5 px-3">
-            <div className="flex items-center gap-3">
-                <AtomLoader />
-                <p className="italic text-gray-400">{currentType.text}</p>
+        <div className="bg-fade-bottom-to-top2 py-5 px-1">
+            <div className="flex items-end justify-between">
+                <div className="flex items-center gap-3">
+                    <AtomLoader />
+                    <p className="italic text-gray-400">{currentType.text}</p>
+                </div>
+                {currentType.accessory}
             </div>
         </div>
     )
 }
 
 export default Input
+
+const PauseButton = ({ paused }) => {
+    if (paused) {
+        return (
+            <button
+                // onClick=
+                className="flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 text-gray-100 smooth-hover"
+            >
+                <CirclePause size={16} />
+                Paused
+            </button>
+        )
+    }
+    return (
+        <button
+            // onClick=
+            className="flex items-center gap-2 px-3 py-1 rounded-md text-gray-400 mb-[-4px] -mr-2 hover:text-gray-100 smooth-hover"
+        >
+            <CirclePause size={16} />
+            Pause
+        </button>
+    )
+}
