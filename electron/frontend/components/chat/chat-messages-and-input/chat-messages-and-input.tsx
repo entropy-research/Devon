@@ -110,12 +110,6 @@ export default function ChatMessagesAndInput({
                         />
                     )
                 )}
-                {messages && messages.length > 0 && (
-                    <ChatMessages
-                        messages={messages}
-                        spinning={eventState.modelLoading}
-                    />
-                )}
                 <div className="h-px w-full" ref={visibilityRef}></div>
                 {/* </div> */}
             </div>
