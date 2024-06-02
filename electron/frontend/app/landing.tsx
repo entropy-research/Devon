@@ -79,6 +79,7 @@ export default function Landing() {
             <SelectProjectDirectoryModal
                 openProjectModal={openProjectModal}
                 hideclose
+                backendUrl={backendUrl}
             />
         </>
     )

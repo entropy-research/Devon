@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import {
     useReadSessions,
     useDeleteSession,
+    getSessions,
 } from '@/lib/services/sessionService/sessionHooks'
 import { useSearchParams } from 'next/navigation'
 
@@ -34,17 +35,24 @@ const SelectProjectDirectoryModal = ({
     setOpenProjectModal,
     hideclose,
     header,
+    backendUrl,
 }: {
     trigger?: JSX.Element
     openProjectModal?: boolean
     setOpenProjectModal?: (open: boolean) => void
     hideclose?: boolean
     header?: JSX.Element
+    backendUrl: string | null
 }) => {
     const [folderPath, setFolderPath] = useState('')
     const [open, setOpen] = useState(false)
     const [page, setPage] = useState(1)
-    const { sessions, loading, error, refreshSessions } = useReadSessions()
+    const [sessions, setSessions] = useState([])
+
+    useEffect(() => {
+        if (!backendUrl) return
+        getSessions(backendUrl).then(res => setSessions(res))
+    }, [backendUrl])
 
     function validate() {
         return folderPath !== ''
@@ -57,6 +65,8 @@ const SelectProjectDirectoryModal = ({
     function handleOpenChange(open: boolean) {
         setOpen(open)
         if (setOpenProjectModal) setOpenProjectModal(open)
+        if (!backendUrl) return
+        getSessions(backendUrl).then(res => setSessions(res))
     }
 
     useEffect(() => {

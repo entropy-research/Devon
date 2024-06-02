@@ -3,6 +3,19 @@ import axios from 'axios'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
 import { createEventSource } from './sessionService'
 
+export async function getSessions(backendUrl: string) {
+    if (!backendUrl) {
+        return []
+    }
+    try {
+        const response = await axios.get(`${backendUrl}/session`)
+        return response.data
+    } catch (error) {
+        console.error('Error fetching sessions:', error)
+        return []
+    }
+}
+
 export const useReadSessions = () => {
     const { backendUrl } = useBackendUrl()
     const [loading, setLoading] = useState(false)
@@ -13,6 +26,7 @@ export const useReadSessions = () => {
     const fetchSessions = async () => {
         setLoading(true)
         setError(null)
+
         // Don't fetch if the backendUrl hasn't been set yet
         if (!backendUrl) {
             setLoading(false)
