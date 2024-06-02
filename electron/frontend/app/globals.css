@@ -105,14 +105,18 @@
         scrollbar-width: none; /* Firefox */
     }
 
+    /* If you want to disable the scrollbars for all browsers globally:
+
     * {
-        scrollbar-width: none; /* For Firefox */
-        -ms-overflow-style: none; /* For Internet Explorer and Edge */
+        scrollbar-width: none; // For Firefox
+        -ms-overflow-style: none; // For Internet Explorer and Edge
     }
 
     *::-webkit-scrollbar {
-        display: none; /* For Chrome, Safari, and Opera */
+        display: none; // For Chrome, Safari, and Opera
     }
+
+    */
 }
 
 @layer components {

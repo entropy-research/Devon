@@ -28,6 +28,7 @@ const config: Config = {
           day: '#f2f2f2',
           night: '#484848',
         },
+        outlinecolor: '#3d3d3d',
         orange: '#c97f59',
         aqua: '#55c2f9',
         // input: {
@@ -78,13 +79,13 @@ const config: Config = {
         '800': '800ms',
       },
       animation: {
-        "pulse-size": 'pulse-size 4s infinite',
+        'pulse-size': 'pulse-size 4s infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        lineGrow: 'lineGrow 2s ease-in-out forwards', 
+        lineGrow: 'lineGrow 2s ease-in-out forwards',
       },
       keyframes: {
-        "pulse-size": {
+        'pulse-size': {
           '0%, 100%': { transform: 'scale(1)', opacity: '0.4' },
           '50%': { transform: 'scale(0.3)', opacity: '0.6' },
         },

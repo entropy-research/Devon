@@ -53,6 +53,7 @@ export const TreeView = ({
     return (
         <div
             ref={containerRef}
+            id="tree-container-ref"
             className={cn(
                 'rounded-md overflow-hidden py-1 relative h-full',
                 className
@@ -64,6 +65,7 @@ export const TreeView = ({
                 elements={elements}
                 // style={{ height, width }}
                 className="h-full overflow-y-auto"
+                id="tree"
             >
                 {getVirtualItems().map(element => (
                     <TreeItem
@@ -91,10 +93,10 @@ export const TreeItem = forwardRef<
     } & React.HTMLAttributes<HTMLUListElement>
 >(({ className, elements, indicator, ...props }, ref) => {
     return (
-        <ul ref={ref} className="space-y-0" {...props}>
+        <ul id="ul-ref" ref={ref} className="space-y-0 w-full" {...props}>
             {elements &&
                 elements.map(element => (
-                    <li key={element.id}>
+                    <li key={element.id} className="w-full">
                         {element.children && element.children?.length > 0 ? (
                             <Folder
                                 element={element.name}
@@ -115,7 +117,7 @@ export const TreeItem = forwardRef<
                                 key={element.id}
                                 isSelectable={element.isSelectable}
                             >
-                                <span>{element?.name}</span>
+                                <p className="truncate">{element?.name}</p>
                             </File>
                         )}
                     </li>

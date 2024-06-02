@@ -95,7 +95,7 @@ export default function CodeEditor({
     }
 
     return (
-        <>
+        <div className="flex flex-col w-full h-full">
             <FileTabs
                 files={files}
                 selectedFileId={selectedFileId}
@@ -116,7 +116,7 @@ export default function CodeEditor({
                     />
                 )}
             </div>
-        </>
+        </div>
     )
 }
 
@@ -146,7 +146,7 @@ const BothEditorTypes = ({ diffEnabled, file, handleEditorDidMount }) =>
     )
 
 const PathDisplay = ({ path }: { path: string }) => (
-    <div className="-mt-[1px] px-3 py-1 bg-night">
+    <div className="-mt-[1px] px-3 py-1 bg-night border-t border-outlinecolor">
         <p className="text-xs text-neutral-500">
             {path ? convertPath(path) : ''}
         </p>

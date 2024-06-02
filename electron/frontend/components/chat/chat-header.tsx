@@ -10,7 +10,7 @@ export default function ChatHeader({
     //     return <></>
     // }
     return (
-        <div className="relative mt-4 items-end pt-1 pb-3 border-outline-night shrink-0 items-left flex flex-row justify-between border-b px-8">
+        <div className="relative mt-4 items-end pt-1 pb-2 border-outline-night shrink-0 items-left flex flex-row justify-between border-b px-8">
             {/* <div className="">
                 <p className="text-lg mb-2">Hey there!</p>
                 <p className="text-gray-400 text-sm">{`My name is Devon and I'm a software engineer. Give me coding tasks and I will try my best to solve them!`}</p>

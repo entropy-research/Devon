@@ -183,8 +183,9 @@ const Tree = forwardRef<HTMLDivElement, TreeViewProps>(
             >
                 <div className={cn('size-full', className)}>
                     <ScrollArea
+                        id="tree-scroll-area"
                         ref={ref}
-                        className="h-full relative px-2"
+                        className="h-full relative pl-1"
                         dir={dir as Direction}
                     >
                         <AccordionPrimitive.Root
@@ -273,7 +274,7 @@ const Folder = forwardRef<
             <AccordionPrimitive.Item
                 {...props}
                 value={value}
-                className="relative overflow-hidden h-full "
+                className="relative overflow-hidden h-full"
             >
                 <AccordionPrimitive.Trigger
                     className={cn(
@@ -346,7 +347,7 @@ const File = forwardRef<
         const { direction, selectedId, selectItem } = useTree()
         const isSelected = isSelect ?? selectedId === value
         return (
-            <AccordionPrimitive.Item value={value} className="relative">
+            <AccordionPrimitive.Item value={value} className="relative w-full">
                 <AccordionPrimitive.Trigger
                     ref={ref}
                     {...props}

@@ -123,9 +123,9 @@ export default function ShellWidget({messages}: {messages: Message[]}): JSX.Elem
             // is too large and switching tabs causes a layout shift.
             cols: 0,
             fontFamily: "Menlo, Monaco, 'Courier New', monospace",
-            fontSize: 13,
+            fontSize: 11,
             theme: {
-                // background: bgColor,
+                background: '#111111',
             },
             cursorBlink: true,
         })
@@ -162,12 +162,12 @@ export default function ShellWidget({messages}: {messages: Message[]}): JSX.Elem
     }, [messages])
 
     return (
-        <div className="h-full flex flex-col">
-            <div className="flex items-center justify-start">
+        <div className="h-full flex flex-col bg-midnight">
+            {/* <div className="flex items-center justify-start">
                 {[{ id: 1, name: 'Terminal' }].map(file => (
                     <button
                         key={file.id}
-                        className={`flex px-2 items-center bg-black pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 1 ? 'border-t-primary outline outline-neutral-700 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
+                        className={`flex px-2 items-center bg-black pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 0 ? 'border-t-primary outline outline-neutral-700 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
                         // onClick={() => updateSelectedFile(file)}
                     >
                         <TerminalIcon
@@ -177,10 +177,10 @@ export default function ShellWidget({messages}: {messages: Message[]}): JSX.Elem
                         {file.name}
                     </button>
                 ))}
-            </div>
+            </div> */}
             <div
                 id="terminal-wrapper"
-                className="flex-grow flex bg-black w-full p-3 overflow-hidden"
+                className="flex-grow flex bg-midnight w-full pl-3 pr-[1px] pt-3 overflow-hidden border-t border-outlinecolor"
             >
                 <div
                     id="terminal-ref"

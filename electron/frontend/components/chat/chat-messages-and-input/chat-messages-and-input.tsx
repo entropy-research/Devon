@@ -10,6 +10,7 @@ import { sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { useSearchParams } from 'next/navigation'
 import { SessionMachineContext } from '@/app/home'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 type Message = {
     role: 'user' | 'assistant' | 'system' | 'function' | 'data' | 'tool'
@@ -149,7 +150,7 @@ const LoadingSkeleton = () => {
                         </div>
                     </div>
                     <div className="mb-8">
-                    <div className="flex gap-5">
+                        <div className="flex gap-5">
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
