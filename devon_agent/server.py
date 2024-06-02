@@ -100,7 +100,7 @@ def read_root():
 
 @app.get("/session")
 def read_session():
-    return list(sessions.keys())
+    return [{"name": session_name, "path": session_data.base_path} for session_name, session_data in sessions.items()]
 
 
 @app.post("/session")

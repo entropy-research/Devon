@@ -313,7 +313,7 @@ export const sessionMachine = setup({
 
                 for (let i = 0; i < response.data.length; i++) {
                     if (response.data[i].name === input.name) {
-                        return response.data[i];
+                        return response.data[i].name;
                     }
                 }
                 throw new Error('Session not found');

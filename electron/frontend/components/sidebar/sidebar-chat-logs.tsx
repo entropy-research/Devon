@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 import { Ellipsis, Trash } from 'lucide-react'
-import { useReadSessions, useDeleteSession } from '@/lib/services/sessionService/sessionHooks'
+import {
+    useReadSessions,
+    useDeleteSession,
+} from '@/lib/services/sessionService/sessionHooks'
 import {
     Popover,
     PopoverContent,
@@ -46,37 +49,49 @@ const SidebarChatLogs = () => {
             )}
             {!loading &&
                 sessions &&
-                sessions.reverse().map((chatId: string, index: number) => (
-                    <div
-                        key={chatId}
-                        className={`flex relative justify-between group items-center smooth-hover rounded-sm mx-2 ${chatId === sessionId ? 'bg-night border-l-2 border-primary' : ''}`}
-                    >
-                        <button
-                            className="relative px-3 py-2 flex w-full items-center"
-                            onClick={() => handleNavigate(chatId)}
-                        >
-                            <span className="text-ellipsis">
-                                {chatId ? chatId : '(Unnamed chat)'}
-                            </span>
-                        </button>
-
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <button className="opacity-0 group-hover:opacity-100 right-0 px-1 pl-1 pr-3 group-hover:hover-opacity">
-                                    <Ellipsis size={24} className="pt-1" />
-                                </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="bg-night w-fit p-0">
+                sessions
+                    .reverse()
+                    .map(
+                        (
+                            session: { name: string; path: string },
+                            index: number
+                        ) => (
+                            <div
+                                key={session.name}
+                                className={`flex relative justify-between group items-center smooth-hover rounded-sm mx-2 ${session.name === sessionId ? 'bg-night border-l-2 border-primary' : ''}`}
+                            >
                                 <button
-                                    onClick={() => deleteChat(chatId)}
-                                    className="flex gap-2 justify-start items-center p-2 pr-3 text-sm"
+                                    className="relative px-3 py-2 flex w-full items-center"
+                                    onClick={() => handleNavigate(session.name)}
                                 >
-                                    <Trash size={16} /> Delete session
+                                    <span className="text-ellipsis">
+                                        {session.name
+                                            ? session.name
+                                            : '(Unnamed chat)'}
+                                    </span>
                                 </button>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                ))}
+
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <button className="opacity-0 group-hover:opacity-100 right-0 px-1 pl-1 pr-3 group-hover:hover-opacity">
+                                            <Ellipsis
+                                                size={24}
+                                                className="pt-1"
+                                            />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="bg-night w-fit p-0">
+                                        <button
+                                            onClick={() => deleteChat(session.name)}
+                                            className="flex gap-2 justify-start items-center p-2 pr-3 text-sm"
+                                        >
+                                            <Trash size={16} /> Delete session
+                                        </button>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        )
+                    )}
         </div>
     )
 }

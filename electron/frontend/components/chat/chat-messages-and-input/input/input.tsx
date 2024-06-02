@@ -10,6 +10,7 @@ import { useSearchParams } from 'next/navigation'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 import { SessionMachineContext } from '@/app/home'
+import { useBackendUrl } from '@/contexts/BackendUrlContext'
 
 const Input = ({
     isAtBottom,
@@ -36,6 +37,7 @@ const Input = ({
     // For blocking user with modal
     const searchParams = useSearchParams()
     const [openProjectModal, setOpenProjectModal] = useState(false)
+    const { backendUrl } = useBackendUrl()
 
     async function submitUserMessage(value: string) {
         const chatId = searchParams.get('chat')
@@ -152,6 +154,7 @@ const Input = ({
                     <SelectProjectDirectoryModal
                         openProjectModal={openProjectModal}
                         setOpenProjectModal={setOpenProjectModal}
+                        backendUrl={backendUrl}
                     />
                 </>
             )}

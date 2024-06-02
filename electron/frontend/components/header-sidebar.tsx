@@ -3,9 +3,11 @@ import { List, PanelsTopLeft, PanelLeft, SquarePen } from 'lucide-react'
 import { useState } from 'react'
 import Sidebar from '@/components/sidebar/sidebar'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
+import { useBackendUrl } from '@/contexts/BackendUrlContext'
 
 const HeaderSidebar = () => {
     const [expanded, setExpanded] = useState(false)
+    const { backendUrl } = useBackendUrl()
 
     return (
         <>
@@ -38,6 +40,7 @@ const HeaderSidebar = () => {
                         </button>
                     }
                     header={<h1 className="text-2xl font-bold mb-5">Create new chat</h1>}
+                    backendUrl={backendUrl}
                 />
             </header>
             <Sidebar expanded={expanded} setExpanded={setExpanded} />

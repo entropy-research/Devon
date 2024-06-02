@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import {
     useReadSessions,
     useDeleteSession,
+    getSessions,
 } from '@/lib/services/sessionService/sessionHooks'
 import { useSearchParams } from 'next/navigation'
 
@@ -34,17 +35,24 @@ const SelectProjectDirectoryModal = ({
     setOpenProjectModal,
     hideclose,
     header,
+    backendUrl,
 }: {
     trigger?: JSX.Element
     openProjectModal?: boolean
     setOpenProjectModal?: (open: boolean) => void
     hideclose?: boolean
     header?: JSX.Element
+    backendUrl: string | null
 }) => {
     const [folderPath, setFolderPath] = useState('')
     const [open, setOpen] = useState(false)
     const [page, setPage] = useState(1)
-    const { sessions, loading, error, refreshSessions } = useReadSessions()
+    const [sessions, setSessions] = useState([])
+
+    useEffect(() => {
+        if (!backendUrl) return
+        getSessions(backendUrl).then(res => setSessions(res))
+    }, [backendUrl])
 
     function validate() {
         return folderPath !== ''
@@ -57,6 +65,8 @@ const SelectProjectDirectoryModal = ({
     function handleOpenChange(open: boolean) {
         setOpen(open)
         if (setOpenProjectModal) setOpenProjectModal(open)
+        if (!backendUrl) return
+        getSessions(backendUrl).then(res => setSessions(res))
     }
 
     useEffect(() => {
@@ -164,7 +174,7 @@ export const StartChatButton = ({ onClick, disabled, folderPath }) => {
 
 const ExistingSessionFound = ({ sessions, setPage, onClick }) => {
     const searchParams = useSearchParams()
-    function handleContinueChat() {
+    function handleContinueChat(path: string) {
         async function session() {
             try {
                 // Don't need to navigate if already on chat
@@ -174,7 +184,7 @@ const ExistingSessionFound = ({ sessions, setPage, onClick }) => {
                 // const newSessionId = nanoid()
                 // Using a set session id for now: for single sessions
                 const newSessionId = 'New chat'
-                handleNavigate(newSessionId)
+                handleNavigate(newSessionId, path)
             } catch (error) {
                 console.error('Error starting session:', error)
             }
@@ -184,7 +194,7 @@ const ExistingSessionFound = ({ sessions, setPage, onClick }) => {
     }
     return (
         <div>
-            {sessions?.length > 0 && sessions[0] === 'New chat' ? (
+            {sessions?.length > 0 && sessions[0].name === 'New chat' ? (
                 <div>
                     <p className="text-2xl font-bold">
                         Continue previous chat?
@@ -198,7 +208,7 @@ const ExistingSessionFound = ({ sessions, setPage, onClick }) => {
                         <Button
                             type="submit"
                             className="bg-primary text-white p-2 rounded-md w-full mt-7"
-                            onClick={handleContinueChat}
+                            onClick={() => handleContinueChat(sessions[0].path)}
                         >
                             Continue
                         </Button>
