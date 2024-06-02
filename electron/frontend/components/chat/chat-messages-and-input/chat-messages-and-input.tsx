@@ -30,10 +30,12 @@ export interface ChatProps extends React.ComponentProps<'div'> {
 export default function ChatMessagesAndInput({
     viewOnly,
     loading,
+    sessionId
     // sessionMachineProps,
 }: {
     viewOnly: boolean
     loading: boolean
+    sessionId: string
     // sessionMachineProps: {
     //     port: number
     //     name: string
@@ -127,6 +129,7 @@ export default function ChatMessagesAndInput({
                         viewOnly={viewOnly}
                         eventContext={eventState}
                         loading={!state.matches('running')}
+                        sessionId={sessionId}
                     />
                 </div>
             </div>

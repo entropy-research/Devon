@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Paperclip, ArrowRight, CirclePause } from 'lucide-react'
+import { Paperclip, ArrowRight, CirclePause, Axis3DIcon } from 'lucide-react'
 import { AutoresizeTextarea } from '@/components/ui/textarea'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import {
@@ -9,6 +9,7 @@ import {
 import { useSearchParams } from 'next/navigation'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
+import { SessionMachineContext } from '@/app/home'
 
 const Input = ({
     isAtBottom,
@@ -16,14 +17,17 @@ const Input = ({
     viewOnly,
     eventContext,
     loading,
+    sessionId
 }: {
     isAtBottom: boolean
     scrollToBottom: () => void
     viewOnly: boolean
     eventContext: any
     loading: boolean
+    sessionId: string
 }) => {
     const [focused, setFocused] = useState(false)
+    const [paused, setPaused] = useState(false)
     const { formRef, onKeyDown } = useEnterSubmit()
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const [input, setInput] = useState('')
@@ -56,6 +60,27 @@ const Input = ({
         checkShouldOpenModal()
     }
 
+    const host = SessionMachineContext.useSelector(state => state.context.host)
+
+    async function handlePause() {
+        try {
+            
+            const response = await fetch(`${host}/session/${sessionId}/pause`, {
+                method: "POST"
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            setPaused(!paused)
+            return data
+        } catch (error) {
+            console.log(host)
+            console.log(error)  
+        }
+    }
+
     return (
         <div
             className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
@@ -67,6 +92,8 @@ const Input = ({
                     modelLoading={eventContext.modelLoading}
                     userRequested={eventContext.userRequest}
                     loading={loading}
+                    paused={paused}
+                    pauseHandler={handlePause}
                 />
             )}
             {!viewOnly && (
@@ -132,8 +159,8 @@ const Input = ({
     )
 }
 
-const InformationBox = ({ modelLoading, userRequested, loading }) => {
-    let paused = false
+const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHandler }) => {
+
     const types: {
         [key: string]: {
             text: string
@@ -142,7 +169,7 @@ const InformationBox = ({ modelLoading, userRequested, loading }) => {
     } = {
         modelLoading: {
             text: 'Devon is working...',
-            accessory: <PauseButton paused={paused} />,
+            accessory: <PauseButton paused={paused} pauseHandler={pauseHandler}/>,
         },
         userRequested: {
             text: 'Devon is waiting for your response',
@@ -180,11 +207,11 @@ const InformationBox = ({ modelLoading, userRequested, loading }) => {
 
 export default Input
 
-const PauseButton = ({ paused }) => {
+const PauseButton = ({ paused, pauseHandler }) => {
     if (paused) {
         return (
             <button
-                // onClick=
+                onClick={pauseHandler}
                 className="flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 text-gray-100 smooth-hover"
             >
                 <CirclePause size={16} />
@@ -194,7 +221,7 @@ const PauseButton = ({ paused }) => {
     }
     return (
         <button
-            // onClick=
+            onClick={pauseHandler}
             className="flex items-center gap-2 px-3 py-1 rounded-md text-gray-400 mb-[-4px] -mr-2 hover:text-gray-100 smooth-hover"
         >
             <CirclePause size={16} />

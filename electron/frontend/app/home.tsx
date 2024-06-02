@@ -72,7 +72,7 @@ export default function Home({
                     host: 'http://localhost:' + sessionMachineProps.port,
                     name: sessionMachineProps.name,
                     path: sessionMachineProps.path,
-                    reset: false,
+                    reset: true,
                 },
             }}
         >

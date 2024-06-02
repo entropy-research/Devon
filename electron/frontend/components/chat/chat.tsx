@@ -51,6 +51,7 @@ export default function Chat({
                     <ChatMessagesAndInput
                         viewOnly={viewOnly}
                         loading={loading}
+                        sessionId={sessionId as string}
                         // sessionMachineProps={sessionMachineProps}
                     />
                 {/* )} */}
