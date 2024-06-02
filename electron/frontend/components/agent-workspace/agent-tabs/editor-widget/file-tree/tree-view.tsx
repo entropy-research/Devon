@@ -63,7 +63,7 @@ export const TreeView = ({
                 initialSelectedId={initialSelectedId}
                 initialExpendedItems={initialExpendedItems}
                 elements={elements}
-                // style={{ height, width }}
+                style={{ height, width }}
                 className="h-full overflow-y-auto"
                 id="tree"
             >
@@ -117,7 +117,7 @@ export const TreeItem = forwardRef<
                                 key={element.id}
                                 isSelectable={element.isSelectable}
                             >
-                                <p className="truncate">{element?.name}</p>
+                                <p className="flex-1 truncate text-left">{element?.name}</p>
                             </File>
                         )}
                     </li>

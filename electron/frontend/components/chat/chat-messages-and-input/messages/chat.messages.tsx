@@ -13,7 +13,7 @@ export interface ChatMessages {
 
 const ChatMessages = ({ messages, spinning }: ChatMessages) => {
     return messages?.length ? (
-        <div className="relative px-8 mt-5">
+        <div className="relative px-6 mt-5">
             {messages.map((message, index) => (
                 <DisplayedChatMessage
                     key={message.id ?? index}
@@ -67,6 +67,7 @@ const DisplayedChatMessage = ({ message }) => {
                     </ChatTypeWrapper>
                 ) : message.type === 'tool' ? (
                     <ToolResponseMessage
+                        className="text-gray-400"
                         content={message.text}
                     ></ToolResponseMessage>
                 ) : message.type === 'user' ? (

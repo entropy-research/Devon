@@ -34,7 +34,7 @@ const FolderPicker = ({ folderPath, setFolderPath, disabled }) => {
                     className="w-[300px]"
                     value={folderPath}
                     onChange={handleInputChange}
-                    disabled={disabled}
+                    disabled={true} // Don't have path validation on input of string yet so disable for now
                 />
                 <Button className="" onClick={handleDirectoryPicker} disabled={disabled}>
                     Choose...

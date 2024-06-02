@@ -7,6 +7,7 @@ import { CodeBlock } from '@/components/ui/codeblock'
 import { MemoizedReactMarkdown } from './chat.memoized-react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
+import { remarkCustomCode } from './remarkCustomCode' // import the custom plugin
 import { StreamableValue } from 'ai/rsc'
 import { useStreamableText } from '@/lib/hooks/chat.use-streamable-text'
 import { TfiThought } from 'react-icons/tfi'
@@ -111,19 +112,11 @@ export const ToolResponseMessage = ({
     className?: string
 }) => {
     const icon = <div className="w-[32px]"></div>
-    className = 'text-gray-400'
-    return <StyledMessage content={content} className={className} icon={icon} />
+    let [command, response] = content.toString().split('|START_RESPONSE|')
+    return <StyledMessage content={command} className={className} icon={icon} />
 }
 
-function StyledMessage({
-    content,
-    className,
-    icon,
-}: {
-    content: string | StreamableValue<string>
-    className?: string
-    icon: React.ReactNode
-}) {
+function StyledMessage({ content, className, icon }) {
     const text = useStreamableText(content)
 
     return (
@@ -132,7 +125,8 @@ function StyledMessage({
             <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
                 <MemoizedReactMarkdown
                     className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
-                    remarkPlugins={[remarkGfm, remarkMath]}
+                    // remarkPlugins={[remarkGfm, remarkMath, remarkCustomCode]}
+                    // remarkPlugins={[remarkCustomCode]}
                     components={{
                         p({ children }) {
                             return <p className="mb-2 last:mb-0">{children}</p>

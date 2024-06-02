@@ -87,7 +87,7 @@ const Input = ({
         >
             {(loading ||
                 eventContext.modelLoading ||
-                eventContext.userRequest) && (
+                eventContext.userRequest || paused) && (
                 <InformationBox
                     modelLoading={eventContext.modelLoading}
                     userRequested={eventContext.userRequest}
@@ -187,9 +187,9 @@ const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHan
     } else {
         currentType = modelLoading ? types.modelLoading : types.userRequested
     }
-    currentType = types.modelLoading
     if (paused) {
         currentType.text = 'Devon is paused'
+        currentType.accessory = <PauseButton paused={paused} pauseHandler={pauseHandler}/>
     }
 
     return (

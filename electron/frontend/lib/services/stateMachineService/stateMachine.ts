@@ -8,58 +8,55 @@ import {
     EventObject,
     sendTo,
     enqueueActions,
-    log
+    log,
     // createActor
-} from 'xstate';
+} from 'xstate'
 
 export type Message = {
-    text: string;
-    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error';
-};
+    text: string
+    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error'
+}
 
 type ServerEvent = {
     type:
-    | 'ModelResponse'
-    | 'ToolResponse'
-    | 'Task'
-    | 'Interrupt'
-    | 'UserRequest'
-    | 'Stop'
-    | 'ModelRequest'
-    | 'ToolRequest'
-    | 'Error'
-    | 'UserResponse'
-    | 'GitEvent';
-    content: any;
-    identifier: string | null;
-};
+        | 'ModelResponse'
+        | 'ToolResponse'
+        | 'Task'
+        | 'Interrupt'
+        | 'UserRequest'
+        | 'Stop'
+        | 'ModelRequest'
+        | 'ToolRequest'
+        | 'Error'
+        | 'UserResponse'
+        | 'GitEvent'
+    content: any
+    identifier: string | null
+}
 
 type ServerEventContext = {
-    messages: Message[];
-    ended: boolean;
-    modelLoading: boolean;
-    toolMessage: string;
-    userRequest: boolean;
+    messages: Message[]
+    ended: boolean
+    modelLoading: boolean
+    toolMessage: string
+    userRequest: boolean
     gitData: {
-        base_commit: string | null;
-        commits: string[];
-    };
+        base_commit: string | null
+        commits: string[]
+    }
 }
 
 export const eventHandlingLogic = fromTransition(
-    (
-        state: ServerEventContext,
-        event: ServerEvent,
-    ) => {
+    (state: ServerEventContext, event: ServerEvent) => {
         switch (event.type) {
             case 'Stop': {
-                return { ...state, ended: true };
+                return { ...state, ended: true }
             }
             case 'ModelRequest': {
-                return { ...state, modelLoading: true };
+                return { ...state, modelLoading: true }
             }
             case 'ModelResponse': {
-                let content = JSON.parse(event.content);
+                let content = JSON.parse(event.content)
                 return {
                     ...state,
                     modelLoading: false,
@@ -67,18 +64,20 @@ export const eventHandlingLogic = fromTransition(
                         ...state.messages,
                         { text: content.thought, type: 'thought' } as Message,
                     ],
-                };
+                }
             }
             case 'ToolRequest': {
                 return {
                     ...state,
-                    toolMessage: 'Running command: ' + event.content.raw_command,
-                };
+                    toolMessage:
+                        'Running command: ' + event.content.raw_command,
+                }
             }
             case 'ToolResponse': {
-                let tool_message = state.toolMessage + '\n> ' + event.content;
+                let tool_message =
+                    state.toolMessage + '|START_RESPONSE|' + event.content
                 if (tool_message.length > 2000) {
-                    tool_message = tool_message.slice(2000);
+                    tool_message = tool_message.slice(2000)
                 }
 
                 return {
@@ -86,9 +85,12 @@ export const eventHandlingLogic = fromTransition(
                     toolMessage: '',
                     messages: [
                         ...state.messages,
-                        { text: tool_message, type: 'tool' } as Message,
+                        {
+                            text: tool_message,
+                            type: 'tool',
+                        } as Message,
                     ],
-                };
+                }
             }
             case 'Task': {
                 return {
@@ -97,7 +99,7 @@ export const eventHandlingLogic = fromTransition(
                         ...state.messages,
                         { text: event.content, type: 'task' } as Message,
                     ],
-                };
+                }
             }
             case 'Interrupt': {
                 return {
@@ -106,7 +108,7 @@ export const eventHandlingLogic = fromTransition(
                         ...state.messages,
                         { text: event.content, type: 'user' } as Message,
                     ],
-                };
+                }
             }
             case 'UserRequest': {
                 return {
@@ -116,7 +118,7 @@ export const eventHandlingLogic = fromTransition(
                         ...state.messages,
                         { text: event.content, type: 'agent' } as Message,
                     ],
-                };
+                }
             }
             case 'UserResponse': {
                 return {
@@ -126,17 +128,17 @@ export const eventHandlingLogic = fromTransition(
                         ...state.messages,
                         { text: event.content, type: 'user' } as Message,
                     ],
-                };
+                }
             }
             case 'Error': {
-                console.error(event.content);
+                console.error(event.content)
                 return {
                     ...state,
                     messages: [
                         ...state.messages,
                         { text: event.content, type: 'error' } as Message,
-                    ]
-                };
+                    ],
+                }
             }
             case 'GitEvent': {
                 if (event.content.type === 'base_commit') {
@@ -146,15 +148,18 @@ export const eventHandlingLogic = fromTransition(
                             base_commit: event.content.commit,
                             commits: [event.content.commit],
                         },
-                    };
+                    }
                 } else if (event.content.type === 'commit') {
                     return {
                         ...state,
                         gitData: {
                             base_commit: state.gitData.base_commit,
-                            commits: [...state.gitData.commits, event.content.commit],
+                            commits: [
+                                ...state.gitData.commits,
+                                event.content.commit,
+                            ],
                         },
-                    };
+                    }
                 } else if (event.content.type === 'revert') {
                     return {
                         ...state,
@@ -162,18 +167,19 @@ export const eventHandlingLogic = fromTransition(
                             base_commit: event.content.commit,
                             commits: state.gitData.commits.slice(
                                 0,
-                                state.gitData.commits.indexOf(event.content.commit_to_go_to) +
-                                1,
+                                state.gitData.commits.indexOf(
+                                    event.content.commit_to_go_to
+                                ) + 1
                             ),
                         },
-                    };
+                    }
                 } else {
-                    return state;
+                    return state
                 }
             }
 
             default: {
-                return state;
+                return state
             }
         }
     },
@@ -187,8 +193,8 @@ export const eventHandlingLogic = fromTransition(
             base_commit: null,
             commits: [],
         },
-    },
-);
+    }
+)
 
 export const eventSourceActor = fromCallback<
     EventObject,
@@ -197,25 +203,25 @@ export const eventSourceActor = fromCallback<
     let eventStream: EventSource | null = null
 
     const eventHandler = ({ data }: { data: any }) => {
-        sendBack({ type: 'serverEvent', payload: JSON.parse(data) });
-    };
+        sendBack({ type: 'serverEvent', payload: JSON.parse(data) })
+    }
 
     receive((event: any) => {
         if (event.type === 'startStream') {
             eventStream = new EventSource(
-                `${input.host}/session/${input.name}/events/stream`,
-            );
-            eventStream.addEventListener('message', eventHandler);
+                `${input.host}/session/${input.name}/events/stream`
+            )
+            eventStream.addEventListener('message', eventHandler)
         }
         if (event.type === 'stopStream') {
-            eventStream?.removeEventListener('message', eventHandler);
+            eventStream?.removeEventListener('message', eventHandler)
         }
-    });
+    })
 
     return () => {
-        eventStream?.removeEventListener('message', eventHandler);
-    };
-});
+        eventStream?.removeEventListener('message', eventHandler)
+    }
+})
 
 export const sessionMachine = setup({
     types: {
@@ -224,18 +230,18 @@ export const sessionMachine = setup({
             | { type: 'startStream' }
             | { type: 'stopStream' },
         context: {} as {
-            host: string;
-            retryCount: number;
-            name: string;
-            path: string;
-            reset: boolean;
-            serverEventContext: ServerEventContext;
+            host: string
+            retryCount: number
+            name: string
+            path: string
+            reset: boolean
+            serverEventContext: ServerEventContext
         },
         input: {} as {
-            reset: boolean;
-            host: string;
-            name: string;
-            path: string;
+            reset: boolean
+            host: string
+            name: string
+            path: string
         },
     },
 
@@ -246,56 +252,60 @@ export const sessionMachine = setup({
             async ({
                 input,
             }: {
-                input: { host: string; name: string; path: string; reset: boolean };
+                input: {
+                    host: string
+                    name: string
+                    path: string
+                    reset: boolean
+                }
             }) => {
-                console.log("starting server")
+                console.log('starting server')
                 // sleep for 5 sec
-                await new Promise(resolve => setTimeout(resolve, 5000));
+                await new Promise(resolve => setTimeout(resolve, 5000))
 
                 if (input?.reset === true) {
-                    await axios.post(`${input?.host}/session/${input?.name}/reset`);
+                    await axios.post(
+                        `${input?.host}/session/${input?.name}/reset`
+                    )
                 }
 
-
-                const encodedPath = encodeURIComponent(input?.path);
+                const encodedPath = encodeURIComponent(input?.path)
                 const response = await axios.post(
-                    `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
-                );
-                console.log("response",response)
-                return response;
-            },
+                    `${input?.host}/session?session=${input?.name}&path=${encodedPath}`
+                )
+                console.log('response', response)
+                return response
+            }
         ),
         startSession: fromPromise(
             async ({ input }: { input: { host: string; name: string } }) => {
                 const response = await axios.post(
-                    `${input?.host}/session/${input?.name}/start`,
-                );
-                return response;
-            },
+                    `${input?.host}/session/${input?.name}/start`
+                )
+                return response
+            }
         ),
         checkSession: fromPromise(
             async ({ input }: { input: { host: string; name: string } }) => {
-                const response = await axios.get(`${input?.host}/session`);
+                const response = await axios.get(`${input?.host}/session`)
 
                 for (let i = 0; i < response.data.length; i++) {
                     if (response.data[i].name === input.name) {
-                        return response.data[i];
+                        return response.data[i]
                     }
                 }
-                throw new Error('Session not found');
-            },
+                throw new Error('Session not found')
+            }
         ),
         loadEvents: fromPromise(
-            async ({
-                input,
-            }: {
-                input: { host: string; name: string };
-            }) => {
+            async ({ input }: { input: { host: string; name: string } }) => {
                 const newEvents = (
-                    await axios.get(`${input?.host}/session/${input?.name}/events`)
-                ).data;
+                    await axios.get(
+                        `${input?.host}/session/${input?.name}/events`
+                    )
+                ).data
                 return newEvents
-            },
+            }
         ),
     },
 }).createMachine({
@@ -308,9 +318,9 @@ export const sessionMachine = setup({
             input: ({ context: { host, name } }) => ({ host, name }),
             onDone: {
                 actions: ({ event }) => {
-                    console.log("event", event)
-                }
-            }
+                    console.log('event', event)
+                },
+            },
         },
         {
             id: 'ServerEventHandler',
@@ -320,9 +330,9 @@ export const sessionMachine = setup({
                 actions: assign({
                     serverEventContext: ({ event }) => {
                         return event.snapshot.context
-                    }
-                })
-            }
+                    },
+                }),
+            },
         },
     ],
     context: ({ input }) => ({
@@ -341,13 +351,12 @@ export const sessionMachine = setup({
                 base_commit: null,
                 commits: [],
             },
-        }
+        },
     }),
-
 
     states: {
         initial: {
-            entry:log("initial"),
+            entry: log('initial'),
             invoke: {
                 id: 'checkSession',
                 src: 'checkSession',
@@ -375,13 +384,13 @@ export const sessionMachine = setup({
                     actions: sendTo('ServerEventSource', ({ self }) => {
                         return {
                             type: 'startStream',
-                            sender: self
+                            sender: self,
                         }
                     }),
                 },
                 onError: {
                     target: 'retryCreateSession',
-                }
+                },
             },
         },
         sessionExists: {
@@ -396,9 +405,12 @@ export const sessionMachine = setup({
                     target: 'sessionReady',
                     actions: enqueueActions(({ enqueue, event }) => {
                         for (let i = 0; i < event.output.length; i++) {
-                            enqueue.sendTo('ServerEventHandler', event.output[i]);
+                            enqueue.sendTo(
+                                'ServerEventHandler',
+                                event.output[i]
+                            )
                         }
-                    })
+                    }),
                 },
             },
         },
@@ -441,8 +453,7 @@ export const sessionMachine = setup({
             reenter: true,
         },
     },
-});
-
+})
 
 // export const sessionMachine = setup({
 //     types: {

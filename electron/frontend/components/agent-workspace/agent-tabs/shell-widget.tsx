@@ -16,7 +16,6 @@ import type { Message } from '@/lib/services/stateMachineService/stateMachine'
 
 //     // const [messages, setMessages] = useState([])
 
-
 //     // useEffect(() => {
 //     //     if (!chatId || chatId === 'New') return
 //     //     const fetchAndUpdateMessages = () => {
@@ -93,12 +92,15 @@ class JsonWebsocketAddon {
  * we keep the terminal persistently open as a child of <App /> and hidden when not in use.
  */
 
-export default function ShellWidget({messages}: {messages: Message[]}): JSX.Element {
+export default function ShellWidget({
+    messages,
+}: {
+    messages: Message[]
+}): JSX.Element {
     const terminalRef = useRef<HTMLDivElement>(null)
     const terminalInstanceRef = useRef<XtermTerminal | null>(null)
 
     // const messages = SessionMachineContext.useSelector(state => state.context.serverEventContext.messages).filter(message => message.type === 'tool')
-
 
     useEffect(() => {
         async function addOn() {
@@ -136,7 +138,6 @@ export default function ShellWidget({messages}: {messages: Message[]}): JSX.Elem
 
         addOn()
 
-
         return () => {
             terminal.dispose()
             terminalInstanceRef.current = null
@@ -148,15 +149,36 @@ export default function ShellWidget({messages}: {messages: Message[]}): JSX.Elem
         if (terminal) {
             terminal.clear() // Clear the existing content
             messages.forEach((message, idx) => {
-                let prefix = ''
-                
-                let [command, response] = message.text.split('\n> ')
-                command = "bash>  " + command.slice(18,).trim()
-                // if (message.type === 'EnvironmentRequest') {
-                //     prefix = idx === 0 ? '> ' : '\n> '
-                // }
-                terminal.writeln(`${command}`)
-                terminal.writeln(`${response}`)
+                let [command, response] = message.text.split('|START_RESPONSE|')
+                let commandMsgs = command.slice(18).trim().split('\n')
+                commandMsgs.forEach((line, index) => {
+                    if (index === 0) {
+                        const firstLineItems = line.trim().split(' ')
+                        let end: string | undefined = undefined
+
+                        // Check if the last item in the first line is "<<<"
+                        if (
+                            firstLineItems[firstLineItems.length - 1] === '<<<'
+                        ) {
+                            end = firstLineItems.pop() // Remove the "<<<"
+                        }
+
+                        // Construct the command string
+                        line = 'bash>  ' + firstLineItems.join(' ')
+                        if (end) {
+                            terminal.writeln(line)
+                            terminal.writeln(end)
+                            return
+                        }
+                    }
+                    terminal.writeln(line)
+                })
+                if (response) {
+                    let responseMsgs = response.trim().split('\n')
+                    responseMsgs.forEach(line => {
+                        terminal.writeln(line)
+                    })
+                }
             })
         }
     }, [messages])
