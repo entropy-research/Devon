@@ -1,17 +1,20 @@
-import type { Metadata } from 'next'
+"use client"
+// import type { Metadata } from 'next'
 import { DM_Sans } from 'next/font/google'
 import { Toaster } from '@/components/ui/toaster'
-import Sidebar from '@/components/sidebar/sidebar'
+import HeaderSidebar from '@/components/header-sidebar'
+import { BackendUrlProvider } from '../contexts/BackendUrlContext'
 
 import './globals.css'
 
 // const inter = Inter({ subsets: ['latin'] })
 const dmSans = DM_Sans({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-    title: 'Devon',
-    description: 'Open-Source AI Software Engineer',
-}
+// Can't do this with bc provider needs 'use client'
+// export const metadata: Metadata = {
+//     title: 'Devon',
+//     description: 'Open-Source AI Software Engineer',
+// }
 
 export default function RootLayout({
     children,
@@ -20,13 +23,17 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className="dark h-full">
-            <body className={`${dmSans.className} h-full`}>
-                <main className="flex h-full flex-row overflow-hidden">
-                    <div className="relative w-full overflow-hidden bg-day transition-colors duration-200 dark:bg-night md:flex md:p-[2rem]">
-                        <Sidebar />
-                        {children}
+            <body className={`${dmSans.className} flex h-full flex-col`}>
+                <div className="flex w-full h-full overflow-hidden">
+                    <div className="relative w-full overflow-hidden bg-day transition-colors duration-200 dark:bg-night flex">
+                        <BackendUrlProvider>
+                            <HeaderSidebar />
+                            <main className="mt-[54px] flex flex-row w-full">
+                                {children}
+                            </main>
+                        </BackendUrlProvider>
                     </div>
-                </main>
+                </div>
                 <Toaster />
             </body>
         </html>

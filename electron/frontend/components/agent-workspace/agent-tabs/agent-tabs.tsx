@@ -2,31 +2,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ShellWidget from './shell-widget'
 import BrowserWidget from './browser-widget'
 import EditorWidget from './editor-widget/editor-widget'
+import TimelineWidget from './timeline-widget'
 import PlannerWidget from './planner-widget'
 import Chat from '../../chat/chat'
 import { ViewMode } from '@/lib/types'
 import { ChatProps } from '@/lib/chat.types'
+import { useContext, createContext, useState, useRef } from 'react'
 
-const tabs = [
-    {
-        id: 'shell',
-        title: 'Shell',
-        content: <ShellWidget />,
-    },
-    {
-        id: 'browser',
-        title: 'Browser',
-        content: <BrowserWidget />,
-    },
-    {
-        id: 'editor',
-        title: 'Editor',
-        content: <></>,
-    },
+const observeTabs = [
     {
         id: 'planner',
         title: 'Planner',
         content: <PlannerWidget />,
+    },
+    {
+        id: 'timeline',
+        title: 'Minimap',
+        content: <TimelineWidget />,
     },
 ]
 
@@ -54,90 +46,83 @@ const gridTabs = [
     // },
 ]
 
+const defaultValue = {
+    expanded: true,
+}
+
 export default function AgentWorkspaceTabs({
     viewMode,
     chatProps,
+    visibilityProps: {
+        showPlanner,
+        setShowPlanner,
+        showTimeline,
+        setShowTimeline,
+    },
 }: {
     viewMode: ViewMode
     chatProps: ChatProps
+    visibilityProps: {
+        showPlanner: boolean
+        setShowPlanner: (show: boolean) => void
+        showTimeline: boolean
+        setShowTimeline: (show: boolean) => void
+    }
 }) {
     return (
         <>
             {viewMode === ViewMode.Panel ? (
-                <PanelView chatProps={chatProps} />
+                // <div className="flex gap-5 w-full h-full justify-around pr-5 flex-1">
+                //     <div
+                //         className={`transition-all duration-300 ${showPlanner ? 'w-full' : 'w-0 overflow-hidden'}`}
+                //     >
+                //         <PlannerWidget />
+                //     </div>
+                //     <div
+                //         className={`transition-all duration-300 ${showTimeline ? 'w-full' : 'w-0 overflow-hidden'}`}
+                //     >
+                //         <TimelineWidget />
+                //     </div>
+                // </div>
+                <div className="flex px-5 gap-5">
+                    {/* {showPlanner && <PlannerWidget />} */}
+                    <EditorWidget chatId={chatProps.id ?? null} />
+                    {showTimeline && <TimelineWidget />}
+                </div>
             ) : (
-                <GridView chatProps={chatProps} />
+                <div className="flex gap-5 w-full h-full justify-around pr-5 flex-1">
+                    <GridView chatProps={chatProps} />
+                </div>
             )}
         </>
     )
 }
 
-const PanelView = ({ chatProps }: { chatProps: ChatProps }) => (
-    <Tabs defaultValue="shell" className="flex flex-col h-full">
-        <TabsList className="gap-1 justify-start">
-            {tabs.map(({ id, title }) => (
-                <TabsTrigger key={id} value={id}>
-                    {title}
-                </TabsTrigger>
-            ))}
-        </TabsList>
-        {tabs.map(({ id, content }) => (
-            <ContentContainer key={id} value={id}>
-                {id === 'editor' ? (
-                    <EditorWidget chatId={chatProps.id ?? null} />
-                ) : (
-                    content
-                )}
-            </ContentContainer>
-        ))}
-    </Tabs>
-)
+// function PlannerWidget() {
+//     const { expanded } = useContext(CTX1);
+//     return (
+//         <div className={`transition-all duration-300 ${expanded ? 'w-1/2' : 'w-0 overflow-hidden'}`}>
+//             {expanded && <div>Planner Content</div>}
+//         </div>
+//     );
+// }
+
+// function TimelineWidget() {
+//     const { expanded } = useContext(CTX2);
+//     return (
+//         <div className={`transition-all duration-300 ${expanded ? 'w-1/2' : 'w-0 overflow-hidden'}`}>
+//             {expanded && <div>Timeline Content</div>}
+//         </div>
+//     );
+// }
 
 const GridView = ({ chatProps }: { chatProps: ChatProps }) => (
-    <div className="h-full w-full flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-4 h-1/2">
-            {gridTabs.slice(0, 2).map(({ id, content }) => (
-                <GridContentContainer key={id}>
-                    {id === 'chat' ? (
-                        <Chat viewOnly chatProps={chatProps} />
-                    ) : (
-                        content
-                    )}
-                </GridContentContainer>
-            ))}
+    <div className="h-full w-full flex flex-row gap-4">
+        <div className="w-full">
+            <EditorWidget chatId={chatProps.id ?? null} />
         </div>
-        <div className="grid grid-cols-2 gap-4 h-1/2 block">
-            {gridTabs.slice(2, 4).map(({ id, content }) => (
-                <GridContentContainer key={id}>
-                    {id === 'editor' ? (
-                        <EditorWidget chatId={chatProps.id ?? null} />
-                    ) : (
-                        content
-                    )}
-                </GridContentContainer>
-            ))}
+        <div className="flex flex-1">
+            <TimelineWidget />
         </div>
     </div>
-)
-
-const GridContentContainer = ({ children }: { children: React.ReactNode }) => (
-    <div className="border-2 rounded-lg overflow-y-scroll bg-night border-outline-night h-full flex flex-col flex-grow overflow-auto w-full">
-        {children}
-    </div>
-)
-const ContentContainer = ({
-    value,
-    children,
-}: {
-    value: string
-    children: React.ReactNode
-}) => (
-    <TabsContent
-        value={value}
-        className="border-2 rounded-lg h-full bg-night border-outline-night"
-    >
-        <div className="flex flex-col flex-grow overflow-auto w-full h-full">
-            {children}
-        </div>
-    </TabsContent>
 )

@@ -73,7 +73,7 @@ async def lifespan(app: fastapi.FastAPI):
     async with AsyncSessionLocal() as db_session:
         app.db_session = db_session
         data = await load_data(db_session)
-        data = { k:Session.from_dict(v, lambda: get_user_input(k), config=app.config) for (k,v) in data.items()} 
+        data = { k:Session.from_dict(v, lambda: get_user_input(k)) for (k,v) in data.items()} 
         sessions = data
         yield
 
@@ -100,7 +100,7 @@ def read_root():
 
 @app.get("/session")
 def read_session():
-    return list(sessions.keys())
+    return [{"name": session_name, "path": session_data.base_path} for session_name, session_data in sessions.items()]
 
 
 @app.post("/session")
@@ -133,7 +133,7 @@ def create_session(session: str, path: str):
                 path,
                 user_input=lambda: get_user_input(session),
                 name=session,
-                config=app.config
+                # config=app.config
             ),
             agent,
         )
@@ -157,10 +157,11 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
 
     if session in running_sessions:
-        raise fastapi.HTTPException(status_code=304, detail="Session already running")
+        return "Session already running"
+        # raise fastapi.HTTPException(status_code=304, detail="Session already running")
 
     sessions[session].enter()
-    if len(sessions[session].event_log) == 0 or sessions[session].task == None:
+    if len(sessions[session].event_log) == 0 or sessions[session].state.task == None:
         sessions[session].event_log.append(
             Event(
                 type="Task",
@@ -212,8 +213,33 @@ def stop_session(session: str):
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_obj.event_log.append(Event(type="stop", content="stop"))
+    session_obj.event_log.append(
+        Event(
+            type="stop",
+            content={"type": "UserStopped", "message": "User stopped session"},
+        )
+    )
     return session_obj
+
+@app.post("/session/{session}/pause")
+def pause_session(session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj = sessions.get(session)
+    if not session_obj:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj.pause()
+    return session
+
+@app.post("/session/{session}/resume")
+def resume_session(session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj = sessions.get(session)
+    if not session_obj:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj.resume()
+    return session
 
 
 @app.get("/session/{session}/state")
@@ -238,6 +264,7 @@ class ServerEvent(BaseModel):
     content: Any
     producer: str | None
     consumer: str | None
+
 
 @app.post("/session/{session}/event")
 def create_event(session: str, event: ServerEvent):

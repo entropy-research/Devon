@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import random
+import time
 import traceback
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
@@ -36,7 +37,7 @@ class SessionArguments:
     user_input: Any
     name: str
     task: Optional[str] = None
-    config: Optional[Dict[str, Any]] = None
+    # config: Optional[Dict[str, Any]] = None
     headless: Optional[bool] = False
 
 
@@ -109,9 +110,10 @@ class Session:
         self.telemetry_client = Posthog()
         self.name = args.name
         self.agent_branch = "devon_agent_" + self.name
-        self.global_config = args.config
+        self.global_config = {}
         self.excludes = self.global_config.get("excludes", [])
-
+        self.status = "created"
+        self.state.task = None
         local_environment = LocalEnvironment(args.path)
         local_environment.register_tools({
             "create_file" : CreateFileTool().register_post_hook(save_create_file),
@@ -133,13 +135,13 @@ class Session:
         self.default_environment = local_environment
 
         if args.headless:
-            self.task = args.headless
+            self.state.task = args.headless
 
             self.environments = {
                 "local" : local_environment
             }
         else:
-            self.task = args.task
+            self.state.task = args.task
             user_environment = UserEnvironment(args.user_input)
             user_environment.register_tools({
                 "ask_user" : AskUserTool(),
@@ -157,7 +159,7 @@ class Session:
 
     def to_dict(self):
         return {
-            "task": self.task,
+            "task": self.state.task,
             "path": self.path,
             "name": self.name,
             "config": self.global_config,
@@ -172,7 +174,7 @@ class Session:
         }
 
     @classmethod
-    def from_dict(cls, data, user_input, config):
+    def from_dict(cls, data, user_input):
         print(data)
         instance = cls(
             args=SessionArguments(
@@ -181,11 +183,12 @@ class Session:
                 user_input=user_input,
                 name=data["name"],
                 task=data["task"] if "task" in data else None,
-                config=config,
+                # config=config,
             ),
             agent=TaskAgent(
                 name=data["agent"]["name"],
-                model=config["modelName"],
+                # model=config["modelName"],
+                model="gpt4-o",
                 temperature=data["agent"]["temperature"],
                 chat_history=data["agent"]["chat_history"],
             )
@@ -202,12 +205,27 @@ class Session:
         return instance
 
     def get_last_task(self):
-        if self.task:
-            return self.task
+        if self.state.task:
+            return self.state.task
         return "Task unspecified ask user to specify task"
     
+    def get_status(self):
+        return self.status
+    
+    def pause(self):
+        self.status = "paused"
+    
+    def resume(self):
+        self.status = "running"
+    
     def run_event_loop(self):
+        self.status = "running"
         while True and not (self.event_id == len(self.event_log)):
+
+            if self.status == "paused":
+                # self.logger.info("Session paused, waiting for resume")
+                time.sleep(2)
+                continue
             
             event = self.event_log[self.event_id]
 
@@ -215,15 +233,18 @@ class Session:
             self.logger.info(f"State: {self.state}")
 
             # Collect only event name and content only in case of error
-            telemetry_event = SessionEventEvent(
-                event_type=event["type"],
-                message="" if not event["type"] == "Error" else event["content"],
-            )
+            # telemetry_event = SessionEventEvent(
+            #     event_type=event["type"],
+            #     message="" if not event["type"] == "Error" else event["content"],
+            # )
 
-            self.telemetry_client.capture(telemetry_event)
+            # self.telemetry_client.capture(telemetry_event)
 
-            if event["type"] == "Stop":
+            if event["type"] == "Stop" and event["content"]["type"] != "submit":
+                self.status = "stopped"
                 break
+            elif event["type"] == "Stop" and event["content"]["type"] == "submit":
+                self.state.task = "You have completed your task, ask user for revisions or a new one."
 
             events = self.step_event(event)
             self.event_log.extend(events)
@@ -240,7 +261,10 @@ class Session:
                 new_events.append(
                     {
                         "type": "Stop",
-                        "content": "Stopped task",
+                        "content": {
+                            "type" : "error",
+                            "message": event["content"]
+                        },
                         "producer": event["producer"],
                         "consumer": "user",
                     }
@@ -296,7 +320,10 @@ class Session:
                         new_events.append(
                             {
                                 "type": "Stop",
-                                "content": "Stopped task",
+                                "content": {
+                                    "type" : tool_name,
+                                    "message": " ".join(args)
+                                },
                                 "producer": event["producer"],
                                 "consumer": "user",
                             }
