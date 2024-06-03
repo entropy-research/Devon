@@ -22,5 +22,11 @@ export type Model = {
     comingSoon?: boolean
 }
 
+export type SessionMachineProps = {
+    port: number
+    name: string
+    path: string
+}
+
 
 export { ViewMode, LocalStorageKey }

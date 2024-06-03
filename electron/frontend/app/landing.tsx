@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useLocalStorage } from '@/lib/hooks/chat.use-local-storage'
 import Home from './home'
 import OnboardingModal from '@/components/modals/onboarding-modal'
-import { LocalStorageKey } from '@/lib/types'
+import { LocalStorageKey, SessionMachineProps } from '@/lib/types'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
@@ -26,11 +26,7 @@ export default function Landing() {
         }
     }, [hasAcceptedCheckbox, searchParams])
 
-    const [sessionMachineProps, setSessionMachineProps] = useState<{
-        port: number
-        name: string
-        path: string
-    } | null>(null)
+    const [sessionMachineProps, setSessionMachineProps] = useState<SessionMachineProps | null>(null)
 
     let sessionName = searchParams.get('chat')
     const encodedPath = searchParams.get('path')

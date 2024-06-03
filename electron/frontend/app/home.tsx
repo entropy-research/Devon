@@ -12,17 +12,14 @@ import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-wid
 import { useSearchParams } from 'next/navigation'
 import { createActorContext, useMachine } from '@xstate/react'
 import { sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
+import { SessionMachineProps } from '@/lib/types'
 
 export const SessionMachineContext = createActorContext(sessionMachine)
 
 export default function Home({
     sessionMachineProps,
 }: {
-    sessionMachineProps: {
-        port: number
-        name: string
-        path: string
-    }
+    sessionMachineProps: SessionMachineProps
 }) {
     const searchParams = useSearchParams()
     const [sessionId, setSessionId] = useState<string | null>(null)
@@ -90,16 +87,10 @@ export default function Home({
                                 }
                             />
                         )} */}
-                        {/* {port ? ( */}
                         <Chat
                             sessionId={sessionId}
-                            port={sessionMachineProps.port}
-                            // sessionMachineProps={sessionMachineProps}
                             // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
                         />
-                        {/* ) : ( */}
-                        {/* <div>Loading...</div> */}
-                        {/* )} */}
                     </ResizablePanel>
                     <ResizableHandle className="" />
                     <ResizablePanel className="flex-col w-full hidden md:flex">

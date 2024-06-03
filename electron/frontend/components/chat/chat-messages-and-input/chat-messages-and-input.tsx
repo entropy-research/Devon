@@ -31,16 +31,10 @@ export default function ChatMessagesAndInput({
     viewOnly,
     loading,
     sessionId
-    // sessionMachineProps,
 }: {
     viewOnly: boolean
     loading: boolean
     sessionId: string
-    // sessionMachineProps: {
-    //     port: number
-    //     name: string
-    //     path: string
-    // }
 }) {
     const {
         // messagesRef,
@@ -49,22 +43,6 @@ export default function ChatMessagesAndInput({
         isAtBottom,
         scrollToBottom,
     } = useScrollAnchor()
-
-    // const searchParams = useSearchParams()
-    // const [eventState, sendEvent] = useActor(eventHandlingLogic)
-    // let messages = eventState.context.messages
-    // This inits the state machine and starts the session
-
-    let status = ''
-
-    //     const [state] = useMachine(sessionMachine, { input: {
-    //         host: 'http://localhost:' + sessionMachineProps.port,
-    //         name: sessionMachineProps.name,
-    //         path: sessionMachineProps.path,
-    //         reset: false,
-    //         },
-    //     },
-    // )
 
     const state = SessionMachineContext.useSelector(state => state)
 
