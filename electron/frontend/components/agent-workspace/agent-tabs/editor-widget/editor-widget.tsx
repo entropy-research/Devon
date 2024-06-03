@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react'
 import CodeEditor from './code-editor'
 import { CodeEditorContextProvider } from '@/contexts/CodeEditorContext'
 import FileTree from './file-tree/file-tree'
@@ -6,27 +5,6 @@ import ShellWidget from '@/components/agent-workspace/agent-tabs/shell-widget'
 import { SessionMachineContext } from '@/app/home'
 import { Bot } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
-
-const boilerplateFile = {
-    id: 'main.py',
-    name: 'main.py',
-    path: 'main.py',
-    language: 'python',
-    value: {
-        lines: `# Welcome to Devon!
-`,
-    },
-}
-const boilerplateFile2 = {
-    id: 'hello.py',
-    name: 'hello.py',
-    path: 'hello.py',
-    language: 'python',
-    value: {
-        lines: `# Hello world!
-`,
-    },
-}
 
 const EditorWidget = ({
     chatId,
