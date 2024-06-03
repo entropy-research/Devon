@@ -231,7 +231,8 @@ function mapIcon(filename: string): string | undefined {
     return extension ? extensionToIconMap[extension] : undefined
 }
 
-// https://iconify.design/docs/icon-components/react/
+// Docs: https://iconify.design/docs/icon-components/react/
+// Directory: https://icon-sets.iconify.design/
 const extensionToIconMap: { [key: string]: string | undefined } = {
     abap: 'file-icons:abap',
     cls: 'file-icons:apex',

@@ -11,6 +11,7 @@ import { remarkCustomCode } from './remarkCustomCode' // import the custom plugi
 import { StreamableValue } from 'ai/rsc'
 import { useStreamableText } from '@/lib/hooks/chat.use-streamable-text'
 import { TfiThought } from 'react-icons/tfi'
+import { Icon } from '@iconify/react'
 
 // Different types of message bubbles.
 
@@ -98,7 +99,8 @@ export const ThoughtMessage = ({
 }) => {
     const icon = (
         <div className="scale-x-[-1] translate-x-1 flex size-[32px] shrink-0 select-none items-center justify-center rounded-md text-primary-foreground shadow-sm">
-            <TfiThought size={28} />
+            {/* <TfiThought size={28} /> */}
+            <Icon icon="mdi:thinking" className="w-[30px] h-[30px] transform -scale-x-100" />
         </div>
     )
     return <StyledMessage content={content} className={className} icon={icon} />
