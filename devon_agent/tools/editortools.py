@@ -405,7 +405,7 @@ class ScrollUpTool(Tool):
     
     @property
     def name(self):
-        return "scroll_up_in_editor"
+        return "scroll_up"
     
     def setup(self, ctx: ToolContext):
         ctx["state"].editor.files = {}
