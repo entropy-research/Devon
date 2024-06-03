@@ -9,9 +9,22 @@ const boilerplateFile = {
     path: 'main.py',
     language: 'python',
     value: {
-        lines: `# Welcome to Devon!\n`,
+        lines: `# Welcome to Devon!\n
+"""
+         __________
+       /  ========  \\
+      | ___________ |
+      | | >_      | |
+      | |         | |    let's get started!
+      | |_________| |________________________
+      \\=____________/             — devon    )
+      / """"""""""" \\                       /
+     / ::::::::::::: \\                  =D-'
+    (_________________)
+
+"""`,
     },
-}
+} // https://www.asciiart.eu/computers/computers
 
 const boilerplateFile2 = {
     id: 'hello.py',
@@ -19,7 +32,13 @@ const boilerplateFile2 = {
     path: 'hello.py',
     language: 'python',
     value: {
-        lines: `# Hello world!\n`,
+        lines: `# Start by giving me a task in the chat!\n\n# This is my editor :)
+def hello_world():
+    print("Hello, World!")
+
+if __name__ == "__main__":
+    hello_world()
+`,
     },
 }
 
@@ -48,12 +67,21 @@ const useSessionFiles = chatId => {
                             path: key,
                             language: mapLanguage(fileName),
                             value: f[key],
+                            icon: mapIcon(fileName),
                         })
                     }
                 }
                 if (_files.length === 0) {
-                    _files.push(boilerplateFile)
-                    _files.push(boilerplateFile2)
+                    _files.push({
+                        ...boilerplateFile,
+                        language: mapLanguage(boilerplateFile.path),
+                        icon: mapIcon(boilerplateFile.path),
+                    })
+                    _files.push({
+                        ...boilerplateFile2,
+                        language: mapLanguage(boilerplateFile2.path),
+                        icon: mapIcon(boilerplateFile2.path),
+                    })
                 }
                 setFiles(_files)
                 if (
@@ -196,4 +224,123 @@ function mapLanguage(filename: string): string {
     return extension
         ? extensionToLanguageMap[extension] || 'plaintext'
         : 'plaintext'
+}
+
+function mapIcon(filename: string): string | undefined {
+    const extension = filename.split('.').pop()?.toLowerCase()
+    return extension ? extensionToIconMap[extension] : undefined
+}
+
+// https://iconify.design/docs/icon-components/react/
+const extensionToIconMap: { [key: string]: string | undefined } = {
+    abap: 'file-icons:abap',
+    cls: 'file-icons:apex',
+    azcli: 'vscode-icons:file-type-azcli',
+    bat: 'vscode-icons:file-type-bat',
+    cmd: 'vscode-icons:file-type-bat',
+    bicep: 'vscode-icons:file-type-bicep',
+    mligo: 'file-icons:cameligo',
+    clj: 'file-icons:clojure',
+    cljs: 'file-icons:clojurescript',
+    cljc: 'file-icons:clojure',
+    coffee: 'vscode-icons:file-type-coffeescript',
+    c: 'vscode-icons:file-type-c',
+    cpp: 'vscode-icons:file-type-cpp',
+    h: 'vscode-icons:file-type-cpp',
+    hpp: 'vscode-icons:file-type-cpp',
+    cs: 'vscode-icons:file-type-csharp',
+    csx: 'vscode-icons:file-type-csharp',
+    csp: 'file-icons:csp',
+    css: 'vscode-icons:file-type-css',
+    cypher: 'file-icons:cypher',
+    dart: 'vscode-icons:file-type-dart',
+    dockerfile: 'vscode-icons:file-type-docker',
+    ecl: 'file-icons:ecl',
+    ex: 'vscode-icons:file-type-elixir',
+    exs: 'vscode-icons:file-type-elixir',
+    flow: 'file-icons:flow',
+    ftl: 'file-icons:freemarker',
+    fs: 'vscode-icons:file-type-fsharp',
+    fsi: 'vscode-icons:file-type-fsharp',
+    fsx: 'vscode-icons:file-type-fsharp',
+    fsscript: 'vscode-icons:file-type-fsharp',
+    go: 'vscode-icons:file-type-go',
+    graphql: 'vscode-icons:file-type-graphql',
+    handlebars: 'vscode-icons:file-type-handlebars',
+    hbs: 'vscode-icons:file-type-handlebars',
+    tf: 'file-icons:terraform',
+    tfvars: 'file-icons:terraform',
+    hcl: 'file-icons:hcl',
+    html: 'vscode-icons:file-type-html',
+    htm: 'vscode-icons:file-type-html',
+    ini: 'vscode-icons:file-type-settings',
+    java: 'vscode-icons:file-type-java',
+    js: 'vscode-icons:file-type-js-official',
+    mjs: 'vscode-icons:file-type-js-official',
+    cjs: 'vscode-icons:file-type-js-official',
+    jsx: 'vscode-icons:file-type-reactjs',
+    jl: 'file-icons:julia',
+    kt: 'vscode-icons:file-type-kotlin',
+    kts: 'vscode-icons:file-type-kotlin',
+    less: 'vscode-icons:file-type-less',
+    lex: 'file-icons:lexon',
+    liquid: 'vscode-icons:file-type-liquid',
+    lua: 'vscode-icons:file-type-lua',
+    m3: 'file-icons:m3',
+    md: 'vscode-icons:file-type-markdown',
+    markdown: 'vscode-icons:file-type-markdown',
+    mdx: 'vscode-icons:file-type-mdx',
+    asm: 'file-icons:mips',
+    dax: 'file-icons:dax',
+    mysql: 'vscode-icons:file-type-mysql',
+    objc: 'vscode-icons:file-type-objectivec',
+    pas: 'file-icons:pascal',
+    pp: 'file-icons:pascal',
+    ligo: 'file-icons:ligo',
+    pl: 'vscode-icons:file-type-perl',
+    pm: 'vscode-icons:file-type-perl',
+    pgsql: 'file-icons:pgsql',
+    php: 'vscode-icons:file-type-php',
+    p: 'file-icons:pla',
+    atd: 'file-icons:postiats',
+    pq: 'file-icons:powerquery',
+    pqm: 'file-icons:powerquery',
+    ps1: 'vscode-icons:file-type-powershell',
+    psm1: 'vscode-icons:file-type-powershell',
+    proto: 'file-icons:protobuf',
+    jade: 'file-icons:pug',
+    pug: 'file-icons:pug',
+    py: 'vscode-icons:file-type-python',
+    qs: 'file-icons:qsharp',
+    r: 'vscode-icons:file-type-r',
+    cshtml: 'vscode-icons:file-type-razor',
+    redis: 'file-icons:redis',
+    redshift: 'file-icons:redshift',
+    rst: 'vscode-icons:file-type-restructuredtext',
+    rb: 'vscode-icons:file-type-ruby',
+    rs: 'vscode-icons:file-type-rust',
+    sb: 'file-icons:sb',
+    scala: 'vscode-icons:file-type-scala',
+    scm: 'file-icons:scheme',
+    scss: 'vscode-icons:file-type-scss',
+    sh: 'vscode-icons:file-type-shell',
+    sol: 'file-icons:solidity',
+    aes: 'file-icons:sophia',
+    rq: 'file-icons:sparql',
+    sql: 'vscode-icons:file-type-sql',
+    st: 'file-icons:st',
+    swift: 'vscode-icons:file-type-swift',
+    sv: 'file-icons:verilog',
+    svh: 'file-icons:verilog',
+    tcl: 'file-icons:tcl',
+    test: 'file-icons:test',
+    twig: 'file-icons:twig',
+    ts: 'vscode-icons:file-type-typescript-official',
+    tsx: 'vscode-icons:file-type-typescript-official',
+    spec: 'file-icons:typespec',
+    vb: 'vscode-icons:file-type-visualstudio',
+    wgsl: 'file-icons:wgsl',
+    xml: 'vscode-icons:file-type-xml',
+    yaml: 'vscode-icons:file-type-yaml',
+    yml: 'vscode-icons:file-type-yaml',
 }

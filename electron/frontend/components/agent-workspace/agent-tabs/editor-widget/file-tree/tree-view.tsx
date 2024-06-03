@@ -11,6 +11,7 @@ import {
     CollapseButton,
     TreeViewElement,
 } from './tree-view-api'
+import { Icon } from '@iconify/react' // https://iconify.design/docs/icon-components/react/
 
 interface TreeViewComponentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -116,8 +117,11 @@ export const TreeItem = forwardRef<
                                 aria-label={`File ${element.name}`}
                                 key={element.id}
                                 isSelectable={element.isSelectable}
+                                fileIcon={element.icon}
                             >
-                                <p className="flex-1 truncate text-left">{element?.name}</p>
+                                <p className="flex-1 truncate text-left">
+                                    {element?.name}
+                                </p>
                             </File>
                         )}
                     </li>

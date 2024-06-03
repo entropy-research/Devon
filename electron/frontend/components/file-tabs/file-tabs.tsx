@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 import { File } from '@/lib/types'
+import { Icon } from '@iconify/react' // https://iconify.design/docs/icon-components/react/
 
 // The file tabs at the top of the editor widget. Also used in the shell widget
 const FileTabs = ({
@@ -37,9 +38,12 @@ const FileTabs = ({
                 {files.map((file: File, index: number) => (
                     <button
                         key={file.id}
-                        className={`flex px-2 justify-center items-center px-1 py-[6px] text-sm border-t-[1.5px] min-w-[100px] ${file.id === selectedFileId ? `border-t-primary rounded-t-sm bg-night border-b-[1px] border-b-night ${index === 0 ? 'border-r-[1px] border-r-outlinecolor' : 'border-x-[1px] border-x-outlinecolor'} z-10` : 'border-transparent outline outline-[1px] outline-outlinecolor'}`}
+                        className={`flex justify-center items-center px-4 ${file.icon ? 'pr-5' : ''} py-[6px] text-sm border-t-[1.5px] ${file.id === selectedFileId ? `border-t-primary rounded-t-sm bg-night border-b-[1px] border-b-night ${index === 0 ? 'border-r-[1px] border-r-outlinecolor' : 'border-x-[1px] border-x-outlinecolor'} z-10` : 'border-transparent outline outline-[1px] outline-outlinecolor'}`}
                         onClick={() => setSelectedFileId(file.id)}
                     >
+                        {file.icon && (
+                            <Icon icon={file.icon} className="h-4 w-4 mr-2" />
+                        )}
                         {file.name}
                     </button>
                 ))}

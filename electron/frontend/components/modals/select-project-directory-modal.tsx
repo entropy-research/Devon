@@ -193,7 +193,7 @@ const ExistingSessionFound = ({ sessions, setPage, onClick }) => {
         onClick()
     }
     return (
-        <div>
+        <div className="w-[25rem]">
             {sessions?.length > 0 && sessions[0].name === 'New chat' ? (
                 <div>
                     <p className="text-2xl font-bold">

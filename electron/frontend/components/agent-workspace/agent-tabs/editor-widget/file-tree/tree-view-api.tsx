@@ -15,12 +15,14 @@ import React, {
 } from 'react'
 import { Button } from '@/components/ui/button'
 import { useCodeEditorState } from '@/contexts/CodeEditorContext'
+import { Icon } from '@iconify/react'
 
 type TreeViewElement = {
     id: string
     name: string
     isSelectable?: boolean
     children?: TreeViewElement[]
+    icon?: string
 }
 
 type TreeContextProps = {
@@ -328,7 +330,7 @@ const File = forwardRef<
         handleSelect?: (id: string) => void
         isSelectable?: boolean
         isSelect?: boolean
-        fileIcon?: React.ReactNode
+        fileIcon?: string
     } & React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(
     (
@@ -366,7 +368,11 @@ const File = forwardRef<
                     )}
                     onClick={() => selectItem(value)}
                 >
-                    {fileIcon ?? <FileIcon className="h-4 w-4 mr-2" />}
+                    {fileIcon ? (
+                        <Icon icon={fileIcon} className="h-4 w-4 ml-[2px] mr-2" />
+                    ) : (
+                        <FileIcon className="h-4 w-4 ml-[2px] mr-2 text-gray-300" />
+                    )}
                     {children}
                     {isSelected && (
                         <span className="absolute top-0 left-0 h-full w-[1.5px] bg-primary" />
