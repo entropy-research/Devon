@@ -32,3 +32,7 @@ export const models: Model[] = [
 export const showChatBorders = true
 
 export const bottomPadding = showChatBorders ? 'pb-3' : 'pb-7'
+
+export const theme = {
+    darkChat: true
+}
