@@ -36,6 +36,7 @@ export default function Landing() {
     const encodedPath = searchParams.get('path')
 
     useEffect(() => {
+        // console.log(sessionName, encodedPath, port)
         if (sessionName && encodedPath && port) {
             const stateMachineProps = {
                 port: port,

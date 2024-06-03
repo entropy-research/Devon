@@ -87,6 +87,7 @@
         font-size: 85%;
     }
 
+    /* Accessibility border for tabbing */
     *:focus-visible {
         outline: 1px solid #2353cc;
         border-radius: 3px;

@@ -15,4 +15,12 @@ export type File = {
     value: any
 }
 
+export type Model = {
+    id: string
+    name: string
+    company: string
+    comingSoon?: boolean
+}
+
+
 export { ViewMode, LocalStorageKey }

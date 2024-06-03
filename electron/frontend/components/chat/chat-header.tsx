@@ -50,7 +50,7 @@ export default function ChatHeader({
                 <p className="text-gray-400 text-sm">{`My name is Devon and I'm a software engineer. Give me coding tasks and I will try my best to solve them!`}</p>
             </div> */}
             <p className="text-lg font-semibold pb-[1px]">Chat</p>
-            <div className="flex gap-3">
+            <div className="flex gap-3 -mr-2">
                 <RestartButton resetHandler={handleReset} />
                 <StopButton stopHandler={handleStop} />
             </div>
@@ -63,11 +63,11 @@ const RestartButton = ({ resetHandler }) => {
     return (
         <button
             onClick={resetHandler}
-            className="flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 text-gray-100 smooth-hover"
+            className="group flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 smooth-hover"
         >
             <History
                 size={14}
-                className="group-hover:transition text-gray-400 group-hover:text-white duration-300 mb-[1px]"
+                className="group-hover:transition text-gray-400 duration-300 mb-[1px] group-hover:text-white"
             />
             <p className="group-hover:transition duration-300 text-gray-400 group-hover:text-white">
                 Reset session
@@ -80,7 +80,7 @@ const StopButton = ({ stopHandler }) => {
     return (
         <button
             onClick={stopHandler}
-            className="flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 text-gray-100 smooth-hover"
+            className="group flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] smooth-hover"
         >
             <Power
                 size={14}

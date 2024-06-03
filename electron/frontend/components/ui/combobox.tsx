@@ -19,7 +19,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover'
 
-type ComboboxItem = {
+export type ComboboxItem = {
     value: string
     label: string
 }
@@ -30,7 +30,7 @@ const Combobox = ({
     itemType,
     className,
     selectedItem,
-    setSelectedItem
+    setSelectedItem,
 }: {
     items: ComboboxItem[]
     searchBar?: boolean
