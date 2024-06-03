@@ -199,6 +199,7 @@ class Session:
         instance.state.editor = {}
         instance.event_log = data["event_history"]
         instance.event_id = len(data["event_history"])
+        instance.state.task = data["task"]
 
         # instance.environments["local"].communicate("cd " + data["cwd"])
 
