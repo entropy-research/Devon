@@ -25,8 +25,12 @@
 		],
 		"baseUrl": "./frontend",
 		"paths": {
-			"@/*": ["./*"],
+			"@/devon_state": ["../state"],
+			"@/*": ["./*"]
 		},
+		"composite": true,
+		"declaration": true,
+		"declarationMap": true
 	},
 	"exclude": ["node_modules"],
 }
