@@ -28,3 +28,7 @@ export const models: Model[] = [
         comingSoon: true,
     },
 ]
+
+export const showChatBorders = true
+
+export const bottomPadding = showChatBorders ? 'pb-3' : 'pb-7'

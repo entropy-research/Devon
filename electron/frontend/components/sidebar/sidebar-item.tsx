@@ -24,11 +24,11 @@ function SidebarItem({
         transition-colors group
     `}
         >
-            <Link href={route} className="flex">
+            <Link href={route} className="flex items-center">
                 {expanded && icon}
                 <span
-                    className={`overflow-hidden transition-all flex items-start ${
-                        expanded ? 'w-52 ml-3' : 'w-0'
+                    className={`overflow-hidden transition-all flex items-center ${
+                        expanded ? 'w-52 ml-[9px] py-2' : 'w-0'
                     }`}
                 >
                     {expanded && text}

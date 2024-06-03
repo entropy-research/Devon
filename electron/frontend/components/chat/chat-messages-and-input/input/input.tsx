@@ -11,6 +11,7 @@ import SelectProjectDirectoryModal from '@/components/modals/select-project-dire
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 import { SessionMachineContext } from '@/app/home'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
+import { showChatBorders, bottomPadding } from '@/lib/config'
 
 const Input = ({
     isAtBottom,
@@ -85,7 +86,7 @@ const Input = ({
 
     return (
         <div
-            className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
+            className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-0 mt-8' : ''} ${showChatBorders ? 'pb-5' : ''}`}
         >
             {(loading ||
                 eventContext.modelLoading ||
@@ -142,8 +143,9 @@ const Input = ({
                                 />
                             </button> */}
                             <button
-                                className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 xl:right-4"
+                                className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 xl:right-4 ${loading ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}`}
                                 type="submit"
+                                disabled={loading}
                             >
                                 <ArrowRight
                                     className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}

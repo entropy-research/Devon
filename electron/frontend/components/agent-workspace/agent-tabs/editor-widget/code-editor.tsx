@@ -4,6 +4,7 @@ import { DiffEditor } from '@monaco-editor/react'
 import FileTabs from '@/components/file-tabs/file-tabs'
 import { useCodeEditorState } from '@/contexts/CodeEditorContext'
 import { useSearchParams } from 'next/navigation'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/CodeEditor.tsx
 export default function CodeEditor({
@@ -41,43 +42,6 @@ export default function CodeEditor({
         monaco.editor.setTheme('theme')
     }
 
-    if (!selectedFileId || !chatId || chatId === 'New') {
-        return (
-            <>
-                <FileTabs
-                    files={files}
-                    selectedFileId={selectedFileId ?? files[0]?.id}
-                    setSelectedFileId={setSelectedFileId}
-                    diffEnabled={diffEnabled}
-                    setDiffEnabled={setDiffEnabled}
-                    chatId={chatId}
-                    className={showEditorBorders ? '' : 'mr-[13px]'}
-                    isExpandedVariant={isExpandedVariant}
-                />
-                {files.length > 0 && (
-                    <PathDisplay path={'/Users/devon/projects/hello_world'} />
-                )}
-                <div className="w-full bg-workspace rounded-b-lg mt-[-2px]">
-                    {selectedFileId && (
-                        <BothEditorTypes
-                            diffEnabled={diffEnabled}
-                            file={files?.find(f => f.id === selectedFileId)}
-                            handleEditorDidMount={handleEditorDidMount}
-                        />
-                    )}
-                </div>
-            </>
-        )
-    }
-
-    // if (!file || !selectedFileId || !files) {
-    //     return (
-    //         <p className="text-lg flex justify-center items-center h-full w-full">
-    //             Loading...
-    //         </p>
-    //     )
-    // }
-
     const bgColor = getComputedStyle(document.documentElement)
         .getPropertyValue('--bg-workspace')
         .trim()
@@ -94,6 +58,27 @@ export default function CodeEditor({
         )
     }
 
+    // if (selectedFileId === 'hello.py') {
+    //     return (
+    //         <div className="flex flex-col w-full h-full">
+    //             <FileTabs
+    //                 files={files}
+    //                 selectedFileId={selectedFileId}
+    //                 setSelectedFileId={setSelectedFileId}
+    //                 diffEnabled={diffEnabled}
+    //                 setDiffEnabled={setDiffEnabled}
+    //                 chatId={chatId}
+    //                 className={showEditorBorders ? '' : ''}
+    //                 isExpandedVariant={isExpandedVariant}
+    //             />
+    //             <PathDisplay path={path} loading />
+    //             <div className="w-full bg-night h-full">
+    //                 <p className="text-lg flex justify-center items-center h-full w-full"></p>
+    //             </div>
+    //         </div>
+    //     )
+    // }
+
     return (
         <div className="flex flex-col w-full h-full">
             <FileTabs
@@ -105,9 +90,10 @@ export default function CodeEditor({
                 chatId={chatId}
                 className={showEditorBorders ? '' : ''}
                 isExpandedVariant={isExpandedVariant}
+                loading={files.length === 0}
             />
-            {files && <PathDisplay path={path} />}
-            <div className="flex w-full h-full bg-bg-workspace rounded-b-lg mt-[-2px]">
+            {<PathDisplay path={path} loading={files.length === 0} />}
+            <div className="flex w-full h-full bg-night rounded-b-lg mt-[-2px]">
                 {selectedFileId && (
                     <BothEditorTypes
                         diffEnabled={diffEnabled}
@@ -145,11 +131,22 @@ const BothEditorTypes = ({ diffEnabled, file, handleEditorDidMount }) =>
         ></DiffEditor>
     )
 
-const PathDisplay = ({ path }: { path: string }) => (
+const PathDisplay = ({
+    path,
+    loading = false,
+}: {
+    path: string
+    loading?: boolean
+}) => (
     <div className="-mt-[1px] px-3 py-1 bg-night border-t border-outlinecolor">
-        <p className="text-xs text-neutral-500">
-            {path ? convertPath(path) : ''}
-        </p>
+        {loading ? (
+            // <Skeleton className="w-[150px] h-[8px] mt-1 bg-neutral-800 rounded-[3px]" />
+            <></>
+        ) : (
+            <p className="text-xs text-neutral-500">
+                {path ? convertPath(path) : ''}
+            </p>
+        )}
     </div>
 )
 

@@ -12,6 +12,7 @@ import {
     TreeViewElement,
 } from './tree-view-api'
 import { Icon } from '@iconify/react' // https://iconify.design/docs/icon-components/react/
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface TreeViewComponentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -19,6 +20,7 @@ type TreeViewProps = {
     initialSelectedId?: string
     elements: TreeViewElement[]
     indicator?: boolean
+    loading?: boolean
 } & (
     | {
           initialExpendedItems?: string[]
@@ -38,6 +40,7 @@ export const TreeView = ({
     initialExpendedItems,
     expandAll,
     indicator = false,
+    loading = false,
 }: TreeViewProps) => {
     const containerRef = useRef<HTMLDivElement>(null)
 
@@ -51,6 +54,32 @@ export const TreeView = ({
     const { height = getTotalSize(), width } = useResizeObserver({
         ref: containerRef,
     })
+
+    if (loading) {
+        return (
+            <div
+                ref={containerRef}
+                id="tree-container-ref"
+                className={cn(
+                    'rounded-md overflow-hidden py-1 relative h-full',
+                    className
+                )}
+            >
+                <div style={{ width }} className="overflow-y-auto pt-2">
+                    {Array.from({ length: 2 }).map((_, index) => (
+                        <div
+                            key={index}
+                            className="mb-3 flex gap-3 px-[12px] items-center"
+                        >
+                            <Skeleton className="w-4 h-4 rounded-[3px] bg-night" />
+                            <Skeleton className="w-full h-3 rounded-[3px] flex-1 bg-night" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div
             ref={containerRef}

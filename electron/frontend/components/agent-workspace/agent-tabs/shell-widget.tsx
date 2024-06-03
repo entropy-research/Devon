@@ -92,6 +92,8 @@ class JsonWebsocketAddon {
  * we keep the terminal persistently open as a child of <App /> and hidden when not in use.
  */
 
+const promptStr = 'bash> '
+
 export default function ShellWidget({
     messages,
 }: {
@@ -134,7 +136,7 @@ export default function ShellWidget({
 
         terminal.open(terminalRef.current as HTMLDivElement)
         terminalInstanceRef.current = terminal // Store the terminal instance
-        terminal.write('> ')
+        terminal.write(promptStr)
 
         addOn()
 
@@ -164,7 +166,7 @@ export default function ShellWidget({
                         }
 
                         // Construct the command string
-                        line = 'bash>  ' + firstLineItems.join(' ')
+                        line = promptStr + firstLineItems.join(' ')
                         if (end) {
                             terminal.writeln(line)
                             terminal.writeln(end)

@@ -29,7 +29,7 @@ const expandedChatTabs: {
 
 const bottomSidebarItems = [
     {
-        icon: <Settings className="text-primary" />,
+        icon: <Settings className="text-primary w-6 h-6" />,
         text: 'Settings',
         active: true,
         alert: false,
@@ -48,7 +48,7 @@ export default function Sidebar({
 }) {
     return (
         <aside className="h-full flex flex-row bg-midnight border-r">
-            <nav className="h-full flex flex-col rounded-sm pt-9 pb-2 max-w-[280px] w-full">
+            <nav className="h-full flex flex-col rounded-sm pt-9 pb-0 max-w-[280px] w-full">
                 <SidebarContext.Provider value={{ expanded }}>
                     <ul
                         className={`flex-1 flex flex-col justify-between ${expanded ? 'px-3' : 'px-0 mx-0 w-0 items-center'} pb-2`}
