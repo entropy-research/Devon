@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Paperclip, ArrowRight, CirclePause, Axis3DIcon } from 'lucide-react'
+import { Paperclip, ArrowRight, CirclePause } from 'lucide-react'
 import { AutoresizeTextarea } from '@/components/ui/textarea'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import {
@@ -8,10 +8,10 @@ import {
 } from '@/lib/services/sessionService/sendUserMessage'
 import { useSearchParams } from 'next/navigation'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
-import AtomLoader from '@/components/ui/atom-loader/atom-loader'
+import AtomLoader from '@/components/ui/loaders/atom-loader/atom-loader'
 import { SessionMachineContext } from '@/app/home'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
-import { showChatBorders, bottomPadding } from '@/lib/config'
+import { theme } from '@/lib/config'
 
 const Input = ({
     isAtBottom,
@@ -86,7 +86,7 @@ const Input = ({
 
     return (
         <div
-            className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-0 mt-8' : ''} ${showChatBorders ? 'pb-5' : ''}`}
+            className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-0 mt-8' : ''} ${theme.showChatBorders.enabled ? 'pb-5' : ''}`}
         >
             {(loading ||
                 eventContext.modelLoading ||

@@ -37,7 +37,7 @@ const General = () => {
                         <CardTitle>API Keys</CardTitle>
                         <Popover>
                             <PopoverTrigger className="ml-2 mb-2">
-                                <CircleHelp size={20} />
+                                <CircleHelp size={18} />
                             </PopoverTrigger>
                             <SafeStoragePopoverContent />
                         </Popover>

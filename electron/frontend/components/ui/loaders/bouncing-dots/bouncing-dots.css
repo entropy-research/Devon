@@ -1,0 +1,67 @@
+/* https://codepen.io/nzbin/pen/GGrXbp */
+
+.dot-typing {
+    position: relative;
+    left: -9999px;
+    width: 8px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: white;
+    color: white;
+    box-shadow:
+        9991px 0 0 0 white,
+        9999px 0 0 0 white,
+        10007px 0 0 0 white;
+    animation: dot-typing 2.5s infinite linear;
+}
+
+@keyframes dot-typing {
+    0% {
+        box-shadow:
+            9991px 0 0 0 white,
+            9999px 0 0 0 white,
+            10007px 0 0 0 white;
+    }
+    10% {
+        box-shadow:
+            9991px -10px 0 0 white,
+            9999px 0 0 0 white,
+            10007px 0 0 0 white;
+    }
+    20% {
+        box-shadow:
+            9991px 0 0 0 white,
+            9999px 0 0 0 white,
+            10007px 0 0 0 white;
+    }
+    30% {
+        box-shadow:
+            9991px 0 0 0 white,
+            9999px -10px 0 0 white,
+            10007px 0 0 0 white;
+    }
+    40% {
+        box-shadow:
+            9991px 0 0 0 white,
+            9999px 0 0 0 white,
+            10007px 0 0 0 white;
+    }
+    50% {
+        box-shadow:
+            9991px 0 0 0 white,
+            9999px 0 0 0 white,
+            10007px -10px 0 0 white;
+    }
+    60% {
+        box-shadow:
+            9991px 0 0 0 white,
+            9999px 0 0 0 white,
+            10007px 0 0 0 white;
+    }
+    100% {
+        box-shadow:
+            9991px 0 0 0 white,
+            9999px 0 0 0 white,
+            10007px 0 0 0 white;
+    }
+}

@@ -13,7 +13,7 @@ import { useSearchParams } from 'next/navigation'
 import { createActorContext, useMachine } from '@xstate/react'
 import { sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { SessionMachineProps } from '@/lib/types'
-import { showChatBorders, bottomPadding } from '@/lib/config'
+import { theme, bottomPadding } from '@/lib/config'
 
 export const SessionMachineContext = createActorContext(sessionMachine)
 
@@ -75,11 +75,11 @@ export default function Home({
             }}
         >
             <div
-                className={`w-full flex flex-row ${showChatBorders ? 'pt-3' : ''}`}
+                className={`w-full flex flex-row ${theme.showChatBorders.enabled ? 'pt-3' : ''}`}
             >
                 <ResizablePanelGroup direction="horizontal">
                     <ResizablePanel
-                        className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center ${bottomPadding}`}
+                        className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center ${theme.showChatBorders.enabled ? bottomPadding : ''}`}
                     >
                         {/* {showTimeline && (
                             <TimelineWidget
@@ -92,7 +92,7 @@ export default function Home({
                         )} */}
                         <Chat sessionId={sessionId} />
                     </ResizablePanel>
-                    <ResizableHandle className="w-[9px]" />
+                    <ResizableHandle className={theme.showChatBorders.enabled ? "w-[9px]" : ''} />
                     <ResizablePanel className="flex-col w-full hidden md:flex">
                         <EditorWidget chatId={sessionId ?? null} />
                     </ResizablePanel>

@@ -34,7 +34,7 @@ const HeaderSidebar = () => {
                 <SelectProjectDirectoryModal
                     trigger={
                         <button
-                            className={`no-drag ml-[8rem] p-2 ${expanded ? 'visible' : 'hidden'} z-10`}
+                            className={`no-drag ml-[7.7rem] p-2 ${expanded ? 'visible' : 'hidden'} z-10`}
                         >
                             <SquarePen size="1.4rem" className="no-drag text-primary" />
                         </button>

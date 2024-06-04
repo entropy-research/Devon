@@ -7,7 +7,8 @@ import OnboardingModal from '@/components/modals/onboarding-modal'
 import { LocalStorageKey, SessionMachineProps } from '@/lib/types'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
-import AtomLoader from '@/components/ui/atom-loader/atom-loader'
+import AtomLoader from '@/components/ui/loaders/atom-loader/atom-loader'
+// import BouncingDots from '@/components/ui/loaders/bouncing-dots/bouncing-dots'
 
 export default function Landing() {
     const searchParams = useSearchParams()
@@ -26,7 +27,8 @@ export default function Landing() {
         }
     }, [hasAcceptedCheckbox, searchParams])
 
-    const [sessionMachineProps, setSessionMachineProps] = useState<SessionMachineProps | null>(null)
+    const [sessionMachineProps, setSessionMachineProps] =
+        useState<SessionMachineProps | null>(null)
 
     let sessionName = searchParams.get('chat')
     const encodedPath = searchParams.get('path')
@@ -64,7 +66,10 @@ export default function Landing() {
                     <div className="fixed left-[50%] top-[50%] grid translate-x-[-50%] translate-y-[-50%]">
                         <div className="flex items-center justify-center flex-col gap-10">
                             <AtomLoader size="lg" />
-                            <p className="text-2xl">{`Devon's cleaning up his desk...`}</p>
+                            <span className="flex">
+                                <p className="text-2xl">{`Devon's cleaning up his desk...`}</p>
+                                {/* <BouncingDots /> */}
+                            </span>
                         </div>
                     </div>
                 </div>
