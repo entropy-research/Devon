@@ -1,10 +1,11 @@
-import React, {useState} from 'react';
+import React, {createContext, useContext, useEffect, useState} from 'react';
 import {Box, Text, useInput, useApp, Static} from 'ink';
 import TextInput from 'ink-text-input';
 import axios from 'axios';
 import Spinner from 'ink-spinner';
-import {useMachine, } from '@xstate/react';
-import { sessionMachine} from './sm.js';
+import {useSelector, } from '@xstate/react';	
+import { SessionManager, sessionMachine } from './state/server_manager.js';
+import { ActorRefFrom } from 'xstate';
 
 
 const giveUserReponse = async (port: number, res: string) => {
@@ -38,29 +39,100 @@ const sendSessionEvent = async (port: number, event: SessionEvent) => {
 	}
 };
 
-export const App = ({port, reset}: {port: number; reset: boolean}) => {
-	const [inputValue, setInputValue] = useState('');
-	// const [userRequested, setUserRequested] = useState(false);
-	// const [started, setStarted] = useState(false);
-	const [state] = useMachine(sessionMachine, {
-		input: {
-			host: "http://localhost:" + port,
-			name: 'cli',
-			path: process.cwd(),
-			reset: reset,
-		},
-	});
-	let status = '';
 
+const SessionManagerContext = createContext<{
+	activeSession : string | undefined,
+	sessionMap : Map<string, ActorRefFrom<typeof sessionMachine>>,
+	setActiveSession : (sessionId : string) => void,
+	createSession : (sessionId : string, host : string, path : string, reset : boolean) => void,
+	startSession : (sessionId : string) => void,
+	stopSession : (sessionId : string) => void,
+}>({
+	activeSession : "123",
+	sessionMap : new Map<string, ActorRefFrom<typeof sessionMachine>>(),
+	setActiveSession : () => {}, //ts-ignore
+	createSession : () => {}, //ts-ignore
+	startSession : () => {}, //ts-ignore
+	stopSession : () => {}, //ts-ignore
+});
+
+type SessionProps = {
+	reset : boolean,
+	sessionName : string,
+	path : string
+}
+
+
+const SessionManagerProvider = ({ children, port, sessions }: { children: React.ReactNode; port: number, sessions : SessionProps[] }) => {
+    const [sessionManager] = useState<SessionManager>(new SessionManager(`http://localhost:${port}`));
+	const [activeSession, setActiveSession] =  useState<string | undefined>(undefined);
+
+	const [sessionRefs, setSessionRefs] = useState<typeof sessionManager.sessions>(
+		sessionManager.sessions
+	);
+
+	useEffect(() => {
+		setSessionRefs(sessionManager.sessions);
+	}, [sessionManager.sessions]);
+
+	for (let session of sessions) {
+		sessionManager.registerSession(session.sessionName,session.sessionName, session.path, session.reset);
+		sessionManager.startSession(session.sessionName);
+	}
+
+    return (
+        <SessionManagerContext.Provider value={{
+			activeSession : activeSession,
+			sessionMap : sessionRefs,
+			setActiveSession : setActiveSession,
+			createSession : (sessionId : string, host : string, path : string, reset : boolean) => {
+				sessionManager.registerSession(sessionId, host, path, reset);
+			},
+			startSession : (sessionId : string) => {
+				sessionManager.startSession(sessionId);
+			},
+			stopSession : (sessionId : string) => {
+				sessionManager.stopSession(sessionId);
+			},
+		}}>
+            {children}
+        </SessionManagerContext.Provider>
+    );
+};
+
+
+
+
+export const App = ({port, reset} : {port : number, reset : boolean}) => {
+
+	return (
+		<SessionManagerProvider  port={port} sessions={[
+			{
+				sessionName : "123",
+				path : process.cwd(),
+				reset : reset
+			}
+		]}>
+			<Display port={port}/>
+		</SessionManagerProvider>
+	);
+};
+
+
+const Display = ({port} : {port : number}) => {
+	const [inputValue, setInputValue] = useState('');
+	let status = '';
+	const {activeSession, sessionMap} = useContext(SessionManagerContext);
+	let sessionState = useSelector(sessionMap.get(activeSession ?? "123"), (snapshot) => snapshot);
+	const eventState = sessionState?.context.serverEventContext;
 	const {exit} = useApp();
 
-	const eventState = state.context.serverEventContext;
-
-	if (!state.matches('running')) {
+	// console.log("state",sessionState);
+	if (!sessionState?.matches('running')) {
 		status = 'Initializing...';
-	} else if (eventState.modelLoading) {
+	} else if (eventState?.modelLoading) {
 		status = 'Waiting for Devon...';
-	} else if (eventState.userRequest) {
+	} else if (eventState?.userRequest) {
 		status = 'Type your message:';
 	} else {
 		status = 'Interrupt:';
@@ -73,7 +145,7 @@ export const App = ({port, reset}: {port: number; reset: boolean}) => {
 	});
 
 	const handleSubmit = () => {
-		if (state.matches('running') && inputValue.trim() !== '') {
+		if (sessionState?.matches('running') && inputValue.trim() !== '') {
 			setInputValue('');
 			if (inputValue.toLowerCase() == 'exit') {
 				exit();
@@ -84,17 +156,17 @@ export const App = ({port, reset}: {port: number; reset: boolean}) => {
 					content: {
 						type: 'revert_to_commit',
 						commit_to_revert:
-							eventState.gitData.commits[
-								eventState.gitData.commits.length - 1
+							eventState?.gitData.commits[
+								eventState?.gitData.commits.length - 1
 							],
-						commit_to_go_to: eventState.gitData.base_commit,
+						commit_to_go_to: eventState?.gitData.base_commit,
 					},
 					producer: 'cli',
 					consumer: 'cli',
 				});
 			}
 
-			if (eventState.userRequest) {
+			if (eventState?.userRequest) {
 				giveUserReponse(port, inputValue);
 			} else {
 				sendSessionEvent(port, {
@@ -106,7 +178,7 @@ export const App = ({port, reset}: {port: number; reset: boolean}) => {
 			}
 		}
 	};
-	let messages = eventState.messages;
+	let messages = eventState?.messages || [];
 
 	return (
 		<Box
@@ -171,7 +243,7 @@ export const App = ({port, reset}: {port: number; reset: boolean}) => {
 					<Box paddingX={3} marginBottom={1}>
 						<Text>
 							{status}
-							{eventState.modelLoading || !state.matches('running') ? (
+							{eventState?.modelLoading || !sessionState?.matches('running') ? (
 								<Spinner type="simpleDots" />
 							) : (
 								<></>
