@@ -82,7 +82,7 @@
     "@storybook/testing-library": "^0.2.2",
     "@svgr/webpack": "^8.1.0",
     "@types/better-sqlite3": "^7.6.10",
-    "@types/node": "^20.11.21",
+    "@types/node": "^20.14.0",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.19",
     "@types/react-syntax-highlighter": "^15",
