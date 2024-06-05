@@ -530,6 +530,7 @@ class Session:
                     "session" : self,
                     "state" : self.state,
                 })
+                self.state.exclude_files = []
                 if gitignore_files:
                     for file in gitignore_files:
                         self.state.exclude_files += get_ignored_files(file)

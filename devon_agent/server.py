@@ -121,7 +121,7 @@ def create_session(session: str, path: str, config : AgentArguments ):
                 path,
                 user_input=lambda: get_user_input(session),
                 name=session,
-                config=config
+                # config=config
             ),
             agent,
         )

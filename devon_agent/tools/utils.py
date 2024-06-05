@@ -29,7 +29,7 @@ def get_ignored_files(gitignore_path):
             # Match directories against the pattern
             for dir in fnmatch.filter(dirs, pattern):
                 ignored_files.append(os.path.join(root, dir))
-
+    assert ignored_files is not None, "No ignored files found"
     return ignored_files
 
 
