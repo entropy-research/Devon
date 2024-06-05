@@ -137,6 +137,17 @@ export const ToolResponseMessage = ({
 function StyledMessage({ content, className, icon, noMarginLeft = false }) {
     const text = useStreamableText(content)
 
+    // return (
+    //     <div className={cn('group relative flex items-start', className)}>
+    //         {icon}
+    //         <div
+    //             className={`${noMarginLeft ? '' : 'ml-6'} flex-1 space-y-2 overflow-hidden`}
+    //         >
+    //             <p>{text}</p>
+    //         </div>
+    //     </div>
+    // )
+
     return (
         <div className={cn('group relative flex items-start', className)}>
             {icon}
