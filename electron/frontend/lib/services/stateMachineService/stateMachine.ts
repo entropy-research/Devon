@@ -725,6 +725,7 @@ type Message = {
 
 type ServerEvent = {
     type:
+    | 'RESET'
     | 'ModelResponse'
     | 'ToolResponse'
     | 'Task'
@@ -758,6 +759,20 @@ export const eventHandlingLogic = fromTransition(
         event: ServerEvent,
     ) => {
         switch (event.type) {
+            case 'RESET': {
+                return {
+                    ...state,
+                    messages: [],
+                    ended: false,
+                    modelLoading: false,
+                    toolMessage: '',
+                    userRequest: false,
+                    gitData: {
+                        base_commit: null,
+                        commits: [],
+                    },
+                };
+            }
             case 'Stop': {
                 return { ...state, ended: true };
             }
@@ -924,49 +939,51 @@ export const eventSourceActor = fromCallback<
     };
 });
 
+
 const createSessionActor = fromPromise(async ({
-        input,
-    }: {
-        input: { host: string; name: string; path: string; reset: boolean };
-    }) => {
-        console.log("starting server")
-        // sleep for 5 sec
-        await new Promise(resolve => setTimeout(resolve, 5000));
+    input,
+}: {
+    input: { host: string; name: string; path: string; reset: boolean };
+}) => {
+    console.log("starting server")
+    // sleep for 5 sec
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
-        if (input?.reset === true) {
-            await axios.post(`${input?.host}/session/${input?.name}/reset`);
-        }
-
-
-        const encodedPath = encodeURIComponent(input?.path);
-        const response = await axios.post(
-            `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
-        );
-        return response;
+    if (input?.reset === true) {
+        await axios.post(`${input?.host}/session/${input?.name}/reset`);
     }
+
+
+    const encodedPath = encodeURIComponent(input?.path);
+    const response = await axios.post(
+        `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
+    );
+    return response;
+}
 )
 
 const loadEventsActor = fromPromise(async ({
-        input,
-    }: {
-        input: { host: string; name: string };
-    }) => {
-        const newEvents = (
-            await axios.get(`${input?.host}/session/${input?.name}/events`)
-        ).data;
-        return newEvents
-    }
+    input,
+}: {
+    input: { host: string; name: string };
+}) => {
+    const newEvents = (
+        await axios.get(`${input?.host}/session/${input?.name}/events`)
+    ).data;
+    return newEvents
+}
 )
 
 const startSessionActor = fromPromise(async ({
-        input,
-    }: {
-        input: { host: string; name: string };
-    }) => {
-        const response = await axios.post(`${input?.host}/session/${input?.name}/start`);
-        return response;
-    },
+    input,
+}: {
+    input: { host: string; name: string };
+}) => {
+    const response = await axios.post(`${input?.host}/session/${input?.name}/start`);
+    return response;
+},
 )
+
 
 export const sessionMachine = setup({
     types: {
@@ -1189,8 +1206,7 @@ export const sessionMachine = setup({
     },
 });
 
-
-const newSessionMachine = setup({
+export const newSessionMachine = setup({
     types: {
         context: {} as {
             reset: boolean;
@@ -1350,7 +1366,12 @@ const newSessionMachine = setup({
 
             },
             onDone: {
-                target: 'initializing'
+                target: 'initializing',
+                actions: [
+                    assign({
+                        reset: () => (false)
+                    })
+                ]
             }
         },
         initializing: {
@@ -1361,9 +1382,14 @@ const newSessionMachine = setup({
                     host,
                     name,
                 }),
-            },
-            onDone: {
-                target: 'starting'
+                onDone: {
+                    target: 'starting',
+                    actions: enqueueActions(({ enqueue, event }) => {
+                        for (let i = 0; i < event.output.length; i++) {
+                            enqueue.sendTo('ServerEventHandler', event.output[i]);
+                        }
+                    })
+                }
             }
         },
         reset:{
@@ -1372,7 +1398,15 @@ const newSessionMachine = setup({
                 src: 'resetSession',
                 input: ({ context: { host, name } }) => ({ host, name }),
                 onDone: {
-                    target: 'initializing'
+                    target: 'creating',
+                    actions: [
+                        sendTo('ServerEventHandler', ({ self }) => {
+                            return {
+                                type: 'RESET',
+                                sender: self
+                            }
+                        })
+                    ]
                 }
             },
         },
@@ -1394,24 +1428,39 @@ const newSessionMachine = setup({
                 },
                 retryStartSession: {
                     after: {
-                        1000: 'starting',
+                        1000: 'initial',
                     },
                 },
                 started: {
                     type: 'final'
                 }
-                
             },
             onDone: {
                 target: 'running'
             }
         },
-        running:{
+        resume: {
             invoke: {
                 id: 'resumeSession',
                 src: 'resumeSession',
                 input: ({ context: { host, name } }) => ({ host, name }),
+                onDone: {
+                    target: 'running'
+                }
             },
+            on : {
+                "session.pause": {
+                    target: "paused"
+                },
+                "session.reset": {
+                    target: "reset"
+                },
+                "session.toggle": {
+                    target: "paused"
+                }
+            }
+        },
+        running:{
             on: {
                 "session.pause": {
                     target: "paused"
@@ -1419,9 +1468,13 @@ const newSessionMachine = setup({
                 "session.toggle": {
                     target: "paused"
                 },
+                "session.reset": {
+                    target: "reset"
+                },
                 serverEvent: {
                     target: 'running',
                     actions: sendTo('ServerEventHandler', ({ event }) => {
+                        console.log(event)
                         return event['payload']
                     }),
                     reenter: true,
@@ -1436,10 +1489,10 @@ const newSessionMachine = setup({
             },
             on: {
                 "session.resume": {
-                    target: "running"
+                    target: "resume"
                 },
                 "session.toggle": {
-                    target: "running"
+                    target: "resume"
                 }
             },
         },
@@ -1448,7 +1501,6 @@ const newSessionMachine = setup({
         }
     }
 })
-
 // const sessionMachine = setup({
 //     types: {
 //         context: {} as {

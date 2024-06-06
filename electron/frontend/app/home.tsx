@@ -11,9 +11,9 @@ import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/
 import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-widget'
 import { useSearchParams } from 'next/navigation'
 import { createActorContext, useMachine } from '@xstate/react'
-import { sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
+import { newSessionMachine, sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 
-export const SessionMachineContext = createActorContext(sessionMachine)
+export const SessionMachineContext = createActorContext(newSessionMachine)
 
 export default function Home({
     sessionMachineProps,
@@ -93,7 +93,7 @@ export default function Home({
                         {/* {port ? ( */}
                         <Chat
                             sessionId={sessionId}
-                            port={sessionMachineProps.port}
+                            // port={sessionMachineProps.port}
                             // sessionMachineProps={sessionMachineProps}
                             // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
                         />

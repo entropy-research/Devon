@@ -8,39 +8,14 @@ export default function ChatHeader({
     headerIcon?: JSX.Element
 }) {
     const host = SessionMachineContext.useSelector(state => state.context.host)
+    const sessionActorRef = SessionMachineContext.useActorRef()
 
     async function handleReset() {
-        try {
-            const response = await fetch(`${host}/session/${sessionId}/reset`, {
-                method: 'POST',
-            })
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
-            }
-            const data = await response.json()
-            return data
-        } catch (error) {
-            console.log(host)
-            console.log(error)
-        }
+        sessionActorRef.send({type: 'session.reset'})
     }
 
     async function handleStop() {
-        try {
-            const response = await fetch(`${host}/session/${sessionId}/stop`, {
-                method: 'POST',
-            })
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
-            }
-            const data = await response.json()
-            return data
-        } catch (error) {
-            console.log(host)
-            console.log(error)
-        }
+        sessionActorRef.send({type: 'session.pause'})
     }
 
     return (

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Paperclip, ArrowRight, CirclePause, Axis3DIcon } from 'lucide-react'
+import { Paperclip, ArrowRight, CirclePause, Axis3DIcon, CirclePlay } from 'lucide-react'
 import { AutoresizeTextarea } from '@/components/ui/textarea'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import {
@@ -28,7 +28,7 @@ const Input = ({
     sessionId: string
 }) => {
     const [focused, setFocused] = useState(false)
-    const [paused, setPaused] = useState(false)
+    // const [paused, setPaused] = useState(false)
     const { formRef, onKeyDown } = useEnterSubmit()
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const [input, setInput] = useState('')
@@ -61,25 +61,25 @@ const Input = ({
         setFocused(true)
         checkShouldOpenModal()
     }
-
-    const host = SessionMachineContext.useSelector(state => state.context.host)
+    const sessionActorRef = SessionMachineContext.useActorRef()
 
     async function handlePause() {
         try {
             
-            const response = await fetch(`${host}/session/${sessionId}/pause`, {
-                method: "POST"
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            setPaused(!paused)
-            return data
+            // const response = await fetch(`${host}/session/${sessionId}/pause`, {
+            //     method: "POST"
+            // });
+
+            sessionActorRef.send({type: 'session.toggle'})
+
+            // if (!response.ok) {
+            //     throw new Error(`HTTP error! status: ${response.status}`);
+            // }
+            // const data = await response.json();
+            // setPaused(!paused)
+            // return data
         } catch (error) {
-            console.log(host)
-            console.log(error)  
+            console.log(error)
         }
     }
 
@@ -89,12 +89,12 @@ const Input = ({
         >
             {(loading ||
                 eventContext.modelLoading ||
-                eventContext.userRequest || paused) && (
+                eventContext.userRequest || sessionActorRef.getSnapshot().matches('paused')) && (
                 <InformationBox
                     modelLoading={eventContext.modelLoading}
                     userRequested={eventContext.userRequest}
                     loading={loading}
-                    paused={paused}
+                    paused={sessionActorRef.getSnapshot().matches('paused')}
                     pauseHandler={handlePause}
                 />
             )}
@@ -217,8 +217,8 @@ const PauseButton = ({ paused, pauseHandler }) => {
                 onClick={pauseHandler}
                 className="flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 text-gray-100 smooth-hover"
             >
-                <CirclePause size={16} />
-                Paused
+                <CirclePlay size={16} />
+                Play
             </button>
         )
     }

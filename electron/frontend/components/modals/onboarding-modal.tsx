@@ -115,10 +115,6 @@ const OnboardingModal = ({
                                 checked={isChecked}
                                 onClick={handleCheckboxChange}
                             />
-                            <label className="ml-2">
-                                I understand that this is not associated with
-                                Cognition Labs&apos;s Devin
-                            </label>
                         </div>
                         <DisabledWrapper
                             disabled={!isChecked}

@@ -1,17 +1,17 @@
-import React, {createContext, useContext, useState} from 'react';
+import React, {useState} from 'react';
 import {Box, Text, useInput, useApp, Static} from 'ink';
 import TextInput from 'ink-text-input';
 import axios from 'axios';
 import Spinner from 'ink-spinner';
-import {useMachine, useSelector, } from '@xstate/react';	
-import { serverMachine, sessionMachine } from './state/server_manager.js';
-import { ActorRefFrom } from 'xstate';
+import {createActorContext, } from '@xstate/react';	
+import {  newSessionMachine } from './state/server_manager.js';
 
 
-const giveUserReponse = async (port: number, res: string) => {
+
+const giveUserReponse = async (host: string, sessionName: string, res: string) => {
 	try {
 		const response = await axios.post(
-			`http://localhost:${port}/session/cli/response?response=` + res,
+			`${host}/session/${sessionName}/response?response=` + res,
 		);
 		return response.data;
 	} catch (error: any) {
@@ -27,10 +27,10 @@ type SessionEvent = {
 	consumer: string;
 };
 
-const sendSessionEvent = async (port: number, event: SessionEvent) => {
+const sendSessionEvent = async (host: string, sessionName: string, event: SessionEvent) => {
 	try {
 		const response = await axios.post(
-			`http://localhost:${port}/session/cli/event`,
+			`${host}/session/${sessionName}/event`,
 			event,
 		);
 		return response.data;
@@ -38,77 +38,36 @@ const sendSessionEvent = async (port: number, event: SessionEvent) => {
 		// console.error('Error:', error.message);
 	}
 };
-
-
-const SessionManagerContext = createContext<{
-	activeSession : string | undefined,
-	setActiveSession: any,
-	sessionMap : Map<string, ActorRefFrom<typeof sessionMachine>>,
-}>({
-	activeSession : "123",
-	setActiveSession: undefined,
-	sessionMap : new Map<string, ActorRefFrom<typeof sessionMachine>>(),
-});
-
-type SessionProps = {
-	reset : boolean,
-	sessionName : string,
-	path : string
-}
-
-const SessionManagerProvider = ({ children, port, session}: { children: React.ReactNode; port: number, session: SessionProps }) => {
-    // const [sessionManager] = useState<SessionManager>(new SessionManager(`http://localhost:${port}`));
-	const [activeSession, setActiveSession] =  useState<string | undefined>(undefined);
-
-	const [state, send] = useMachine(serverMachine, { id: "serverMachine", input: { host: `http://localhost:${port}` }});
-
-	send({type: "server.setup"})
-	send({
-		type: "server.spawnSession",
-		payload: {
-			...session, 
-			sessionId: session.sessionName, 
-			apiKey: ""
-		}
-	})
-
-    return (
-        <SessionManagerContext.Provider value={{
-			activeSession: activeSession,
-			setActiveSession: setActiveSession,
-			sessionMap : state.context.refs,
-		}}>
-            {state.context.refs ? children : null}
-        </SessionManagerContext.Provider>
-    );
-};
-
+const SessionMachineContext = createActorContext(newSessionMachine);
 
 export const App = ({port, reset} : {port : number, reset : boolean}) => {
 
 	return (
-		<SessionManagerProvider  port={port} session={
+		<SessionMachineContext.Provider options={
 			{
-				sessionName : "123",
-				path : process.cwd(),
-				reset : reset
+				input : {
+					reset : reset,
+					host : `http://localhost:${port}`,
+					name : "123",
+					path : process.cwd()
+				}
 			}
 		}>
-			<Display port={port}/>
-		</SessionManagerProvider>
+			<Display/>
+		</SessionMachineContext.Provider>
 	);
 };
 
 
-const Display = ({port} : {port : number}) => {
+const Display = () => {
 	const [inputValue, setInputValue] = useState('');
 	let status = '';
-	const {activeSession, sessionMap} = useContext(SessionManagerContext);
-	let sessionState = useSelector(sessionMap.get(activeSession ?? "123"), (snapshot) => snapshot);
+	// const eventState = sessionState?.context.serverEventContext;
+	const sessionState = SessionMachineContext.useSelector((state) => state);
 	const eventState = sessionState?.context.serverEventContext;
 	const {exit} = useApp();
 
-	// console.log("state",sessionState);
+	console.log("state",sessionState.value);
 	if (!sessionState?.matches('running')) {
 		status = 'Initializing...';
 	} else if (eventState?.modelLoading) {
@@ -132,7 +91,7 @@ const Display = ({port} : {port : number}) => {
 				exit();
 			}
 			if (inputValue.toLowerCase() == '/reset') {
-				sendSessionEvent(port, {
+				sendSessionEvent(sessionState?.context.host, sessionState?.context.name, {
 					type: 'GitRequest',
 					content: {
 						type: 'revert_to_commit',
@@ -148,9 +107,9 @@ const Display = ({port} : {port : number}) => {
 			}
 
 			if (eventState?.userRequest) {
-				giveUserReponse(port, inputValue);
+				giveUserReponse(sessionState?.context.host, sessionState?.context.name, inputValue);
 			} else {
-				sendSessionEvent(port, {
+				sendSessionEvent(sessionState?.context.host, sessionState?.context.name, {
 					type: 'Interrupt',
 					content: inputValue,
 					producer: 'cli',

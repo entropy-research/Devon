@@ -23,7 +23,7 @@ import {
     // createActor
 } from 'xstate';
 // const EventSource = require('eventsource');
-// import EventSource from 'eventsource';
+import EventSource from 'eventsource';
 
 
 type Message = {
@@ -33,6 +33,7 @@ type Message = {
 
 type ServerEvent = {
     type:
+    | 'RESET'
     | 'ModelResponse'
     | 'ToolResponse'
     | 'Task'
@@ -66,6 +67,20 @@ export const eventHandlingLogic = fromTransition(
         event: ServerEvent,
     ) => {
         switch (event.type) {
+            case 'RESET': {
+                return {
+                    ...state,
+                    messages: [],
+                    ended: false,
+                    modelLoading: false,
+                    toolMessage: '',
+                    userRequest: false,
+                    gitData: {
+                        base_commit: null,
+                        commits: [],
+                    },
+                };
+            }
             case 'Stop': {
                 return { ...state, ended: true };
             }
@@ -232,288 +247,105 @@ export const eventSourceActor = fromCallback<
     };
 });
 
-// const createSessionActor = fromPromise(async ({
-//         input,
-//     }: {
-//         input: { host: string; name: string; path: string; reset: boolean };
-//     }) => {
-//         console.log("starting server")
-//         // sleep for 5 sec
-//         await new Promise(resolve => setTimeout(resolve, 5000));
+const createSessionActor = fromPromise(async ({
+        input,
+    }: {
+        input: { host: string; name: string; path: string; reset: boolean };
+    }) => {
+        console.log("starting server")
+        // sleep for 5 sec
+        await new Promise(resolve => setTimeout(resolve, 5000));
 
-//         if (input?.reset === true) {
-//             await axios.post(`${input?.host}/session/${input?.name}/reset`);
-//         }
-
-
-//         const encodedPath = encodeURIComponent(input?.path);
-//         const response = await axios.post(
-//             `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
-//         );
-//         return response;
-//     }
-// )
-
-// const loadEventsActor = fromPromise(async ({
-//         input,
-//     }: {
-//         input: { host: string; name: string };
-//     }) => {
-//         const newEvents = (
-//             await axios.get(`${input?.host}/session/${input?.name}/events`)
-//         ).data;
-//         return newEvents
-//     }
-// )
-
-// const startSessionActor = fromPromise(async ({
-//         input,
-//     }: {
-//         input: { host: string; name: string };
-//     }) => {
-//         const response = await axios.post(`${input?.host}/session/${input?.name}/start`);
-//         return response;
-//     },
-// )
-
-export const sessionMachine = setup({
-    types: {
-        events: {} as
-            | { type: 'serverEvent'; payload: any }
-            | { type: 'startStream' }
-            | { type: 'stopStream' },
-        context: {} as {
-            host: string;
-            retryCount: number;
-            name: string;
-            path: string;
-            reset: boolean;
-            serverEventContext: ServerEventContext;
-        },
-        input: {} as {
-            reset: boolean;
-            host: string;
-            name: string;
-            path: string;
-        },
-    },
-
-    actors: {
-        eventHandlingLogic,
-        eventSourceActor,
-        createSession: fromPromise(
-            async ({
-                input,
-            }: {
-                input: { host: string; name: string; path: string; reset: boolean };
-            }) => {
-                console.log("starting server")
-                // sleep for 5 sec
-                await new Promise(resolve => setTimeout(resolve, 5000));
-
-                if (input?.reset === true) {
-                    await axios.post(`${input?.host}/session/${input?.name}/reset`);
-                }
-
-
-                const encodedPath = encodeURIComponent(input?.path);
-                const response = await axios.post(
-                    `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
-                );
-                return response;
-            },
-        ),
-        startSession: fromPromise(
-            async ({ input }: { input: { host: string; name: string } }) => {
-                const response = await axios.post(
-                    `${input?.host}/session/${input?.name}/start`,
-                );
-                return response;
-            },
-        ),
-        checkSession: fromPromise(
-            async ({ input }: { input: { host: string; name: string } }) => {
-                const response = await axios.get(`${input?.host}/session`);
-
-                for (let i = 0; i < response.data.length; i++) {
-                    if (response.data[i].name === input.name) {
-                        return response.data[i].name;
-                    }
-                }
-                throw new Error('Session not found');
-            },
-        ),
-        loadEvents: fromPromise(
-            async ({
-                input,
-            }: {
-                input: { host: string; name: string };
-            }) => {
-                const newEvents = (
-                    await axios.get(`${input?.host}/session/${input?.name}/events`)
-                ).data;
-                return newEvents
-            },
-        ),
-    },
-}).createMachine({
-    id: 'session',
-    initial: 'initial',
-    invoke: [
-        {
-            id: 'ServerEventSource',
-            src: 'eventSourceActor',
-            input: ({ context: { host, name } }) => ({ host, name }),
-            onDone: {
-                actions: ({ event }) => {
-                    console.log("event", event)
-                }
-            }
-        },
-        {
-            id: 'ServerEventHandler',
-            src: 'eventHandlingLogic',
-            input: ({ context: { host, name } }) => ({ host, name }),
-            onSnapshot: {
-                actions: assign({
-                    serverEventContext: ({ event }) => {
-                        return event.snapshot.context
-                    }
-                })
-            }
-        },
-    ],
-    context: ({ input }) => ({
-        host: input.host,
-        retryCount: 0,
-        name: input.name,
-        path: input.path,
-        reset: input.reset,
-        serverEventContext: {
-            messages: [],
-            ended: false,
-            modelLoading: false,
-            toolMessage: '',
-            userRequest: false,
-            gitData: {
-                base_commit: null,
-                commits: [],
-            },
+        if (input?.reset === true) {
+            await axios.post(`${input?.host}/session/${input?.name}/reset`);
         }
-    }),
 
 
-    states: {
-        initial: {
-            invoke: {
-                id: 'checkSession',
-                src: 'checkSession',
-                input: ({ context: { host, name } }) => ({ host, name }),
-                onDone: {
-                    target: 'sessionExists',
-                },
-                onError: {
-                    target: 'sessionDoesNotExist',
-                },
-            },
-        },
-        sessionDoesNotExist: {
-            invoke: {
-                id: 'createSession',
-                src: 'createSession',
-                input: ({ context: { host, name, path, reset } }) => ({
-                    host,
-                    name,
-                    path,
-                    reset,
-                }),
-                onDone: {
-                    target: 'sessionExists',
-                    actions: sendTo('ServerEventSource', ({ self }) => {
-                        return {
-                            type: 'startStream',
-                            sender: self
-                        }
-                    }),
-                },
-                onError: {
-                    target: 'retryCreateSession',
-                }
-            },
-        },
-        sessionExists: {
-            invoke: {
-                id: 'loadEvents',
-                src: 'loadEvents',
-                input: ({ context: { host, name } }) => ({
-                    host,
-                    name,
-                }),
-                onDone: {
-                    target: 'sessionReady',
-                    actions: enqueueActions(({ enqueue, event }) => {
-                        for (let i = 0; i < event.output.length; i++) {
-                            enqueue.sendTo('ServerEventHandler', event.output[i]);
-                        }
-                    })
-                },
-            },
-        },
-        sessionReady: {
-            invoke: {
-                id: 'startSession',
-                src: 'startSession',
-                input: ({ context: { host, name } }) => ({ host, name }),
-                onDone: {
-                    target: 'running',
-                },
-                onError: {
-                    target: 'retryStartSession',
-                },
-            },
-        },
-        retryStartSession: {
-            after: {
-                1000: 'sessionReady',
-            },
-        },
-        retryCreateSession: {
-            after: {
-                1000: 'sessionDoesNotExist',
-            }
-        },
-        running: {
-            on: {
-                serverEvent: {
-                    target: 'running',
-                    actions: sendTo('ServerEventHandler', ({ event }) => {
-                        return event.payload
-                    }),
-                    reenter: true,
-                },
-            },
-            reenter: true,
-        },
+        const encodedPath = encodeURIComponent(input?.path);
+        const response = await axios.post(
+            `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
+        );
+        return response;
+    }
+)
+
+const loadEventsActor = fromPromise(async ({
+        input,
+    }: {
+        input: { host: string; name: string };
+    }) => {
+        const newEvents = (
+            await axios.get(`${input?.host}/session/${input?.name}/events`)
+        ).data;
+        return newEvents
+    }
+)
+
+const startSessionActor = fromPromise(async ({
+        input,
+    }: {
+        input: { host: string; name: string };
+    }) => {
+        const response = await axios.post(`${input?.host}/session/${input?.name}/start`);
+        return response;
     },
-});
+)
 
-
-// const newSessionMachine = setup({
+// export const sessionMachine = setup({
 //     types: {
+//         events: {} as
+//             | { type: 'serverEvent'; payload: any }
+//             | { type: 'startStream' }
+//             | { type: 'stopStream' },
 //         context: {} as {
+//             host: string;
+//             retryCount: number;
+//             name: string;
+//             path: string;
+//             reset: boolean;
+//             serverEventContext: ServerEventContext;
+//         },
+//         input: {} as {
 //             reset: boolean;
 //             host: string;
 //             name: string;
 //             path: string;
-//             serverEventContext: ServerEventContext;
 //         },
 //     },
+
 //     actors: {
-//         createSession: createSessionActor,
-//         loadEvents: loadEventsActor,
-//         startSession: startSessionActor,
-//         eventSourceActor: eventSourceActor,
-//         eventHandlingLogic: eventHandlingLogic,
+//         eventHandlingLogic,
+//         eventSourceActor,
+//         createSession: fromPromise(
+//             async ({
+//                 input,
+//             }: {
+//                 input: { host: string; name: string; path: string; reset: boolean };
+//             }) => {
+//                 console.log("starting server")
+//                 // sleep for 5 sec
+//                 await new Promise(resolve => setTimeout(resolve, 5000));
+
+//                 if (input?.reset === true) {
+//                     await axios.post(`${input?.host}/session/${input?.name}/reset`);
+//                 }
+
+
+//                 const encodedPath = encodeURIComponent(input?.path);
+//                 const response = await axios.post(
+//                     `${input?.host}/session?session=${input?.name}&path=${encodedPath}`,
+//                 );
+//                 return response;
+//             },
+//         ),
+//         startSession: fromPromise(
+//             async ({ input }: { input: { host: string; name: string } }) => {
+//                 const response = await axios.post(
+//                     `${input?.host}/session/${input?.name}/start`,
+//                 );
+//                 return response;
+//             },
+//         ),
 //         checkSession: fromPromise(
 //             async ({ input }: { input: { host: string; name: string } }) => {
 //                 const response = await axios.get(`${input?.host}/session`);
@@ -526,46 +358,22 @@ export const sessionMachine = setup({
 //                 throw new Error('Session not found');
 //             },
 //         ),
-//         pauseSession: fromPromise(
-//             async ({ input }: { input: { host: string; name: string } }) => {
-//                 const response = await axios.post(`${input?.host}/session/${input?.name}/pause`);
-//                 return response;
+//         loadEvents: fromPromise(
+//             async ({
+//                 input,
+//             }: {
+//                 input: { host: string; name: string };
+//             }) => {
+//                 const newEvents = (
+//                     await axios.get(`${input?.host}/session/${input?.name}/events`)
+//                 ).data;
+//                 return newEvents
 //             },
 //         ),
-//         resumeSession: fromPromise(
-//             async ({ input }: { input: { host: string; name: string } }) => {
-//                 const response = await axios.post(`${input?.host}/session/${input?.name}/resume`);
-//                 return response;
-//             },
-//         ),
-//         resetSession: fromPromise(
-//             async ({ input }: { input: { host: string; name: string } }) => {
-//                 // pause session first
-//                 await axios.post(`${input?.host}/session/${input?.name}/pause`);
-//                 const response = await axios.post(`${input?.host}/session/${input?.name}/reset`);
-//                 return response;
-//             },
-//         ),
-//     }
-    
+//     },
 // }).createMachine({
-//     context: ({ input } : { input: any }) => ({
-//         reset: input.reset,
-//         host: input.host,
-//         name: input.name,
-//         path: input.path,
-//         serverEventContext: {
-//             messages: [],
-//             ended: false,
-//             modelLoading: false,
-//             toolMessage: '',
-//             userRequest: false,
-//             gitData: {
-//                 base_commit: null,
-//                 commits: [],
-//             },
-//         }
-//     }),
+//     id: 'session',
+//     initial: 'initial',
 //     invoke: [
 //         {
 //             id: 'ServerEventSource',
@@ -582,86 +390,73 @@ export const sessionMachine = setup({
 //             src: 'eventHandlingLogic',
 //             input: ({ context: { host, name } }) => ({ host, name }),
 //             onSnapshot: {
-//                 actions: [assign({
+//                 actions: assign({
 //                     serverEventContext: ({ event }) => {
 //                         return event.snapshot.context
 //                     }
-//                 }),
-//                 raise(({ event }) => {
-//                     if (event.snapshot.context.ended) {
-//                         return {
-//                             type: 'session.ended'
-//                         }
-//                     } else {
-//                         return {
-//                             type: 'randomcrap'
-//                         }
-//                     }
 //                 })
-//             ]
 //             }
 //         },
 //     ],
-//     initial: 'creating',
-//     states : {
-
-//         error: {},
-//         creating: {
-            
-//             initial: "initial",
-//             states: {
-//                 initial: {
-//                     invoke: {
-//                         id: 'checkSession',
-//                         src: 'checkSession',
-//                         input: ({ context: { host, name } }) => ({ host, name }),
-//                         onDone: {
-//                             target: 'sessionCreated',
-//                         },
-//                         onError: {
-//                             target: 'sessionDoesNotExist',
-//                         },
-//                     },
-//                 },
-//                 sessionDoesNotExist: {
-//                     invoke: {
-//                         id: 'createSession',
-//                         src: 'createSession',
-//                         input: ({ context: { host, name, path, reset } }) => ({
-//                             host,
-//                             name,
-//                             path,
-//                             reset,
-//                         }),
-//                         onDone: {
-//                             target: 'sessionCreated',
-//                             actions: sendTo('ServerEventSource', ({ self }) => {
-//                                 return {
-//                                     type: 'startStream',
-//                                     sender: self
-//                                 }
-//                             }),
-//                         },
-//                         onError: {
-//                             target: 'retryCreateSession',
-//                         }
-//                     },
-//                 },
-//                 retryCreateSession: {
-//                     after: {
-//                         1000: 'sessionDoesNotExist',
-//                     }
-//                 },
-//                 sessionCreated: {
-//                     type: 'final'
-//                 }
-
+//     context: ({ input }) => ({
+//         host: input.host,
+//         retryCount: 0,
+//         name: input.name,
+//         path: input.path,
+//         reset: input.reset,
+//         serverEventContext: {
+//             messages: [],
+//             ended: false,
+//             modelLoading: false,
+//             toolMessage: '',
+//             userRequest: false,
+//             gitData: {
+//                 base_commit: null,
+//                 commits: [],
 //             },
-//             onDone: {
-//                 target: 'initializing'
-//             }
+//         }
+//     }),
+
+
+//     states: {
+//         initial: {
+//             invoke: {
+//                 id: 'checkSession',
+//                 src: 'checkSession',
+//                 input: ({ context: { host, name } }) => ({ host, name }),
+//                 onDone: {
+//                     target: 'sessionExists',
+//                 },
+//                 onError: {
+//                     target: 'sessionDoesNotExist',
+//                 },
+//             },
 //         },
-//         initializing: {
+//         sessionDoesNotExist: {
+//             invoke: {
+//                 id: 'createSession',
+//                 src: 'createSession',
+//                 input: ({ context: { host, name, path, reset } }) => ({
+//                     host,
+//                     name,
+//                     path,
+//                     reset,
+//                 }),
+//                 onDone: {
+//                     target: 'sessionExists',
+//                     actions: sendTo('ServerEventSource', ({ self }) => {
+//                         return {
+//                             type: 'startStream',
+//                             sender: self
+//                         }
+//                     }),
+//                 },
+//                 onError: {
+//                     target: 'retryCreateSession',
+//                 }
+//             },
+//         },
+//         sessionExists: {
 //             invoke: {
 //                 id: 'loadEvents',
 //                 src: 'loadEvents',
@@ -669,93 +464,346 @@ export const sessionMachine = setup({
 //                     host,
 //                     name,
 //                 }),
+//                 onDone: {
+//                     target: 'sessionReady',
+//                     actions: enqueueActions(({ enqueue, event }) => {
+//                         for (let i = 0; i < event.output.length; i++) {
+//                             enqueue.sendTo('ServerEventHandler', event.output[i]);
+//                         }
+//                     })
+//                 },
 //             },
-//             onDone: {
-//                 target: 'starting'
-//             }
 //         },
-//         reset:{
+//         sessionReady: {
 //             invoke: {
-//                 id: 'resetSession',
-//                 src: 'resetSession',
+//                 id: 'startSession',
+//                 src: 'startSession',
 //                 input: ({ context: { host, name } }) => ({ host, name }),
 //                 onDone: {
-//                     target: 'initializing'
-//                 }
+//                     target: 'running',
+//                 },
+//                 onError: {
+//                     target: 'retryStartSession',
+//                 },
 //             },
 //         },
-//         starting: {
-//             initial: "initial",
-//             states: {
-//                 initial: {
-//                     invoke: {
-//                         id: 'startSession',
-//                         src: 'startSession',
-//                         input: ({ context: { host, name } }) => ({ host, name }),
-//                         onDone: {
-//                             target: 'started',
-//                         },
-//                         onError: {
-//                             target: 'retryStartSession',
-//                         },
-//                     },
-//                 },
-//                 retryStartSession: {
-//                     after: {
-//                         1000: 'starting',
-//                     },
-//                 },
-//                 started: {
-//                     type: 'final'
-//                 }
-                
+//         retryStartSession: {
+//             after: {
+//                 1000: 'sessionReady',
 //             },
-//             onDone: {
-//                 target: 'running'
+//         },
+//         retryCreateSession: {
+//             after: {
+//                 1000: 'sessionDoesNotExist',
 //             }
 //         },
-//         running:{
-//             invoke: {
-//                 id: 'resumeSession',
-//                 src: 'resumeSession',
-//                 input: ({ context: { host, name } }) => ({ host, name }),
-//             },
+//         running: {
 //             on: {
-//                 "session.pause": {
-//                     target: "paused"
-//                 },
-//                 "session.toggle": {
-//                     target: "paused"
-//                 },
 //                 serverEvent: {
 //                     target: 'running',
 //                     actions: sendTo('ServerEventHandler', ({ event }) => {
-//                         return event['payload']
+//                         return event.payload
 //                     }),
 //                     reenter: true,
 //                 },
 //             },
+//             reenter: true,
 //         },
-//         paused: {
-//             invoke: {
-//                 id: 'pauseSession',
-//                 src: 'pauseSession',
-//                 input: ({ context: { host, name } }) => ({ host, name }),
-//             },
-//             on: {
-//                 "session.resume": {
-//                     target: "running"
-//                 },
-//                 "session.toggle": {
-//                     target: "running"
-//                 }
-//             },
-//         },
-//         stopped: {
-//             type: "final"
-//         }
-//     }
-// })
+//     },
+// });
+
+
+export const newSessionMachine = setup({
+    types: {
+        context: {} as {
+            reset: boolean;
+            host: string;
+            name: string;
+            path: string;
+            serverEventContext: ServerEventContext;
+        },
+    },
+    actors: {
+        createSession: createSessionActor,
+        loadEvents: loadEventsActor,
+        startSession: startSessionActor,
+        eventSourceActor: eventSourceActor,
+        eventHandlingLogic: eventHandlingLogic,
+        checkSession: fromPromise(
+            async ({ input }: { input: { host: string; name: string } }) => {
+                const response = await axios.get(`${input?.host}/session`);
+
+                for (let i = 0; i < response.data.length; i++) {
+                    if (response.data[i].name === input.name) {
+                        return response.data[i].name;
+                    }
+                }
+                throw new Error('Session not found');
+            },
+        ),
+        pauseSession: fromPromise(
+            async ({ input }: { input: { host: string; name: string } }) => {
+                console.log("PAUSING")
+                const response = await axios.post(`${input?.host}/session/${input?.name}/pause`);
+                return response;
+            },
+        ),
+        resumeSession: fromPromise(
+            async ({ input }: { input: { host: string; name: string } }) => {
+                const response = await axios.post(`${input?.host}/session/${input?.name}/resume`);
+                return response;
+            },
+        ),
+        resetSession: fromPromise(
+            async ({ input }: { input: { host: string; name: string } }) => {
+                // pause session first
+                await axios.post(`${input?.host}/session/${input?.name}/pause`);
+                const response = await axios.post(`${input?.host}/session/${input?.name}/reset`);
+                return response;
+            },
+        ),
+    }
+    
+}).createMachine({
+    context: ({ input } : { input: any }) => ({
+        reset: input.reset,
+        host: input.host,
+        name: input.name,
+        path: input.path,
+        serverEventContext: {
+            messages: [],
+            ended: false,
+            modelLoading: false,
+            toolMessage: '',
+            userRequest: false,
+            gitData: {
+                base_commit: null,
+                commits: [],
+            },
+        }
+    }),
+    invoke: [
+        {
+            id: 'ServerEventSource',
+            src: 'eventSourceActor',
+            input: ({ context: { host, name } }) => ({ host, name }),
+            onDone: {
+                actions: ({ event }) => {
+                    console.log("event", event)
+                }
+            }
+        },
+        {
+            id: 'ServerEventHandler',
+            src: 'eventHandlingLogic',
+            input: ({ context: { host, name } }) => ({ host, name }),
+            onSnapshot: {
+                actions: [assign({
+                    serverEventContext: ({ event }) => {
+                        return event.snapshot.context
+                    }
+                }),
+                raise(({ event }) => {
+                    if (event.snapshot.context.ended) {
+                        return {
+                            type: 'session.ended'
+                        }
+                    } else {
+                        return {
+                            type: 'randomcrap'
+                        }
+                    }
+                })
+            ]
+            }
+        },
+    ],
+    initial: 'creating',
+    states : {
+
+        error: {},
+        creating: {
+            
+            initial: "initial",
+            states: {
+                initial: {
+                    invoke: {
+                        id: 'checkSession',
+                        src: 'checkSession',
+                        input: ({ context: { host, name } }) => ({ host, name }),
+                        onDone: {
+                            target: 'sessionCreated',
+                        },
+                        onError: {
+                            target: 'sessionDoesNotExist',
+                        },
+                    },
+                },
+                sessionDoesNotExist: {
+                    invoke: {
+                        id: 'createSession',
+                        src: 'createSession',
+                        input: ({ context: { host, name, path, reset } }) => ({
+                            host,
+                            name,
+                            path,
+                            reset,
+                        }),
+                        onDone: {
+                            target: 'sessionCreated',
+                            actions: sendTo('ServerEventSource', ({ self }) => {
+                                return {
+                                    type: 'startStream',
+                                    sender: self
+                                }
+                            }),
+                        },
+                        onError: {
+                            target: 'retryCreateSession',
+                        }
+                    },
+                },
+                retryCreateSession: {
+                    after: {
+                        1000: 'sessionDoesNotExist',
+                    }
+                },
+                sessionCreated: {
+                    type: 'final'
+                }
+
+            },
+            onDone: {
+                target: 'initializing'
+            }
+        },
+        initializing: {
+            invoke: {
+                id: 'loadEvents',
+                src: 'loadEvents',
+                input: ({ context: { host, name } }) => ({
+                    host,
+                    name,
+                }),
+                onDone: {
+                    target: 'starting',
+                    actions: enqueueActions(({ enqueue, event }) => {
+                        for (let i = 0; i < event.output.length; i++) {
+                            enqueue.sendTo('ServerEventHandler', event.output[i]);
+                        }
+                    })
+                }
+            }
+        },
+        reset:{
+            invoke: {
+                id: 'resetSession',
+                src: 'resetSession',
+                input: ({ context: { host, name } }) => ({ host, name }),
+                onDone: {
+                    target: 'initial',
+                    actions: [
+                        sendTo('ServerEventHandler', ({ self }) => {
+                            return {
+                                type: 'RESET',
+                                sender: self
+                            }
+                        })
+                    ]
+                }
+            },
+        },
+        starting: {
+            initial: "initial",
+            states: {
+                initial: {
+                    invoke: {
+                        id: 'startSession',
+                        src: 'startSession',
+                        input: ({ context: { host, name } }) => ({ host, name }),
+                        onDone: {
+                            target: 'started',
+                        },
+                        onError: {
+                            target: 'retryStartSession',
+                        },
+                    },
+                },
+                retryStartSession: {
+                    after: {
+                        1000: 'initial',
+                    },
+                },
+                started: {
+                    type: 'final'
+                }
+            },
+            onDone: {
+                target: 'pause'
+            }
+        },
+        resume: {
+            invoke: {
+                id: 'resumeSession',
+                src: 'resumeSession',
+                input: ({ context: { host, name } }) => ({ host, name }),
+                onDone: {
+                    target: 'running'
+                }
+            },
+            on : {
+                "session.pause": {
+                    target: "paused"
+                },
+                "session.reset": {
+                    target: "reset"
+                },
+                "session.toggle": {
+                    target: "paused"
+                }
+            }
+        },
+        running:{
+            on: {
+                "session.pause": {
+                    target: "paused"
+                },
+                "session.toggle": {
+                    target: "paused"
+                },
+                "session.reset": {
+                    target: "reset"
+                },
+                serverEvent: {
+                    target: 'running',
+                    actions: sendTo('ServerEventHandler', ({ event }) => {
+                        console.log(event)
+                        return event['payload']
+                    }),
+                    reenter: true,
+                },
+            },
+        },
+        paused: {
+            invoke: {
+                id: 'pauseSession',
+                src: 'pauseSession',
+                input: ({ context: { host, name } }) => ({ host, name }),
+            },
+            on: {
+                "session.resume": {
+                    target: "resume"
+                },
+                "session.toggle": {
+                    target: "resume"
+                }
+            },
+        },
+        stopped: {
+            type: "final"
+        }
+    }
+})
 
 // const sessionMachine = setup({
 //     types: {
@@ -811,18 +859,51 @@ export const sessionMachine = setup({
 //     output: ({context}) => (context)
 // })
 
+
+//                 sessionDoesNotExist: {
+//                     invoke: {
+//                         id: 'createSession',
+//                         src: 'createSession',
+//                         input: ({ context: { host, name, path, reset } }) => ({
+//                             host,
+//                             name,
+//                             path,
+//                             reset,
+//                         }),
+//                         onDone: {
+//                             target: 'sessionCreated',
+//                             actions: sendTo('ServerEventSource', ({ self }) => {
+//                                 return {
+//                                     type: 'startStream',
+//                                     sender: self
+//                                 }
+//                             }),
+//                         },
+//                         onError: {
+//                             target: 'retryCreateSession',
+//                         }
+//                     },
+//                 },
+//                 retryCreateSession: {
+//                     after: {
+//                         1000: 'sessionDoesNotExist',
+//                     }
+//                 },
+
+
 export const serverMachine = setup({
     types: {
         context: {} as {
             host: string;
             retryCount: number;
-            refs:  Map<string, ActorRefFrom<typeof sessionMachine>>;
+            refs: Map<string, ActorRefFrom<typeof newSessionMachine>>;
         },
         input: {} as {
             port: string | undefined;
         } | {},
         events: {} as
         | { type: 'server.setup'}
+        | { type: 'server.rand'}
         | { type: 'server.shutdown'}
         | { type: 'server.setupFailed'}
         | { type: 'server.retry'}
@@ -835,13 +916,13 @@ export const serverMachine = setup({
             const response = await axios.get(`${input.host}/`);
             return response.data;
         }),
-        spawnSessionMachine: sessionMachine
+        spawnSessionMachine: newSessionMachine
     },
 }).createMachine({
     context: ({ input } : { input: any }) => ({
         host: input.host,
         retryCount: 0,
-        refs: new  Map<string, ActorRefFrom<typeof sessionMachine>>(),
+        refs: new  Map<string, ActorRefFrom<typeof newSessionMachine>>(),
     }),
     id: 'serverMachine',
     initial: 'setup',
@@ -861,6 +942,7 @@ export const serverMachine = setup({
                 id: 'startServer',
                 src: 'startServer',
                 input: ({ context }: {context: any, event: any}) => ({
+                    host: context.host, 
                     retryCount: context.retryCount,
                 }),
                 onDone: {
@@ -872,34 +954,43 @@ export const serverMachine = setup({
                     ]
                 },
                 onError: {
+                    target: 'retryServerStart',
                     actions: [
                         ({ event}) => { console.log(event.error)},
                         assign({
                             retryCount: ({ context }) => (context.retryCount + 1)
                         }),
-                        raise(({ }) => { 
-                            // console.log("retrying")
-                            // if(context.retryCount > 5){
-                            //     return {
-                            //         type: 'server.setupFailed',
-                            //     }
-                            // }
+                        raise(({ context, event }) => { 
+                            console.log("retrying")
+                            if(context.retryCount > 5){
+                                return {
+                                    type: 'server.setupFailed',
+                                    payload: {
+                                        error: event.error
+                                    }
+                                }
+                            }
                             return {
-                                type: 'server.retry',
+                                type: 'server.rand',
                             }
                         })
                     ]
                 }
             },
         },
+        retryServerStart: {
+            after: {
+                1000: "setup"
+            }
+        },
         running: {
             on: {
-                'server.spawnSession': {
-                    actions: [
-                        ({ context }) => { console.log(context) }
-                    ],
-                    target: "spawnSessionMachine"
-                },
+                // 'server.spawnSession': {
+                //     actions: [
+                //         ({ context }) => { console.log(context) }
+                //     ],
+                //     target: "spawnSessionMachine"
+                // },
                 'server.shutdown': {
                     target: 'shutdown'
                 }
@@ -908,20 +999,20 @@ export const serverMachine = setup({
                 () => { console.log("entered running") }
             ],
         },
-        spawnSessionMachine: {
-            entry: [
-                assign({
-                  refs: ({ context, spawn, event  }) => ({
-                    ...context.refs,
-                    [(event as any).payload?.sessionId]: spawn(sessionMachine, { 
-                    id: (event as any).payload?.sessionId,
-                    input: {
-                        reset: (event as any).payload?.reset,
-                        host: context.host,
-                        name: (event as any).payload?.sessionName,
-                        path: (event as any).payload?.path,
-                    }})})})],
-        },
+        // spawnSessionMachine: {
+        //     entry: [
+        //         assign({
+        //           refs: ({ context, spawn, event  }) => ({
+        //             ...context.refs,
+        //             [(event as any).payload?.sessionId]: spawn(sessionMachine, { 
+        //             id: (event as any).payload?.sessionId,
+        //             input: {
+        //                 reset: (event as any).payload?.reset,
+        //                 host: context.host,
+        //                 name: (event as any).payload?.sessionName,
+        //                 path: (event as any).payload?.path,
+        //             }})})})],
+        // },
         shutdown: {
             type: 'final',
             entry: [
