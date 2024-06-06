@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 import json
 from contextlib import asynccontextmanager
-from devon_agent.agents.default.agent import TaskAgent
+from devon_agent.agents.default.agent import AgentArguments, TaskAgent
 from devon_agent.models import ENGINE, Base, init_db, load_data
 from devon_agent.session import (
     Event,
@@ -104,27 +104,15 @@ def read_session():
 
 
 @app.post("/session")
-def create_session(session: str, path: str):
+def create_session(session: str, path: str, config : AgentArguments ):
     if not os.path.exists(path):
         raise fastapi.HTTPException(status_code=404, detail="Path not found")
 
-    if not app.api_base:
-        agent = TaskAgent(
-            name="Devon",
-            model=app.model,
-            temperature=0.0,
-            api_key=app.api_key,
-            prompt_type=app.prompt_type,
-        )
 
-    else:
-        agent = TaskAgent(
+    agent = TaskAgent(
             name="Devon",
-            model=app.model,
             temperature=0.0,
-            api_key=app.api_key,
-            api_base=app.api_base,
-            prompt_type=app.prompt_type,
+            args=config
         )
 
     if session not in sessions:
@@ -133,7 +121,7 @@ def create_session(session: str, path: str):
                 path,
                 user_input=lambda: get_user_input(session),
                 name=session,
-                # config=app.config
+                # config=config
             ),
             agent,
         )
