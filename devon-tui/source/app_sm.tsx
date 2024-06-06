@@ -1,10 +1,10 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
+import React, {createContext, useContext, useState} from 'react';
 import {Box, Text, useInput, useApp, Static} from 'ink';
 import TextInput from 'ink-text-input';
 import axios from 'axios';
 import Spinner from 'ink-spinner';
-import {useSelector, } from '@xstate/react';	
-import { SessionManager, sessionMachine } from './state/server_manager.js';
+import {useMachine, useSelector, } from '@xstate/react';	
+import { serverMachine, sessionMachine } from './state/server_manager.js';
 import { ActorRefFrom } from 'xstate';
 
 
@@ -42,18 +42,12 @@ const sendSessionEvent = async (port: number, event: SessionEvent) => {
 
 const SessionManagerContext = createContext<{
 	activeSession : string | undefined,
+	setActiveSession: any,
 	sessionMap : Map<string, ActorRefFrom<typeof sessionMachine>>,
-	setActiveSession : (sessionId : string) => void,
-	createSession : (sessionId : string, host : string, path : string, reset : boolean) => void,
-	startSession : (sessionId : string) => void,
-	stopSession : (sessionId : string) => void,
 }>({
 	activeSession : "123",
+	setActiveSession: undefined,
 	sessionMap : new Map<string, ActorRefFrom<typeof sessionMachine>>(),
-	setActiveSession : () => {}, //ts-ignore
-	createSession : () => {}, //ts-ignore
-	startSession : () => {}, //ts-ignore
-	stopSession : () => {}, //ts-ignore
 });
 
 type SessionProps = {
@@ -62,57 +56,44 @@ type SessionProps = {
 	path : string
 }
 
-
-const SessionManagerProvider = ({ children, port, sessions }: { children: React.ReactNode; port: number, sessions : SessionProps[] }) => {
-    const [sessionManager] = useState<SessionManager>(new SessionManager(`http://localhost:${port}`));
+const SessionManagerProvider = ({ children, port, session}: { children: React.ReactNode; port: number, session: SessionProps }) => {
+    // const [sessionManager] = useState<SessionManager>(new SessionManager(`http://localhost:${port}`));
 	const [activeSession, setActiveSession] =  useState<string | undefined>(undefined);
 
-	const [sessionRefs, setSessionRefs] = useState<typeof sessionManager.sessions>(
-		sessionManager.sessions
-	);
+	const [state, send] = useMachine(serverMachine, { id: "serverMachine", input: { host: `http://localhost:${port}` }});
 
-	useEffect(() => {
-		setSessionRefs(sessionManager.sessions);
-	}, [sessionManager.sessions]);
-
-	for (let session of sessions) {
-		sessionManager.registerSession(session.sessionName,session.sessionName, session.path, session.reset);
-		sessionManager.startSession(session.sessionName);
-	}
+	send({type: "server.setup"})
+	send({
+		type: "server.spawnSession",
+		payload: {
+			...session, 
+			sessionId: session.sessionName, 
+			apiKey: ""
+		}
+	})
 
     return (
         <SessionManagerContext.Provider value={{
-			activeSession : activeSession,
-			sessionMap : sessionRefs,
-			setActiveSession : setActiveSession,
-			createSession : (sessionId : string, host : string, path : string, reset : boolean) => {
-				sessionManager.registerSession(sessionId, host, path, reset);
-			},
-			startSession : (sessionId : string) => {
-				sessionManager.startSession(sessionId);
-			},
-			stopSession : (sessionId : string) => {
-				sessionManager.stopSession(sessionId);
-			},
+			activeSession: activeSession,
+			setActiveSession: setActiveSession,
+			sessionMap : state.context.refs,
 		}}>
-            {children}
+            {state.context.refs ? children : null}
         </SessionManagerContext.Provider>
     );
 };
 
 
-
-
 export const App = ({port, reset} : {port : number, reset : boolean}) => {
 
 	return (
-		<SessionManagerProvider  port={port} sessions={[
+		<SessionManagerProvider  port={port} session={
 			{
 				sessionName : "123",
 				path : process.cwd(),
 				reset : reset
 			}
-		]}>
+		}>
 			<Display port={port}/>
 		</SessionManagerProvider>
 	);

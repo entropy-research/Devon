@@ -1,4 +1,4 @@
-import { setup, assign, fromPromise, ActorRefFrom, createActor } from 'xstate';
+import { setup, assign, fromPromise, ActorRefFrom } from 'xstate';
 
 // Server session machine
 
@@ -18,11 +18,12 @@ import {
     fromCallback,
     EventObject,
     sendTo,
-    enqueueActions
+    enqueueActions,
+    raise
     // createActor
 } from 'xstate';
 // const EventSource = require('eventsource');
-import EventSource from 'eventsource';
+// import EventSource from 'eventsource';
 
 
 type Message = {
@@ -810,173 +811,136 @@ export const sessionMachine = setup({
 //     output: ({context}) => (context)
 // })
 
-export class SessionManager {
-    public sessions: Map<string, ActorRefFrom<typeof sessionMachine>> = new Map();
-
-    constructor(private host: string) {}
-
-    registerSession(sessionId: string, sessionName: string, path: string, reset: boolean) {
-        this.sessions.set(sessionId, createActor(sessionMachine, { id: sessionId, input: { reset, host: this.host, name: sessionName, path } }));
-    }
-
-    startSession(sessionId: string) {
-        this.sessions.get(sessionId)?.start();
-    }
-
-    stopSession(sessionId: string) {
-        this.sessions.get(sessionId)?.stop();
-    }
-
-    getSession(sessionId: string) {
-        return this.sessions.get(sessionId);
-    }
-
-
-}
-
-
-
-// export const serverMachine = setup({
-//     types: {
-//         context: {} as {
-//             host: string;
-//             retryCount: number;
-//             port: number;
-//             refs: {
-//                 [key: string]: ActorRefFrom<typeof newSessionMachine>;
-//             };
-//         },
-//         input: {} as {
-//             port: string | undefined;
-//         } | {},
-//         events: {} as
-//         | { type: 'server.setup'}
-//         | { type: 'server.shutdown'}
-//         | { type: 'server.setupFailed'; payload: { port: number; }}
-//         | { type: 'server.retry'; payload: { port: number; }}
-//         | { type: 'server.spawnSession'; payload: { sessionId: string; apiKey: string; sessionName: string; path: string; reset: boolean }; }
-//         | { type: 'session.setupFailed'; payload: { error: any; }},
-//     },
-//     actors: {
-//         startServer: fromPromise(async ({input} : { input: any, system: any}) => {
-//             // run  healthcheck
-//             const response = await axios.get(`${input.host}/`);
-//             return response.data;
-//         }),
-//         spawnSessionMachine: sessionMachine
-//     },
-// }).createMachine({
-//     context: ({ input } : { input: any }) => ({
-//         host: input.host,
-//         retryCount: 0,
-//         refs: {},
-//         port: input.port // string or undefined, if undefined, we define it in setup
-//     }),
-//     id: 'serverMachine',
-//     initial: 'setup',
-//     states: {
-//         setup: {
-//             //use a promise actor here so that we can easily bail out
-//             on:{
-//                 "server.retry": {
-//                     target: "setup",
-//                     reenter: true
-//                 },
-//                 "server.setupFailed": {
-//                     target: "shutdown"
-//                 }
-//             },
-//             invoke: {
-//                 id: 'startServer',
-//                 src: 'startServer',
-//                 input: ({ context }: {context: any, event: any}) => ({
-//                     hello: context.retryCount,
-//                     raise: true
-//                 }),
-//                 onDone: {
-//                     target: 'running',
-//                     actions: [
-//                         assign({
-//                             retryCount: () => (0)
-//                         })
-//                     ]
-//                 },
-//                 onError: {
-//                     actions: [
-//                         assign({
-//                             retryCount: ({ context }) => (context.retryCount + 1)
-//                         }),
-//                         raise(({ context }) => { 
-//                             console.log("retrying")
-//                             if(context.retryCount > 5){
-//                                 return {
-//                                     type: 'server.setupFailed',
-//                                     payload: {
-//                                         port: context.port
-//                                     }
-//                                 }
-//                             }
-//                             return {
-//                                 type: 'server.retry',
-//                                 payload: {
-//                                     port: context.port
-//                                 }
-//                             }
-//                         })
-//                     ]
-//                 }
-//             },
-//         },
-//         running: {
-//             on: {
-//                 'server.spawnSession': {
-//                     actions: [
-//                         ({ context }) => { console.log(context) }
-//                     ],
-//                     target: "spawnSessionMachine"
-//                 },
-//                 'server.shutdown': {
-//                     target: 'shutdown'
-//                 }
-//             },
-//             entry: [
-//                 () => { console.log("entered running") }
-//             ],
-//         },
-//         spawnSessionMachine: {
-//             entry: [
-//                 assign({
-//                   refs: ({ context, spawn, event  }) => ({
-//                     ...context.refs,
-//                     [(event as any).payload?.sessionId]: spawn(sessionMachine, { 
-//                     id: (event as any).payload?.sessionId,
-//                     input: {
-//                         reset: (event as any).payload?.reset,
-//                         host: context.host,
-//                         name: (event as any).payload?.sessionName,
-//                         path: (event as any).payload?.path,
-//                     }})})})],
-
-//         },
-//         shutdown: {
-//             type: 'final',
-//             entry: [
-//                 () => console.log("shutdown entered"),
-//                 ({ context }) => {
-//                     for(const session of Object.values(context.refs)){
-//                         session.send({ type: 'session.pause' })
-//                         stopChild(session)
-//                     };
-//                 },
-//                 assign({
-//                     refs: undefined
-//                 })
-//             ],
-//             exit: () => console.log("shutdown exited")
-//         }
-//     },
-//     exit: () => { console.log("exited full machine") }
-// })
+export const serverMachine = setup({
+    types: {
+        context: {} as {
+            host: string;
+            retryCount: number;
+            refs:  Map<string, ActorRefFrom<typeof sessionMachine>>;
+        },
+        input: {} as {
+            port: string | undefined;
+        } | {},
+        events: {} as
+        | { type: 'server.setup'}
+        | { type: 'server.shutdown'}
+        | { type: 'server.setupFailed'}
+        | { type: 'server.retry'}
+        | { type: 'server.spawnSession'; payload: { sessionId: string; apiKey: string; sessionName: string; path: string; reset: boolean }; }
+        | { type: 'session.setupFailed'; payload: { error: any; }},
+    },
+    actors: {
+        startServer: fromPromise(async ({input} : { input: any, system: any}) => {
+            // run  healthcheck
+            const response = await axios.get(`${input.host}/`);
+            return response.data;
+        }),
+        spawnSessionMachine: sessionMachine
+    },
+}).createMachine({
+    context: ({ input } : { input: any }) => ({
+        host: input.host,
+        retryCount: 0,
+        refs: new  Map<string, ActorRefFrom<typeof sessionMachine>>(),
+    }),
+    id: 'serverMachine',
+    initial: 'setup',
+    states: {
+        setup: {
+            //use a promise actor here so that we can easily bail out
+            on:{
+                "server.retry": {
+                    target: "setup",
+                    reenter: true
+                },
+                "server.setupFailed": {
+                    target: "shutdown"
+                }
+            },
+            invoke: {
+                id: 'startServer',
+                src: 'startServer',
+                input: ({ context }: {context: any, event: any}) => ({
+                    retryCount: context.retryCount,
+                }),
+                onDone: {
+                    target: 'running',
+                    actions: [
+                        assign({
+                            retryCount: () => (0)
+                        })
+                    ]
+                },
+                onError: {
+                    actions: [
+                        ({ event}) => { console.log(event.error)},
+                        assign({
+                            retryCount: ({ context }) => (context.retryCount + 1)
+                        }),
+                        raise(({ }) => { 
+                            // console.log("retrying")
+                            // if(context.retryCount > 5){
+                            //     return {
+                            //         type: 'server.setupFailed',
+                            //     }
+                            // }
+                            return {
+                                type: 'server.retry',
+                            }
+                        })
+                    ]
+                }
+            },
+        },
+        running: {
+            on: {
+                'server.spawnSession': {
+                    actions: [
+                        ({ context }) => { console.log(context) }
+                    ],
+                    target: "spawnSessionMachine"
+                },
+                'server.shutdown': {
+                    target: 'shutdown'
+                }
+            },
+            entry: [
+                () => { console.log("entered running") }
+            ],
+        },
+        spawnSessionMachine: {
+            entry: [
+                assign({
+                  refs: ({ context, spawn, event  }) => ({
+                    ...context.refs,
+                    [(event as any).payload?.sessionId]: spawn(sessionMachine, { 
+                    id: (event as any).payload?.sessionId,
+                    input: {
+                        reset: (event as any).payload?.reset,
+                        host: context.host,
+                        name: (event as any).payload?.sessionName,
+                        path: (event as any).payload?.path,
+                    }})})})],
+        },
+        shutdown: {
+            type: 'final',
+            entry: [
+                () => console.log("shutdown entered"),
+                ({ context }) => {
+                    for(const session of Object.values(context.refs)){
+                        session.send({ type: 'session.pause' })
+                        session.stop()
+                    };
+                },
+                assign({
+                    refs: undefined
+                })
+            ],
+            exit: () => console.log("shutdown exited")
+        }
+    },
+    exit: () => { console.log("exited full machine") }
+})
 
 // const serverActor = createActor(serverMachine, {
 //   input: {},
