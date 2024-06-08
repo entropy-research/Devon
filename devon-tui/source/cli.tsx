@@ -270,12 +270,11 @@ if (input[0] === 'configure') {
 
 
 				const {waitUntilExit} = render(<App port={port} reset={reset} agentConfig={{
-          api_key: api_key as string,
-          model: modelName as string,
-          prompt_type: prompt_type as string,
-          api_base: api_base as string,
-        }
-        }/>, {
+					api_key: api_key as string,
+					model: modelName as string,
+					prompt_type: prompt_type as string,
+					api_base: api_base as string,
+				}}/>, {
 					exitOnCtrlC: true,
 				});
 

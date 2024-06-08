@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useLocalStorage } from '@/lib/hooks/chat.use-local-storage'
-import Home from './home'
+import Home, { SessionContextProviderComponent } from './home'
 import OnboardingModal from '@/components/modals/onboarding-modal'
 import { LocalStorageKey } from '@/lib/types'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
@@ -62,7 +62,9 @@ export default function Landing() {
     return (
         <>
             {sessionMachineProps && !isLoading ? (
-                <Home sessionMachineProps={sessionMachineProps} />
+                <SessionContextProviderComponent sessionMachineProps={sessionMachineProps}>
+                    <Home/>
+                </SessionContextProviderComponent>
             ) : (
                 <div className="absolute top-0 left-0 w-full h-full bg-night z-50">
                     <div className="fixed left-[50%] top-[50%] grid translate-x-[-50%] translate-y-[-50%]">

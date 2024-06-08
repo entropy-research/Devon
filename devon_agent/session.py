@@ -159,6 +159,23 @@ class Session:
         self.base_path = args.path
         self.event_id = 0
 
+        self.event_log.append(
+            Event(
+                type="Init"
+            )
+        )
+
+        # 1 because self.event_log has the init event already
+        if len(self.event_log) == 1 or self.state.task == None:
+            self.event_log.append(
+                Event(
+                    type="Task",
+                    content="ask user for what to do",
+                    producer="system",
+                    consumer="devon",
+                )
+            )
+
     def to_dict(self):
         return {
             "task": self.state.task,
@@ -201,6 +218,15 @@ class Session:
 
         # instance.environments["local"].communicate("cd " + data["cwd"])
 
+        instance.event_log.append(
+            Event(
+                type="ModelRequest",
+                content="Your interaction with the user was paused, please resume.",
+                producer="system",
+                consumer="devon",
+            )
+        )
+
         return instance
 
     def get_last_task(self):
@@ -216,6 +242,60 @@ class Session:
     
     def resume(self):
         self.status = "running"
+
+    def reset(self):
+        print("EVIRONMENTS: ", self.environments)
+        self.state = DotDict({})
+        self.event_log: List[Event] = []
+        self.status = "created"
+        self.environments["local"].register_tools({
+            "create_file" : CreateFileTool().register_post_hook(save_create_file),
+            "open_file" : OpenFileTool(),
+            "scroll_up" : ScrollUpTool(),
+            "scroll_down" : ScrollDownTool(),
+            "scroll_to_line" : ScrollToLineTool(),
+            "search_file" : SearchFileTool(),
+            "edit_file" : EditFileTool().register_post_hook(save_edit_file),
+            "search_dir" : SearchDirTool(),
+            "find_file" : FindFileTool(),
+            "get_cwd" : GetCwdTool(),
+            "no_op" : NoOpTool(),
+            "submit" : SubmitTool(),
+            "delete_file" : DeleteFileTool().register_post_hook(save_delete_file),
+        })
+
+        if "user" in self.environments:
+            self.environments["user"].register_tools({
+                "ask_user" : AskUserTool(),
+                "set_task" : SetTaskTool()
+            })
+
+        print(self.state)
+
+        self.event_id = 0
+
+        self.event_log.append(
+            Event(
+                type="Init"
+            )
+        )
+
+        if len(self.event_log) == 1 or self.state.task == None:
+            self.event_log.append(
+                Event(
+                    type="Task",
+                    content="ask user for what to do",
+                    producer="system",
+                    consumer="devon",
+                )
+            )
+        
+        self.agent.reset()
+        self.enter()
+
+        print(self.event_log)
+        
+        asyncio.run(_save_session_util(self.name, self.to_dict()))
     
     def run_event_loop(self):
         self.status = "running"

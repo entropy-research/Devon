@@ -8,7 +8,7 @@ export async function getSessions(backendUrl: string) {
         return []
     }
     try {
-        const response = await axios.get(`${backendUrl}/session`)
+        const response = await axios.get(`${backendUrl}/sessions`)
         return response.data
     } catch (error) {
         console.error('Error fetching sessions:', error)
@@ -33,7 +33,7 @@ export const useReadSessions = () => {
             return
         }
         try {
-            const response = await axios.get(`${backendUrl}/session`)
+            const response = await axios.get(`${backendUrl}/sessions`)
             setSessions(response.data)
         } catch (err) {
             setError(err.message || 'Unknown error')

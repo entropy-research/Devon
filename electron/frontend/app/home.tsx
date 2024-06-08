@@ -10,21 +10,53 @@ import { ViewMode } from '@/lib/types'
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-widget'
 import { useSearchParams } from 'next/navigation'
-import { createActorContext, useMachine } from '@xstate/react'
-import { newSessionMachine, sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
+import { createActorContext, useActor, useActorRef, useMachine } from '@xstate/react'
+import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
+import { useSafeStorage } from "@/lib/services/safeStorageService"
 
 export const SessionMachineContext = createActorContext(newSessionMachine)
 
-export default function Home({
-    sessionMachineProps,
+export const SessionContextProviderComponent = ({
+    sessionMachineProps, children
 }: {
     sessionMachineProps: {
         port: number
         name: string
         path: string
-    }
-}) {
-    const searchParams = useSearchParams()
+    },
+    children: any
+}) => {
+    return (
+        <SessionMachineContext.Provider
+            options={{
+                input: {
+                    host: 'http://localhost:' + sessionMachineProps.port,
+                    name: sessionMachineProps.name,
+                    path: sessionMachineProps.path, 
+                    reset: true
+                },
+            }}
+        >
+            {children}
+        </SessionMachineContext.Provider>
+    )
+}
+
+export default function Home() {
+    const [ agentConfig, setAgentConfig ] = useState<{
+        api_key: undefined | string;
+        model: undefined | string;
+        prompt_type: undefined | string;
+    }>({
+        api_key: undefined,
+        model: "gpt4-o",
+        prompt_type: 'openai'
+    })
+
+    const sessionMachineRef = SessionMachineContext.useActorRef()
+
+    const searchParams = useSearchParams();
+    const { getApiKey } = useSafeStorage();
     const [sessionId, setSessionId] = useState<string | null>(null)
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
@@ -64,49 +96,57 @@ export default function Home({
         setSessionId(chatId)
     }, [])
 
+    useEffect(() => {
+        Promise.resolve(getApiKey("gpt4-o")).then((value) => {
+            // setAgentConfig({
+            //     ...agentConfig,
+            //     api_key: value
+            // })
+            if( value ){
+                console.log("loading api key", value)
+                sessionMachineRef.send({
+                    type: "session.begin",
+                    agentConfig: {
+                        ...agentConfig,
+                        api_key: value
+                    }
+                })
+            }
+        })
+    }, [])
+
     // Get session id and path from url
     return (
-        <SessionMachineContext.Provider
-            options={{
-                input: {
-                    host: 'http://localhost:' + sessionMachineProps.port,
-                    name: sessionMachineProps.name,
-                    path: sessionMachineProps.path,
-                    reset: true,
-                },
-            }}
-        >
-            <div className="w-full flex flex-row">
-                <ResizablePanelGroup direction="horizontal">
-                    <ResizablePanel
-                        className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center`}
-                    >
-                        {/* {showTimeline && (
-                            <TimelineWidget
-                                className={
-                                    viewMode === ViewMode.Panel
-                                        ? 'w-[275px]'
-                                        : 'w-full overflow-hidden'
-                                }
-                            />
-                        )} */}
-                        {/* {port ? ( */}
-                        <Chat
-                            sessionId={sessionId}
-                            // port={sessionMachineProps.port}
-                            // sessionMachineProps={sessionMachineProps}
-                            // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
+        <div className="w-full flex flex-row">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel
+                    className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center`}
+                >
+                    {/* {showTimeline && (
+                        <TimelineWidget
+                            className={
+                                viewMode === ViewMode.Panel
+                                    ? 'w-[275px]'
+                                    : 'w-full overflow-hidden'
+                            }
                         />
-                        {/* ) : ( */}
-                        {/* <div>Loading...</div> */}
-                        {/* )} */}
-                    </ResizablePanel>
-                    <ResizableHandle className="" />
-                    <ResizablePanel className="flex-col w-full hidden md:flex">
-                        <EditorWidget chatId={sessionId ?? null} />
-                    </ResizablePanel>
-                </ResizablePanelGroup>
-            </div>
-        </SessionMachineContext.Provider>
+                    )} */}
+                    {/* {port ? ( */}
+                    <Chat
+                        sessionId={sessionId}
+                        // port={sessionMachineProps.port}
+                        // sessionMachineProps={sessionMachineProps}
+                        // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
+                    />
+                    {/* ) : ( */}
+                    {/* <div>Loading...</div> */}
+                    {/* )} */}
+                </ResizablePanel>
+                <ResizableHandle className="" />
+                <ResizablePanel className="flex-col w-full hidden md:flex">
+                    <EditorWidget chatId={sessionId ?? null} />
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
     )
 }

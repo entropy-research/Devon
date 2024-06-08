@@ -1,11 +1,10 @@
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {Box, Text, useInput, useApp, Static} from 'ink';
 import TextInput from 'ink-text-input';
 import axios from 'axios';
 import Spinner from 'ink-spinner';
 import {createActorContext, } from '@xstate/react';	
 import {  newSessionMachine } from './state/server_manager.js';
-
 
 
 const giveUserReponse = async (host: string, sessionName: string, res: string) => {
@@ -18,7 +17,6 @@ const giveUserReponse = async (host: string, sessionName: string, res: string) =
 		console.error('Error:', error.message);
 	}
 };
-
 
 type SessionEvent = {
 	type: string;
@@ -38,10 +36,11 @@ const sendSessionEvent = async (host: string, sessionName: string, event: Sessio
 		// console.error('Error:', error.message);
 	}
 };
+
 const SessionMachineContext = createActorContext(newSessionMachine);
 
-export const App = ({port, reset} : {port : number, reset : boolean}) => {
-
+export const App = ({port, reset, agentConfig} : {port : number, reset : boolean, agentConfig: any}) => {
+	console.log("RESET: ", reset)
 	return (
 		<SessionMachineContext.Provider options={
 			{
@@ -49,21 +48,22 @@ export const App = ({port, reset} : {port : number, reset : boolean}) => {
 					reset : reset,
 					host : `http://localhost:${port}`,
 					name : "123",
-					path : process.cwd()
+					path : process.cwd(),
 				}
 			}
 		}>
-			<Display/>
+			<Display agentConfig={agentConfig}/>
 		</SessionMachineContext.Provider>
 	);
 };
 
 
-const Display = () => {
+const Display = ({ agentConfig }: { agentConfig: any}) => {
 	const [inputValue, setInputValue] = useState('');
 	let status = '';
 	// const eventState = sessionState?.context.serverEventContext;
 	const sessionState = SessionMachineContext.useSelector((state) => state);
+	const sessionActor = SessionMachineContext.useActorRef()
 	const eventState = sessionState?.context.serverEventContext;
 	const {exit} = useApp();
 
@@ -77,6 +77,10 @@ const Display = () => {
 	} else {
 		status = 'Interrupt:';
 	}
+
+	useEffect(() => {
+		sessionActor.send({ type: "session.begin", agentConfig: agentConfig})
+	}, [])
 
 	useInput((_: any, key: any) => {
 		if (key.escape) {

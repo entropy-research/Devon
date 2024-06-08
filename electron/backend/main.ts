@@ -60,29 +60,6 @@ let use_port = NaN
 const spawnAppWindow = async () => {
   if (electronIsDev) await installExtensions()
 
-  let api_key: string | undefined = undefined
-  let modelName: string | undefined = undefined
-  // let api_base: string | undefined = undefined;
-  const prompt_type: string = 'anthropic'
-
-  if (process.env['OPENAI_API_KEY']) {
-    api_key = process.env['OPENAI_API_KEY']
-    modelName = 'gpt4-o'
-    // prompt_type = "openai";
-  } else if (process.env['ANTHROPIC_API_KEY']) {
-    api_key = process.env['ANTHROPIC_API_KEY']
-    modelName = 'claude-opus'
-  } else if (process.env['GROQ_API_KEY']) {
-    api_key = process.env['GROQ_API_KEY']
-    modelName = 'llama-3-70b'
-    // prompt_type = "llama3";
-  } else {
-    console.log(
-      'Please provide an API key using the --api_key option or by setting OPENAI_API_KEY or ANTHROPIC_API_KEY.'
-    )
-    process.exit(1)
-  }
-
   // const packageDir = process.cwd();
   // const configPath = path.join(packageDir, '.devon.config');
 
@@ -118,14 +95,14 @@ const spawnAppWindow = async () => {
           'server',
           '--port',
           port.toString(),
-          '--model',
-          modelName as string,
-          '--api_key',
-          api_key as string,
+          // '--model',
+          // modelName as string,
+          // '--api_key',
+          // api_key as string,
           // '--api_base',
           // api_base as string,
-          '--prompt_type',
-          prompt_type as string,
+          // '--prompt_type',
+          // prompt_type as string,
         ],
         {
           signal: controller.signal,

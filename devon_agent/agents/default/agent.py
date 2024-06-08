@@ -87,6 +87,12 @@ class TaskAgent(Agent):
         }
     }
 
+    def reset(self):
+        self.chat_history = []
+        self.interrupt = ""
+        self.temperature = 0.0
+        self.scratchpad = None
+
     def _initialize_model(self):
         is_custom_model = self.args.model not in self.default_models
         if is_custom_model:

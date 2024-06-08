@@ -17,27 +17,6 @@ export default function Chat({
 }) {
     const searchParams = useSearchParams()
 
-    // const [sessionMachineProps, setSessionMachineProps] = useState<{
-    //     port: number
-    //     name: string
-    //     path: string
-    // } | null>(null)
-
-    // let sessionName = searchParams.get('chat')
-    // const encodedPath = searchParams.get('path')
-    // console.log(sessionName,encodedPath)
-    // useEffect(() => {
-
-    //     if (sessionName && encodedPath) {
-    //         const stateMachineProps = {
-    //             port: port,
-    //             name: sessionName,
-    //             path: decodeURIComponent(encodedPath),
-    //         }
-    //         setSessionMachineProps(stateMachineProps)
-    //     }
-    // }, [sessionName, encodedPath,port])
-
     return (
         <div className="rounded-lg h-full w-full max-w-4xl flex flex-col flex-2">
             <ChatHeader sessionId={sessionId} headerIcon={headerIcon} />

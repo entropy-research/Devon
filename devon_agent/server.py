@@ -82,6 +82,7 @@ app = fastapi.FastAPI(
     lifespan=lifespan,
 )
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -90,24 +91,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 session_buffers: Dict[str, str] = {}
 running_sessions: List[str] = []
+
 
 @app.get("/")
 def read_root():
     return {"content": "Hello from Devon!"}
 
 
-@app.get("/session")
-def read_session():
+@app.get("/sessions")
+def get_sessions():
     return [{"name": session_name, "path": session_data.base_path} for session_name, session_data in sessions.items()]
 
 
 @app.post("/session")
-def create_session(session: str, path: str, config : AgentArguments ):
+def upsert_session(session: str, path: str, config: AgentArguments ):
     if not os.path.exists(path):
         raise fastapi.HTTPException(status_code=404, detail="Path not found")
 
+    if session in sessions:
+        # raise fastapi.HTTPException(status_code=400, detail=f"Session with id {session} already exists")
+        return session
 
     agent = TaskAgent(
             name="Devon",
@@ -115,27 +121,25 @@ def create_session(session: str, path: str, config : AgentArguments ):
             args=config
         )
 
-    if session not in sessions:
-        sessions[session] = Session(
-            SessionArguments(
-                path,
-                user_input=lambda: get_user_input(session),
-                name=session,
-                # config=config
-            ),
-            agent,
-        )
+    sessions[session] = Session(
+        SessionArguments(
+            path,
+            user_input=lambda: get_user_input(session),
+            name=session
+        ),
+        agent
+    )
 
     return session
 
 
-@app.post("/session/{session}/reset")
-def reset_session(session: str):
-    global sessions
-
-    if session in sessions:
-        del sessions[session]
-
+@app.delete("/session")
+def delete_session(session: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    
+    # needs to persist to database
+    del sessions[session]
     return session
 
 
@@ -146,68 +150,22 @@ def start_session(background_tasks: fastapi.BackgroundTasks, session: str):
 
     if session in running_sessions:
         return "Session already running"
-        # raise fastapi.HTTPException(status_code=304, detail="Session already running")
 
     sessions[session].enter()
-    if len(sessions[session].event_log) == 0 or sessions[session].state.task == None:
-        sessions[session].event_log.append(
-            Event(
-                type="Task",
-                content="ask user for what to do",
-                producer="system",
-                consumer="devon",
-            )
-        )
-    else:
-        sessions[session].event_log.append(
-            Event(
-                type="ModelRequest",
-                content="Your interaction with the user was paused, please resume.",
-                producer="system",
-                consumer="devon",
-            )
-        )
-
     background_tasks.add_task(sessions[session].run_event_loop)
     running_sessions.append(session)
     return session
 
 
-@app.post("/session/{session}/response")
-def create_response(session: str, response: str):
-    if session not in sessions:
-        raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_buffers[session] = response
-    return session_buffers[session]
+@app.post("/session/{session}/reset")
+def reset_session(session: str):
+    global sessions
 
+    if session in sessions:
+        sessions[session].reset()
 
-@app.post("/session/{session}/interrupt")
-def interrupt_session(session: str, message: str):
-    if session not in sessions:
-        raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_obj = sessions.get(session)
-    if not session_obj:
-        raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_obj.event_log.append(
-        Event(type="Interrupt", content=message, producer="user", consumer="devon")
-    )
     return session
 
-
-@app.post("/session/{session}/stop")
-def stop_session(session: str):
-    if session not in sessions:
-        raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_obj = sessions.get(session)
-    if not session_obj:
-        raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_obj.event_log.append(
-        Event(
-            type="stop",
-            content={"type": "UserStopped", "message": "User stopped session"},
-        )
-    )
-    return session_obj
 
 @app.post("/session/{session}/pause")
 def pause_session(session: str):
@@ -218,6 +176,7 @@ def pause_session(session: str):
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
     session_obj.pause()
     return session
+
 
 @app.post("/session/{session}/resume")
 def resume_session(session: str):
@@ -231,7 +190,7 @@ def resume_session(session: str):
 
 
 @app.get("/session/{session}/state")
-def continue_session(session: str):
+def get_session_state(session: str):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
     session_obj = sessions.get(session)
@@ -240,13 +199,15 @@ def continue_session(session: str):
     return session_obj.state.to_dict()
 
 
-@app.delete("/session")
-def delete_session(session: str):
+@app.post("/session/{session}/response")
+def create_response(session: str, response: str):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    del sessions[session]
-    return session
+    session_buffers[session] = response
+    return session_buffers[session]
 
+
+#Event State code
 class ServerEvent(BaseModel):
     type: str  # types: ModelResponse, ToolResponse, UserRequest, Interrupt, Stop
     content: Any
@@ -289,6 +250,20 @@ async def read_events_stream(session: str):
                 await asyncio.sleep(0.1)  # Sleep to prevent busy waiting
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+#Misc communication code
+@app.post("/session/{session}/interrupt")
+def interrupt_session(session: str, message: str):
+    if session not in sessions:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj = sessions.get(session)
+    if not session_obj:
+        raise fastapi.HTTPException(status_code=404, detail="Session not found")
+    session_obj.event_log.append(
+        Event(type="Interrupt", content=message, producer="user", consumer="devon")
+    )
+    return session
 
 
 if __name__ == "__main__":
