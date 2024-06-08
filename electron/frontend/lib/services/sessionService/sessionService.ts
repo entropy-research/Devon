@@ -16,7 +16,7 @@ export const fetchSessionState = async (backendUrl, sessionId) => {
         return null
     }
     const { data } = await axios.get(
-        `${backendUrl}/session/${encodeURIComponent(sessionId)}/state`
+        `${backendUrl}/sessions/${encodeURIComponent(sessionId)}/state`
     )
     return data
 }
@@ -24,7 +24,7 @@ export const fetchSessionState = async (backendUrl, sessionId) => {
 // Function to fetch session events
 export const fetchSessionEvents = async sessionId => {
     // const { data } = await axios.get(
-    //     `${BACKEND_URL}/session/${encodeURIComponent(sessionId)}/events`
+    //     `${BACKEND_URL}/sessions/${encodeURIComponent(sessionId)}/events`
     // )
     return []
 }

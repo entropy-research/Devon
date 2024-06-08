@@ -66,7 +66,7 @@ const Input = ({
     async function handlePause() {
         try {
             
-            // const response = await fetch(`${host}/session/${sessionId}/pause`, {
+            // const response = await fetch(`${host}/sessions/${sessionId}/pause`, {
             //     method: "POST"
             // });
 

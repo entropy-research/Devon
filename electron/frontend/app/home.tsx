@@ -10,7 +10,7 @@ import { ViewMode } from '@/lib/types'
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-widget'
 import { useSearchParams } from 'next/navigation'
-import { createActorContext, useActor, useActorRef, useMachine } from '@xstate/react'
+import { createActorContext, useActor, useActorRef, useMachine, useSelector } from '@xstate/react'
 import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { useSafeStorage } from "@/lib/services/safeStorageService"
 
@@ -102,6 +102,7 @@ export default function Home() {
             //     ...agentConfig,
             //     api_key: value
             // })
+            console.log("API KEY: ", value)
             if( value ){
                 console.log("loading api key", value)
                 sessionMachineRef.send({
@@ -115,6 +116,8 @@ export default function Home() {
         })
     }, [])
 
+    let state = SessionMachineContext.useSelector(state => state)
+    console.log(state.value)
     // Get session id and path from url
     return (
         <div className="w-full flex flex-row">

@@ -15,7 +15,7 @@ export const useCreateResponse = () => {
         setError(null)
         try {
             const result = await axios.post(
-                `${backendUrl}/session/${encodeURIComponent(sessionId)}/response?response=${encodeURIComponent(response)}`
+                `${backendUrl}/sessions/${encodeURIComponent(sessionId)}/response?response=${encodeURIComponent(response)}`
             )
             setResponseData(result.data)
             return result.data
@@ -50,7 +50,7 @@ export const useInterruptSession = () => {
         setError(null)
         try {
             const result = await axios.post(
-                `${backendUrl}/session/${encodeURIComponent(sessionId)}/interrupt?message=${encodeURIComponent(message)}`
+                `${backendUrl}/sessions/${encodeURIComponent(sessionId)}/interrupt?message=${encodeURIComponent(message)}`
             )
             setInterruptData(result.data)
             return result.data

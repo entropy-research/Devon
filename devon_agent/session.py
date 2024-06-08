@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import create_engine, text
 from devon_agent.agents.default.agent import AgentArguments, TaskAgent
 from devon_agent.environment import EnvironmentModule, LocalEnvironment, UserEnvironment
-from devon_agent.models import _save_data, _save_session_util, get_async_session, save_data
+from devon_agent.models import _save_data, _save_session_util, _delete_session_util, get_async_session, save_data
 from devon_agent.telemetry import Posthog, SessionEventEvent, SessionStartEvent
 from devon_agent.tool import  ToolNotFoundException
 from devon_agent.tools import (
@@ -98,26 +98,31 @@ stateDiagram
 
 
 class Session:
-    def __init__(self, args: SessionArguments, agent):
-        logger = logging.getLogger(__name__)
-
-        self.state = DotDict({})
-        self.state.PAGE_SIZE = 200
-        self.logger = logger
-        self.agent: TaskAgent = agent
-        self.base_path = args.path
-        self.event_log: List[Event] = []
-        self.get_user_input = args.user_input
-        self.telemetry_client = Posthog()
+    def __init__(self, args: SessionArguments, agent, persist):
         self.name = args.name
-        self.agent_branch = "devon_agent_" + self.name
+
+        self.persist_to_db = persist
+
+        logger = logging.getLogger(__name__)
+        self.logger = logger
+
+        self.agent: TaskAgent = agent
+
+        self.args = args
+
+        self.base_path = args.path
+
+        self.event_log: List[Event] = []
+
+        self.get_user_input = args.user_input
+
+        self.telemetry_client = Posthog()
+
         self.exclude_files = True
 
-        self.global_config = {}
-        self.excludes = self.global_config.get("excludes", [])
-        self.status = "created"
-        self.state.task = None
-        local_environment = LocalEnvironment(args.path)
+        self.status = "paused"
+
+        local_environment = LocalEnvironment(self.args.path)
         local_environment.register_tools({
             "create_file" : CreateFileTool().register_post_hook(save_create_file),
             "open_file" : OpenFileTool(),
@@ -134,17 +139,15 @@ class Session:
             "delete_file" : DeleteFileTool().register_post_hook(save_delete_file),
         })
         local_environment.set_default_tool(ShellTool())
+        
         self.default_environment = local_environment
 
-        if args.headless:
-            self.state.task = args.headless
-
+        if self.args.headless:
             self.environments = {
                 "local" : local_environment
             }
         else:
-            self.state.task = args.task
-            user_environment = UserEnvironment(args.user_input)
+            user_environment = UserEnvironment(self.args.user_input)
             user_environment.register_tools({
                 "ask_user" : AskUserTool(),
                 "set_task" : SetTaskTool()
@@ -155,18 +158,19 @@ class Session:
                 "user" : user_environment,
             }
 
-        self.path = args.path
-        self.base_path = args.path
+    def init_state(self):
+        self.state = DotDict({})
+        self.state.PAGE_SIZE = 200
+        self.state.task = None
+
+        self.status = "paused"
+
+        self.path = self.args.path
         self.event_id = 0
-
-        self.event_log.append(
-            Event(
-                type="Init"
-            )
-        )
-
-        # 1 because self.event_log has the init event already
-        if len(self.event_log) == 1 or self.state.task == None:
+        self.event_log = []
+        self.agent.reset()
+        
+        if len(self.event_log) == 0 or self.state.task == None:
             self.event_log.append(
                 Event(
                     type="Task",
@@ -240,66 +244,17 @@ class Session:
     def pause(self):
         self.status = "paused"
     
-    def resume(self):
+    def start(self):
         self.status = "running"
 
-    def reset(self):
-        print("EVIRONMENTS: ", self.environments)
-        self.state = DotDict({})
-        self.event_log: List[Event] = []
-        self.status = "created"
-        self.environments["local"].register_tools({
-            "create_file" : CreateFileTool().register_post_hook(save_create_file),
-            "open_file" : OpenFileTool(),
-            "scroll_up" : ScrollUpTool(),
-            "scroll_down" : ScrollDownTool(),
-            "scroll_to_line" : ScrollToLineTool(),
-            "search_file" : SearchFileTool(),
-            "edit_file" : EditFileTool().register_post_hook(save_edit_file),
-            "search_dir" : SearchDirTool(),
-            "find_file" : FindFileTool(),
-            "get_cwd" : GetCwdTool(),
-            "no_op" : NoOpTool(),
-            "submit" : SubmitTool(),
-            "delete_file" : DeleteFileTool().register_post_hook(save_delete_file),
-        })
-
-        if "user" in self.environments:
-            self.environments["user"].register_tools({
-                "ask_user" : AskUserTool(),
-                "set_task" : SetTaskTool()
-            })
-
-        print(self.state)
-
-        self.event_id = 0
-
-        self.event_log.append(
-            Event(
-                type="Init"
-            )
-        )
-
-        if len(self.event_log) == 1 or self.state.task == None:
-            self.event_log.append(
-                Event(
-                    type="Task",
-                    content="ask user for what to do",
-                    producer="system",
-                    consumer="devon",
-                )
-            )
-        
-        self.agent.reset()
-        self.enter()
-
-        print(self.event_log)
-        
-        asyncio.run(_save_session_util(self.name, self.to_dict()))
+    def terminate(self):
+        self.status = "terminated"
     
     def run_event_loop(self):
-        self.status = "running"
         while True and not (self.event_id == len(self.event_log)):
+
+            if self.status == "stopped":
+                break
 
             if self.status == "paused":
                 # self.logger.info("Session paused, waiting for resume")
@@ -320,7 +275,7 @@ class Session:
             # self.telemetry_client.capture(telemetry_event)
 
             if event["type"] == "Stop" and event["content"]["type"] != "submit":
-                self.status = "stopped"
+                self.status = "exited"
                 break
             elif event["type"] == "Stop" and event["content"]["type"] == "submit":
                 self.state.task = "You have completed your task, ask user for revisions or a new one."
@@ -329,7 +284,6 @@ class Session:
             self.event_log.extend(events)
 
             self.event_id += 1
-        # return self.run_event_loop()
             
 
     def step_event(self, event):
@@ -363,10 +317,8 @@ class Session:
                     })
 
             case "ModelRequest":
-
-                #Need some quantized timestep for saving persistence that isn't literally every 0.1s
-
-                asyncio.run(_save_session_util(self.name, self.to_dict()))
+                # TODO: Need some quantized timestep for saving persistence that isn't literally every 0.1s
+                self.persist()
                 thought, action, output = self.agent.predict(
                     self.get_last_task(), event["content"], self
                 )
@@ -583,9 +535,14 @@ class Session:
         return docs
 
 
-    def enter(self):
-        print("Entering session")
-        print(self.environments)
+    def setup(self):
+        if self.args.headless:
+            self.state.task = self.args.headless
+        else:
+            self.state.task = self.args.task
+
+        self.status = "paused"    
+
         for name, env in self.environments.items():
             print("Setting up env")
             env.setup(self)
@@ -626,8 +583,7 @@ class Session:
 
         self.telemetry_client.capture(SessionStartEvent(self.name))
 
-    def exit(self):
-
+    def teardown(self):
 
         for env in self.environments.values():
             env.teardown()
@@ -638,3 +594,10 @@ class Session:
                     "state" : self.state,
                 })
 
+    def persist(self):
+        if self.persist_to_db == True:
+            asyncio.run(_save_session_util(self.name, self.to_dict()))
+
+    def delete_from_db(self):
+        if self.persist_to_db == True:
+            asyncio.run(_delete_session_util(self.name))

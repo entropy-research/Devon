@@ -1,5 +1,5 @@
 import time
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, delete
 from fastapi import FastAPI, Depends
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
@@ -47,6 +47,11 @@ async def _save_data(db: AsyncSession, key, value):
         db.add(db_item)
     await db.commit()
 
+async def _delete_data(db: AsyncSession, key):
+    print("Deleting data for: ", key)
+    await db.execute(delete(JSONData).where(JSONData.key == key))
+    await db.commit()
+
 async def _save_session_util(key, value):
     AsyncSessionLocal = sessionmaker(bind=ENGINE, class_=AsyncSession, expire_on_commit=False)
     async with AsyncSessionLocal() as db_session:
@@ -56,13 +61,21 @@ async def _save_session_util(key, value):
             value
         )
 
+async def _delete_session_util(key):
+    AsyncSessionLocal = sessionmaker(bind=ENGINE, class_=AsyncSession, expire_on_commit=False)
+    async with AsyncSessionLocal() as db_session:
+        await _delete_data(
+            db_session,
+            key
+        )
+
 async def save_data(db: AsyncSession, data: dict):
-    t1 = time.time()
     for key, value in data.items():
         await _save_data(db, key, value)
-    
-    t2 = time.time()
-    print(t2-t1)
+
+async def del_data(db: AsyncSession, data: dict):
+    for key, value in data.items():
+        await _delete_session_util(db, key, value)
 
 def get_async_session():
 

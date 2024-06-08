@@ -229,7 +229,7 @@ export const eventSourceActor = fromCallback<
     receive((event: any) => {
         if (event.type === 'startStream') {
             eventStream = new EventSource(
-                `${input.host}/session/${input.name}/events/stream`,
+                `${input.host}/sessions/${input.name}/events/stream`,
             );
             eventStream.addEventListener('message', eventHandler);
         }
@@ -254,7 +254,7 @@ const createSessionActor = fromPromise(async ({
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         try {
-            const response = await axios.post(`${input.host}/session`, input.agentConfig, {
+            const response = await axios.post(`${input.host}/sessions`, input.agentConfig, {
                 params: {
                     session: input?.name,
                     path: input?.path
@@ -281,11 +281,11 @@ const loadEventsActor = fromPromise(async ({
         try {
             if (input?.reset === true) {
                 console.log("resetting session")
-                await axios.post(`${input?.host}/session/${input?.name}/reset`);
+                await axios.post(`${input?.host}/sessions/${input?.name}/reset`);
             }
     
             const newEvents = (
-                await axios.get(`${input?.host}/session/${input?.name}/events`)
+                await axios.get(`${input?.host}/sessions/${input?.name}/events`)
             ).data;
 
             return newEvents
@@ -301,7 +301,7 @@ const startSessionActor = fromPromise(async ({
         input: { host: string; name: string; };
     }) => {
 
-        const response = await axios.post(`${input?.host}/session/${input?.name}/start`);
+        const response = await axios.post(`${input?.host}/sessions/${input?.name}/start`);
         return response;
     },
 )
@@ -343,21 +343,21 @@ export const newSessionMachine = setup({
         pauseSession: fromPromise(
             async ({ input }: { input: { host: string; name: string } }) => {
                 console.log("PAUSING")
-                const response = await axios.post(`${input?.host}/session/${input?.name}/pause`);
+                const response = await axios.post(`${input?.host}/sessions/${input?.name}/pause`);
                 return response;
             },
         ),
         resumeSession: fromPromise(
             async ({ input }: { input: { host: string; name: string } }) => {
-                const response = await axios.post(`${input?.host}/session/${input?.name}/resume`);
+                const response = await axios.post(`${input?.host}/sessions/${input?.name}/resume`);
                 return response;
             },
         ),
         resetSession: fromPromise(
             async ({ input }: { input: { host: string; name: string } }) => {
                 // pause session first
-                await axios.post(`${input?.host}/session/${input?.name}/pause`);
-                const response = await axios.post(`${input?.host}/session/${input?.name}/reset`);
+                await axios.post(`${input?.host}/sessions/${input?.name}/pause`);
+                const response = await axios.post(`${input?.host}/sessions/${input?.name}/reset`);
                 return response;
             },
         ),
