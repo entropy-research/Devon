@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ChatHeader from './chat-header'
 import ChatMessagesAndInput from '@/components/chat/chat-messages-and-input/chat-messages-and-input'
-import { spawnDevonAgent } from '@/lib/services/agentService'
 
 export default function Chat({
     sessionId,

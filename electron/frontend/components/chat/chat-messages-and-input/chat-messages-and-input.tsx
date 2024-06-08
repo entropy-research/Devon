@@ -1,16 +1,10 @@
 'use client'
-import { useEffect } from 'react'
 import { Session } from '@/lib/chat.types'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
-import { useToast } from '@/components/ui/use-toast'
 import ChatMessages from './messages/chat.messages'
 import Input from './input/input'
-import { useActor, useMachine } from '@xstate/react'
-import { sessionMachine } from '@/lib/services/stateMachineService/stateMachine'
-import { useSearchParams } from 'next/navigation'
 import { SessionMachineContext } from '@/app/home'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ScrollArea } from '@/components/ui/scroll-area'
 
 type Message = {
     role: 'user' | 'assistant' | 'system' | 'function' | 'data' | 'tool'

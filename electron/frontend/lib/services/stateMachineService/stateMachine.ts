@@ -244,6 +244,35 @@ export const eventSourceActor = fromCallback<
     };
 });
 
+export const fetchSessionCallbackActor = fromCallback<
+    EventObject,
+    { host: string; name: string }
+>(({ input, receive, sendBack }) => {
+
+    let interval;
+    let state;
+
+    receive((event: any) => {
+        if (event.type === 'startFetching') {
+            interval = setInterval(async () => 
+                {
+                    let new_state = await fetchSessionState(input.host, input.name)
+                    if (new_state !== state) {
+                        state = new_state
+                        sendBack({ type: 'session.stateUpdate', payload: state });
+                    }
+                }, 1000);
+        }
+        if (event.type === 'stopFetching') {
+            clearInterval(interval);
+        }
+    })
+
+    return () => {
+        clearInterval(interval);
+    };
+});
+
 const createSessionActor = fromPromise(async ({
         input,
     }: {
@@ -307,6 +336,36 @@ const startSessionActor = fromPromise(async ({
 )
 
 
+const sendMessage = async ({
+        host,
+        name,
+        message,
+        userResponse
+    }: {
+        host: string;
+        name: string;
+        message: string;
+        userResponse: boolean;
+    }) => {
+        if (userResponse) {
+            const response = await axios.post(`${host}/sessions/${name}/response`, { message: message });
+        } else {
+            const response = await axios.post(`${host}/sessions/${name}/event`, {
+                type: 'Interrupt',
+                content: message,
+                producer: 'user',
+                consumer: 'agent',
+            });
+        }
+}
+
+export const fetchSessionState = async (host : string, sessionId : string) => {
+    const { data } = await axios.get(
+        `${host}/sessions/${encodeURIComponent(sessionId)}/state`
+    )
+    return data
+}
+
 const EVENTSOURCE_ACTOR_ID = 'ServerEventSource';
 const EVENTHANDLER_ACTOR_ID = 'ServerEventHandler';
 
@@ -320,9 +379,11 @@ export const newSessionMachine = setup({
             path: string;
             serverEventContext: ServerEventContext;
             agentConfig: any;
+            sessionState: any;
         },
     },
     actors: {
+        fetchSessionCallbackActor: fetchSessionCallbackActor,
         createSession: createSessionActor,
         loadEvents: loadEventsActor,
         startSession: startSessionActor,
@@ -361,6 +422,7 @@ export const newSessionMachine = setup({
                 return response;
             },
         ),
+        // sendMessage: sendMessageActor
     }
 }).createMachine({
     context: ({ input } : { input: any }) => ({
@@ -369,6 +431,7 @@ export const newSessionMachine = setup({
         name: input.name,
         path: input.path,
         agentConfig: undefined,
+        sessionState: undefined,
         serverEventContext: {
             messages: [],
             ended: false,
@@ -391,6 +454,11 @@ export const newSessionMachine = setup({
                     console.log("event", event)
                 }
             }
+        },
+        {
+            id: 'fetchSessionCallbackActor',
+            src: 'fetchSessionCallbackActor',
+            input: ({ context: { host, name } }) => ({ host, name }),
         },
         {
             id: EVENTHANDLER_ACTOR_ID,
@@ -472,12 +540,18 @@ export const newSessionMachine = setup({
                 },
                 sessionExists: {
                     type: 'final',
-                    entry: sendTo(EVENTSOURCE_ACTOR_ID, ({ self }) => {
+                    entry: [sendTo(EVENTSOURCE_ACTOR_ID, ({ self }) => {
                         return {
                             type: 'startStream',
                             sender: self
                         }
                     }),
+                    sendTo('fetchSessionCallbackActor', ({ self }) => {
+                        return {
+                            type: 'startFetching',
+                            sender: self
+                        }
+                    })]
                 }
 
             },
@@ -580,6 +654,17 @@ export const newSessionMachine = setup({
                 "session.pause": {
                     target: "paused"
                 },
+                "session.sendmessage": {
+                    target: "running",
+                    actions: ({ event, context}) => {
+                        sendMessage({
+                            host: context.host,
+                            name: context.name,
+                            message: event.message,
+                            userResponse: context.serverEventContext.userRequest
+                        })
+                    }
+                },
                 "session.toggle": {
                     target: "paused"
                 },
@@ -594,6 +679,15 @@ export const newSessionMachine = setup({
                     }),
                     reenter: true,
                 },
+                "session.stateUpdate": {
+                    target: "running",
+                    actions: assign(({ event }) => {
+                        return {
+                            sessionState: event.payload
+                        }
+                    }),
+                    reenter: true,
+                }
             },
         },
         paused: {

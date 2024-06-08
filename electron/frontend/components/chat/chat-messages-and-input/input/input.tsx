@@ -2,10 +2,6 @@ import { useState, useRef } from 'react'
 import { Paperclip, ArrowRight, CirclePause, Axis3DIcon, CirclePlay } from 'lucide-react'
 import { AutoresizeTextarea } from '@/components/ui/textarea'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
-import {
-    useCreateResponse,
-    useInterruptSession,
-} from '@/lib/services/sessionService/sendUserMessage'
 import { useSearchParams } from 'next/navigation'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
@@ -32,21 +28,15 @@ const Input = ({
     const { formRef, onKeyDown } = useEnterSubmit()
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const [input, setInput] = useState('')
-    const { createResponse } = useCreateResponse()
-    const { interruptSession } = useInterruptSession()
     // For blocking user with modal
     const searchParams = useSearchParams()
     const [openProjectModal, setOpenProjectModal] = useState(false)
     const { backendUrl } = useBackendUrl()
 
+    const sessionActorRef = SessionMachineContext.useActorRef()
+
     async function submitUserMessage(value: string) {
-        const chatId = searchParams.get('chat')
-        // Distinguish between user request vs interrupt
-        if (eventContext.userRequest) {
-            // setUserRequested(false)
-            return createResponse(chatId, value)
-        }
-        return interruptSession(chatId, value)
+        sessionActorRef.send({type: 'session.sendMessage', message: value})
     }
 
     function checkShouldOpenModal() {
@@ -61,26 +51,9 @@ const Input = ({
         setFocused(true)
         checkShouldOpenModal()
     }
-    const sessionActorRef = SessionMachineContext.useActorRef()
 
     async function handlePause() {
-        try {
-            
-            // const response = await fetch(`${host}/sessions/${sessionId}/pause`, {
-            //     method: "POST"
-            // });
-
-            sessionActorRef.send({type: 'session.toggle'})
-
-            // if (!response.ok) {
-            //     throw new Error(`HTTP error! status: ${response.status}`);
-            // }
-            // const data = await response.json();
-            // setPaused(!paused)
-            // return data
-        } catch (error) {
-            console.log(error)
-        }
+        sessionActorRef.send({type: 'session.toggle'})
     }
 
     return (

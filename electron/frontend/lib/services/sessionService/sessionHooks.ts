@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
-import { createEventSource } from './sessionService'
 
 export async function getSessions(backendUrl: string) {
     if (!backendUrl) {
@@ -73,32 +72,4 @@ export const useDeleteSession = () => {
     }
 
     return { deleteSession, response, loading, error }
-}
-
-type EventData = Record<string, any>
-
-export const useEventStream = sessionId => {
-    const { backendUrl } = useBackendUrl()
-    const [events, setEvents] = useState<EventData[]>([])
-
-    useEffect(() => {
-        if (!sessionId) return // Guard to ensure sessionId is provided
-
-        const eventStreamUrl = `${backendUrl}/${sessionId}/events/stream`
-        const eventSource = createEventSource(eventStreamUrl)
-
-        eventSource.onMessage(event => {
-            const newEvent: EventData = JSON.parse(event.data)
-            setEvents((prevEvents: EventData[]) => [...prevEvents, newEvent])
-        })
-
-        eventSource.onError(error => {
-            console.error('EventSource failed:', error)
-            eventSource.close()
-        })
-
-        return () => eventSource.close() // Cleanup function to close the event source
-    }, [sessionId])
-
-    return events
 }

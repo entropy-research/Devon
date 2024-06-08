@@ -1,7 +1,19 @@
 import { useEffect, useState } from 'react'
-import { fetchSessionState } from '@/lib/services/sessionService/sessionService'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
 import { File } from '@/lib/types'
+
+import axios from 'axios'
+
+
+export const fetchSessionState = async (backendUrl, sessionId) => {
+    if (!backendUrl || !sessionId) {
+        return null
+    }
+    const { data } = await axios.get(
+        `${backendUrl}/sessions/${encodeURIComponent(sessionId)}/state`
+    )
+    return data
+}
 
 const boilerplateFile = {
     id: 'main.py',
