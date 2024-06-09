@@ -11,6 +11,7 @@ import { useSearchParams } from 'next/navigation'
 import { createActorContext } from '@xstate/react'
 import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { useSafeStorage } from "@/lib/services/safeStorageService"
+import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 
 export const SessionMachineContext = createActorContext(newSessionMachine)
 
@@ -137,7 +138,7 @@ export default function Home() {
                 </ResizablePanel>
                 <ResizableHandle className="" />
                 <ResizablePanel className="flex-col w-full hidden md:flex">
-                    {/* <EditorWidget chatId={sessionId ?? null} /> */}
+                    <EditorWidget chatId={sessionId ?? null} />
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>

@@ -65,6 +65,7 @@ export const eventHandlingLogic = fromTransition(
     ) => {
         switch (event.type) {
             case 'session.reset': {
+                console.log("reset")
                 return {
                     ...state,
                     messages: [],
@@ -653,7 +654,8 @@ export const newSessionMachine = setup({
                 onDone: {
                     target: 'setup.sessionExists',
                     actions: [
-                        sendTo(EVENTSOURCE_ACTOR_ID, ({ self }) => {
+                        sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
+                            console.log("resetting state")
                             return {
                                 type: 'session.reset',
                                 sender: self
