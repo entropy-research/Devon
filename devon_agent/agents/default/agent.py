@@ -30,7 +30,7 @@ logger = logging.getLogger(LOGGER_NAME)
 
 class AgentArguments(BaseModel):
     model: str
-    # api_key: Optional[str] = None
+    api_key: Optional[str] = None
     api_base: Optional[str] = None
     prompt_type: Optional[str] = None
     # temperature: float = 0.0

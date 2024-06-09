@@ -36,6 +36,7 @@ const Input = ({
     const sessionActorRef = SessionMachineContext.useActorRef()
 
     async function submitUserMessage(value: string) {
+        console.log(value)
         sessionActorRef.send({type: 'session.sendMessage', message: value})
     }
 
@@ -124,11 +125,11 @@ const Input = ({
                             </button>
                         </div>
                     </form>
-                    <SelectProjectDirectoryModal
+                    {/* <SelectProjectDirectoryModal
                         openProjectModal={openProjectModal}
                         setOpenProjectModal={setOpenProjectModal}
                         backendUrl={backendUrl}
-                    />
+                    /> */}
                 </>
             )}
         </div>

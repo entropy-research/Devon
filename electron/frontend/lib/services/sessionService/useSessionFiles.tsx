@@ -43,7 +43,7 @@ const useSessionFiles = chatId => {
     const [files, setFiles] = useState<File[]>([])
     const [selectedFileId, setSelectedFileId] = useState<string>('')
 
-    if (!res || !res.editor || !res.editor.files) return
+    // if (!res || !res.editor || !res.editor.files) return
     const editor = res.editor
     const f = editor.files
     const _files: File[] = []

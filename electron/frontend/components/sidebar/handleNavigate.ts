@@ -22,10 +22,10 @@ export default function handleNavigate(sessionId: string, path?: string) {
 
     if (isRootOrChat) {
         // If we're already at the root and the session ID in the query matches or there's no query, just reload
-        window.location.reload()
+        // window.location.reload()
     } else {
         // Otherwise, replace the state to include `?chat={sessionId}&path={encodedPath}` and reload
         window.history.replaceState({}, '', `/?${newSearch}`)
-        window.location.reload()
+        // window.location.reload()
     }
 }

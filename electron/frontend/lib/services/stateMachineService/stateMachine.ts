@@ -1,4 +1,4 @@
-import { setup, createActor, raise, assign, fromPromise, emit, stopChild, ActorRef, StateMachine } from 'xstate';
+import { setup, createActor, raise, assign, fromPromise, emit, stopChild, ActorRef, StateMachine, log } from 'xstate';
 
 // Server session machine
 
@@ -260,7 +260,7 @@ export const fetchSessionCallbackActor = fromCallback<
                     state = new_state
                     sendBack({ type: 'session.stateUpdate', payload: state });
                 }
-            }, 1000);
+            }, 100000);
         }
         if (event.type === 'stopFetching') {
             clearInterval(interval);
@@ -279,9 +279,10 @@ const createSessionActor = fromPromise(async ({
 }) => {
 
     // sleep for 5 sec
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // await new Promise(resolve => setTimeout(resolve, 5000));
 
     try {
+        console.log("path", input?.path,"config", input.agentConfig)
         const response = await axios.post(`${input.host}/sessions/${input?.name}`, input.agentConfig, {
             params: {
                 // session: input?.name,
@@ -291,7 +292,7 @@ const createSessionActor = fromPromise(async ({
                 'Content-Type': 'application/json'
             }
         });
-        console.log(response)
+        console.log(response.request)
         return response;
     } catch (e) {
         console.log(e)
@@ -307,15 +308,10 @@ const loadEventsActor = fromPromise(async ({
 }) => {
 
     try {
-        if (input?.reset === true) {
-            console.log("resetting session")
-            await axios.patch(`${input?.host}/sessions/${input?.name}/reset`);
-        }
-
         const newEvents = (
             await axios.get(`${input?.host}/sessions/${input?.name}/events`)
         ).data;
-
+        console.log("newEvents", newEvents)
         return newEvents
     } catch (e) {
         console.log(e)
@@ -347,7 +343,11 @@ const sendMessage = async ({
     userResponse: boolean;
 }) => {
     if (userResponse) {
-        const response = await axios.post(`${host}/sessions/${name}/response`, { message: message });
+        const response = await axios.post(`${host}/sessions/${name}/response`,{},{
+            params: {
+                response: message
+            }
+        });
     } else {
         const response = await axios.post(`${host}/sessions/${name}/event`, {
             type: 'Interrupt',
@@ -388,6 +388,12 @@ export const newSessionMachine = setup({
         startSession: startSessionActor,
         eventSourceActor: eventSourceActor,
         eventHandlingLogic: eventHandlingLogic,
+        checkServer: fromPromise(
+            async ({ input }: { input: { host: string; } }) => {
+                const response = await axios.get(`${input?.host}/`);
+                return response;
+            },
+        ),
         checkSession: fromPromise(
             async ({ input }: { input: { host: string; name: string } }) => {
                 const response = await axios.get(`${input?.host}/sessions`);
@@ -428,7 +434,7 @@ export const newSessionMachine = setup({
         reset: input.reset,
         host: input.host,
         name: input.name,
-        path: input.path,
+        path: "",
         agentConfig: undefined,
         sessionState: undefined,
         serverEventContext: {
@@ -487,7 +493,37 @@ export const newSessionMachine = setup({
     initial: 'setup',
     states: {
         setup: {
+            initial: 'healthcheck',
             states: {
+                healthcheck: {
+                    initial: "check",
+                    states: {
+                        check: {
+                            invoke: {
+                                id: 'checkServer',
+                                src: 'checkServer',
+                                input: ({ context: { host } }) => ({ host }),
+                                onDone: {
+                                    target: 'done'
+                                },
+                                onError: {
+                                    target: 'retry'
+                                }
+                            }
+                        },
+                        retry: {
+                            after: {
+                                5000: 'check'
+                            }
+                        },
+                        done: {
+                            type: 'final'
+                        }
+                    },
+                    onDone: {
+                        target: 'checkSession'
+                    }
+                },
                 checkSession: {
                     invoke: {
                         id: 'checkSession',
@@ -507,7 +543,7 @@ export const newSessionMachine = setup({
                             target: "creating",
                             actions: [
                                 () => console.log("start session"),
-                                assign(({ context, event }) => ({ ...context, agentConfig: event.agentConfig }))
+                                assign(({ context, event }) => ({ ...context, agentConfig: event.payload.agentConfig, path: event.payload.path }))
                             ]
                         }
                     }
@@ -615,7 +651,7 @@ export const newSessionMachine = setup({
                 src: 'resetSession',
                 input: ({ context: { host, name } }) => ({ host, name }),
                 onDone: {
-                    target: 'sessionExists',
+                    target: 'setup.sessionExists',
                     actions: [
                         sendTo(EVENTSOURCE_ACTOR_ID, ({ self }) => {
                             return {
@@ -653,16 +689,16 @@ export const newSessionMachine = setup({
                 "session.pause": {
                     target: "paused"
                 },
-                "session.sendmessage": {
+                "session.sendMessage": {
                     target: "running",
-                    actions: ({ event, context }) => {
+                    actions: [({ event, context }) => {
                         sendMessage({
                             host: context.host,
                             name: context.name,
                             message: event.message,
                             userResponse: context.serverEventContext.userRequest
                         })
-                    }
+                    },log("sending message")]
                 },
                 "session.toggle": {
                     target: "paused"

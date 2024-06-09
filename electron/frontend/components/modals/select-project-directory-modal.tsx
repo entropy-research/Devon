@@ -10,6 +10,9 @@ import {
     getSessions,
 } from '@/lib/services/sessionService/sessionHooks'
 import { useSearchParams } from 'next/navigation'
+import { SessionMachineContext } from '@/app/home'
+import { ActorRefFrom, AnyMachineSnapshot, MachineSnapshot } from 'xstate'
+import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -35,38 +38,42 @@ const SelectProjectDirectoryModal = ({
     setOpenProjectModal,
     hideclose,
     header,
-    backendUrl,
+    sessionActorref,
+    state
 }: {
     trigger?: JSX.Element
     openProjectModal?: boolean
     setOpenProjectModal?: (open: boolean) => void
     hideclose?: boolean
     header?: JSX.Element
-    backendUrl: string | null
+    sessionActorref: ActorRefFrom<typeof newSessionMachine>
+    state: AnyMachineSnapshot
 }) => {
     const [folderPath, setFolderPath] = useState('')
     const [open, setOpen] = useState(false)
     const [page, setPage] = useState(1)
-    const [sessions, setSessions] = useState([])
 
-    useEffect(() => {
-        if (!backendUrl) return
-        getSessions(backendUrl).then(res => setSessions(res))
-    }, [backendUrl])
 
     function validate() {
         return folderPath !== ''
     }
 
     function afterSubmit() {
+        // sessionActorref.send({ type: 'setup', payload: folderPath })
+        sessionActorref.send({ type: 'session.create', payload: {
+            path: folderPath,
+            agentConfig: {
+                model: 'gpt4-o'
+            }
+        } })
         setOpen(false)
     }
 
     function handleOpenChange(open: boolean) {
         setOpen(open)
         if (setOpenProjectModal) setOpenProjectModal(open)
-        if (!backendUrl) return
-        getSessions(backendUrl).then(res => setSessions(res))
+        // if (!backendUrl) return
+        // getSessions(backendUrl).then(res => setSessions(res))
     }
 
     useEffect(() => {
@@ -81,37 +88,54 @@ const SelectProjectDirectoryModal = ({
                 hideclose={hideclose ? true.toString() : false.toString()}
             >
                 <div className="mx-8 my-4">
-                    {sessions?.length > 0 && page === 1 ? (
+                    {state.matches("sessionReady") ?
+                     <>
+                        <ExistingSessionFound
+                            continueChat={() => {
+                                sessionActorref.send({ type: 'session.init' })
+                            }}
+                            newChat={() => {
+                                sessionActorref.send({ type: 'session.delete' })
+                            }}
+                        />
+                     </> : <></>
+                    }
+
+                    {/* {sessions?.length > 0 && page === 1 ? (
                         <ExistingSessionFound
                             sessions={sessions}
                             setPage={setPage}
                             onClick={afterSubmit}
                         />
                     ) : sessions?.length === 0 || page === 2 ? (
-                        <>
-                            {page !== 1 && (
-                                <button
-                                    className="top-3 left-3 absolute text-primary mb-2 flex items-center p-1"
-                                    onClick={() => setPage(1)}
-                                >
-                                    <ArrowLeft size={18} className="mr-1" />
-                                    {/* {'Back'} */}
-                                </button>
-                            )}
-                            {/* {header} */}
-                            <SelectProjectDirectoryComponent
-                                folderPath={folderPath}
-                                setFolderPath={setFolderPath}
-                            />
-                            <StartChatButton
-                                disabled={!validate()}
-                                onClick={afterSubmit}
-                                folderPath={folderPath}
-                            />
-                        </>
+                       
                     ) : (
                         <></>
-                    )}
+                    )} */}
+
+
+                    {state.matches({setup :  "sessionDoesNotExist"}) ?
+                     <>
+                     {page !== 1 && (
+                         <button
+                             className="top-3 left-3 absolute text-primary mb-2 flex items-center p-1"
+                            //  onClick={() => setPage(1)}
+                         >
+                             <ArrowLeft size={18} className="mr-1" />
+                             {/* {'Back'} */}
+                         </button>
+                     )}
+                     {/* {header} */}
+                     <SelectProjectDirectoryComponent
+                         folderPath={folderPath}
+                         setFolderPath={setFolderPath}
+                     />
+                     <StartChatButton
+                         disabled={!validate()}
+                         onClick={afterSubmit}
+                         folderPath={folderPath}
+                     />
+                 </>  : <></>}
                 </div>
             </DialogContent>
         </Dialog>
@@ -146,55 +170,22 @@ export const SelectProjectDirectoryComponent = ({
 }
 
 export const StartChatButton = ({ onClick, disabled, folderPath }) => {
-    function handleStartChat() {
-        async function session() {
-            try {
-                // const newSessionId = nanoid()
-                // Using a set session id for now: for single sessions
-                const newSessionId = 'New chat'
-                handleNavigate(newSessionId, folderPath)
-            } catch (error) {
-                console.error('Error starting session:', error)
-            }
-        }
-        session()
-        onClick()
-    }
 
     return (
         <Button
             disabled={disabled}
             className="bg-primary text-white p-2 rounded-md mt-10 w-full"
-            onClick={handleStartChat}
+            onClick={onClick}
         >
             Start Chat
         </Button>
     )
 }
 
-const ExistingSessionFound = ({ sessions, setPage, onClick }) => {
-    const searchParams = useSearchParams()
-    function handleContinueChat(path: string) {
-        async function session() {
-            try {
-                // Don't need to navigate if already on chat
-                if (searchParams.get('chat') === 'New chat') {
-                    return
-                }
-                // const newSessionId = nanoid()
-                // Using a set session id for now: for single sessions
-                const newSessionId = 'New chat'
-                handleNavigate(newSessionId, path)
-            } catch (error) {
-                console.error('Error starting session:', error)
-            }
-        }
-        session()
-        onClick()
-    }
+const ExistingSessionFound = ({ continueChat, newChat }) => {
+
     return (
         <div>
-            {sessions?.length > 0 && sessions[0].name === 'New chat' ? (
                 <div>
                     <p className="text-2xl font-bold">
                         Continue previous chat?
@@ -208,7 +199,7 @@ const ExistingSessionFound = ({ sessions, setPage, onClick }) => {
                         <Button
                             type="submit"
                             className="bg-primary text-white p-2 rounded-md w-full mt-7"
-                            onClick={() => handleContinueChat(sessions[0].path)}
+                            onClick={continueChat}
                         >
                             Continue
                         </Button>
@@ -217,15 +208,12 @@ const ExistingSessionFound = ({ sessions, setPage, onClick }) => {
                         <Button
                             variant="outline"
                             className="text-[#977df5] p-2 rounded-md mt-0 w-full font-bold"
-                            onClick={() => setPage(2)}
+                            onClick={newChat}
                         >
                             New Chat
                         </Button>
                     </div>
                 </div>
-            ) : (
-                <></>
-            )}
         </div>
     )
 }

@@ -42,6 +42,7 @@ origins = [
 ]
 
 sessions: Dict[str, Session] = {}
+running_sessions: List[Session] = []
 
 
 def get_user_input(session: str):
@@ -84,6 +85,10 @@ async def lifespan(app: fastapi.FastAPI):
                 for (k, v) in data.items()
             }
             sessions = data
+            for k, v in sessions.items():
+                v.setup()
+                # background_tasks.add_task(v.run_event_loop)
+                
     yield
 
 
@@ -147,6 +152,7 @@ def create_session(
 
     sessions[session].setup()
     background_tasks.add_task(sessions[session].run_event_loop)
+    running_sessions.append(session)
 
     return session
 
@@ -158,16 +164,20 @@ def delete_session(session: str):
 
     sessions[session].delete_from_db()
     del sessions[session]
+    running_sessions.remove(session)
 
     return session
 
 
 @app.patch("/sessions/{session}/start")
-def start_session(session: str):
+def start_session(session: str, background_tasks: fastapi.BackgroundTasks):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
 
     session_obj = sessions.get(session)
+    if session not in running_sessions:
+        background_tasks.add_task(sessions[session].run_event_loop)
+        running_sessions.append(session)
 
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")

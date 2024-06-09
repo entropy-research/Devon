@@ -7,10 +7,8 @@ import {
     ResizablePanelGroup,
 } from '@/components/ui/resizable'
 import { ViewMode } from '@/lib/types'
-import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
-import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-widget'
 import { useSearchParams } from 'next/navigation'
-import { createActorContext, useActor, useActorRef, useMachine, useSelector } from '@xstate/react'
+import { createActorContext } from '@xstate/react'
 import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { useSafeStorage } from "@/lib/services/safeStorageService"
 
@@ -20,9 +18,8 @@ export const SessionContextProviderComponent = ({
     sessionMachineProps, children
 }: {
     sessionMachineProps: {
-        port: number
+        host: string
         name: string
-        path: string
     },
     children: any
 }) => {
@@ -30,9 +27,8 @@ export const SessionContextProviderComponent = ({
         <SessionMachineContext.Provider
             options={{
                 input: {
-                    host: 'http://localhost:' + sessionMachineProps.port,
+                    host: sessionMachineProps.host,
                     name: sessionMachineProps.name,
-                    path: sessionMachineProps.path, 
                     reset: true
                 },
             }}
@@ -111,6 +107,7 @@ export default function Home() {
     }, [])
 
     let state = SessionMachineContext.useSelector(state => state)
+    console.log(state.context.serverEventContext)
     // Get session id and path from url
     return (
         <div className="w-full flex flex-row">
@@ -140,7 +137,7 @@ export default function Home() {
                 </ResizablePanel>
                 <ResizableHandle className="" />
                 <ResizablePanel className="flex-col w-full hidden md:flex">
-                    <EditorWidget chatId={sessionId ?? null} />
+                    {/* <EditorWidget chatId={sessionId ?? null} /> */}
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>

@@ -183,7 +183,7 @@ class Session:
     def to_dict(self):
         return {
             "task": self.state.task,
-            "path": self.path,
+            "path": self.base_path,
             "name": self.name,
             "event_history": [event for event in self.event_log],
             "cwd": self.environments["local"].get_cwd(),
@@ -219,6 +219,7 @@ class Session:
         # instance.state = DotDict(data["state"])
         instance.state = DotDict({})
         instance.state.editor = {}
+        instance.state.editor["files"] = []
         instance.event_log = data["event_history"]
         instance.event_id = len(data["event_history"])
 
@@ -260,6 +261,7 @@ class Session:
 
             if self.status == "paused":
                 # self.logger.info("Session paused, waiting for resume")
+                print("Session paused, waiting for resume")
                 time.sleep(2)
                 continue
             
