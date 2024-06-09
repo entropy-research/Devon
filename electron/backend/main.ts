@@ -264,6 +264,7 @@ ipcMain.handle('save-data', async (event, plainText) => {
 
 ipcMain.handle('load-data', async () => {
   const filePath = path.join(app.getPath('userData'), 'secureData.bin')
+  console.log("filePath", filePath)
   try {
     const encryptedData = fs.readFileSync(filePath)
     if (safeStorage.isEncryptionAvailable()) {

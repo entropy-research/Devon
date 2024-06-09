@@ -97,14 +97,8 @@ export default function Home() {
     }, [])
 
     useEffect(() => {
-        Promise.resolve(getApiKey("gpt4-o")).then((value) => {
-            // setAgentConfig({
-            //     ...agentConfig,
-            //     api_key: value
-            // })
-            console.log("API KEY: ", value)
+        getApiKey("gpt4-o").then((value) => {
             if( value ){
-                console.log("loading api key", value)
                 sessionMachineRef.send({
                     type: "session.begin",
                     agentConfig: {
@@ -117,7 +111,6 @@ export default function Home() {
     }, [])
 
     let state = SessionMachineContext.useSelector(state => state)
-    console.log(state.value)
     // Get session id and path from url
     return (
         <div className="w-full flex flex-row">

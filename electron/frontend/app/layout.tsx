@@ -6,6 +6,7 @@ import HeaderSidebar from '@/components/header-sidebar'
 import { BackendUrlProvider } from '../contexts/BackendUrlContext'
 
 import './globals.css'
+import { useEffect, useState } from 'react'
 
 // const inter = Inter({ subsets: ['latin'] })
 const dmSans = DM_Sans({ subsets: ['latin'] })

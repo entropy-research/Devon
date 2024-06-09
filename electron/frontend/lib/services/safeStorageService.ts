@@ -13,6 +13,7 @@ export const useSafeStorage = () => {
 
     const loadData = async () => {
         const response = await window.api.invoke('load-data')
+        console.log("load data",response)
         if (response.success) {
             if (response.data) {
                 return JSON.parse(response.data)
@@ -47,6 +48,7 @@ export const useSafeStorage = () => {
 
     const getApiKey = async keyName => {
         const data = await loadData()
+        console.log("data", data)
         return data ? data[keyName] : null
     }
 

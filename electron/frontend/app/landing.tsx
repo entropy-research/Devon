@@ -17,36 +17,23 @@ export default function Landing() {
     const { port, backendUrl } = useBackendUrl()
     const [isLoading, setIsLoading] = useState(true)
 
+
+
+
     useEffect(() => {
-        const chatId = searchParams.get('chat')
-        if (chatId && chatId !== 'New') return
+
         if (hasAcceptedCheckbox) {
             setOpenProjectModal(true)
             window.history.replaceState({}, '', '/?chat=New')
         }
     }, [hasAcceptedCheckbox, searchParams])
 
-    const [sessionMachineProps, setSessionMachineProps] = useState<{
-        port: number
-        name: string
-        path: string
-    } | null>(null)
 
-    let sessionName = searchParams.get('chat')
+
+
     const encodedPath = searchParams.get('path')
 
-    useEffect(() => {
-        // console.log(sessionName, encodedPath, port)
-        if (sessionName && encodedPath && port) {
-            const stateMachineProps = {
-                port: port,
-                name: sessionName,
-                path: decodeURIComponent(encodedPath),
-            }
 
-            setSessionMachineProps(stateMachineProps)
-        }
-    }, [sessionName, encodedPath, port])
 
     useEffect(() => {
         // Ensure the loader is displayed for at least 3 seconds
@@ -60,9 +47,7 @@ export default function Landing() {
 
     // When still loading session machine, show loading screen
     return (
-        <>
-            {sessionMachineProps && !isLoading ? (
-                <SessionContextProviderComponent sessionMachineProps={sessionMachineProps}>
+
                     <Home/>
                 </SessionContextProviderComponent>
             ) : (

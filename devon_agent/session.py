@@ -196,7 +196,7 @@ class Session:
         }
 
     @classmethod
-    def from_dict(cls, data, user_input):
+    def from_dict(cls, data, user_input,persist):
         print(data)
         instance = cls(
             args=SessionArguments(
@@ -211,7 +211,9 @@ class Session:
                 args=AgentArguments(**data["agent"]["config"]),
                 temperature=data["agent"]["temperature"],
                 chat_history=data["agent"]["chat_history"],
-            )
+            ),
+            persist=persist,
+
         )
 
         # instance.state = DotDict(data["state"])

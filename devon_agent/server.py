@@ -80,7 +80,7 @@ async def lifespan(app: fastapi.FastAPI):
             app.db_session = db_session
             data = await load_data(db_session)
             data = {
-                k: Session.from_dict(v, lambda: get_user_input(k))
+                k: Session.from_dict(v, lambda: get_user_input(k), persist=True)
                 for (k, v) in data.items()
             }
             sessions = data
