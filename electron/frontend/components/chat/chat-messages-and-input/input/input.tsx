@@ -62,13 +62,15 @@ const Input = ({
         >
             {(  loading ||
                 eventContext.modelLoading ||
-                eventContext.userRequest || sessionActorRef.getSnapshot().matches('paused') ||
+                eventContext.userRequest ||
+                sessionActorRef.getSnapshot().matches('paused') ||
+                sessionActorRef.getSnapshot().matches('resetting') ||
                 sessionActorRef.getSnapshot().matches('running')) && (
                 <InformationBox
                     modelLoading={eventContext.modelLoading}
                     userRequested={eventContext.userRequest}
                     loading={loading}
-                    paused={sessionActorRef.getSnapshot().matches('paused')}
+                    paused={sessionActorRef.getSnapshot().matches('paused') || sessionActorRef.getSnapshot().matches('resetting')}
                     pauseHandler={handlePause}
                 />
             )}

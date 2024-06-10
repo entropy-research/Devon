@@ -162,6 +162,7 @@ class Session:
         self.state = DotDict({})
         self.state.PAGE_SIZE = 200
         self.state.task = None
+        self.args.task = None
 
         self.status = "paused"
 
@@ -250,12 +251,15 @@ class Session:
         self.status = "running"
 
     def terminate(self):
-        self.status = "terminated"
+        self.status = "terminating"
+
+        while self.status != "terminated":
+            time.sleep(2)
     
     def run_event_loop(self):
         while True and not (self.event_id == len(self.event_log)):
 
-            if self.status == "stopped":
+            if self.status == "terminating":
                 break
 
             if self.status == "paused":
@@ -287,6 +291,9 @@ class Session:
             self.event_log.extend(events)
 
             self.event_id += 1
+
+        self.status = "terminated"
+
 
     def step_event(self, event):
         

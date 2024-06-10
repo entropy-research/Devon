@@ -214,7 +214,7 @@ def terminate(session: str):
 
 
 @app.patch("/sessions/{session}/reset")
-def reset_session(session: str):
+def reset_session(session: str, background_tasks: fastapi.BackgroundTasks):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
 
@@ -222,9 +222,11 @@ def reset_session(session: str):
 
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    
+
+    session_obj.terminate()
     session_obj.init_state()
     session_obj.setup()
+    background_tasks.add_task(session_obj.run_event_loop)
 
     return session
 
@@ -277,7 +279,8 @@ def create_event(session: str, event: ServerEvent):
 def read_events(session: str):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    return sessions.get(session, None).event_log
+    events = sessions.get(session, None).event_log
+    return events
 
 
 @app.get("/sessions/{session}/events/stream")
@@ -292,8 +295,6 @@ async def read_events_stream(session: str):
         initial_index = len(session_obj.event_log)
         while True:
             current_index = len(session_obj.event_log)
-            if current_index < initial_index:
-                initial_index = 0
             if current_index > initial_index:
                 for event in session_obj.event_log[initial_index:current_index]:
                     yield f"data: {json.dumps(event)}\n\n"

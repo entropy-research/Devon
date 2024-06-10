@@ -299,25 +299,23 @@ const createSessionActor = fromPromise(async ({
         console.log(e)
         throw e
     }
-}
-)
+})
 
 const loadEventsActor = fromPromise(async ({
     input,
 }: {
     input: { host: string; name: string; reset: boolean };
 }) => {
-
-    try {
-        const newEvents = (
-            await axios.get(`${input?.host}/sessions/${input?.name}/events`)
-        ).data;
-        console.log("newEvents", newEvents)
-        return newEvents
-    } catch (e) {
-        console.log(e)
+        try {
+            const newEvents = (
+                await axios.get(`${input?.host}/sessions/${input?.name}/events`)
+            ).data;
+            console.log("Loaded events: ", newEvents)
+            return newEvents
+        } catch (e) {
+            console.log(e)
+        }
     }
-}
 )
 
 const startSessionActor = fromPromise(async ({
@@ -327,10 +325,15 @@ const startSessionActor = fromPromise(async ({
 }) => {
 
     const response = await axios.patch(`${input?.host}/sessions/${input?.name}/start`);
-    return response;
-},
-)
+    
+    const events = (await axios.get(`${input?.host}/sessions/${input?.name}/events`)).data;
+    console.log("EVENTS IN START: ", events)
 
+    const state = (await axios.get(`${input?.host}/sessions/${input?.name}/state`)).data;
+    console.log("STATE IN START: ", state)
+
+    return response;
+})
 
 const sendMessage = async ({
     host,
@@ -417,8 +420,14 @@ export const newSessionMachine = setup({
         resetSession: fromPromise(
             async ({ input }: { input: { host: string; name: string } }) => {
                 // pause session first
+
+                console.log("RESETTING")
                 await axios.patch(`${input?.host}/sessions/${input?.name}/pause`);
                 const response = await axios.patch(`${input?.host}/sessions/${input?.name}/reset`);
+
+                const state = (await axios.get(`${input?.host}/sessions/${input?.name}/state`)).data;
+                console.log("STATE: ", state)
+
                 return response;
             },
         ),
@@ -654,52 +663,31 @@ export const newSessionMachine = setup({
             ]
         },
         resetting: {
-            initial: "initial",
-            states: {
-                initial: {
-                    invoke: {
-                        id: 'resetSession',
-                        src: 'resetSession',
-                        input: ({ context: { host, name } }) => ({ host, name }),
-                        onDone: {
-                            target: 'reloadEvents',
-                            actions: [
-                                sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
-                                    console.log("resetting state")
-                                    return {
-                                        type: 'session.reset',
-                                        sender: self
-                                    }
-                                })
-                            ]
-                        }
-                    },
-                },
-                reloadEvents: {
-                    invoke: {
-                        id: 'loadEvents',
-                        src: 'loadEvents',
-                        input: ({ context: { host, name, reset } }) => ({
-                            host,
-                            name,
-                            reset
-                        }),
-                        onDone: {
-                            target: 'final',
-                            actions: enqueueActions(({ enqueue, event }) => {
-                                for (let i = 0; i < event.output.length; i++) {
-                                    enqueue.sendTo(EVENTHANDLER_ACTOR_ID, event.output[i]);
-                                }
-                            })
-                        }
-                    },
-                },
-                final: {
-                    type: "final"
-                }
+            exit: [
+                () =>  console.log("Successfully reset"),
+                sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
+                    return {
+                        type: 'session.reset',
+                        sender: self
+                    }
+                }),
+            ],
+            entry: () => console.log("resetting"),
+            invoke: {
+                id: "resetSession",
+                src: "resetSession",
+                input: ({ context: { host, name } }) => ({ host, name }),
             },
-            onDone: {
-                target: "paused"
+            on: {
+                "session.resume": {
+                    target: "starting"
+                },
+                "session.toggle": {
+                    target: "starting"
+                },
+                "session.reset": {
+                    target: "resetting"
+                }
             }
         },
         starting: {
