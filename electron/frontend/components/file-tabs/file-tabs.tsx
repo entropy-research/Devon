@@ -14,8 +14,8 @@ const FileTabs = ({
     files,
     selectedFileId,
     setSelectedFileId,
-    diffEnabled,
-    setDiffEnabled,
+    // diffEnabled,
+    // setDiffEnabled,
     chatId,
     className,
     isExpandedVariant,
@@ -23,8 +23,8 @@ const FileTabs = ({
     files: any[]
     selectedFileId: string
     setSelectedFileId: (id: string) => void
-    diffEnabled: boolean
-    setDiffEnabled: (value: boolean) => void
+    // diffEnabled: boolean
+    // setDiffEnabled: (value: boolean) => void
     chatId: string | null
     className?: string
     isExpandedVariant: boolean

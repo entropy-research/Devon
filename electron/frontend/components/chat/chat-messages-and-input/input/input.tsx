@@ -64,13 +64,12 @@ const Input = ({
                 eventContext.modelLoading ||
                 eventContext.userRequest ||
                 sessionActorRef.getSnapshot().matches('paused') ||
-                sessionActorRef.getSnapshot().matches('resetting') ||
                 sessionActorRef.getSnapshot().matches('running')) && (
                 <InformationBox
                     modelLoading={eventContext.modelLoading}
                     userRequested={eventContext.userRequest}
                     loading={loading}
-                    paused={sessionActorRef.getSnapshot().matches('paused') || sessionActorRef.getSnapshot().matches('resetting')}
+                    paused={sessionActorRef.getSnapshot().matches('paused')}
                     pauseHandler={handlePause}
                 />
             )}
@@ -163,8 +162,12 @@ const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHan
     let currentType
     if (loading) {
         currentType = types.loading
+    } else if (modelLoading) {
+        currentType = types.modelLoading
+    } else if (userRequested) {
+        currentType = types.userRequested
     } else {
-        currentType = modelLoading ? types.modelLoading : types.userRequested
+        currentType = types.loading
     }
     if (paused) {
         currentType.text = 'Devon is paused'

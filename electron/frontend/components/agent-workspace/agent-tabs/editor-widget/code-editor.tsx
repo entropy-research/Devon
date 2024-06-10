@@ -21,8 +21,6 @@ export default function CodeEditor({
         files,
         selectedFileId,
         setSelectedFileId,
-        diffEnabled,
-        setDiffEnabled,
     } = useCodeEditorState()
 
     const handleEditorDidMount = (
@@ -48,8 +46,6 @@ export default function CodeEditor({
                     files={files}
                     selectedFileId={selectedFileId ?? files[0]?.id}
                     setSelectedFileId={setSelectedFileId}
-                    diffEnabled={diffEnabled}
-                    setDiffEnabled={setDiffEnabled}
                     chatId={chatId}
                     className={showEditorBorders ? '' : 'mr-[13px]'}
                     isExpandedVariant={isExpandedVariant}
@@ -60,7 +56,7 @@ export default function CodeEditor({
                 <div className="w-full bg-workspace rounded-b-lg mt-[-2px]">
                     {selectedFileId && (
                         <BothEditorTypes
-                            diffEnabled={diffEnabled}
+                            // diffEnabled={diffEnabled}
                             file={files?.find(f => f.id === selectedFileId)}
                             handleEditorDidMount={handleEditorDidMount}
                         />

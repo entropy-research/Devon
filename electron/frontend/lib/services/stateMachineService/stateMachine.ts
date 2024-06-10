@@ -234,6 +234,14 @@ export const eventSourceActor = fromCallback<
             );
             eventStream.addEventListener('message', eventHandler);
         }
+        if (event.type === 'reset') {
+            eventStream?.removeEventListener('message', eventHandler);
+            eventStream?.close();
+            eventStream = new EventSource(
+                `${input.host}/sessions/${input.name}/events/stream`,
+            );
+            eventStream.addEventListener('message', eventHandler);
+        }
         if (event.type === 'stopStream') {
             eventStream?.removeEventListener('message', eventHandler);
         }
@@ -629,7 +637,14 @@ export const newSessionMachine = setup({
             },
         },
         initializing: {
-            entry: () => console.log("initializing session"),
+            entry: [() => console.log("initializing session"),
+                sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
+                    return {
+                        type: 'session.reset',
+                        sender: self
+                    }
+                })
+            ],
             invoke: {
                 id: 'loadEvents',
                 src: 'loadEvents',
@@ -678,7 +693,16 @@ export const newSessionMachine = setup({
                 src: "resetSession",
                 input: ({ context: { host, name } }) => ({ host, name }),
                 onDone: {
-                    target: "starting"
+                    actions: [
+                        sendTo(EVENTSOURCE_ACTOR_ID, ({ self }) => {
+                            return {
+                                type: 'stopStream',
+                                sender: self
+                            }
+                        }),
+
+                    ],
+                    target: "initializing"
                 },
             },
 

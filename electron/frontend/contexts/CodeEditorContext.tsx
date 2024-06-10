@@ -6,21 +6,16 @@ const context: {
     files: File[]
     selectedFileId: string
     setSelectedFileId: (value: string) => void
-    diffEnabled: boolean
-    setDiffEnabled: (value: boolean) => void
 } = {
     files: [],
     selectedFileId: '',
     setSelectedFileId: value => {},
-    diffEnabled: false,
-    setDiffEnabled: value => {},
 }
 
 const CodeEditorContext = createContext(context)
 
 export const CodeEditorContextProvider = ({ children, chatId }) => {
     const { files, selectedFileId, setSelectedFileId } = useSessionFiles(chatId)
-    const [diffEnabled, setDiffEnabled] = useState(false)
 
     useEffect(() => {
         if (files.length === 0) {
@@ -38,8 +33,6 @@ export const CodeEditorContextProvider = ({ children, chatId }) => {
                 files,
                 selectedFileId,
                 setSelectedFileId,
-                diffEnabled,
-                setDiffEnabled,
             }}
         >
             {children}
