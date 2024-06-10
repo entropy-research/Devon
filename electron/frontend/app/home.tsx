@@ -40,7 +40,7 @@ export const SessionContextProviderComponent = ({
 }
 
 export default function Home() {
-    const [ agentConfig, setAgentConfig ] = useState<{
+    const [agentConfig, setAgentConfig] = useState<{
         api_key: undefined | string;
         model: undefined | string;
         prompt_type: undefined | string;
@@ -52,50 +52,34 @@ export default function Home() {
 
     const sessionMachineRef = SessionMachineContext.useActorRef()
 
-    const searchParams = useSearchParams();
+    // const searchParams = useSearchParams();
     const { getApiKey } = useSafeStorage();
-    const [sessionId, setSessionId] = useState<string | null>(null)
+    // const [sessionId, setSessionId] = useState<string | null>(null)
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
-    const [showPlanner, setShowPlanner] = useState<boolean>(true)
-    const [showTimeline, setShowTimeline] = useState<boolean>(true)
+    // const [showPlanner, setShowPlanner] = useState<boolean>(true)
+    // const [showTimeline, setShowTimeline] = useState<boolean>(true)
 
-    const toggleViewMode = () => {
-        setViewMode(
-            viewMode === ViewMode.Panel ? ViewMode.Grid : ViewMode.Panel
-        )
-    }
+    // const toggleViewMode = () => {
+    //     setViewMode(
+    //         viewMode === ViewMode.Panel ? ViewMode.Grid : ViewMode.Panel
+    //     )
+    // }
 
-    const visibilityProps = {
-        showPlanner,
-        setShowPlanner,
-        showTimeline,
-        setShowTimeline,
-    }
+    // const visibilityProps = {
+    //     showPlanner,
+    //     setShowPlanner,
+    //     showTimeline,
+    //     setShowTimeline,
+    // }
 
-    const [isAgentWorkspaceVisible, setAgentWorkspaceVisible] = useState(true)
 
-    const toggleAgentWorkspace = () => {
-        setAgentWorkspaceVisible(!isAgentWorkspaceVisible)
-    }
 
-    // Basically listens for change
-    useEffect(() => {
-        const chatId = searchParams.get('chat')
-        // Handle when the chatId is 'New', which means the session hasn't been made yet, and we should prompt the select project modal
-        if (chatId && chatId === 'New') {
-            return
-        }
 
-        if (!chatId) {
-            return
-        }
-        setSessionId(chatId)
-    }, [])
 
     useEffect(() => {
         getApiKey("gpt4-o").then((value) => {
-            if( value ){
+            if (value) {
                 sessionMachineRef.send({
                     type: "session.begin",
                     agentConfig: {
@@ -127,10 +111,10 @@ export default function Home() {
                     )} */}
                     {/* {port ? ( */}
                     <Chat
-                        sessionId={sessionId}
-                        // port={sessionMachineProps.port}
-                        // sessionMachineProps={sessionMachineProps}
-                        // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
+                        sessionId={"UI"}
+                    // port={sessionMachineProps.port}
+                    // sessionMachineProps={sessionMachineProps}
+                    // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
                     />
                     {/* ) : ( */}
                     {/* <div>Loading...</div> */}
@@ -138,7 +122,7 @@ export default function Home() {
                 </ResizablePanel>
                 <ResizableHandle className="" />
                 <ResizablePanel className="flex-col w-full hidden md:flex">
-                    <EditorWidget chatId={sessionId ?? null} />
+                    <EditorWidget chatId={"UI"} />
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>

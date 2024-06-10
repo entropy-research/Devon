@@ -13,7 +13,7 @@ import { useCodeEditorState } from '@/contexts/CodeEditorContext'
 // }
 
 export default function FileTree() {
-    const { files, selectedFileId } = useCodeEditorState()
+    // const { files, selectedFileId } = useCodeEditorState()
 
     return (
         <TreeView

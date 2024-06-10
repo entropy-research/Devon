@@ -269,7 +269,7 @@ export const fetchSessionCallbackActor = fromCallback<
                     state = new_state
                     sendBack({ type: 'session.stateUpdate', payload: state });
                 }
-            }, 100000);
+            }, 1000);
         }
         if (event.type === 'stopFetching') {
             clearInterval(interval);

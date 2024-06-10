@@ -45,7 +45,7 @@ const EditorWidget = ({
     const showEditorBorders = true
 
     return (
-        <CodeEditorContextProvider chatId={chatId}>
+        // <CodeEditorContextProvider chatId={chatId}>
             <div
                 className={`flex flex-col h-full w-full ${showEditorBorders ? 'pb-7' : ''}`}
             >
@@ -70,7 +70,7 @@ const EditorWidget = ({
                         </div>
                         <div className="flex flex-grow overflow-auto">
                             <div className="flex-none w-40 bg-midnight border-r border-outlinecolor">
-                                <FileTree />
+                                {/* <FileTree /> */}
                             </div>
                             <CodeEditor
                                 isExpandedVariant={isExpandedVariant}
@@ -86,7 +86,7 @@ const EditorWidget = ({
                     </div>
                 </div>
             </div>
-        </CodeEditorContextProvider>
+        // </CodeEditorContextProvider>
     )
 }
 

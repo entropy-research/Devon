@@ -226,7 +226,8 @@ def reset_session(session: str, background_tasks: fastapi.BackgroundTasks):
     session_obj.terminate()
     session_obj.init_state()
     session_obj.setup()
-    del session_buffers[session]
+    if session in session_buffers:
+        del session_buffers[session]
     background_tasks.add_task(session_obj.run_event_loop)
 
     return session

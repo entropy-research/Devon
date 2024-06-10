@@ -2,8 +2,11 @@ import Editor, { Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { DiffEditor } from '@monaco-editor/react'
 import FileTabs from '@/components/file-tabs/file-tabs'
-import { useCodeEditorState } from '@/contexts/CodeEditorContext'
+// import { useCodeEditorState } from '@/contexts/CodeEditorContext'
 import { useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useSelector } from '@xstate/react'
+import { SessionMachineContext } from '@/app/home'
 
 // Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/CodeEditor.tsx
 export default function CodeEditor({
@@ -17,11 +20,29 @@ export default function CodeEditor({
 }): JSX.Element {
     const searchParams = useSearchParams()
     const chatId = searchParams.get('chat')
-    const {
-        files,
-        selectedFileId,
-        setSelectedFileId,
-    } = useCodeEditorState()
+    // const {
+    //     files,
+    //     selectedFileId,
+    //     setSelectedFileId,
+    // } = useCodeEditorState()
+
+    const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
+
+    let files = SessionMachineContext.useSelector(
+        state => {
+            if (state.context.sessionState?.editor && state.context.sessionState.editor.files) {
+                return Object.keys(state.context.sessionState.editor.files).map(filename => ({
+                    id: filename,
+                    name: filename.split('/').pop() ?? 'unnamed_file',
+                    path: filename,
+                    language: 'python',
+                    value: state.context.sessionState.editor.files[filename],
+                }))
+            } else {
+                return []
+            }
+        }
+    )
 
     const handleEditorDidMount = (
         editor: editor.IStandaloneCodeEditor,
@@ -56,7 +77,7 @@ export default function CodeEditor({
                 <div className="w-full bg-workspace rounded-b-lg mt-[-2px]">
                     {selectedFileId && (
                         <BothEditorTypes
-                            // diffEnabled={diffEnabled}
+                            diffEnabled={false}
                             file={files?.find(f => f.id === selectedFileId)}
                             handleEditorDidMount={handleEditorDidMount}
                         />
@@ -82,7 +103,7 @@ export default function CodeEditor({
         return (
             <div className="w-full bg-workspace rounded-b-lg overflow-hidden">
                 <BothEditorTypes
-                    diffEnabled={diffEnabled}
+                    diffEnabled={false}
                     file={files?.find(f => f.id === selectedFileId)}
                     handleEditorDidMount={handleEditorDidMount}
                 />
@@ -96,8 +117,8 @@ export default function CodeEditor({
                 files={files}
                 selectedFileId={selectedFileId}
                 setSelectedFileId={setSelectedFileId}
-                diffEnabled={diffEnabled}
-                setDiffEnabled={setDiffEnabled}
+                // diffEnabled={diffEnabled}
+                // setDiffEnabled={setDiffEnabled}
                 chatId={chatId}
                 className={showEditorBorders ? '' : ''}
                 isExpandedVariant={isExpandedVariant}
@@ -106,7 +127,7 @@ export default function CodeEditor({
             <div className="flex w-full h-full bg-bg-workspace rounded-b-lg mt-[-2px]">
                 {selectedFileId && (
                     <BothEditorTypes
-                        diffEnabled={diffEnabled}
+                        // diffEnabled={diffEnabled}
                         file={files?.find(f => f.id === selectedFileId)}
                         handleEditorDidMount={handleEditorDidMount}
                     />
