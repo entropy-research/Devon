@@ -36,7 +36,6 @@ const Input = ({
     const sessionActorRef = SessionMachineContext.useActorRef()
 
     async function submitUserMessage(value: string) {
-        console.log(value)
         sessionActorRef.send({type: 'session.sendMessage', message: value})
     }
 
@@ -61,9 +60,10 @@ const Input = ({
         <div
             className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
         >
-            {(loading ||
+            {(  loading ||
                 eventContext.modelLoading ||
-                eventContext.userRequest || sessionActorRef.getSnapshot().matches('paused')) && (
+                eventContext.userRequest || sessionActorRef.getSnapshot().matches('paused') ||
+                sessionActorRef.getSnapshot().matches('running')) && (
                 <InformationBox
                     modelLoading={eventContext.modelLoading}
                     userRequested={eventContext.userRequest}

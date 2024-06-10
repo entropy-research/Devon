@@ -292,6 +292,8 @@ async def read_events_stream(session: str):
         initial_index = len(session_obj.event_log)
         while True:
             current_index = len(session_obj.event_log)
+            if current_index < initial_index:
+                initial_index = 0
             if current_index > initial_index:
                 for event in session_obj.event_log[initial_index:current_index]:
                     yield f"data: {json.dumps(event)}\n\n"

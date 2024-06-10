@@ -452,6 +452,11 @@ export const newSessionMachine = setup({
     }),
     invoke: [
         {
+            id: 'fetchSessionCallbackActor',
+            src: 'fetchSessionCallbackActor',
+            input: ({ context: { host, name } }) => ({ host, name }),
+        },
+        {
             id: EVENTSOURCE_ACTOR_ID,
             src: 'eventSourceActor',
             input: ({ context: { host, name } }) => ({ host, name }),
@@ -460,11 +465,6 @@ export const newSessionMachine = setup({
                     console.log("event", event)
                 }
             }
-        },
-        {
-            id: 'fetchSessionCallbackActor',
-            src: 'fetchSessionCallbackActor',
-            input: ({ context: { host, name } }) => ({ host, name }),
         },
         {
             id: EVENTHANDLER_ACTOR_ID,
@@ -603,6 +603,13 @@ export const newSessionMachine = setup({
             }
         },
         sessionReady: {
+            entry: [
+                () => console.log("Session Ready!"), 
+                emit(({ context }) => ({
+                    type: "session.creationComplete",
+                    name: context.name
+                }))
+            ],
             on: {
                 "session.delete": {
                     target: "deleting",
@@ -647,25 +654,56 @@ export const newSessionMachine = setup({
             ]
         },
         resetting: {
-            invoke: {
-                id: 'resetSession',
-                src: 'resetSession',
-                input: ({ context: { host, name } }) => ({ host, name }),
-                onDone: {
-                    target: 'setup.sessionExists',
-                    actions: [
-                        sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
-                            console.log("resetting state")
-                            return {
-                                type: 'session.reset',
-                                sender: self
-                            }
-                        })
-                    ]
+            initial: "initial",
+            states: {
+                initial: {
+                    invoke: {
+                        id: 'resetSession',
+                        src: 'resetSession',
+                        input: ({ context: { host, name } }) => ({ host, name }),
+                        onDone: {
+                            target: 'reloadEvents',
+                            actions: [
+                                sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
+                                    console.log("resetting state")
+                                    return {
+                                        type: 'session.reset',
+                                        sender: self
+                                    }
+                                })
+                            ]
+                        }
+                    },
+                },
+                reloadEvents: {
+                    invoke: {
+                        id: 'loadEvents',
+                        src: 'loadEvents',
+                        input: ({ context: { host, name, reset } }) => ({
+                            host,
+                            name,
+                            reset
+                        }),
+                        onDone: {
+                            target: 'final',
+                            actions: enqueueActions(({ enqueue, event }) => {
+                                for (let i = 0; i < event.output.length; i++) {
+                                    enqueue.sendTo(EVENTHANDLER_ACTOR_ID, event.output[i]);
+                                }
+                            })
+                        }
+                    },
+                },
+                final: {
+                    type: "final"
                 }
             },
+            onDone: {
+                target: "paused"
+            }
         },
         starting: {
+            entry: () => console.log("Starting"),
             invoke: {
                 id: 'startSession',
                 src: 'startSession',

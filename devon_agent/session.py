@@ -169,16 +169,15 @@ class Session:
         self.event_id = 0
         self.event_log = []
         self.agent.reset()
-        
-        if len(self.event_log) == 0 or self.state.task == None:
-            self.event_log.append(
-                Event(
-                    type="Task",
-                    content="ask user for what to do",
-                    producer="system",
-                    consumer="devon",
-                )
+    
+        self.event_log.append(
+            Event(
+                type="Task",
+                content="ask user for what to do",
+                producer="system",
+                consumer="devon",
             )
+        )
 
     def to_dict(self):
         return {
@@ -288,7 +287,6 @@ class Session:
             self.event_log.extend(events)
 
             self.event_id += 1
-            
 
     def step_event(self, event):
         
@@ -545,7 +543,7 @@ class Session:
         else:
             self.state.task = self.args.task
 
-        self.status = "paused"    
+        self.status = "paused"
 
         for name, env in self.environments.items():
             print("Setting up env")

@@ -15,10 +15,6 @@ export default function Landing() {
     const [openProjectModal, setOpenProjectModal] = useState(false)
     const { backendUrl } = useBackendUrl()
 
-
-
-    // let sessionActorref = SessionMachineContext.useActorRef()
-
     useEffect(() => {
 
         if (hasAcceptedCheckbox) {
@@ -29,14 +25,7 @@ export default function Landing() {
 
     let sessionActorref = SessionMachineContext.useActorRef()
     let state = SessionMachineContext.useSelector(state => state)
-    console.log(state.value)
-
-    useEffect(() => {
-        if (state.can({type: 'session.init'}) && openProjectModal) {
-            sessionActorref.send({ type: 'session.init' })
-        }
-    }, [openProjectModal,state])
-
+    
     return (
         <>
             <Home />
@@ -44,12 +33,11 @@ export default function Landing() {
                 initialized={hasAcceptedCheckbox}
                 setInitialized={setHasAcceptedCheckbox}
             />
-
-                <SelectProjectDirectoryModal
-                    openProjectModal={!state.can({type: 'session.toggle'}) && !state.matches('resetting')}
-                    hideclose
-                    sessionActorref={sessionActorref}
-                    state={state}
+            <SelectProjectDirectoryModal
+                openProjectModal={!state.can({type: 'session.toggle'}) && !state.matches('resetting')}
+                hideclose
+                sessionActorref={sessionActorref}
+                state={state}
             />
         </>
     )

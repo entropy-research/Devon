@@ -66,6 +66,9 @@ const SelectProjectDirectoryModal = ({
                 model: 'gpt4-o'
             }
         } })
+        sessionActorref.on("session.creationComplete", () => {
+            sessionActorref.send({ type: 'session.init' })
+        })
         setOpen(false)
     }
 
@@ -89,16 +92,16 @@ const SelectProjectDirectoryModal = ({
             >
                 <div className="mx-8 my-4">
                     {state.matches("sessionReady") ?
-                     <>
-                        <ExistingSessionFound
-                            continueChat={() => {
-                                sessionActorref.send({ type: 'session.init' })
-                            }}
-                            newChat={() => {
-                                sessionActorref.send({ type: 'session.delete' })
-                            }}
-                        />
-                     </> : <></>
+                        <>
+                            <ExistingSessionFound
+                                continueChat={() => {
+                                    sessionActorref.send({ type: 'session.init' })
+                                }}
+                                newChat={() => {
+                                    sessionActorref.send({ type: 'session.delete' })
+                                }}
+                            />
+                        </> : <></>
                     }
 
                     {/* {sessions?.length > 0 && page === 1 ? (
@@ -113,29 +116,29 @@ const SelectProjectDirectoryModal = ({
                         <></>
                     )} */}
 
-
-                    {state.matches({setup :  "sessionDoesNotExist"}) ?
-                     <>
-                     {page !== 1 && (
-                         <button
-                             className="top-3 left-3 absolute text-primary mb-2 flex items-center p-1"
-                            //  onClick={() => setPage(1)}
-                         >
-                             <ArrowLeft size={18} className="mr-1" />
-                             {/* {'Back'} */}
-                         </button>
-                     )}
-                     {/* {header} */}
-                     <SelectProjectDirectoryComponent
-                         folderPath={folderPath}
-                         setFolderPath={setFolderPath}
-                     />
-                     <StartChatButton
-                         disabled={!validate()}
-                         onClick={afterSubmit}
-                         folderPath={folderPath}
-                     />
-                 </>  : <></>}
+                    {
+                        state.matches({setup :  "sessionDoesNotExist"}) ?
+                        <>
+                            {page !== 1 && (
+                                <button
+                                    className="top-3 left-3 absolute text-primary mb-2 flex items-center p-1"
+                                    //  onClick={() => setPage(1)}
+                                >
+                                    <ArrowLeft size={18} className="mr-1" />
+                                    {/* {'Back'} */}
+                                </button>
+                            )}
+                            {/* {header} */}
+                            <SelectProjectDirectoryComponent
+                                folderPath={folderPath}
+                                setFolderPath={setFolderPath}
+                            />
+                            <StartChatButton
+                                disabled={!validate()}
+                                onClick={afterSubmit}
+                                folderPath={folderPath}
+                            />
+                        </>  : <></>}
                 </div>
             </DialogContent>
         </Dialog>
