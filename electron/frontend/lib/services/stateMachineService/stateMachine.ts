@@ -677,18 +677,22 @@ export const newSessionMachine = setup({
                 id: "resetSession",
                 src: "resetSession",
                 input: ({ context: { host, name } }) => ({ host, name }),
+                onDone: {
+                    target: "starting"
+                },
             },
-            on: {
-                "session.resume": {
-                    target: "starting"
-                },
-                "session.toggle": {
-                    target: "starting"
-                },
-                "session.reset": {
-                    target: "resetting"
-                }
-            }
+
+            // on: {
+            //     "session.resume": {
+            //         target: "starting"
+            //     },
+            //     "session.toggle": {
+            //         target: "starting"
+            //     },
+            //     "session.reset": {
+            //         target: "resetting"
+            //     }
+            // }
         },
         starting: {
             entry: () => console.log("Starting"),

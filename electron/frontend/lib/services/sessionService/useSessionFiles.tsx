@@ -39,6 +39,11 @@ const boilerplateFile2 = {
 const useSessionFiles = chatId => {
 
     const res = SessionMachineContext.useSelector(state => state.context.sessionState)
+    // const res = {
+    //     editor: {
+    //         files: {}
+    //     }
+    // }
 
     const [files, setFiles] = useState<File[]>([])
     const [selectedFileId, setSelectedFileId] = useState<string>('')
