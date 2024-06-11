@@ -24,19 +24,19 @@ const HeaderSidebar = () => {
             <header
                 id="header"
                 // className="flex w-full absolute top-0 px-3 items-center gap-1 pb-1 pt-12 h-14"
-                className="flex w-full absolute top-0 px-3 items-center gap-1 pb-1 pt-8"
+                className="flex w-full absolute top-0 px-3 items-center gap-1 pb-1 pt-4"
             >
                 <div
                     id="header-drag-region"
                     className="absolute w-full h-full top-0 left-0"
                 ></div>
                 {pathname.includes('settings') ? (
-                    <Link className="absolute right-8 top-8" href="/">
+                    <Link className="absolute right-4 top-5" href="/">
                         <MessageCircleMore className="text-primary" />
                     </Link>
 
                 ) : (
-                    <Link className="absolute right-8 top-8" href="/settings">
+                    <Link className="absolute right-4 top-5" href="/settings">
                         <Settings className="text-primary" />
                     </Link>
                 )}
