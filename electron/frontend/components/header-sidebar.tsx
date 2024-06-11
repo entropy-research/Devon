@@ -32,12 +32,12 @@ const HeaderSidebar = () => {
                 ></div>
                 {pathname.includes('settings') ? (
                     <Link className="absolute right-4 top-5" href="/">
-                        <MessageCircleMore className="text-primary" />
+                        <MessageCircleMore size={22} className="text-primary" />
                     </Link>
 
                 ) : (
                     <Link className="absolute right-4 top-5" href="/settings">
-                        <Settings className="text-primary" />
+                        <Settings size={22} className="text-primary" />
                     </Link>
                 )}
 
