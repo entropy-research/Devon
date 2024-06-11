@@ -16,7 +16,7 @@ const FileTabs = ({
     setSelectedFileId,
     // diffEnabled,
     // setDiffEnabled,
-    chatId,
+    // chatId,
     className,
     isExpandedVariant,
 }: {
@@ -25,7 +25,7 @@ const FileTabs = ({
     setSelectedFileId: (id: string) => void
     // diffEnabled: boolean
     // setDiffEnabled: (value: boolean) => void
-    chatId: string | null
+    // chatId: string | null
     className?: string
     isExpandedVariant: boolean
 }) => {

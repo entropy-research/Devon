@@ -164,7 +164,8 @@ def delete_session(session: str):
 
     sessions[session].delete_from_db()
     del sessions[session]
-    running_sessions.remove(session)
+    if session in running_sessions:
+        running_sessions.remove(session)
 
     return session
 

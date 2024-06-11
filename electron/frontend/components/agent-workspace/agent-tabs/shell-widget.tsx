@@ -1,91 +1,8 @@
-import { IDisposable, Terminal as XtermTerminal } from '@xterm/xterm'
+import { Terminal as XtermTerminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
 import React, { useEffect, useRef, useState } from 'react'
 
-// import socket from "../socket/socket";
-import { fetchSessionEvents } from '@/lib/services/sessionService/sessionService'
-import { useSearchParams } from 'next/navigation'
-import FileTabs from '@/components/file-tabs/file-tabs'
-import { Terminal as TerminalIcon } from 'lucide-react'
-// import { SessionMachineContext } from '@/app/home'
 import type { Message } from '@/lib/services/stateMachineService/stateMachine'
-
-// export default function ShellWidget() {
-//     // const searchParams = useSearchParams()
-//     // const chatId = searchParams.get('chat')
-
-//     // const [messages, setMessages] = useState([])
-
-//     // useEffect(() => {
-//     //     if (!chatId || chatId === 'New') return
-//     //     const fetchAndUpdateMessages = () => {
-//     //         fetchSessionEvents(chatId)
-//     //             .then(data => {
-//     //                 setMessages(getOnlyToolResponse(data))
-//     //             })
-//     //             .catch(error => {
-//     //                 console.error('Error fetching session events:', error)
-//     //             })
-//     //     }
-//     //     const intervalId = setInterval(fetchAndUpdateMessages, 4000)
-
-//     //     return () => {
-//     //         clearInterval(intervalId)
-//     //     }
-//     // }, [chatId])
-
-//     return <Terminal />
-// }
-
-function getOnlyToolResponse(messages) {
-    return messages?.filter(
-        message =>
-            message.type === 'EnvironmentRequest' ||
-            message.type === 'EnvironmentResponse'
-    )
-}
-
-// Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/Terminal.tsx
-/*
-class JsonWebsocketAddon {
-    _socket: WebSocket
-
-    _disposables: IDisposable[]
-
-    constructor(_socket: WebSocket) {
-        this._socket = _socket
-        this._disposables = []
-    }
-
-    activate(terminal: XtermTerminal) {
-        this._disposables.push(
-            terminal.onData(data => {
-                const payload = JSON.stringify({ action: 'terminal', data })
-                this._socket.send(payload)
-            })
-        )
-        this._socket.addEventListener('message', event => {
-            const { action, args, observation, content } = JSON.parse(
-                event.data
-            )
-            if (action === 'run') {
-                terminal.writeln(args.command)
-            }
-            if (observation === 'run') {
-                content.split('\n').forEach((line: string) => {
-                    terminal.writeln(line)
-                })
-                terminal.write('\n$ ')
-            }
-        })
-    }
-
-    dispose() {
-        this._disposables.forEach(d => d.dispose())
-        this._socket.removeEventListener('message', () => {})
-    }
-}
-*/
 
 /**
  * The terminal's content is set by write messages. To avoid complicated state logic,
@@ -99,8 +16,7 @@ export default function ShellWidget({
 }): JSX.Element {
     const terminalRef = useRef<HTMLDivElement>(null)
     const terminalInstanceRef = useRef<XtermTerminal | null>(null)
-
-    // const messages = SessionMachineContext.useSelector(state => state.context.serverEventContext.messages).filter(message => message.type === 'tool')
+    const [renderedMessages, setRenderedMessages] = useState<Message[]>([])
 
     useEffect(() => {
         async function addOn() {
@@ -147,8 +63,9 @@ export default function ShellWidget({
     useEffect(() => {
         const terminal = terminalInstanceRef.current
         if (terminal) {
-            terminal.clear() // Clear the existing content
-            messages.forEach((message, idx) => {
+            const messagesToRender = messages.filter(message => !renderedMessages.includes(message))
+            // terminal.clear() // Clear the existing content
+            messagesToRender.forEach((message, idx) => {
                 let [command, response] = message.text.split('|START_RESPONSE|')
                 let commandMsgs = command.slice(18).trim().split('\n')
                 commandMsgs.forEach((line, index) => {
@@ -179,27 +96,13 @@ export default function ShellWidget({
                         terminal.writeln(line)
                     })
                 }
+                setRenderedMessages(prevMessages => [...prevMessages, message])
             })
         }
-    }, [messages])
+    }, [messages, renderedMessages])
 
     return (
         <div className="h-full flex flex-col bg-midnight">
-            {/* <div className="flex items-center justify-start">
-                {[{ id: 1, name: 'Terminal' }].map(file => (
-                    <button
-                        key={file.id}
-                        className={`flex px-2 items-center bg-black pb-0 pt-2 text-sm border-t-[1.5px] min-w-[100px] ${file.id === 0 ? 'border-t-primary outline outline-neutral-700 outline-[0.5px] rounded-t-sm' : 'border-transparent'}`}
-                        // onClick={() => updateSelectedFile(file)}
-                    >
-                        <TerminalIcon
-                            size={16}
-                            className="mr-1 text-primary mb-[1px]"
-                        />
-                        {file.name}
-                    </button>
-                ))}
-            </div> */}
             <div
                 id="terminal-wrapper"
                 className="flex-grow flex bg-midnight w-full pl-3 pr-[1px] pt-3 overflow-hidden border-t border-outlinecolor"

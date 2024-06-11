@@ -7,11 +7,12 @@ import {
     ResizablePanelGroup,
 } from '@/components/ui/resizable'
 import { ViewMode } from '@/lib/types'
-import { useSearchParams } from 'next/navigation'
 import { createActorContext } from '@xstate/react'
 import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { useSafeStorage } from "@/lib/services/safeStorageService"
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
+import SidebarItem from '@/components/sidebar/sidebar-item'
+import { Settings } from 'lucide-react'
 
 export const SessionMachineContext = createActorContext(newSessionMachine)
 
@@ -51,31 +52,8 @@ export default function Home() {
     })
 
     const sessionMachineRef = SessionMachineContext.useActorRef()
-
-    // const searchParams = useSearchParams();
     const { getApiKey } = useSafeStorage();
-    // const [sessionId, setSessionId] = useState<string | null>(null)
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
-
-    // const [showPlanner, setShowPlanner] = useState<boolean>(true)
-    // const [showTimeline, setShowTimeline] = useState<boolean>(true)
-
-    // const toggleViewMode = () => {
-    //     setViewMode(
-    //         viewMode === ViewMode.Panel ? ViewMode.Grid : ViewMode.Panel
-    //     )
-    // }
-
-    // const visibilityProps = {
-    //     showPlanner,
-    //     setShowPlanner,
-    //     showTimeline,
-    //     setShowTimeline,
-    // }
-
-
-
-
 
     useEffect(() => {
         getApiKey("gpt4-o").then((value) => {
@@ -91,6 +69,8 @@ export default function Home() {
         })
     }, [])
 
+
+
     let state = SessionMachineContext.useSelector(state => state)
     console.log(state.context.serverEventContext)
     // Get session id and path from url
@@ -100,25 +80,17 @@ export default function Home() {
                 <ResizablePanel
                     className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center`}
                 >
-                    {/* {showTimeline && (
-                        <TimelineWidget
-                            className={
-                                viewMode === ViewMode.Panel
-                                    ? 'w-[275px]'
-                                    : 'w-full overflow-hidden'
-                            }
-                        />
-                    )} */}
-                    {/* {port ? ( */}
+                    {/* <SidebarItem
+                        text="Settings"
+                        icon={<Settings className="text-primary" />}
+                        active={true}
+                        alert={false}
+                        route="/settings"
+                        expanded={true}
+                    /> */}
                     <Chat
                         sessionId={"UI"}
-                    // port={sessionMachineProps.port}
-                    // sessionMachineProps={sessionMachineProps}
-                    // headerIcon={<ToggleTimelineHeader showTimeline={showTimeline} setShowTimeline={setShowTimeline} />}
                     />
-                    {/* ) : ( */}
-                    {/* <div>Loading...</div> */}
-                    {/* )} */}
                 </ResizablePanel>
                 <ResizableHandle className="" />
                 <ResizablePanel className="flex-col w-full hidden md:flex">

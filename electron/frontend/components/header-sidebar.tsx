@@ -16,7 +16,6 @@ import { usePathname } from 'next/navigation'
 
 const HeaderSidebar = () => {
     const [expanded, setExpanded] = useState(false)
-    const { backendUrl } = useBackendUrl()
     const pathname = usePathname()
 
     return (

@@ -1,15 +1,12 @@
 import React from 'react'
-// import { useSelector } from 'react-redux'
-// import { RootState } from '../store'
+
 
 export default function BrowserWidget() {
     return <Browser />
 }
 // Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/Browser.tsx
 function Browser(): JSX.Element {
-    // const { url, screenshotSrc } = useSelector(
-    //     (state: RootState) => state.browser
-    // )
+
     const url = ''
     const screenshotSrc: string = ''
 

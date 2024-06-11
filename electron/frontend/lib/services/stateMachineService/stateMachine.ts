@@ -23,7 +23,7 @@ import {
 } from 'xstate';
 
 
-type Message = {
+export type Message = {
     text: string;
     type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error';
 };

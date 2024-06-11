@@ -7,11 +7,13 @@ export const useSafeStorage = () => {
     }, [])
 
     const decryptText = async encryptedText => {
+        //@ts-ignore
         const decrypted = await window.api.invoke('decrypt-data', encryptedText)
         return decrypted
     }
 
     const loadData = async () => {
+        //@ts-ignore
         const response = await window.api.invoke('load-data')
         console.log("load data",response)
         if (response.success) {
@@ -26,16 +28,19 @@ export const useSafeStorage = () => {
 
     const saveData = async data => {
         const plainText = JSON.stringify(data)
+        //@ts-ignore
         const response = await window.api.invoke('save-data', plainText)
         window.location.reload()
     }
 
     const deleteData = async () => {
+        //@ts-ignore
         const response = await window.api.invoke('delete-encrypted-data')
         window.location.reload()
     }
 
     const checkHasEncryptedData = async () => {
+        //@ts-ignore
         const response = await window.api.invoke('check-has-encrypted-data')
         return response.success
     }

@@ -8,7 +8,6 @@ import {
     Tree,
     Folder,
     File,
-    CollapseButton,
     TreeViewElement,
 } from './tree-view-api'
 
@@ -17,6 +16,9 @@ interface TreeViewComponentProps extends React.HTMLAttributes<HTMLDivElement> {}
 type TreeViewProps = {
     initialSelectedId?: string
     elements: TreeViewElement[]
+    files: any[]
+    selectedFileId: string
+    setSelectedFileId: (id: string) => void
     indicator?: boolean
 } & (
     | {
@@ -31,6 +33,9 @@ type TreeViewProps = {
     TreeViewComponentProps
 
 export const TreeView = ({
+    files,
+    selectedFileId,
+    setSelectedFileId,
     elements,
     className,
     initialSelectedId,
@@ -60,6 +65,9 @@ export const TreeView = ({
             )}
         >
             <Tree
+                files={files}
+                selectedFileId={selectedFileId}
+                setSelectedFileId={setSelectedFileId}
                 initialSelectedId={initialSelectedId}
                 initialExpendedItems={initialExpendedItems}
                 elements={elements}
@@ -75,9 +83,6 @@ export const TreeView = ({
                         indicator={indicator}
                     />
                 ))}
-                {/* <CollapseButton elements={elements} expandAll={expandAll}>
-          <span>Expand All</span>
-        </CollapseButton> */}
             </Tree>
         </div>
     )

@@ -1,7 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
 import CodeEditor from './code-editor'
-import { CodeEditorContextProvider } from '@/contexts/CodeEditorContext'
-import FileTree from './file-tree/file-tree'
 import ShellWidget from '@/components/agent-workspace/agent-tabs/shell-widget'
 import { SessionMachineContext } from '@/app/home'
 import { Bot } from 'lucide-react'
@@ -29,7 +26,6 @@ const boilerplateFile2 = {
 }
 
 const EditorWidget = ({
-    chatId,
     isExpandedVariant = false,
 }: {
     chatId: string | null
@@ -41,11 +37,10 @@ const EditorWidget = ({
             message => message.type === 'tool'
         )
     )
-    const state = SessionMachineContext.useSelector(state => state)
+    const path = SessionMachineContext.useSelector(state => state.context.path)
     const showEditorBorders = true
 
     return (
-        // <CodeEditorContextProvider chatId={chatId}>
             <div
                 className={`flex flex-col h-full w-full ${showEditorBorders ? 'pb-7' : ''}`}
             >
@@ -69,13 +64,13 @@ const EditorWidget = ({
                             </button>
                         </div>
                         <div className="flex flex-grow overflow-auto">
-                            <div className="flex-none w-40 bg-midnight border-r border-outlinecolor">
+                            {/* <div className="flex-none w-40 bg-midnight border-r border-outlinecolor"> */}
                                 {/* <FileTree /> */}
-                            </div>
+                            {/* </div> */}
                             <CodeEditor
                                 isExpandedVariant={isExpandedVariant}
                                 showEditorBorders={showEditorBorders}
-                                path={state.context.path}
+                                path={path}
                             />
                         </div>
                         <div
@@ -86,7 +81,6 @@ const EditorWidget = ({
                     </div>
                 </div>
             </div>
-        // </CodeEditorContextProvider>
     )
 }
 

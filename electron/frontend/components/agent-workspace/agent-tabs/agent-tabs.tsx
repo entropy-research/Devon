@@ -27,10 +27,10 @@ const gridTabs = [
         id: 'chat',
         content: <></>,
     },
-    {
-        id: 'shell',
-        content: <ShellWidget />,
-    },
+    // {
+    //     id: 'shell',
+    //     content: <ShellWidget />,
+    // },
     {
         id: 'browser',
         content: <BrowserWidget />,

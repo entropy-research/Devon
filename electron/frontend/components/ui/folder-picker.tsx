@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button'
 
 const FolderPicker = ({ folderPath, setFolderPath, disabled }) => {
     const handleDirectoryPicker = e => {
-        window.api.send('get-file-path')
+        //@ts-ignore
+        window.api.send('get-file-path') 
     }
 
     const handleInputChange = e => {
@@ -12,7 +13,8 @@ const FolderPicker = ({ folderPath, setFolderPath, disabled }) => {
     }
 
     useEffect(() => {
-        window.api.receive('file-path-response', path => {
+        //@ts-ignore
+        window.api.receive('file-path-response', path => { 
             if (path === 'cancelled') {
                 console.log('Directory selection was cancelled.')
             } else if (path === 'error') {
