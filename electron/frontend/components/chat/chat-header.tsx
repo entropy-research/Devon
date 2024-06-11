@@ -11,15 +11,15 @@ export default function ChatHeader({
     const sessionActorRef = SessionMachineContext.useActorRef()
 
     async function handleReset() {
-        sessionActorRef.send({type: 'session.reset'})
+        sessionActorRef.send({ type: 'session.reset' })
     }
 
     async function handleStop() {
-        sessionActorRef.send({type: 'session.pause'})
+        sessionActorRef.send({ type: 'session.pause' })
     }
 
     return (
-        <div className="relative mt-4 items-end pt-1 pb-3 border-outline-night shrink-0 items-left flex flex-row justify-between border-b px-6">
+        <div className="relative mt-[-5px] items-end pt-1 pb-3 border-outline-night shrink-0 items-left flex flex-row justify-between border-b px-6">
             {/* <div className="">
                 <p className="text-lg mb-2">Hey there!</p>
                 <p className="text-gray-400 text-sm">{`My name is Devon and I'm a software engineer. Give me coding tasks and I will try my best to solve them!`}</p>

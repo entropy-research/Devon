@@ -28,7 +28,7 @@ export default function RootLayout({
                 <div className="flex w-full h-full overflow-hidden">
                     <div className="relative w-full overflow-hidden bg-day transition-colors duration-200 dark:bg-night flex">
                         <BackendUrlProvider>
-                            {/* <HeaderSidebar /> */}
+                            <HeaderSidebar />
                             <main className="mt-[54px] flex flex-row w-full">
                                 {children}
                             </main>
