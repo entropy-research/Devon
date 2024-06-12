@@ -29,7 +29,20 @@ def server(port, db_path):
     import uvicorn
     app.db_path = db_path
     app.persist = False
-    uvicorn.run(app, host="0.0.0.0", port=port)
+
+    def signal_handler(sig, frame):
+        print('Received signal to terminate. Shutting down gracefully...')
+        uvicorn_server.should_exit = True
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    config = uvicorn.Config(app, host="0.0.0.0", port=port)
+    uvicorn_server = uvicorn.Server(config)
+
+    uvicorn_server.run()
+
+    # uvicorn.run(app, host="0.0.0.0", port=port)
 
 
 @click.command()

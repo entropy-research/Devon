@@ -26,11 +26,15 @@ export default function Landing() {
                 setModelName(modelName)
                 console.log('modelName', modelName)
                 if (modelName) {
-                    setOnboarded(true)
+                    startTransition(() => {
+                        setOnboarded(true)
+                    })
                     return
                 }
             }
-            setOnboarded(false)
+            startTransition(() => {
+                setOnboarded(false)
+            })
         }
         check()
     }, [checkHasEncryptedData])

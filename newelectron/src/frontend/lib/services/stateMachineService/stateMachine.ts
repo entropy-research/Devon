@@ -398,6 +398,7 @@ export const newSessionMachine = setup({
             serverEventContext: ServerEventContext;
             agentConfig: any;
             sessionState: any;
+            healthcheckRetry: number;
         },
     },
     actors: {
@@ -472,7 +473,8 @@ export const newSessionMachine = setup({
                 base_commit: null,
                 commits: [],
             },
-        }
+        },
+        healthcheckRetry: 0
     }),
     invoke: [
         {
@@ -532,7 +534,10 @@ export const newSessionMachine = setup({
                                     target: 'done'
                                 },
                                 onError: {
-                                    target: 'retry'
+                                    target: 'retry',
+                                    actions: assign(({ context }) => ({
+                                        healthcheckRetry: context.healthcheckRetry + 1
+                                    }))
                                 }
                             }
                         },

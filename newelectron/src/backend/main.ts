@@ -191,7 +191,17 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
-  serverProcess.kill(9) // Make sure to kill the server process when the app is closing
+  if (serverProcess.pid) {
+    console.log('Killing server process with pid', serverProcess.pid)
+    process.kill(serverProcess.pid, 'SIGTERM');
+  }
+  serverProcess.kill() // Make sure to kill the server process when the app is closing
+
+  if (serverProcess.killed) {
+    console.log('Server process was successfully killed.');
+  } else {
+    console.log('Failed to kill the server process.');
+  }
 })
 
 /*

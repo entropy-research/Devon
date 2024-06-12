@@ -22,7 +22,7 @@ export default defineConfig((env) => {
     plugins: [pluginHotRestart('restart'), viteStaticCopy({
       targets: [
         {
-          src: '/Users/mihirchintawar/agent/newelectron/src/backend/devon_agent',
+          src: './src/backend/devon_agent',
           dest: '.',
           rename: "devon_agent"
         }
