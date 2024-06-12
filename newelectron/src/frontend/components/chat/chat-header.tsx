@@ -1,5 +1,7 @@
 import { SessionMachineContext } from '@/home'
-import { CircleArrowDown, Power, Rewind, History } from 'lucide-react'
+import { CircleArrowDown, Power, Rewind, History, Settings } from 'lucide-react'
+import SettingsModal from '../modals/settings-modal'
+
 export default function ChatHeader({
     sessionId,
     headerIcon,
@@ -27,7 +29,8 @@ export default function ChatHeader({
             <p className="text-lg font-semibold pb-[1px]">Chat</p>
             <div className="flex gap-3 -mr-2">
                 <RestartButton resetHandler={handleReset} />
-                <StopButton stopHandler={handleStop} />
+                {/* <StopButton stopHandler={handleStop} /> */}
+                <ConfigureButton />
             </div>
             {headerIcon}
         </div>
@@ -49,6 +52,21 @@ const RestartButton = ({ resetHandler }) => {
             </p>
         </button>
     )
+}
+
+const ConfigureButton = () => {
+    return (
+        <SettingsModal trigger={<button className="group flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 smooth-hover">
+            <Settings
+                size={14}
+                className="group-hover:transition text-gray-400 duration-300 mb-[1px] group-hover:text-white"
+            />
+            <p className="group-hover:transition duration-300 text-gray-400 group-hover:text-white">
+                Configure session
+            </p>
+        </button>} />
+    )
+
 }
 
 const StopButton = ({ stopHandler }) => {

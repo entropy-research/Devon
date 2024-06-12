@@ -12,6 +12,8 @@ import Sidebar from '@/components/sidebar/sidebar'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
 // import Link from 'next/link'
+// import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
+// import SettingsModal from '@/components/modals/settings-modal'
 
 const HeaderSidebar = () => {
     const [expanded, setExpanded] = useState(false)
@@ -28,18 +30,6 @@ const HeaderSidebar = () => {
                     id="header-drag-region"
                     className="absolute w-full h-full top-0 left-0"
                 ></div>
-                {/* {pathname.includes('settings') ? (
-                    <Link className="absolute right-4 top-5" href="/">
-                        <MessageCircleMore size={22} className="text-primary" />
-                    </Link>
-
-                ) :  */}
-                {/* ( */}
-                    {/* <Link className="absolute right-4 top-5" href="/settings"> */}
-                        <Settings size={22} className="text-primary" />
-                    {/* </Link> */}
-                {/* ) */}
-                {/* } */}
 
                 {/* <button
                     onClick={() => setExpanded(!expanded)}
