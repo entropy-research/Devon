@@ -286,6 +286,14 @@ class Session:
                 break
             elif event["type"] == "Stop" and event["content"]["type"] == "submit":
                 self.state.task = "You have completed your task, ask user for revisions or a new one."
+                self.event_log.append(
+                    Event(
+                        type="Task",
+                        content="You have completed your task, ask user for revisions or a new one.",
+                        producer="system",
+                        consumer="devon",
+                    )
+                )
 
             events = self.step_event(event)
             self.event_log.extend(events)
