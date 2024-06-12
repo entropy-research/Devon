@@ -28,6 +28,7 @@ def server(port, db_path):
     """Start the Devon Agent server."""
     import uvicorn
     app.db_path = db_path
+    app.persist = False
     uvicorn.run(app, host="0.0.0.0", port=port)
 
 

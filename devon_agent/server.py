@@ -69,7 +69,7 @@ async def lifespan(app: fastapi.FastAPI):
 
     # Hacky but it works
     global sessions
-    
+    app.persist = False
     if app.persist:
     
         await init_db()
@@ -96,7 +96,7 @@ app = fastapi.FastAPI(
     lifespan=lifespan,
 )
 
-app.persist = True
+app.persist = False
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
