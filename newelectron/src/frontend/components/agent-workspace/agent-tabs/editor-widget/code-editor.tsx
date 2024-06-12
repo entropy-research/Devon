@@ -18,7 +18,6 @@ export default function CodeEditor({
     // const chatId = searchParams.get('chat')
 
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
-
     let files = SessionMachineContext.useSelector(
         state => {
             if (state.context.sessionState?.editor && state.context.sessionState.editor.files) {
@@ -34,6 +33,12 @@ export default function CodeEditor({
             }
         }
     )
+
+    if (files && files.length > 0 && !selectedFileId) {
+        setSelectedFileId(files[0].id)
+    } else if ((!files || files.length === 0) && selectedFileId) {
+        setSelectedFileId(null)
+    }
 
     const handleEditorDidMount = (
         editor: editor.IStandaloneCodeEditor,
@@ -98,7 +103,7 @@ export default function CodeEditor({
         <div className="flex flex-col w-full h-full">
             <FileTabs
                 files={files}
-                selectedFileId={selectedFileId ?? files[0]?.id}
+                selectedFileId={selectedFileId ?? null}
                 setSelectedFileId={setSelectedFileId}
                 // chatId={chatId}
                 className={showEditorBorders ? '' : ''}

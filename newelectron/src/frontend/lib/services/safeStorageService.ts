@@ -30,13 +30,13 @@ export const useSafeStorage = () => {
         const plainText = JSON.stringify(data)
         //@ts-ignore
         const response = await window.api.invoke('save-data', plainText)
-        // window.location.reload()
+        window.location.reload()
     }
 
     const deleteData = async () => {
         //@ts-ignore
         const response = await window.api.invoke('delete-encrypted-data')
-        // window.location.reload()
+        window.location.reload()
     }
 
     const checkHasEncryptedData = async () => {

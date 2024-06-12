@@ -74,7 +74,7 @@ export const BotMessage = ({
     content,
     className,
 }: {
-    content: string 
+    content: string
     className?: string
 }) => {
     const icon = (
@@ -89,7 +89,7 @@ export const ThoughtMessage = ({
     content,
     className,
 }: {
-    content: string 
+    content: string
     className?: string
 }) => {
     const icon = (
@@ -104,7 +104,7 @@ export const ToolResponseMessage = ({
     content,
     className,
 }: {
-    content: string 
+    content: string
     className?: string
 }) => {
     const icon = <div className="w-[32px]"></div>
@@ -112,7 +112,7 @@ export const ToolResponseMessage = ({
     return <StyledMessage content={command} className={className} icon={icon} />
 }
 
-function StyledMessage({ content, className, icon }) {
+function StyledMessage({ content, className, icon }: { content: string, className: string, icon: JSX.Element }) {
     const text = content
 
     return (
