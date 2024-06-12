@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --dark-primary-background: hsl(0, 0%, 14%);
+    --dark-primary-foreground: hsl(0, 0%, 18%);
+    --dark-outline: hsl(0 0% 28%);
+}
+
+@layer base {
+    :root {
+        --background: hsl(0 0% 100%);
+        --foreground: hsl(222.2 84% 4.9%);
+
+        --card: hsl(0 0% 100%);
+        --card-foreground: hsl(222.2 84% 4.9%);
+
+        --popover: hsl(0 0% 100%);
+        --popover-foreground: hsl(222.2 84% 4.9%);
+
+        --primary: hsl(222.2 47.4% 11.2%);
+        --primary-foreground: hsl(210 40% 98%);
+
+        --secondary: hsl(210 40% 96.1%);
+        --secondary-foreground: hsl(222.2 47.4% 11.2%);
+
+        --muted: hsl(210 40% 96.1%);
+        --muted-foreground: hsl(215.4 16.3% 46.9%);
+
+        --accent: hsl(210 40% 96.1%);
+        --accent-foreground: hsl(222.2 47.4% 11.2%);
+
+        --destructive: hsl(0 84.2% 60.2%);
+        --destructive-foreground: hsl(210 40% 98%);
+
+        --border: hsl(214.3 31.8% 91.4%);
+        --input: hsl(214.3 31.8% 91.4%);
+        --ring: white;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        color: white;
+        --background: #1e1e1e;
+        --foreground: hsl(210 40% 98%);
+
+        --card: var(--dark-primary-background);
+        --card-foreground: white;
+
+        --popover: #111111;
+        --popover-foreground: hsl(210 40% 98%);
+
+        --primary: hsl(210 40% 98%);
+        --primary-foreground: hsl(222.2 47.4% 11.2%);
+
+        --secondary: hsl(217.2 32.6% 17.5%);
+        --secondary-foreground: hsl(210 40% 98%);
+
+        --muted: hsl(217.2 32.6% 17.5%);
+        --muted-foreground: hsl(215 20.2% 65.1%);
+
+        --accent: hsl(217.2 32.6% 17.5%);
+        --accent-foreground: hsl(210 40% 98%);
+
+        --destructive: hsl(0 62.8% 30.6%);
+        --destructive-foreground: hsl(210 40% 98%);
+
+        --border: var(--dark-outline);
+        --input: var(--dark-outline);
+        --ring: white;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings:
+            'rlig' 1,
+            'calt' 1;
+    }
+
+    html {
+        font-size: 85%;
+    }
+
+    /* Accessibility border for tabbing */
+    *:focus-visible {
+        outline: 1px solid #2353cc;
+        border-radius: 3px;
+        /* box-shadow: 0 0 0 1px white; */
+    }
+}
+
+@layer utilities {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+    }
+
+    /* If you want to disable the scrollbars for all browsers globally:
+
+    * {
+        scrollbar-width: none; // For Firefox
+        -ms-overflow-style: none; // For Internet Explorer and Edge
+    }
+
+    *::-webkit-scrollbar {
+        display: none; // For Chrome, Safari, and Opera
+    }
+
+    */
+}
+
+@layer components {
+    .smooth-hover {
+        @apply transition duration-200 hover:bg-gray-100 dark:hover:bg-batman;
+    }
+
+    .text-ellipsis {
+        @apply overflow-hidden whitespace-nowrap overflow-ellipsis;
+    }
+
+    .hover-opacity {
+        @apply hover:opacity-70 transition duration-200;
+    }
+
+    .bg-fade-bottom-to-top {
+        /* TODO don't hardcode color */
+        /* background-image: linear-gradient(to top, #2e2e2e 0%, transparent 100%); */
+        background-image: linear-gradient(to top, #1e1e1e 0%, transparent 100%);
+    }
+
+    .bg-fade-bottom-to-top2 {
+        /* TODO don't hardcode color */
+        /* background-image: linear-gradient(to top, #2e2e2e 50%, transparent 100%); */
+        background-image: linear-gradient(
+            to top,
+            #1e1e1e 50%,
+            transparent 100%
+        );
+    }
+}
+
+#header-drag-region {
+    -webkit-app-region: drag;
+}
+
+.no-drag {
+    -webkit-app-region: no-drag;
+}

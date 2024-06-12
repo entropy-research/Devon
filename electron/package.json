@@ -1,5 +1,5 @@
 {
-  "name": "Devon",
+  "name": "devon-ui",
   "version": "1.0.0",
   "main": "backend/build/main.js",
   "private": true,

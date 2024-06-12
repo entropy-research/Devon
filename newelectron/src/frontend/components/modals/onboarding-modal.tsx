@@ -2,12 +2,9 @@ import {
     useState,
     Suspense,
     lazy,
-    Dispatch,
-    SetStateAction,
     useEffect,
 } from 'react'
 import { CircleHelp } from 'lucide-react'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import DisabledWrapper from '@/components/ui/disabled-wrapper'
 import {
@@ -22,7 +19,6 @@ import {
 import { useSafeStorage } from '@/lib/services/safeStorageService'
 import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
 import Combobox, { ComboboxItem } from '@/components/ui/combobox'
-import { Model } from '@/lib/types'
 import { models } from '@/lib/config'
 
 const Dialog = lazy(() =>
@@ -45,20 +41,13 @@ const comboboxItems: ExtendedComboboxItem[] = models
         company: model.company,
     }))
 
-const OnboardingModal = ({
-    initialized,
-    setInitialized,
-}: {
-    initialized: boolean
-    setInitialized: Dispatch<SetStateAction<boolean>>
-}) => {
+const OnboardingModal = () => {
     const [folderPath, setFolderPath] = useState('')
-    const [isChecked, setIsChecked] = useState(false)
     const [apiKey, setApiKey] = useState('')
     const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
-    const { addApiKey, getApiKey } = useSafeStorage()
+    const { addApiKey, getApiKey, setUseModelName } = useSafeStorage()
     const [isKeySaved, setIsKeySaved] = useState(false)
-
+    console.log('inside onboarding modal')
     useEffect(() => {
         const fetchApiKey = async () => {
             const res = await getApiKey(selectedModel.value)
@@ -74,9 +63,9 @@ const OnboardingModal = ({
         fetchApiKey()
     }, [selectedModel])
 
-    const handleCheckboxChange = () => {
-        setIsChecked(!isChecked)
-    }
+    // const handleCheckboxChange = () => {
+    //     setIsChecked(!isChecked)
+    // }
 
     const handleApiKeyInputChange = (
         e: React.ChangeEvent<HTMLInputElement>
@@ -88,44 +77,36 @@ const OnboardingModal = ({
         const handleSaveApiKey = async () => {
             await addApiKey(selectedModel.value, apiKey)
             setIsKeySaved(true)
+            await setUseModelName(selectedModel.value)
         }
         handleSaveApiKey() // Store the api key
-        setInitialized(true)
+        // setInitialized(true)
     }
 
     function validateFields() {
-        if (!isChecked) return false
+        // if (!isChecked) return false
         return (apiKey !== '' || isKeySaved) && folderPath !== ''
     }
 
     return (
-        <Suspense fallback={<></>}>
-            <Dialog open={!initialized} onOpenChange={setInitialized}>
-                <DialogContent hideclose="true">
+        // <Suspense fallback={<></>}>
+            <Dialog open={true}>
+                <DialogContent>
                     <div className="flex flex-col items-center justify-center my-8 mx-8 max-w-md">
                         <h1 className="text-3xl font-bold">
                             Welcome to Devon!
                         </h1>
-                        <p className="text-md mt-3">Devon, not Devin</p>
-                        <div className="flex mt-6 gap-1">
-                            <Checkbox
-                                className="mt-1"
-                                checked={isChecked}
-                                onClick={handleCheckboxChange}
-                            />
-                        </div>
                         <DisabledWrapper
-                            disabled={!isChecked}
+                            disabled={false}
                             className="mt-10 w-full"
                         >
                             <SelectProjectDirectoryComponent
                                 folderPath={folderPath}
                                 setFolderPath={setFolderPath}
-                                disabled={!isChecked}
                             />
                         </DisabledWrapper>
                         <DisabledWrapper
-                            disabled={!isChecked}
+                            disabled={false}
                             className="w-full"
                         >
                             <div className="flex flex-col mt-10 w-full">
@@ -166,7 +147,7 @@ const OnboardingModal = ({
                                     type="password"
                                     value={apiKey}
                                     onChange={handleApiKeyInputChange}
-                                    disabled={!isChecked || isKeySaved}
+                                    disabled={isKeySaved}
                                 />
                             </div>
                         </DisabledWrapper>
@@ -178,7 +159,7 @@ const OnboardingModal = ({
                     </div>
                 </DialogContent>
             </Dialog>
-        </Suspense>
+        // </Suspense>
     )
 }
 

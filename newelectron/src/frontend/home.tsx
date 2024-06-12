@@ -1,4 +1,4 @@
-'use client'
+
 import { useState, useEffect } from 'react'
 import Chat from '@/components/chat/chat'
 import {
@@ -39,14 +39,14 @@ export const SessionContextProviderComponent = ({
     )
 }
 
-export default function Home() {
+export default function Home({ model }: { model: string | undefined }) {
     const [agentConfig, setAgentConfig] = useState<{
         api_key: undefined | string;
         model: undefined | string;
         prompt_type: undefined | string;
     }>({
         api_key: undefined,
-        model: "gpt4-o",
+        model: model ?? "gpt4-o",
         prompt_type: 'openai'
     })
 
@@ -55,7 +55,7 @@ export default function Home() {
     const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
     useEffect(() => {
-        getApiKey("gpt4-o").then((value) => {
+        getApiKey(model).then((value) => {
             if (value) {
                 sessionMachineRef.send({
                     type: "session.begin",
@@ -70,7 +70,7 @@ export default function Home() {
 
 
 
-    let state = SessionMachineContext.useSelector(state => state)
+    const state = SessionMachineContext.useSelector(state => state)
     console.log(state.context.serverEventContext)
     // Get session id and path from url
     return (
