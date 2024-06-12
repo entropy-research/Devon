@@ -132,7 +132,7 @@ const BothEditorTypes = ({file, handleEditorDidMount }) =>
             defaultValue={''}
             value={file?.value?.lines ?? ''}
             onMount={handleEditorDidMount}
-            path={file.path}
+            path={file?.path}
             options={{ readOnly: true, fontSize: 10 }}
         />
     )

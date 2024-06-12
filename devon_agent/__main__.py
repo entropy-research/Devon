@@ -17,9 +17,11 @@ def cli():
 
 @click.command()
 @click.option("--port", default=8000, help="Port number for the server.")
-def server(port):
+@click.option("--db_path", default=None, help="Path to the database.")
+def server(port, db_path):
     """Start the Devon Agent server."""
     import uvicorn
+    app.db_path = db_path
     uvicorn.run(app, host="0.0.0.0", port=port)
 
 

@@ -14,6 +14,9 @@ let serverProcess: ChildProcessWithoutNullStreams
 portfinder.setBasePort(10000)
 let use_port = NaN
 const spawnAppWindow = async () => {
+
+  const db_path = path.join(app.getPath('userData'), 'devon_environment.sqlite')
+
   await portfinder
   .getPortPromise()
   .then((port: number) => {
@@ -24,6 +27,8 @@ const spawnAppWindow = async () => {
         'server',
         '--port',
         port.toString(),
+        '--db_path',
+        db_path,
         // '--model',
         // modelName as string,
         // '--api_key',
