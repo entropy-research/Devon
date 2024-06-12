@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
+  "bin": {
+    "devon": ".vite/build/cli.js"
+  },
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
