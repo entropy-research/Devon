@@ -683,16 +683,17 @@ def save_create_file(ctx, response):
 
     if "Successfully created file " in response:
         files = response.split("Successfully created file ")[1].split(" ")
-        commit = commit_files(ctx["environment"], files, "created file(s) " + " ".join(files))
-        if commit:
-            ctx["session"].event_log.append({
-                "type": "GitEvent",
-                "content" : {
-                    "type" : "commit",
-                    "commit" : commit,
-                    "files" : files,
-                }
-            })
+        # vgit
+        # commit = commit_files(ctx["environment"], files, "created file(s) " + " ".join(files))
+        # if commit:
+        #     ctx["session"].event_log.append({
+        #         "type": "GitEvent",
+        #         "content" : {
+        #             "type" : "commit",
+        #             "commit" : commit,
+        #             "files" : files,
+        #         }
+        #     })
         return f"Successfully saved file {files[0]} to git repository"
     
 def save_delete_file(ctx, response):
@@ -701,15 +702,16 @@ def save_delete_file(ctx, response):
     """
     if "Successfully deleted file " in response:
         files = response.split("Successfully deleted file ")[1].split(" ")
-        commit = commit_files(ctx["environment"], files, "Deleted file(s) " + " ".join(files))
-        if commit:
-            ctx["session"].event_log.append({
-                "type": "GitEvent",
-                "content" : {
-                    "type" : "commit",
-                    "commit" : commit,
-                    "files" : files,
-                }
-            })
+        # vgit
+        # commit = commit_files(ctx["environment"], files, "Deleted file(s) " + " ".join(files))
+        # if commit:
+        #     ctx["session"].event_log.append({
+        #         "type": "GitEvent",
+        #         "content" : {
+        #             "type" : "commit",
+        #             "commit" : commit,
+        #             "files" : files,
+        #         }
+        #     })
         return f"Successfully saved file {files[0]} to git repository"
     

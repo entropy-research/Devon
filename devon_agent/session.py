@@ -322,7 +322,8 @@ class Session:
 
             case "GitRequest" :
                 if event["content"]["type"] == "revert_to_commit":
-                    safely_revert_to_commit(self.default_environment, event["content"]["commit_to_revert"], event["content"]["commit_to_go_to"])
+                    # vgit
+                    # safely_revert_to_commit(self.default_environment, event["content"]["commit_to_revert"], event["content"]["commit_to_go_to"])
 
                     new_events.append({
                         "type": "GitEvent",
@@ -579,24 +580,26 @@ class Session:
                 self.state.exclude_files = get_ignored_files(devonignore_path)
             
             else:
-                gitignore_files = find_gitignore_files({
-                    "environment" : self.default_environment,
-                    "session" : self,
-                    "state" : self.state,
-                })
+                # vgit
+                # gitignore_files = find_gitignore_files({
+                #     "environment" : self.default_environment,
+                #     "session" : self,
+                #     "state" : self.state,
+                # })
                 self.state.exclude_files = []
-                if gitignore_files:
-                    for file in gitignore_files:
-                        self.state.exclude_files += get_ignored_files(file)
-
-        self.event_log.append({
-            "type": "GitEvent",
-            "content" : {
-                "type" : "base_commit",
-                "commit" : get_last_commit(self.default_environment),
-                "files" : [],
-            }
-        })
+                # vgit
+                # if gitignore_files:
+                #     for file in gitignore_files:
+                #         self.state.exclude_files += get_ignored_files(file)
+        # vgit
+        # self.event_log.append({
+        #     "type": "GitEvent",
+        #     "content" : {
+        #         "type" : "base_commit",
+        #         "commit" : get_last_commit(self.default_environment),
+        #         "files" : [],
+        #     }
+        # })
 
         self.telemetry_client.capture(SessionStartEvent(self.name))
 
