@@ -760,6 +760,9 @@ export const newSessionMachine = setup({
                 },
                 "session.toggle": {
                     target: "paused"
+                },
+                "session.delete": {
+                    target: "deleting"
                 }
             }
         },
@@ -784,6 +787,9 @@ export const newSessionMachine = setup({
                 },
                 "session.reset": {
                     target: "resetting"
+                },
+                "session.delete": {
+                    target: "deleting"
                 },
                 serverEvent: {
                     target: 'running',
@@ -819,6 +825,9 @@ export const newSessionMachine = setup({
                 },
                 "session.reset": {
                     target: "resetting"
+                },
+                "session.delete": {
+                    target: "deleting"
                 }
             },
         },
