@@ -1,16 +1,26 @@
 /* eslint-disable import/no-named-as-default-member */
 import { app, BrowserWindow, dialog, ipcMain, safeStorage } from 'electron';
 import path from 'path';
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
+import { ChildProcess, execFile } from 'child_process'
 import portfinder from 'portfinder'
 import fs from 'fs'
+
+function writeToLogFile(logMessage: string) {
+  const logFilePath = path.join("/Users/mihirchintawar/", 'app.log');
+  const timestamp = new Date().toISOString();
+  const formattedMessage = `${timestamp} - ${logMessage}\n`;
+
+  fs.appendFileSync(logFilePath, formattedMessage);
+}
+
+
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-let serverProcess: ChildProcessWithoutNullStreams
+let serverProcess: ChildProcess
 portfinder.setBasePort(10000)
 let use_port = NaN
 const spawnAppWindow = async () => {
@@ -21,8 +31,15 @@ const spawnAppWindow = async () => {
   .getPortPromise()
   .then((port: number) => {
     use_port = port
-    serverProcess = spawn(
-      'devon_agent',
+    process.resourcesPath 
+    let agent_path = path.join(__dirname, "devon_agent")
+    if (fs.existsSync(path.join(process.resourcesPath, "devon_agent"))) {
+      agent_path = path.join(process.resourcesPath, "devon_agent")
+    }
+    fs.chmodSync(agent_path, '755');
+
+    serverProcess = execFile(
+      agent_path,
       [
         'server',
         '--port',
@@ -43,11 +60,13 @@ const spawnAppWindow = async () => {
       }
     )
 
-    serverProcess.stdout.on('data', (data: unknown) => {
+    serverProcess.stdout?.on('data', (data: unknown) => {
+      writeToLogFile(`Server: ${data}`)
       console.log(`Server: ${data}`)
     })
 
-    serverProcess.stderr.on('data', (data: unknown) => {
+    serverProcess.stderr?.on('data', (data: unknown) => {
+      writeToLogFile(`Server Error: ${data}`)
       console.error(`Server Error: ${data}`)
     })
 
@@ -56,6 +75,7 @@ const spawnAppWindow = async () => {
     })
   })
   .catch(error => {
+    writeToLogFile(`Failed to find a free port: ${error}`)
     console.error('Failed to find a free port:', error)
     return { success: false, message: 'Failed to find a free port.' }
   })

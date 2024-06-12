@@ -18,7 +18,8 @@ export default function CodeEditor({
     // const chatId = searchParams.get('chat')
 
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
-    let files = SessionMachineContext.useSelector(
+
+    const files = SessionMachineContext.useSelector(
         state => {
             if (state.context.sessionState?.editor && state.context.sessionState.editor.files) {
                 return Object.keys(state.context.sessionState.editor.files).map(filename => ({

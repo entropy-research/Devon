@@ -11,6 +11,7 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    extraResource: ["src/backend/devon_agent"],
   },
   rebuildConfig: {},
   makers: [
@@ -29,7 +30,7 @@ const config: ForgeConfig = {
         {
           // `entry` is just an alias for `build.lib.entry` in the corresponding file of `config`.
           entry: 'src/backend/main.ts',
-          config: 'vite.main.config.ts',
+          config: 'vite.main.config.mts',
         },
         {
           // `entry` is just an alias for `build.lib.entry` in the corresponding file of `config`.

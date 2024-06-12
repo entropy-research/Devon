@@ -9,6 +9,12 @@ from devon_agent.session import Session, SessionArguments
 from devon_agent.utils import Event
 
 
+import sys
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    print('running in a PyInstaller bundle')
+else:
+    print('running in a normal Python process')
+
 @click.group()
 def cli():
     """Devon Agent CLI application."""
@@ -83,3 +89,6 @@ cli.add_command(headless)
 
 def main():
     cli()
+
+if __name__ == "__main__":
+    main()
