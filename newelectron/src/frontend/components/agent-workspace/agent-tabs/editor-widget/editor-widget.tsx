@@ -32,12 +32,12 @@ const EditorWidget = ({
     isExpandedVariant?: boolean
 }) => {
     const { toast } = useToast()
-    let messages = SessionMachineContext.useSelector(state =>
+    const messages = SessionMachineContext.useSelector(state =>
         state.context.serverEventContext.messages.filter(
             message => message.type === 'tool'
         )
     )
-    const path = SessionMachineContext.useSelector(state => state.context.path)
+    const path = SessionMachineContext.useSelector(state => state.context?.sessionState?.path ?? ".") 
     const showEditorBorders = true
 
     return (
@@ -46,7 +46,7 @@ const EditorWidget = ({
             >
                 <div
                     className={`flex flex-row h-full ${showEditorBorders ? 'rounded-md border bg-midnight border-outlinecolor pt-0 mr-3 overflow-hidden' : ''}`}
-                >
+                > 
                     <div className="flex flex-col flex-grow w-full h-full">
                         <div className="w-full border-b border-outlinecolor flex justify-center py-1 relative">
                             <div className="flex space-x-2 ml-2 mr-4 absolute left-1 top-[11px] opacity-70">

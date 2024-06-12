@@ -176,8 +176,8 @@ def start_session(session: str, background_tasks: fastapi.BackgroundTasks, api_k
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
 
     session_obj = sessions.get(session)
+    session_obj.agent.api_key = api_key
     if session not in running_sessions:
-        session_obj.agent.api_key = api_key
         background_tasks.add_task(sessions[session].run_event_loop)
         running_sessions.append(session)
 
@@ -252,7 +252,10 @@ def get_session_state(session: str):
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    return session_obj.state.to_dict()
+    
+    state = session_obj.state.to_dict()
+    state["path"] = session_obj.base_path
+    return state
 
 
 @app.post("/sessions/{session}/response")
