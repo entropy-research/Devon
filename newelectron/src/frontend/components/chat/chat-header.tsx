@@ -9,7 +9,6 @@ export default function ChatHeader({
     sessionId?: string | null
     headerIcon?: JSX.Element
 }) {
-    const host = SessionMachineContext.useSelector(state => state.context.host)
     const sessionActorRef = SessionMachineContext.useActorRef()
 
     async function handleReset() {
