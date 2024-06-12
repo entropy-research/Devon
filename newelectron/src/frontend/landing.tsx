@@ -7,7 +7,7 @@ import SelectProjectDirectoryModal from '@/components/modals/select-project-dire
 import { useSafeStorage } from './lib/services/safeStorageService'
 import { useEffect, useState } from 'react'
 
-export default function Landing({ smHealthCheckDone, setSmHealthCheckDone } : {
+export default function Landing({ smHealthCheckDone, setSmHealthCheckDone }: {
     smHealthCheckDone: boolean,
     setSmHealthCheckDone: (value: boolean) => void
 }) {
@@ -29,24 +29,25 @@ export default function Landing({ smHealthCheckDone, setSmHealthCheckDone } : {
                 setModelName(modelName)
                 console.log('modelName', modelName)
                 if (modelName) {
-                    startTransition(() => {
-                        setOnboarded(true)
-                    })
+                    setOnboarded(true)
                     return
                 }
             }
-            startTransition(() => {
-                setOnboarded(false)
-            })
+            setOnboarded(false)
         }
         check()
     }, [checkHasEncryptedData])
-    console.log('onboarded', onboarded)
+
     const sessionActorref = SessionMachineContext.useActorRef()
     const state = SessionMachineContext.useSelector(state => state, (a, b) => a.value === b.value)
-    if (state && !state.matches({ setup: "healthcheck" })) {
+
+    if (!smHealthCheckDone && state && !state.matches({ setup: "healthcheck" })) {
         setSmHealthCheckDone(true)
+        if (state.context.healthcheckRetry >= 10) {
+            alert(`Application failed health check\n\nRetries: ${state.context.healthcheckRetry}\n\nPlease report / find more info on this issue here:\nhttps://github.com/entropy-research/Devon/issues`,)
+        }
     }
+
     return (
         <>
             <Home />
