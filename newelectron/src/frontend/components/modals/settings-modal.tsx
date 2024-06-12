@@ -11,14 +11,25 @@ import { useLocalStorage } from '@/lib/hooks/chat.use-local-storage'
 import { LocalStorageKey } from '@/lib/types'
 import { useToast } from '@/components/ui/use-toast'
 import { useSafeStorage } from '@/lib/services/safeStorageService'
-import { Popover, PopoverTrigger } from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { CircleHelp, Settings } from 'lucide-react'
 import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Model } from '@/lib/types'
 import { models } from '@/lib/config'
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
+import Combobox, { ComboboxItem } from '@/components/ui/combobox'
 
+type ExtendedComboboxItem = Model & ComboboxItem & { company: string }
+
+const comboboxItems: ExtendedComboboxItem[] = models
+    .filter(model => !model.comingSoon)
+    .map(model => ({
+        ...model,
+        value: model.id,
+        label: model.name,
+        company: model.company,
+    }))
 
 const SettingsModal = ({ trigger }: { trigger: JSX.Element }) => {
     return (
@@ -37,15 +48,76 @@ const General = () => {
     const { toast } = useToast()
     const [hasAcceptedCheckbox, setHasAcceptedCheckbox, clearKey] =
         useLocalStorage<boolean>(LocalStorageKey.hasAcceptedCheckbox, false)
+    const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
+    // Checking model
+    const { checkHasEncryptedData, getUseModelName } = useSafeStorage()
 
     const handleLocalStorage = () => {
         clearKey()
         toast({ title: 'Local storage cleared!' })
     }
 
+    useEffect(() => {
+        const check = async () => {
+            const hasEncryptedData = await checkHasEncryptedData()
+            if (hasEncryptedData) {
+                const modelName: string = await getUseModelName()
+                if (modelName) {
+                    const foundModel = models.find(model => model.id === modelName)
+                    if (foundModel) {
+                        const extendedComboboxModel = {
+                            ...foundModel,
+                            value: foundModel.id,
+                            label: foundModel.name,
+                            company: foundModel.company,
+                        }
+                        setSelectedModel(extendedComboboxModel)
+                    }
+                }
+            }
+        }
+        check()
+    }, [])
+
     return (
         <div className="pt-4 pb-2 px-2 flex flex-col gap-5">
             <Card className="bg-midnight">
+                <CardContent>
+                    <div className="flex flex-col mt-5 w-full">
+                        <div className="flex items-center justify-between mb-4 gap-3">
+                            <p className="text-lg font-semibold">
+                                {`Current model:`}
+                            </p>
+                            <Combobox
+                                items={comboboxItems}
+                                itemType="model"
+                                selectedItem={selectedModel}
+                                setSelectedItem={setSelectedModel}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex gap-1 items-center mb-4">
+                        <p className="text-xl font-bold">
+                            {`${selectedModel.company} API Key`}
+                        </p>
+                        <Popover>
+                            <PopoverTrigger className="ml-1">
+                                <CircleHelp size={20} />
+                            </PopoverTrigger>
+                            <SafeStoragePopoverContent />
+                        </Popover>
+                    </div>
+                    <APIKeyComponent key={selectedModel.id} model={selectedModel} />
+                    {/* <Input
+                        className="w-full"
+                        type="password"
+                        value={123}
+                        // onChange={handleApiKeyInputChange}
+                        // disabled={!isChecked || isKeySaved}
+                    /> */}
+                </CardContent>
+            </Card>
+            {/* <Card className="bg-midnight">
                 <CardHeader>
                     <div className="flex items-center -mb-2">
                         <CardTitle>API Keys</CardTitle>
@@ -64,10 +136,10 @@ const General = () => {
                         ))}
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
             <Card className="bg-midnight">
                 <CardHeader>
-                    <CardTitle>Miscellaneous</CardTitle>
+                    <h2 className="text-lg font-semibold">Miscellaneous</h2>
                 </CardHeader>
                 <CardContent>
                     <Button className="w-fit" onClick={handleLocalStorage}>

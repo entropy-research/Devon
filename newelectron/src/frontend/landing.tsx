@@ -16,7 +16,7 @@ export default function Landing() {
     const { checkHasEncryptedData, getUseModelName } = useSafeStorage()
     const [onboarded, setOnboarded] = useState(false)
     const [modelName, setModelName] = useState('')
-    
+
     useEffect(() => {
         const check = async () => {
             const hasEncryptedData = await checkHasEncryptedData()
@@ -39,21 +39,21 @@ export default function Landing() {
     const state = SessionMachineContext.useSelector(state => state, (a, b) => a.value === b.value)
     return (
         <>
-            <Home/>
-            
-           {!onboarded && <OnboardingModal
-                // initialized={false}
-                // setInitialized={() => {}}
+            <Home />
+
+            {!onboarded && <OnboardingModal
+            // initialized={false}
+            // setInitialized={() => {}}
             />}
             <div className="dark">
-            {onboarded && <SelectProjectDirectoryModal
-                openProjectModal={!state.can({ type: 'session.toggle' }) && !state.matches('resetting')}
-                hideclose
-                sessionActorref={sessionActorref}
+                {onboarded && <SelectProjectDirectoryModal
+                    openProjectModal={!state.can({ type: 'session.toggle' }) && !state.matches('resetting')}
+                    hideclose
+                    sessionActorref={sessionActorref}
                     state={state}
                     model={modelName}
                 />
-            }
+                }
             </div>
         </>
     )
