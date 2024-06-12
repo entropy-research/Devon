@@ -21,6 +21,7 @@ type Channel =
   | 'spawn-devon-agent'
   | 'get-port'
   | 'get-port-response'
+  | 'server-error'
 
 const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
   send: ['get-file-path', 'ping', 'server-port', 'get-port'],
@@ -35,7 +36,7 @@ const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
     'check-has-encrypted-data',
     'spawn-devon-agent',
   ],
-  receive: ['file-path-response', 'server-port', 'get-port-response'],
+  receive: ['file-path-response', 'server-port', 'get-port-response', 'server-error'],
 }
 
 type ReceiveHandler = (event: any, ...arg: [any?, any?, any?]) => void

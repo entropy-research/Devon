@@ -15,6 +15,7 @@ export default function IndexPage() {
         host: string
         name: string
     } | null>(null)
+    const [smHealthCheckDone, setSmHealthCheckDone] = useState(false)
 
     useEffect(() => {
         if (backendUrl) {
@@ -36,18 +37,21 @@ export default function IndexPage() {
 
     return (
         <>
-            {sessionMachineProps && !isLoading ? (
+            {sessionMachineProps && !isLoading && (
                 <SessionContextProviderComponent sessionMachineProps={sessionMachineProps}>
-                    <Landing />
+                    <Landing smHealthCheckDone={smHealthCheckDone} setSmHealthCheckDone={setSmHealthCheckDone} />
                 </SessionContextProviderComponent>
-            ) : <div className="absolute top-0 left-0 w-full h-full bg-night z-50">
-                <div className="fixed left-[50%] top-[50%] grid translate-x-[-50%] translate-y-[-50%]">
-                    <div className="flex items-center justify-center flex-col gap-10">
-                        <AtomLoader size="lg" />
-                        <p className="text-2xl">{`Devon's cleaning up his desk...`}</p>
+            )}
+            {!sessionMachineProps || isLoading || !smHealthCheckDone && (
+                <div className="absolute top-0 left-0 w-full h-full bg-night z-50">
+                    <div className="fixed left-[50%] top-[50%] grid translate-x-[-50%] translate-y-[-50%]">
+                        <div className="flex items-center justify-center flex-col gap-10">
+                            <AtomLoader size="lg" />
+                            <p className="text-2xl">{`Devon's cleaning up his desk...`}</p>
+                        </div>
                     </div>
                 </div>
-            </div>}
+            )}
         </>
     )
 }

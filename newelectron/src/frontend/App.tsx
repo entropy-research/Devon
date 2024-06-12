@@ -1,11 +1,28 @@
 
 import './globals.css';
+import { useEffect } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import HeaderSidebar from '@/components/header-sidebar'
 import { BackendUrlProvider } from './contexts/BackendUrlContext'
 import Page from "./page"
 
+
 function App() {
+
+  useEffect(() => {
+    const handleServerError = (error) => {
+      console.error('Server Error:', error);
+      // alert('Server Error: ' + error); // Display as a popup
+    };
+
+    // Set up the IPC receive listener
+    window.api.receive('server-error', handleServerError);
+
+    // Clean up the listener on unmount
+    return () => {
+      window.api.removeAllListeners('server-error');
+    };
+  }, []);
 
   return (
     <div lang="en" className="dark h-full">

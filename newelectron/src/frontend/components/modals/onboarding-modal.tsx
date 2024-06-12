@@ -31,6 +31,7 @@ const DialogContent = lazy(() =>
         default: module.DialogContent,
     }))
 )
+
 type ExtendedComboboxItem = ComboboxItem & { company: string }
 
 const comboboxItems: ExtendedComboboxItem[] = models
@@ -47,7 +48,6 @@ const OnboardingModal = () => {
     const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
     const { addApiKey, getApiKey, setUseModelName } = useSafeStorage()
     const [isKeySaved, setIsKeySaved] = useState(false)
-    console.log('inside onboarding modal')
     useEffect(() => {
         const fetchApiKey = async () => {
             const res = await getApiKey(selectedModel.value)
@@ -89,7 +89,7 @@ const OnboardingModal = () => {
     }
 
     return (
-        // <Suspense fallback={<></>}>
+        <Suspense fallback={<></>}>
             <Dialog open={true}>
                 <DialogContent>
                     <div className="flex flex-col items-center justify-center my-8 mx-8 max-w-md">
@@ -159,7 +159,7 @@ const OnboardingModal = () => {
                     </div>
                 </DialogContent>
             </Dialog>
-        // </Suspense>
+        </Suspense>
     )
 }
 

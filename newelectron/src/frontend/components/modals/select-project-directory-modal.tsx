@@ -1,5 +1,5 @@
 import FolderPicker from '@/components/ui/folder-picker'
-import { useState, lazy, useEffect } from 'react'
+import { useState, lazy, useEffect, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 
@@ -67,22 +67,26 @@ const SelectProjectDirectoryModal = ({
 
     function afterSubmit() {
         // sessionActorref.send({ type: 'setup', payload: folderPath })
-        console.log("API KEY",apiKey, model)
-        sessionActorref.send({ type: 'session.create', payload: {
-            path: folderPath,
-            agentConfig: {
-                model: model,
-                api_key: apiKey
-            }
-        } })
-        sessionActorref.on("session.creationComplete", () => {
-            sessionActorref.send({ type: 'session.init', payload: {
-                // path: folderPath,
+        console.log("API KEY", apiKey, model)
+        sessionActorref.send({
+            type: 'session.create', payload: {
+                path: folderPath,
                 agentConfig: {
                     model: model,
                     api_key: apiKey
                 }
-            } })
+            }
+        })
+        sessionActorref.on("session.creationComplete", () => {
+            sessionActorref.send({
+                type: 'session.init', payload: {
+                    // path: folderPath,
+                    agentConfig: {
+                        model: model,
+                        api_key: apiKey
+                    }
+                }
+            })
         })
         setOpen(false)
     }
@@ -100,31 +104,34 @@ const SelectProjectDirectoryModal = ({
     }, [openProjectModal])
 
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
-            {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-            <DialogContent
-                hideclose={hideclose ? true.toString() : false.toString()}
-            >
-                <div className="dark mx-8 my-4">
-                    {state.matches("sessionReady") ?
-                        <>
-                            <ExistingSessionFound
-                                continueChat={() => {
-                                    sessionActorref.send({ type: 'session.init', payload: {
-                                        agentConfig: {
-                                            model: model,
-                                            api_key: apiKey
-                                        }
-                                    } })
-                                }}
-                                newChat={() => {
-                                    sessionActorref.send({ type: 'session.delete' })
-                                }}
-                            />
-                        </> : <></>
-                    }
+        <Suspense fallback={<></>}>
+            <Dialog open={open} onOpenChange={handleOpenChange}>
+                {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+                <DialogContent
+                    hideclose={hideclose ? true.toString() : false.toString()}
+                >
+                    <div className="dark mx-8 my-4">
+                        {state.matches("sessionReady") ?
+                            <>
+                                <ExistingSessionFound
+                                    continueChat={() => {
+                                        sessionActorref.send({
+                                            type: 'session.init', payload: {
+                                                agentConfig: {
+                                                    model: model,
+                                                    api_key: apiKey
+                                                }
+                                            }
+                                        })
+                                    }}
+                                    newChat={() => {
+                                        sessionActorref.send({ type: 'session.delete' })
+                                    }}
+                                />
+                            </> : <></>
+                        }
 
-                    {/* {sessions?.length > 0 && page === 1 ? (
+                        {/* {sessions?.length > 0 && page === 1 ? (
                         <ExistingSessionFound
                             sessions={sessions}
                             setPage={setPage}
@@ -136,32 +143,33 @@ const SelectProjectDirectoryModal = ({
                         <></>
                     )} */}
 
-                    {
-                        state.matches({setup :  "sessionDoesNotExist"}) ?
-                        <>
-                            {page !== 1 && (
-                                <button
-                                    className="top-3 left-3 absolute text-primary mb-2 flex items-center p-1"
-                                    //  onClick={() => setPage(1)}
-                                >
-                                    <ArrowLeft size={18} className="mr-1" />
-                                    {/* {'Back'} */}
-                                </button>
-                            )}
-                            {/* {header} */}
-                            <SelectProjectDirectoryComponent
-                                folderPath={folderPath}
-                                setFolderPath={setFolderPath}
-                            />
-                            <StartChatButton
-                                disabled={!validate()}
-                                onClick={afterSubmit}
-                                folderPath={folderPath}
-                            />
-                        </>  : <></>}
-                </div>
-            </DialogContent>
-        </Dialog>
+                        {
+                            state.matches({ setup: "sessionDoesNotExist" }) ?
+                                <>
+                                    {page !== 1 && (
+                                        <button
+                                            className="top-3 left-3 absolute text-primary mb-2 flex items-center p-1"
+                                        //  onClick={() => setPage(1)}
+                                        >
+                                            <ArrowLeft size={18} className="mr-1" />
+                                            {/* {'Back'} */}
+                                        </button>
+                                    )}
+                                    {/* {header} */}
+                                    <SelectProjectDirectoryComponent
+                                        folderPath={folderPath}
+                                        setFolderPath={setFolderPath}
+                                    />
+                                    <StartChatButton
+                                        disabled={!validate()}
+                                        onClick={afterSubmit}
+                                        folderPath={folderPath}
+                                    />
+                                </> : <></>}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </Suspense>
     )
 }
 
@@ -209,34 +217,34 @@ const ExistingSessionFound = ({ continueChat, newChat }) => {
 
     return (
         <div className="dark">
-                <div>
-                    <p className="text-2xl font-bold">
-                        Continue previous chat?
-                    </p>
-                    {/* <p className="text-md mt-2 text-neutral-400">
+            <div>
+                <p className="text-2xl font-bold">
+                    Continue previous chat?
+                </p>
+                {/* <p className="text-md mt-2 text-neutral-400">
                         {`Previous task: "`}
                         <span className="italic">Create a snake game</span>
                         {`"`}
                     </p> */}
-                    <div className="flex flex-col items-center">
-                        <Button
-                            type="submit"
-                            className="bg-primary text-white p-2 rounded-md w-full mt-7"
-                            onClick={continueChat}
-                        >
-                            Continue
-                        </Button>
-                        <div className="bg-neutral-600 h-[1px] w-full mt-8 mb-1"></div>
-                        <p className="text-md m-4 mb-5">Or start a new chat</p>
-                        <Button
-                            variant="outline"
-                            className="text-[#977df5] p-2 rounded-md mt-0 w-full font-bold"
-                            onClick={newChat}
-                        >
-                            New Chat
-                        </Button>
-                    </div>
+                <div className="flex flex-col items-center">
+                    <Button
+                        type="submit"
+                        className="bg-primary text-white p-2 rounded-md w-full mt-7"
+                        onClick={continueChat}
+                    >
+                        Continue
+                    </Button>
+                    <div className="bg-neutral-600 h-[1px] w-full mt-8 mb-1"></div>
+                    <p className="text-md m-4 mb-5">Or start a new chat</p>
+                    <Button
+                        variant="outline"
+                        className="text-[#977df5] p-2 rounded-md mt-0 w-full font-bold"
+                        onClick={newChat}
+                    >
+                        New Chat
+                    </Button>
                 </div>
+            </div>
         </div>
     )
 }

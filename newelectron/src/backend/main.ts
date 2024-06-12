@@ -5,8 +5,14 @@ import { ChildProcess, execFile } from 'child_process'
 import portfinder from 'portfinder'
 import fs from 'fs'
 
+const DEBUG_MODE = false
+
 function writeToLogFile(logMessage: string) {
-  const logFilePath = path.join("/Users/mihirchintawar/", 'app.log');
+  if (!DEBUG_MODE) {
+    return
+  }
+  // TODO edit the path to the log file if we actually want to use this
+  const logFilePath = path.join("/Users/*****/", 'app.log');
   const timestamp = new Date().toISOString();
   const formattedMessage = `${timestamp} - ${logMessage}\n`;
 
@@ -68,6 +74,9 @@ const spawnAppWindow = async () => {
     serverProcess.stderr?.on('data', (data: unknown) => {
       writeToLogFile(`Server Error: ${data}`)
       console.error(`Server Error: ${data}`)
+      if (appWindow) {
+        appWindow.webContents.send('server-error', data.toString());
+      }
     })
 
     serverProcess.on('close', (code: unknown) => {

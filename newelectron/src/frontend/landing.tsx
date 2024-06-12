@@ -7,7 +7,10 @@ import SelectProjectDirectoryModal from '@/components/modals/select-project-dire
 import { useSafeStorage } from './lib/services/safeStorageService'
 import { useEffect, useState } from 'react'
 
-export default function Landing() {
+export default function Landing({ smHealthCheckDone, setSmHealthCheckDone } : {
+    smHealthCheckDone: boolean,
+    setSmHealthCheckDone: (value: boolean) => void
+}) {
     // const [hasAcceptedCheckbox, setHasAcceptedCheckbox] =
     //     useLocalStorage<boolean>(LocalStorageKey.hasAcceptedCheckbox, false)
 
@@ -41,16 +44,19 @@ export default function Landing() {
     console.log('onboarded', onboarded)
     const sessionActorref = SessionMachineContext.useActorRef()
     const state = SessionMachineContext.useSelector(state => state, (a, b) => a.value === b.value)
+    if (state && !state.matches({ setup: "healthcheck" })) {
+        setSmHealthCheckDone(true)
+    }
     return (
         <>
             <Home />
 
-            {!onboarded && <OnboardingModal
+            {smHealthCheckDone && !onboarded && <OnboardingModal
             // initialized={false}
             // setInitialized={() => {}}
             />}
             <div className="dark">
-                {onboarded && <SelectProjectDirectoryModal
+                {smHealthCheckDone && onboarded && <SelectProjectDirectoryModal
                     openProjectModal={!state.can({ type: 'session.toggle' }) && !state.matches('resetting')}
                     hideclose
                     sessionActorref={sessionActorref}

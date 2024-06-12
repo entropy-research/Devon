@@ -51,7 +51,7 @@ const Combobox = ({
                 >
                     {selectedItem
                         ? items.find(i => i.value === selectedItem.value)?.label
-                        : `Select${' ' + itemType ?? ''}...`}
+                        : `Select${' ' + itemType}...`}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
@@ -59,7 +59,7 @@ const Combobox = ({
                 <Command>
                     {searchBar && (
                         <CommandInput
-                            placeholder={`Search${' ' + itemType ?? ''}...`}
+                            placeholder={`Search${' ' + itemType}...`}
                         />
                     )}
                     <CommandEmpty className="pt-2 pb-0 px-4">
