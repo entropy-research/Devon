@@ -15,6 +15,7 @@ export default function Landing() {
 
     const { checkHasEncryptedData, getUseModelName } = useSafeStorage()
     const [onboarded, setOnboarded] = useState(false)
+    const [modelName, setModelName] = useState('')
     
     useEffect(() => {
         const check = async () => {
@@ -22,6 +23,7 @@ export default function Landing() {
             console.log('hasEncryptedData', hasEncryptedData)
             if (hasEncryptedData) {
                 const modelName = await getUseModelName()
+                setModelName(modelName)
                 console.log('modelName', modelName)
                 if (modelName) {
                     setOnboarded(true)
@@ -35,7 +37,7 @@ export default function Landing() {
     const state = SessionMachineContext.useSelector(state => state)
     return (
         <>
-            <Home />
+            <Home/>
             
            {!onboarded && <OnboardingModal
                 // initialized={false}
@@ -47,6 +49,7 @@ export default function Landing() {
                 hideclose
                 sessionActorref={sessionActorref}
                     state={state}
+                    model={modelName}
                 />
             }
             </div>

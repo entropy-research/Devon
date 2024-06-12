@@ -30,7 +30,7 @@ logger = logging.getLogger(LOGGER_NAME)
 
 class AgentArguments(BaseModel):
     model: str
-    api_key: Optional[str] = None
+    # api_key: Optional[str] = None
     api_base: Optional[str] = None
     prompt_type: Optional[str] = None
     # temperature: float = 0.0
@@ -42,6 +42,7 @@ class Agent:
     chat_history: list[dict[str, str]] = field(default_factory=list)
     interrupt: str = ""
     temperature: float = 0.0
+    api_key: Optional[str] = None
 
     def run(self, session: "Session", observation: str = None): ...
 
@@ -96,7 +97,7 @@ class TaskAgent(Agent):
     def _initialize_model(self):
         is_custom_model = self.args.model not in self.default_models
         if is_custom_model:
-            if not self.args.api_key:
+            if not self.api_key:
                 raise Exception("API key not specified for custom model")
             if not self.args.api_base:
                 raise Exception("API base not specified for custom model")
@@ -108,7 +109,7 @@ class TaskAgent(Agent):
                 args=ModelArguments(
                     model_name=self.args.model,
                     temperature=self.temperature,
-                    api_key=self.args.api_key,
+                    api_key=self.api_key,
                     api_base=self.args.api_base,
                     prompt_type=self.args.prompt_type
                 )
@@ -118,7 +119,7 @@ class TaskAgent(Agent):
                 args=ModelArguments(
                     model_name=self.args.model,
                     temperature=self.temperature,
-                    api_key=self.args.api_key,
+                    api_key=self.api_key,
                 )
             )
 

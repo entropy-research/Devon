@@ -39,45 +39,38 @@ export const SessionContextProviderComponent = ({
     )
 }
 
-export default function Home({ model }: { model: string | undefined }) {
-    const [agentConfig, setAgentConfig] = useState<{
-        api_key: undefined | string;
-        model: undefined | string;
-        prompt_type: undefined | string;
-    }>({
-        api_key: undefined,
-        model: model ?? "gpt4-o",
-        prompt_type: 'openai'
-    })
+export default function Home() {
 
-    const sessionMachineRef = SessionMachineContext.useActorRef()
-    const { getApiKey } = useSafeStorage();
-    const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
+    // const sessionMachineRef = SessionMachineContext.useActorRef()
+    // const { getApiKey } = useSafeStorage();
+    // const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
-    useEffect(() => {
-        getApiKey(model).then((value) => {
-            if (value) {
-                sessionMachineRef.send({
-                    type: "session.begin",
-                    agentConfig: {
-                        ...agentConfig,
-                        api_key: value
-                    }
-                })
-            }
-        })
-    }, [])
+    // useEffect(() => {
+
+    //     getApiKey(model).then((value) => {
+    //         if (value) {
+    //             console.log("CONIG",agentConfig)
+    //             sessionMachineRef.send({
+    //                 type: "session.begin",
+    //                 agentConfig: {
+    //                     ...agentConfig,
+    //                     api_key: value
+    //                 }
+    //             })
+    //         }
+    //     })
+    // }, [])
 
 
 
-    const state = SessionMachineContext.useSelector(state => state)
-    console.log(state.context.serverEventContext)
+    // const state = SessionMachineContext.useSelector(state => state)
+    // console.log(state.context.serverEventContext)
     // Get session id and path from url
     return (
         <div className="w-full flex flex-row">
             <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel
-                    className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center`}
+                    className={`flex ${ViewMode.Panel === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center`}
                 >
                     {/* <SidebarItem
                         text="Settings"

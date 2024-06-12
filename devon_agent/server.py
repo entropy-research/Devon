@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 import json
 import os
 from time import sleep
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import fastapi
 from pydantic import BaseModel
@@ -171,12 +171,13 @@ def delete_session(session: str):
 
 
 @app.patch("/sessions/{session}/start")
-def start_session(session: str, background_tasks: fastapi.BackgroundTasks):
+def start_session(session: str, background_tasks: fastapi.BackgroundTasks, api_key: Optional[str] = None):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
 
     session_obj = sessions.get(session)
     if session not in running_sessions:
+        session_obj.agent.api_key = api_key
         background_tasks.add_task(sessions[session].run_event_loop)
         running_sessions.append(session)
 

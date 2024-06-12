@@ -329,10 +329,16 @@ const loadEventsActor = fromPromise(async ({
 const startSessionActor = fromPromise(async ({
     input,
 }: {
-    input: { host: string; name: string; };
+    input: { host: string; name: string; api_key: string };
 }) => {
 
-    const response = await axios.patch(`${input?.host}/sessions/${input?.name}/start`);
+    const response = await axios.patch(`${input?.host}/sessions/${input?.name}/start`, {
+       
+    },{
+        params: {
+            api_key: input.api_key
+        }
+    });
     
     const events = (await axios.get(`${input?.host}/sessions/${input?.name}/events`)).data;
     console.log("EVENTS IN START: ", events)
@@ -723,7 +729,7 @@ export const newSessionMachine = setup({
             invoke: {
                 id: 'startSession',
                 src: 'startSession',
-                input: ({ context: { host, name } }) => ({ host, name }),
+                input: ({ context: { host, name, agentConfig } }) => ({ host, name, api_key: agentConfig?.api_key }),
                 onDone: {
                     target: 'running'
                 }

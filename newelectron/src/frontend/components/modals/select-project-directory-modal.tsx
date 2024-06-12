@@ -1,17 +1,11 @@
 import FolderPicker from '@/components/ui/folder-picker'
 import { useState, lazy, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import handleNavigate from '@/components/sidebar/handleNavigate'
-import { nanoid } from '@/lib/chat.utils'
 import { ArrowLeft } from 'lucide-react'
-import {
-    useReadSessions,
-    useDeleteSession,
-    getSessions,
-} from '@/lib/services/sessionService/sessionHooks'
-import { SessionMachineContext } from '@/home'
-import { ActorRefFrom, AnyMachineSnapshot, MachineSnapshot } from 'xstate'
+
+import { ActorRefFrom, AnyMachineSnapshot } from 'xstate'
 import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
+import { useSafeStorage } from '@/lib/services/safeStorageService'
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -38,7 +32,8 @@ const SelectProjectDirectoryModal = ({
     hideclose,
     header,
     sessionActorref,
-    state
+    state,
+    model
 }: {
     trigger?: JSX.Element
     openProjectModal?: boolean
@@ -47,10 +42,23 @@ const SelectProjectDirectoryModal = ({
     header?: JSX.Element
     sessionActorref: ActorRefFrom<typeof newSessionMachine>
     state: AnyMachineSnapshot
+    model: string
 }) => {
     const [folderPath, setFolderPath] = useState('')
     const [open, setOpen] = useState(false)
     const [page, setPage] = useState(1)
+
+    const { getApiKey } = useSafeStorage();
+    const [apiKey, setApiKey] = useState('')
+    // const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
+
+    useEffect(() => {
+        getApiKey(model).then((value) => {
+            if (value) {
+                setApiKey(value)
+            }
+        })
+    }, [])
 
 
     function validate() {
@@ -59,10 +67,12 @@ const SelectProjectDirectoryModal = ({
 
     function afterSubmit() {
         // sessionActorref.send({ type: 'setup', payload: folderPath })
+        console.log("API KEY",apiKey, model)
         sessionActorref.send({ type: 'session.create', payload: {
             path: folderPath,
             agentConfig: {
-                model: 'gpt4-o'
+                model: model,
+                apiKey: apiKey
             }
         } })
         sessionActorref.on("session.creationComplete", () => {
