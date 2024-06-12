@@ -1,4 +1,3 @@
-import { setup, createActor, raise, assign, fromPromise, emit, stopChild, ActorRef, StateMachine, log } from 'xstate';
 
 // Server session machine
 
@@ -16,9 +15,13 @@ import axios from 'axios';
 import {
     fromTransition,
     fromCallback,
+
+
+
     EventObject,
     sendTo,
-    enqueueActions
+    enqueueActions,
+    setup, raise, assign, fromPromise, emit, log
     // createActor
 } from 'xstate';
 
@@ -86,7 +89,7 @@ export const eventHandlingLogic = fromTransition(
                 return { ...state, modelLoading: true };
             }
             case 'ModelResponse': {
-                let content = JSON.parse(event.content);
+                const content = JSON.parse(event.content);
                 return {
                     ...state,
                     modelLoading: false,
@@ -258,13 +261,13 @@ export const fetchSessionCallbackActor = fromCallback<
     { host: string; name: string }
 >(({ input, receive, sendBack }) => {
 
-    let interval;
-    let state;
+    let interval: string | number | NodeJS.Timeout;
+    let state: any;
 
     receive((event: any) => {
         if (event.type === 'startFetching') {
             interval = setInterval(async () => {
-                let new_state = await fetchSessionState(input.host, input.name)
+                const new_state = await fetchSessionState(input.host, input.name)
                 if (new_state !== state) {
                     state = new_state
                     sendBack({ type: 'session.stateUpdate', payload: state });
@@ -291,7 +294,7 @@ const createSessionActor = fromPromise(async ({
     // await new Promise(resolve => setTimeout(resolve, 5000));
 
     try {
-        console.log("path", input?.path,"config", input.agentConfig)
+        console.log("path", input?.path, "config", input.agentConfig)
         const response = await axios.post(`${input.host}/sessions/${input?.name}`, input.agentConfig, {
             params: {
                 // session: input?.name,
@@ -314,16 +317,16 @@ const loadEventsActor = fromPromise(async ({
 }: {
     input: { host: string; name: string; reset: boolean };
 }) => {
-        try {
-            const newEvents = (
-                await axios.get(`${input?.host}/sessions/${input?.name}/events`)
-            ).data;
-            console.log("Loaded events: ", newEvents)
-            return newEvents
-        } catch (e) {
-            console.log(e)
-        }
+    try {
+        const newEvents = (
+            await axios.get(`${input?.host}/sessions/${input?.name}/events`)
+        ).data;
+        console.log("Loaded events: ", newEvents)
+        return newEvents
+    } catch (e) {
+        console.log(e)
     }
+}
 )
 
 const startSessionActor = fromPromise(async ({
@@ -333,14 +336,14 @@ const startSessionActor = fromPromise(async ({
 }) => {
 
     const response = await axios.patch(`${input?.host}/sessions/${input?.name}/start`, {
-       
-    },{
+
+    }, {
         params: {
             api_key: input.api_key
         }
     });
     console.log("API KEY IN START: ", input.api_key)
-    
+
     const events = (await axios.get(`${input?.host}/sessions/${input?.name}/events`)).data;
     console.log("EVENTS IN START: ", events)
 
@@ -362,13 +365,13 @@ const sendMessage = async ({
     userResponse: boolean;
 }) => {
     if (userResponse) {
-        const response = await axios.post(`${host}/sessions/${name}/response`,{},{
+        await axios.post(`${host}/sessions/${name}/response`, {}, {
             params: {
                 response: message
             }
         });
     } else {
-        const response = await axios.post(`${host}/sessions/${name}/event`, {
+        await axios.post(`${host}/sessions/${name}/event`, {
             type: 'Interrupt',
             content: message,
             producer: 'user',
@@ -621,7 +624,7 @@ export const newSessionMachine = setup({
                 target: "sessionReady"
             }
         },
-        deleting : {
+        deleting: {
             invoke: {
                 id: 'deleteSession',
                 src: 'deleteSession',
@@ -633,7 +636,7 @@ export const newSessionMachine = setup({
         },
         sessionReady: {
             entry: [
-                () => console.log("Session Ready!"), 
+                () => console.log("Session Ready!"),
                 emit(({ context }) => ({
                     type: "session.creationComplete",
                     name: context.name
@@ -658,12 +661,12 @@ export const newSessionMachine = setup({
         },
         initializing: {
             entry: [() => console.log("initializing session"),
-                sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
-                    return {
-                        type: 'session.reset',
-                        sender: self
-                    }
-                })
+            sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
+                return {
+                    type: 'session.reset',
+                    sender: self
+                }
+            })
             ],
             invoke: {
                 id: 'loadEvents',
@@ -699,7 +702,7 @@ export const newSessionMachine = setup({
         },
         resetting: {
             exit: [
-                () =>  console.log("Successfully reset"),
+                () => console.log("Successfully reset"),
                 sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
                     return {
                         type: 'session.reset',
@@ -774,7 +777,7 @@ export const newSessionMachine = setup({
                             message: event.message,
                             userResponse: context.serverEventContext.userRequest
                         })
-                    },log("sending message")]
+                    }, log("sending message")]
                 },
                 "session.toggle": {
                     target: "paused"

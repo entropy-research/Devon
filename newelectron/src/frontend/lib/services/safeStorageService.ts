@@ -6,7 +6,7 @@ export const useSafeStorage = () => {
         loadData()
     }, [])
 
-    const decryptText = async encryptedText => {
+    const decryptText = async (encryptedText: string) => {
         //@ts-ignore
         const decrypted = await window.api.invoke('decrypt-data', encryptedText)
         return decrypted
@@ -26,7 +26,7 @@ export const useSafeStorage = () => {
         }
     }
 
-    const saveData = async data => {
+    const saveData = async (data: any) => {
         const plainText = JSON.stringify(data)
         //@ts-ignore
         const response = await window.api.invoke('save-data', plainText)
@@ -45,19 +45,19 @@ export const useSafeStorage = () => {
         return response.success
     }
 
-    const addApiKey = async (keyName, keyValue) => {
+    const addApiKey = async (keyName: string, keyValue: string) => {
         const data = (await loadData()) || {}
         data[keyName] = keyValue
         await saveData(data)
     }
 
-    const getApiKey = async keyName => {
+    const getApiKey = async (keyName: string) => {
         const data = await loadData()
         console.log("data", data)
         return data ? data[keyName] : null
     }
 
-    const removeApiKey = async keyName => {
+    const removeApiKey = async (keyName: string) => {
         const data = await loadData()
         if (data && data[keyName]) {
             delete data[keyName]

@@ -2,6 +2,7 @@ import type { ConfigEnv, UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
 import { getBuildConfig, getBuildDefine, external, pluginHotRestart } from './vite.base.config';
 import { viteStaticCopy } from 'vite-plugin-static-copy'
+import { getPlatform } from './getPlatform';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {
@@ -22,7 +23,7 @@ export default defineConfig((env) => {
     plugins: [pluginHotRestart('restart'), viteStaticCopy({
       targets: [
         {
-          src: './src/backend/devon_agent',
+          src: `./src/bin/${getPlatform().platform}-${getPlatform().arch}/devon_agent`,
           dest: '.',
           rename: "devon_agent"
         }

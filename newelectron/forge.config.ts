@@ -7,11 +7,12 @@ import { MakerDMG } from '@electron-forge/maker-dmg';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import { getPlatform } from './getPlatform';
 
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    extraResource: ["src/backend/devon_agent"],
+    extraResource: [`src/bin/${getPlatform().platform}-${getPlatform().arch}/devon_agent`],
   },
   rebuildConfig: {},
   makers: [
