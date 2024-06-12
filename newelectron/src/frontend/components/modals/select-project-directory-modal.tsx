@@ -72,11 +72,17 @@ const SelectProjectDirectoryModal = ({
             path: folderPath,
             agentConfig: {
                 model: model,
-                apiKey: apiKey
+                api_key: apiKey
             }
         } })
         sessionActorref.on("session.creationComplete", () => {
-            sessionActorref.send({ type: 'session.init' })
+            sessionActorref.send({ type: 'session.init', payload: {
+                // path: folderPath,
+                agentConfig: {
+                    model: model,
+                    api_key: apiKey
+                }
+            } })
         })
         setOpen(false)
     }
@@ -104,7 +110,12 @@ const SelectProjectDirectoryModal = ({
                         <>
                             <ExistingSessionFound
                                 continueChat={() => {
-                                    sessionActorref.send({ type: 'session.init' })
+                                    sessionActorref.send({ type: 'session.init', payload: {
+                                        agentConfig: {
+                                            model: model,
+                                            api_key: apiKey
+                                        }
+                                    } })
                                 }}
                                 newChat={() => {
                                     sessionActorref.send({ type: 'session.delete' })

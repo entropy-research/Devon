@@ -69,6 +69,7 @@ class AnthropicModel:
                 model=self.api_model,
                 temperature=self.args.temperature,
                 stop=["</COMMAND>"],
+                api_key=self.api_key,
             )
         
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
@@ -118,6 +119,7 @@ class OpenAiModel:
                 max_tokens=self.model_metadata.get("max_tokens", 4096),
                 model=self.api_model,
                 temperature=self.args.temperature,
+                api_key=self.api_key,
                 stop=["</COMMAND>"],
             )
         
@@ -153,6 +155,7 @@ class GroqModel:
                 model=self.api_model,
                 temperature=self.args.temperature,
                 stop=["</COMMAND>"],
+                api_key=self.api_key,
             )
         
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
@@ -177,7 +180,8 @@ class OllamaModel:
                 model=self.api_model,
                 temperature=self.args.temperature,
                 stop=["</command>"],
-                api_base="http://localhost:11434"
+                api_base="http://localhost:11434",
+                api_key=self.api_key,
             )
 
         response = model_completion.choices[0].message.content.rstrip("</command>")

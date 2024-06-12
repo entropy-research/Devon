@@ -27,14 +27,16 @@ export default function Landing() {
                 console.log('modelName', modelName)
                 if (modelName) {
                     setOnboarded(true)
+                    return
                 }
             }
+            setOnboarded(false)
         }
         check()
     }, [checkHasEncryptedData])
     console.log('onboarded', onboarded)
     const sessionActorref = SessionMachineContext.useActorRef()
-    const state = SessionMachineContext.useSelector(state => state)
+    const state = SessionMachineContext.useSelector(state => state, (a, b) => a.value === b.value)
     return (
         <>
             <Home/>

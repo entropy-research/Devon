@@ -339,6 +339,7 @@ const startSessionActor = fromPromise(async ({
             api_key: input.api_key
         }
     });
+    console.log("API KEY IN START: ", input.api_key)
     
     const events = (await axios.get(`${input?.host}/sessions/${input?.name}/events`)).data;
     console.log("EVENTS IN START: ", events)
@@ -639,6 +640,14 @@ export const newSessionMachine = setup({
                 },
                 "session.init": {
                     target: "initializing",
+                    actions: [
+                        assign(({ event }) => {
+                            console.log("EVENT CONFIG", event.payload.agentConfig)
+                            return {
+                                agentConfig: event.payload.agentConfig
+                            }
+                        })
+                    ]
                 }
             },
         },
