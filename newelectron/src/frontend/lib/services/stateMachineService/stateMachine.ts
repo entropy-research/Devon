@@ -630,6 +630,15 @@ export const newSessionMachine = setup({
                 src: 'deleteSession',
                 input: ({ context: { host, name } }) => ({ host, name }),
                 onDone: {
+                    actions: [
+                        sendTo(EVENTSOURCE_ACTOR_ID, ({ self }) => {
+                            return {
+                                type: 'stopStream',
+                                sender: self
+                            }
+                        }),
+
+                    ],
                     target: 'setup'
                 }
             }
@@ -665,8 +674,8 @@ export const newSessionMachine = setup({
                 return {
                     type: 'session.reset',
                     sender: self
-                }
-            })
+                    }
+                })
             ],
             invoke: {
                 id: 'loadEvents',
