@@ -246,15 +246,21 @@ class Session:
         return self.status
     
     def pause(self):
+        if self.status == "terminating" or self.status == "terminated":
+            return
         self.status = "paused"
     
     def start(self):
         self.status = "running"
 
     def terminate(self):
+        print(self.status)
+        if self.status == "terminated":
+            return
         self.status = "terminating"
 
         while self.status != "terminated":
+            print(self.status)
             time.sleep(2)
     
     def run_event_loop(self):
@@ -283,7 +289,7 @@ class Session:
             # self.telemetry_client.capture(telemetry_event)
 
             if event["type"] == "Stop" and event["content"]["type"] != "submit":
-                self.status = "exited"
+                self.status = "terminated"
                 break
             elif event["type"] == "Stop" and event["content"]["type"] == "submit":
                 self.state.task = "You have completed your task, ask user for revisions or a new one."

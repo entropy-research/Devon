@@ -1,5 +1,5 @@
 /* eslint-disable import/no-named-as-default-member */
-import { app, BrowserWindow, dialog, ipcMain, safeStorage } from 'electron';
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, safeStorage } from 'electron';
 import path from 'path';
 import { ChildProcess, spawn } from 'child_process'
 import portfinder from 'portfinder'
@@ -184,6 +184,22 @@ app.on('window-all-closed', () => {
     app.quit();
   // }
 });
+
+
+app.on('browser-window-focus', function () {
+  globalShortcut.register("CommandOrControl+R", () => {
+      console.log("CommandOrControl+R is pressed: Shortcut Disabled");
+  });
+  globalShortcut.register("F5", () => {
+      console.log("F5 is pressed: Shortcut Disabled");
+  });
+});
+
+app.on('browser-window-blur', function () {
+  globalShortcut.unregister('CommandOrControl+R');
+  globalShortcut.unregister('F5');
+});
+
 
 app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
