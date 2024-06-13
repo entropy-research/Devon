@@ -78,7 +78,7 @@ const DisplayedChatMessage = ({ message }) => {
                             type="Task"
                             className="text-gray-400 flex italic"
                         >
-                            {message.text}
+                            <p className="py-[4px]">{message.text}</p>
                         </ChatTypeWrapper>
                     </div>
                 ) : (
@@ -104,7 +104,7 @@ const ChatTypeWrapper = ({
     let pref: JSX.Element = <></>
     if (type === 'Task') {
         pref = (
-            <span className="font-bold mr-2 flex gap-2 items-center not-italic">
+            <span className="font-bold mr-2 flex gap-2 items-center not-italic max-h-[30px]">
                 <NotebookPen size={16} />
                 Task:
             </span>

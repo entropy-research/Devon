@@ -49,6 +49,8 @@ const General = () => {
     // Checking model
     const { checkHasEncryptedData, getUseModelName, deleteData } = useSafeStorage()
     const sessionActorref = SessionMachineContext.useActorRef()
+    const [originalModelName, setOriginalModelName] = useState(comboboxItems[0].id)
+    const [modelHasSavedApiKey, setModelHasSavedApiKey] = useState(false)
 
     const clearStorageAndResetSession = () => {
         deleteData()
@@ -71,12 +73,17 @@ const General = () => {
                             company: foundModel.company,
                         }
                         setSelectedModel(extendedComboboxModel)
+                        setOriginalModelName(modelName)
                     }
                 }
             }
         }
         check()
     }, [])
+
+    function handleUseNewModel() {
+        sessionActorref.send({ type: 'session.delete' })
+    }
 
     return (
         <div className="pt-4 pb-2 px-2 flex flex-col gap-5">
@@ -85,28 +92,38 @@ const General = () => {
                     <div className="flex flex-col mt-5 w-full">
                         <div className="flex items-center justify-between mb-4 gap-3">
                             <p className="text-lg font-semibold">
-                                {`Current model:`}
+                                {selectedModel.id !== originalModelName ? `Set new model: ` : `Current model:`}
                             </p>
-                            <Combobox
-                                items={comboboxItems}
-                                itemType="model"
-                                selectedItem={selectedModel}
-                                setSelectedItem={setSelectedModel}
-                            />
+                            <div className="flex gap-3">
+                                <Combobox
+                                    items={comboboxItems}
+                                    itemType="model"
+                                    selectedItem={selectedModel}
+                                    setSelectedItem={setSelectedModel}
+                                />
+                            </div>
                         </div>
                     </div>
-                    <div className="flex gap-1 items-center mb-4">
-                        <p className="text-xl font-bold">
-                            {`${selectedModel.company} API Key`}
-                        </p>
-                        <Popover>
-                            <PopoverTrigger className="ml-[2px]">
-                                <CircleHelp size={14} />
-                            </PopoverTrigger>
-                            <SafeStoragePopoverContent />
-                        </Popover>
+                    <div className="flex justify-between w-full">
+                        <div className="flex gap-1 items-center mb-4">
+                            <p className="text-xl font-bold">
+                                {`${selectedModel.company} API Key`}
+                            </p>
+                            <Popover>
+                                <PopoverTrigger className="ml-[2px]">
+                                    <CircleHelp size={14} />
+                                </PopoverTrigger>
+                                <SafeStoragePopoverContent />
+                            </Popover>
+
+                        </div>
+                        {selectedModel.id !== originalModelName && modelHasSavedApiKey && <Button
+                        onClick={handleUseNewModel}
+                        >
+                            {'Use this model'}
+                        </Button>}
                     </div>
-                    <APIKeyComponent key={selectedModel.id} model={selectedModel} sessionActorref={sessionActorref}/>
+                    <APIKeyComponent key={selectedModel.id} model={selectedModel} sessionActorref={sessionActorref} setModelHasSavedApiKey={setModelHasSavedApiKey} />
                     {/* <Input
                         className="w-full"
                         type="password"
@@ -158,8 +175,8 @@ const General = () => {
     )
 }
 
-const APIKeyComponent = ({ model, sessionActorref }: { model: Model, sessionActorref: any }) => {
-    const { addApiKey, getApiKey, removeApiKey } = useSafeStorage()
+const APIKeyComponent = ({ model, sessionActorref, setModelHasSavedApiKey }: { model: Model, sessionActorref: any, setModelHasSavedApiKey: (value: boolean) => void }) => {
+    const { addApiKey, getApiKey, removeApiKey, setUseModelName } = useSafeStorage()
     const [key, setKey] = useState('')
     const [isKeyStored, setIsKeyStored] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
@@ -175,6 +192,11 @@ const APIKeyComponent = ({ model, sessionActorref }: { model: Model, sessionActo
         if (res) {
             setKey(res)
             setIsKeyStored(true)
+            setModelHasSavedApiKey(true)
+        } else {
+            setIsKeyStored(false)
+            setModelHasSavedApiKey(false)
+
         }
         setIsLoading(false)
     }, [model.id])
@@ -186,8 +208,12 @@ const APIKeyComponent = ({ model, sessionActorref }: { model: Model, sessionActo
     const handleSave = async () => {
         setIsSaving(true)
         await addApiKey(model.id, key)
+        // Update the model as well
+        await setUseModelName(model.id)
         setIsKeyStored(true)
         setIsSaving(false)
+        // Right now even if the current session isn't using the model, it will still reset the session once key deleted
+        sessionActorref.send({ type: 'session.delete' })
     }
 
     const handleDelete = async () => {
@@ -222,6 +248,7 @@ const APIKeyComponent = ({ model, sessionActorref }: { model: Model, sessionActo
                     <Button
                         disabled={model.comingSoon || isSaving}
                         onClick={handleDelete}
+                        variant="outline-thin"
                     >
                         {isSaving ? 'Deleting...' : 'Delete API Key'}
                     </Button>
@@ -241,7 +268,8 @@ const APIKeyComponent = ({ model, sessionActorref }: { model: Model, sessionActo
                             disabled={model.comingSoon || isSaving}
                             onClick={handleSave}
                         >
-                            {isSaving ? 'Saving...' : 'Save'}
+                            {/* {isSaving ? 'Saving...' : 'Save'} */}
+                            {isSaving ? 'Saving...' : 'Save and use'}
                         </Button>
                     )}
                 </div>

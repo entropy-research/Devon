@@ -103,7 +103,7 @@ const SelectProjectDirectoryModal = ({
 
     return (
         <Suspense fallback={<></>}>
-            <Dialog open={open} onOpenChange={handleOpenChange}>
+            {(state.matches("sessionReady") || state.matches({ setup: "sessionDoesNotExist" })) && <Dialog open={open} onOpenChange={handleOpenChange}>
                 {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
                 <DialogContent
                     hideclose={hideclose ? true.toString() : false.toString()}
@@ -166,7 +166,7 @@ const SelectProjectDirectoryModal = ({
                                 </> : <></>}
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog>}
         </Suspense>
     )
 }

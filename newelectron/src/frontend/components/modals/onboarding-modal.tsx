@@ -131,8 +131,8 @@ const OnboardingModal = ({ setModelName, setOnboarded, afterOnboard }: {
                                         {`${selectedModel.company} API Key`}
                                     </p>
                                     <Popover>
-                                        <PopoverTrigger className="ml-1">
-                                            <CircleHelp size={20} />
+                                        <PopoverTrigger className="ml-[2px]">
+                                            <CircleHelp size={14} />
                                         </PopoverTrigger>
                                         {isKeySaved ? (
                                             <PopoverContent
