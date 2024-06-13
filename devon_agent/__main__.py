@@ -28,7 +28,6 @@ def server(port, db_path):
     """Start the Devon Agent server."""
     import uvicorn
     app.db_path = db_path
-    app.persist = False
 
     def signal_handler(sig, frame):
         print('Received signal to terminate. Shutting down gracefully...')

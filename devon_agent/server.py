@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 import json
 from contextlib import asynccontextmanager
 from devon_agent.agents.default.agent import AgentArguments, TaskAgent
-from devon_agent.models import ENGINE, Base, init_db, load_data
+from devon_agent.models import  Base, SingletonEngine, init_db, load_data, set_db_engine
 from devon_agent.session import (
     Event,
     Session,
@@ -69,13 +69,16 @@ async def lifespan(app: fastapi.FastAPI):
 
     # Hacky but it works
     global sessions
-    app.persist = False
     if app.persist:
-    
+        if app.db_path:
+            
+            set_db_engine(app.db_path)
+        else:
+            set_db_engine("./devon_environment.db")
         await init_db()
 
         AsyncSessionLocal = sessionmaker(
-            bind=ENGINE, class_=AsyncSession, expire_on_commit=False
+            bind=SingletonEngine.get_engine, class_=AsyncSession, expire_on_commit=False
         )
         async with AsyncSessionLocal() as db_session:
             app.db_session = db_session
@@ -96,7 +99,7 @@ app = fastapi.FastAPI(
     lifespan=lifespan,
 )
 
-app.persist = False
+app.persist = True
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

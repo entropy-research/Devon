@@ -1,7 +1,7 @@
 /* eslint-disable import/no-named-as-default-member */
 import { app, BrowserWindow, dialog, ipcMain, safeStorage } from 'electron';
 import path from 'path';
-import { ChildProcess, execFile } from 'child_process'
+import { ChildProcess, spawn } from 'child_process'
 import portfinder from 'portfinder'
 import fs from 'fs'
 
@@ -32,20 +32,22 @@ let use_port = NaN
 const spawnAppWindow = async () => {
 
   const db_path = path.join(app.getPath('userData'), 'devon_environment.sqlite')
-
+  console.log("db_path", db_path)
   await portfinder
   .getPortPromise()
   .then((port: number) => {
     use_port = port
-    process.resourcesPath 
-    let agent_path = path.join(__dirname, "devon_agent")
-    if (fs.existsSync(path.join(process.resourcesPath, "devon_agent"))) {
-      agent_path = path.join(process.resourcesPath, "devon_agent")
-    }
-    fs.chmodSync(agent_path, '755');
+    // process.resourcesPath 
 
-    serverProcess = execFile(
-      agent_path,
+    // when we move to zip package
+    // let agent_path = path.join(__dirname, "devon_agent")
+    // if (fs.existsSync(path.join(process.resourcesPath, "devon_agent"))) {
+    //   agent_path = path.join(process.resourcesPath, "devon_agent")
+    // }
+    // fs.chmodSync(agent_path, '755');
+
+    serverProcess = spawn(
+      "devon_agent",
       [
         'server',
         '--port',
@@ -204,7 +206,7 @@ app.on('before-quit', () => {
     console.log('Killing server process with pid', serverProcess.pid)
     process.kill(serverProcess.pid, 'SIGTERM');
   }
-  serverProcess.kill() // Make sure to kill the server process when the app is closing
+  serverProcess.kill(9) // Make sure to kill the server process when the app is closing
 
   if (serverProcess.killed) {
     console.log('Server process was successfully killed.');
