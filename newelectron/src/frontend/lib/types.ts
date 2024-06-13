@@ -3,10 +3,6 @@ enum ViewMode {
     Grid,
 }
 
-enum LocalStorageKey {
-    'hasAcceptedCheckbox' = 'hasAcceptedCheckbox',
-}
-
 export type File = {
     id: string
     name: string
@@ -23,4 +19,4 @@ export type Model = {
 }
 
 
-export { ViewMode, LocalStorageKey }
+export { ViewMode }

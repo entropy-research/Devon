@@ -20,6 +20,8 @@ import { useSafeStorage } from '@/lib/services/safeStorageService'
 import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
 import Combobox, { ComboboxItem } from '@/components/ui/combobox'
 import { models } from '@/lib/config'
+import { SessionMachineContext } from '@/home'
+
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -42,12 +44,18 @@ const comboboxItems: ExtendedComboboxItem[] = models
         company: model.company,
     }))
 
-const OnboardingModal = () => {
+const OnboardingModal = ({ setModelName, setOnboarded, afterOnboard }: {
+    setModelName: (value: string) => void
+    setOnboarded: (value: boolean) => void
+    afterOnboard: (apiKey: string, modelName: string, folderPath: string) => void
+}) => {
     const [folderPath, setFolderPath] = useState('')
     const [apiKey, setApiKey] = useState('')
     const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
     const { addApiKey, getApiKey, setUseModelName } = useSafeStorage()
     const [isKeySaved, setIsKeySaved] = useState(false)
+    const sessionActorref = SessionMachineContext.useActorRef()
+
     useEffect(() => {
         const fetchApiKey = async () => {
             const res = await getApiKey(selectedModel.value)
@@ -80,7 +88,9 @@ const OnboardingModal = () => {
             await setUseModelName(selectedModel.value)
         }
         handleSaveApiKey() // Store the api key
-        // setInitialized(true)
+        afterOnboard(apiKey, selectedModel.value, folderPath)
+        setOnboarded(true) // Makes sure the other modal doesn't show up
+        setModelName(selectedModel.value) // Closes the modal
     }
 
     function validateFields() {
@@ -91,7 +101,7 @@ const OnboardingModal = () => {
     return (
         <Suspense fallback={<></>}>
             <Dialog open={true}>
-                <DialogContent>
+                <DialogContent hideclose={true.toString()}>
                     <div className="flex flex-col items-center justify-center my-8 mx-8 max-w-md">
                         <h1 className="text-3xl font-bold">
                             Welcome to Devon!

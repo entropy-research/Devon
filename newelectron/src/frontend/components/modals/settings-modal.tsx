@@ -2,13 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-    CardTitle,
     CardHeader,
     CardContent,
     Card,
 } from '@/components/ui/card'
-import { useLocalStorage } from '@/lib/hooks/chat.use-local-storage'
-import { LocalStorageKey } from '@/lib/types'
 import { useToast } from '@/components/ui/use-toast'
 import { useSafeStorage } from '@/lib/services/safeStorageService'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -19,6 +16,8 @@ import { Model } from '@/lib/types'
 import { models } from '@/lib/config'
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
 import Combobox, { ComboboxItem } from '@/components/ui/combobox'
+import { SessionMachineContext } from '@/home'
+
 
 type ExtendedComboboxItem = Model & ComboboxItem & { company: string }
 
@@ -46,15 +45,15 @@ const SettingsModal = ({ trigger }: { trigger: JSX.Element }) => {
 
 const General = () => {
     const { toast } = useToast()
-    const [hasAcceptedCheckbox, setHasAcceptedCheckbox, clearKey] =
-        useLocalStorage<boolean>(LocalStorageKey.hasAcceptedCheckbox, false)
     const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
     // Checking model
-    const { checkHasEncryptedData, getUseModelName } = useSafeStorage()
+    const { checkHasEncryptedData, getUseModelName, deleteData } = useSafeStorage()
+    const sessionActorref = SessionMachineContext.useActorRef()
 
-    const handleLocalStorage = () => {
-        clearKey()
-        toast({ title: 'Local storage cleared!' })
+    const clearStorageAndResetSession = () => {
+        deleteData()
+        toast({ title: 'Storage cleared!' })
+        sessionActorref.send({ type: 'session.delete' })
     }
 
     useEffect(() => {
@@ -101,8 +100,8 @@ const General = () => {
                             {`${selectedModel.company} API Key`}
                         </p>
                         <Popover>
-                            <PopoverTrigger className="ml-1">
-                                <CircleHelp size={20} />
+                            <PopoverTrigger className="ml-[2px]">
+                                <CircleHelp size={14} />
                             </PopoverTrigger>
                             <SafeStoragePopoverContent />
                         </Popover>
@@ -139,11 +138,19 @@ const General = () => {
             </Card> */}
             <Card className="bg-midnight">
                 <CardHeader>
-                    <h2 className="text-lg font-semibold">Miscellaneous</h2>
+                    <div className="flex gap-1 items-center">
+                        <h2 className="text-lg font-semibold">Miscellaneous</h2>
+                        <Popover>
+                            <PopoverTrigger className="ml-[2px]">
+                                <CircleHelp size={14} />
+                            </PopoverTrigger>
+                            <PopoverContent side='top' className="bg-night w-fit p-2 px-3">Clears your keys from Electron Safe Storage and clears the session</PopoverContent>
+                        </Popover>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    <Button className="w-fit" onClick={handleLocalStorage}>
-                        Clear Local Storage
+                    <Button className="w-fit" onClick={clearStorageAndResetSession}>
+                        Clear Storage
                     </Button>
                 </CardContent>
             </Card>
