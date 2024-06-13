@@ -31,19 +31,20 @@ const comboboxItems: ExtendedComboboxItem[] = models
     }))
 
 const SettingsModal = ({ trigger }: { trigger: JSX.Element }) => {
+    const [open, setOpen] = useState(false)
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger}
             </DialogTrigger>
             <DialogContent className="w-[500px]">
-                <General />
+                <General setOpen={setOpen} />
             </DialogContent>
         </Dialog>
     )
 }
 
-const General = () => {
+const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
     const { toast } = useToast()
     const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
     // Checking model
@@ -133,8 +134,15 @@ const General = () => {
                 }
             })
         })
+        setOpen(false)
     }
 
+    function handleChangePath() {
+        sessionActorref.send({ type: 'session.delete' })
+        setOpen(false)
+    }
+
+    // use this when we implement the change directory button
     function handleNewChat() {
         sessionActorref.send({ type: 'session.delete' })
         setUseModelName(selectedModel.id)
@@ -159,6 +167,7 @@ const General = () => {
                 }
             })
         })
+        setOpen(false)
     }
 
     return (
@@ -172,8 +181,10 @@ const General = () => {
                         folderPath={folderPath}
                         setFolderPath={setFolderPath}
                         showTitle={false}
+                        customButton={<Button onClick={handleChangePath}>Change</Button>}
                     />
-                    {!initialFolderPath.loading && initialFolderPath.value !== folderPath && <Button className="mt-5 w-full" onClick={handleNewChat}>Start new chat</Button>}
+                    {/* Commenting out for now, just does a refresh instead rn */}
+                    {/* {!initialFolderPath.loading && initialFolderPath.value !== folderPath && <Button className="mt-5 w-full" onClick={handleNewChat}>Start new chat</Button>} */}
                 </CardContent>
             </Card>
             <Card className="bg-midnight">

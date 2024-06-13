@@ -68,7 +68,6 @@ export const eventHandlingLogic = fromTransition(
     ) => {
         switch (event.type) {
             case 'session.reset': {
-                console.log("reset")
                 return {
                     ...state,
                     messages: [],
@@ -294,7 +293,6 @@ const createSessionActor = fromPromise(async ({
     // await new Promise(resolve => setTimeout(resolve, 5000));
 
     try {
-        console.log("path", input?.path, "config", input.agentConfig)
         const response = await axios.post(`${input.host}/sessions/${input?.name}`, input.agentConfig, {
             params: {
                 // session: input?.name,
@@ -304,7 +302,6 @@ const createSessionActor = fromPromise(async ({
                 'Content-Type': 'application/json'
             }
         });
-        console.log(response.request)
         return response;
     } catch (e) {
         console.log(e)
@@ -321,7 +318,6 @@ const loadEventsActor = fromPromise(async ({
         const newEvents = (
             await axios.get(`${input?.host}/sessions/${input?.name}/events`)
         ).data;
-        console.log("Loaded events: ", newEvents)
         return newEvents
     } catch (e) {
         console.log(e)
@@ -346,7 +342,6 @@ const startSessionActor = fromPromise(async ({
     const events = (await axios.get(`${input?.host}/sessions/${input?.name}/events`)).data;
 
     const state = (await axios.get(`${input?.host}/sessions/${input?.name}/state`)).data;
-    console.log("STATE IN START: ", state)
 
     return response;
 })
@@ -429,7 +424,6 @@ export const newSessionMachine = setup({
         ),
         pauseSession: fromPromise(
             async ({ input }: { input: { host: string; name: string } }) => {
-                console.log("PAUSING")
                 const response = await axios.patch(`${input?.host}/sessions/${input?.name}/pause`);
                 return response;
             },
@@ -437,13 +431,10 @@ export const newSessionMachine = setup({
         resetSession: fromPromise(
             async ({ input }: { input: { host: string; name: string } }) => {
                 // pause session first
-
-                console.log("RESETTING")
                 await axios.patch(`${input?.host}/sessions/${input?.name}/pause`);
                 const response = await axios.patch(`${input?.host}/sessions/${input?.name}/reset`);
 
                 const state = (await axios.get(`${input?.host}/sessions/${input?.name}/state`)).data;
-                console.log("STATE: ", state)
 
                 return response;
             },
@@ -489,7 +480,7 @@ export const newSessionMachine = setup({
             input: ({ context: { host, name } }) => ({ host, name }),
             onDone: {
                 actions: ({ event }) => {
-                    console.log("event", event)
+                    // console.log("event", event)
                 }
             }
         },
@@ -573,7 +564,7 @@ export const newSessionMachine = setup({
                         "session.create": {
                             target: "creating",
                             actions: [
-                                () => console.log("start session"),
+                                () => console.log("Starting session"),
                                 assign(({ context, event }) => ({ ...context, agentConfig: event.payload.agentConfig, path: event.payload.path }))
                             ]
                         }
@@ -656,18 +647,13 @@ export const newSessionMachine = setup({
                 "session.init": {
                     target: "initializing",
                     actions: [
-                        assign(({ event }) => {
-                            console.log("EVENT CONFIG", event.payload.agentConfig)
-                            return {
-                                agentConfig: event.payload.agentConfig
-                            }
-                        })
+                        assign(({ event }) => ({ agentConfig: event.payload.agentConfig }))
                     ]
                 }
             },
         },
         initializing: {
-            entry: [() => console.log("initializing session"),
+            entry: [() => console.log("Initializing session"),
             sendTo(EVENTHANDLER_ACTOR_ID, ({ self }) => {
                 return {
                     type: 'session.reset',
@@ -717,7 +703,7 @@ export const newSessionMachine = setup({
                     }
                 }),
             ],
-            entry: () => console.log("resetting"),
+            entry: () => console.log("Resetting session"),
             invoke: {
                 id: "resetSession",
                 src: "resetSession",
@@ -801,7 +787,6 @@ export const newSessionMachine = setup({
                 serverEvent: {
                     target: 'running',
                     actions: sendTo('ServerEventHandler', ({ event }) => {
-                        console.log(event)
                         return event['payload']
                     }),
                     reenter: true,

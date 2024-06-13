@@ -32,7 +32,6 @@ let use_port = NaN
 const spawnAppWindow = async () => {
 
   const db_path = path.join(app.getPath('userData'), 'devon_environment.sqlite')
-  console.log("db_path", db_path)
   await portfinder
   .getPortPromise()
   .then((port: number) => {
@@ -310,7 +309,6 @@ ipcMain.handle('load-data', async () => {
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, '');
   }
-  console.log("filePath", filePath)
   try {
     const encryptedData = fs.readFileSync(filePath)
     if (safeStorage.isEncryptionAvailable()) {
