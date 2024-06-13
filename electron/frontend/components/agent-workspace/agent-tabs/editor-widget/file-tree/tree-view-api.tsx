@@ -13,7 +13,6 @@ import React, {
     useState,
 } from 'react'
 import { Button } from '@/components/ui/button'
-import { useCodeEditorState } from '@/contexts/CodeEditorContext'
 import { Icon } from '@iconify/react'
 
 type TreeViewElement = {

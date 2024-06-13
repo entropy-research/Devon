@@ -1,8 +1,9 @@
+"use client"
 import { useEffect, useState } from 'react'
 import Landing from './landing'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
 import { SessionContextProviderComponent } from './home'
-import AtomLoader from '@/components/ui/atom-loader/atom-loader'
+import AtomLoader from '@/components/ui/loaders/atom-loader/atom-loader'
 
 
 export default function IndexPage() {

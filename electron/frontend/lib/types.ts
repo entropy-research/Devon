@@ -24,9 +24,8 @@ export type Model = {
 }
 
 export type SessionMachineProps = {
-    port: number
+    host: string
     name: string
-    path: string
 }
 
 

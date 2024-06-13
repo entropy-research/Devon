@@ -11,8 +11,9 @@ import { createActorContext } from '@xstate/react'
 import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
 import TimelineWidget from '@/components/agent-workspace/agent-tabs/timeline-widget'
-import { useSearchParams } from 'next/navigation'
 import { SessionMachineProps } from '@/lib/types'
+import { theme, bottomPadding } from '@/lib/config'
+import { useSafeStorage } from "@/lib/services/safeStorageService"
 
 
 export const SessionMachineContext = createActorContext(newSessionMachine)
@@ -76,8 +77,8 @@ export default function Home() {
         <div className={`w-full flex flex-row ${theme.showChatBorders.enabled ? 'pt-3' : ''}`}>
             <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel
-                        className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center ${theme.showChatBorders.enabled ? bottomPadding : ''}`}
-                        >
+                    className={`flex ${viewMode === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center ${theme.showChatBorders.enabled ? bottomPadding : ''}`}
+                >
                     {/* <SidebarItem
                         text="Settings"
                         icon={<Settings className="text-primary" />}
