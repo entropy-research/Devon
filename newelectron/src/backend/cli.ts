@@ -5,7 +5,6 @@ const electronPath = require('electron'); // Ensure Electron is installed as a d
 
 const main = () => {
   const subprocess = spawn(electronPath, [path.join(__dirname, 'main.js')], { stdio: 'inherit' });
-
   subprocess.on('error', (err: any) => {
     console.error('Failed to start subprocess.', err);
   });
