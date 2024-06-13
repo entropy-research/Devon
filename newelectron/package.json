@@ -1,6 +1,6 @@
 {
-  "name": "my-new-app",
-  "productName": "my-new-app",
+  "name": "devon-ui",
+  "productName": "Devon (Alpha)",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",

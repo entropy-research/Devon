@@ -412,10 +412,10 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
                         content = lines[i][:]
 
                         if lines[i].startswith("-"):
-                            hunk_lines.append(HunkLine(type="removed", content=content))
+                            hunk_lines.append(HunkLine(type="removed", content=content[1:]))
                             changed_lines += 1
                         elif lines[i].startswith("+"):
-                            hunk_lines.append(HunkLine(type="added", content=content))
+                            hunk_lines.append(HunkLine(type="added", content=content[1:]))
                             changed_lines += 1
                         else:
                             hunk_lines.append(
@@ -693,7 +693,7 @@ def apply_indent(
 def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
     # create i, line pairs for diff apply
     src_lines = [(i, line) for i, line in enumerate(file_content.splitlines())]
-
+    print(src_lines)
     # get stripped version of original file i.e. strip all lines then filter out empty lines
     stripped_src_lines = [
         t for t in [(i, line.strip()) for i, line in src_lines] if t[1] != ""
@@ -701,6 +701,7 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
     # check if stripped_src_lines is empty and append file_diff hunks to it
     if not stripped_src_lines or all([line[1] == "" for line in stripped_src_lines]):
         old_lines, new_lines = construct_versions_from_diff_hunk(file_diff.hunks[0])
+        print(new_lines)
         return "\n".join(new_lines), []
 
     tgt_lines = list(src_lines)
