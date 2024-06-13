@@ -9,6 +9,7 @@ export type File = {
     path: string
     language: string
     value: any
+    icon?: string
 }
 
 export type Model = {

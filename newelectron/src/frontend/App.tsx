@@ -10,7 +10,7 @@ import Page from "./page"
 function App() {
 
   useEffect(() => {
-    const handleServerError = (error) => {
+    const handleServerError = (error: unknown) => {
       console.error('Server Error:', error);
       // alert('Server Error: ' + error); // Display as a popup
     };

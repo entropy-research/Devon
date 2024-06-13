@@ -3,8 +3,9 @@ import type { editor } from 'monaco-editor'
 import FileTabs from '@/components/file-tabs/file-tabs'
 import { useState } from 'react'
 import { SessionMachineContext } from '@/home'
+import { File } from '@/lib/types'
+import { mapLanguage, mapIcon } from '@/lib/services/fileService'
 
-// Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/CodeEditor.tsx
 export default function CodeEditor({
     isExpandedVariant = false,
     showEditorBorders,
@@ -19,15 +20,16 @@ export default function CodeEditor({
 
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
 
-    const files = SessionMachineContext.useSelector(
+    const files: File[] = SessionMachineContext.useSelector(
         state => {
             if (state.context.sessionState?.editor && state.context.sessionState.editor.files) {
                 return Object.keys(state.context.sessionState.editor.files).map(filename => ({
                     id: filename,
                     name: filename.split('/').pop() ?? 'unnamed_file',
                     path: filename,
-                    language: 'python',
+                    language: mapLanguage(filename.split('/').pop()),
                     value: state.context.sessionState.editor.files[filename],
+                    icon: mapIcon(filename.split('/').pop()),
                 }))
             } else {
                 return []
@@ -109,6 +111,7 @@ export default function CodeEditor({
                 // chatId={chatId}
                 className={showEditorBorders ? '' : ''}
                 isExpandedVariant={isExpandedVariant}
+                loading={files.length === 0}
             />
             {files && <PathDisplay path={path} />}
             <div className="flex w-full h-full bg-bg-workspace rounded-b-lg mt-[-2px]">
@@ -123,21 +126,21 @@ export default function CodeEditor({
     )
 }
 
-const BothEditorTypes = ({file, handleEditorDidMount }) =>
-    (
-        <Editor
-            className="h-full"
-            theme="vs-dark"
-            defaultLanguage={'python'}
-            language={file?.language ?? 'python'}
-            defaultValue={''}
-            value={file?.value?.lines ?? ''}
-            onMount={handleEditorDidMount}
-            path={file?.path}
-            options={{ readOnly: true, fontSize: 10 }}
-        />
-    )
-   
+const BothEditorTypes = ({ file, handleEditorDidMount }) =>
+(
+    <Editor
+        className="h-full"
+        theme="vs-dark"
+        defaultLanguage={'python'}
+        language={file?.language ?? 'python'}
+        defaultValue={''}
+        value={file?.value?.lines ?? ''}
+        onMount={handleEditorDidMount}
+        path={file?.path}
+        options={{ readOnly: true, fontSize: 10 }}
+    />
+)
+
 
 const PathDisplay = ({ path }: { path: string }) => (
     <div className="-mt-[1px] px-3 py-1 bg-night border-t border-outlinecolor">

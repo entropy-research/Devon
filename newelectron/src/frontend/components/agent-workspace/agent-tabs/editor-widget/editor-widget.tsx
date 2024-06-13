@@ -49,7 +49,7 @@ const EditorWidget = ({
                 > 
                     <div className="flex flex-col flex-grow w-full h-full">
                         <div className="w-full border-b border-outlinecolor flex justify-center py-1 relative">
-                            <div className="flex space-x-2 ml-2 mr-4 absolute left-1 top-[11px] opacity-70">
+                            <div className="flex space-x-2 ml-2 mr-4 absolute left-1 top-[11px] opacity-80">
                                 <div className="w-[9px] h-[9px] bg-red-500 rounded-full"></div>
                                 <div className="w-[9px] h-[9px] bg-yellow-400 rounded-full"></div>
                                 <div className="w-[9px] h-[9px] bg-green-500 rounded-full"></div>
