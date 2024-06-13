@@ -58,9 +58,9 @@ class AnthropicModel:
         self.model_metadata = self.MODELS[self.api_model]
         self.prompt_type = 'anthropic'
         if args.api_key is not None:
-            self.api = args.api_key
+            self.api_key = args.api_key
         else:
-            self.api = os.getenv("ANTHROPIC_API_KEY")
+            self.api_key = os.getenv("ANTHROPIC_API_KEY")
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
