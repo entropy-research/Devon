@@ -38,7 +38,7 @@ const FileTabs = ({
             className={`flex justify-between bg-[#141414] items-center ${className}`}
         >
             <div className="flex items-center justify-start">
-                {loading
+                {false // used to be "loading" commenting out for now
                     ? Array.from({ length: 2 }).map((_, index) => (
                         <button
                             key={index}

@@ -2,7 +2,7 @@
 import { Session } from '@/lib/chat.types'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
 import ChatMessages from './messages/chat.messages'
-import Input from './input/input'
+import ChatInputField from './input/chat-input-field'
 import { SessionMachineContext } from '@/home'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -96,7 +96,7 @@ export default function ChatMessagesAndInput({
                     className={cn('pt-4 md:pt-10 bg-red-500', className)}
                     ref={messagesRef}
                 > */}
-                {!state.matches('running') ? (
+                {!state.matches('running') && !state.matches('paused') ? (
                     <LoadingSkeleton />
                 ) : (
                     messages &&
@@ -117,7 +117,7 @@ export default function ChatMessagesAndInput({
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                     /> */}
-                    <Input
+                    <ChatInputField
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                         viewOnly={viewOnly}

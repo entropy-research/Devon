@@ -1,6 +1,6 @@
 import { Terminal as XtermTerminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { Message } from '@/lib/services/stateMachineService/stateMachine'
 

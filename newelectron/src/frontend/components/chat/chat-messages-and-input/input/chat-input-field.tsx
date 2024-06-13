@@ -7,7 +7,7 @@ import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 import { SessionMachineContext } from '@/home'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
 
-const Input = ({
+const ChatInputField = ({
     isAtBottom,
     scrollToBottom,
     viewOnly,
@@ -35,7 +35,7 @@ const Input = ({
     const sessionActorRef = SessionMachineContext.useActorRef()
 
     async function submitUserMessage(value: string) {
-        sessionActorRef.send({type: 'session.sendMessage', message: value})
+        sessionActorRef.send({ type: 'session.sendMessage', message: value })
     }
 
     // function checkShouldOpenModal() {
@@ -52,26 +52,26 @@ const Input = ({
     }
 
     async function handlePause() {
-        sessionActorRef.send({type: 'session.toggle'})
+        sessionActorRef.send({ type: 'session.toggle' })
     }
 
     return (
         <div
             className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
         >
-            {(  loading ||
+            {(loading ||
                 eventContext.modelLoading ||
                 eventContext.userRequest ||
                 sessionActorRef.getSnapshot().matches('paused') ||
                 sessionActorRef.getSnapshot().matches('running')) && (
-                <InformationBox
-                    modelLoading={eventContext.modelLoading}
-                    userRequested={eventContext.userRequest}
-                    loading={loading}
-                    paused={sessionActorRef.getSnapshot().matches('paused')}
-                    pauseHandler={handlePause}
-                />
-            )}
+                    <InformationBox
+                        modelLoading={eventContext.modelLoading}
+                        userRequested={eventContext.userRequest}
+                        loading={loading}
+                        paused={sessionActorRef.getSnapshot().matches('paused')}
+                        pauseHandler={handlePause}
+                    />
+                )}
             {!viewOnly && (
                 <>
                     <form
@@ -146,7 +146,7 @@ const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHan
     } = {
         modelLoading: {
             text: 'Devon is working...',
-            accessory: <PauseButton paused={paused} pauseHandler={pauseHandler}/>,
+            accessory: <PauseButton paused={paused} pauseHandler={pauseHandler} />,
         },
         userRequested: {
             text: 'Devon is waiting for your response',
@@ -169,8 +169,8 @@ const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHan
         currentType = types.loading
     }
     if (paused) {
-        currentType.text = 'Devon is paused'
-        currentType.accessory = <PauseButton paused={paused} pauseHandler={pauseHandler}/>
+        currentType.text = 'Devon is taking a coffee break (paused)'
+        currentType.accessory = <PauseButton paused={paused} pauseHandler={pauseHandler} />
     }
 
     return (
@@ -186,7 +186,7 @@ const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHan
     )
 }
 
-export default Input
+export default ChatInputField
 
 const PauseButton = ({ paused, pauseHandler }) => {
     if (paused) {

@@ -104,15 +104,17 @@ export default function CodeEditor({
 
     return (
         <div className="flex flex-col w-full h-full">
-            <FileTabs
-                files={files}
-                selectedFileId={selectedFileId ?? null}
-                setSelectedFileId={setSelectedFileId}
-                // chatId={chatId}
-                className={showEditorBorders ? '' : ''}
-                isExpandedVariant={isExpandedVariant}
-                loading={files.length === 0}
-            />
+            <div className="flex-none overflow-x-auto whitespace-nowrap">
+                <FileTabs
+                    files={files}
+                    selectedFileId={selectedFileId ?? null}
+                    setSelectedFileId={setSelectedFileId}
+                    // chatId={chatId}
+                    className={showEditorBorders ? '' : ''}
+                    isExpandedVariant={isExpandedVariant}
+                    loading={files.length === 0}
+                />
+            </div>
             {files && <PathDisplay path={path} />}
             <div className="flex w-full h-full bg-bg-workspace rounded-b-lg mt-[-2px]">
                 {selectedFileId && (
