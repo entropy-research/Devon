@@ -152,11 +152,7 @@
     .bg-fade-bottom-to-top-midnight {
         /* TODO don't hardcode color */
         /* background-image: linear-gradient(to top, #2e2e2e 50%, transparent 100%); */
-        background-image: linear-gradient(
-            to top,
-            #1e1e1e 0%,
-            #111111 80%
-        );
+        background-image: linear-gradient(to top, #1e1e1e 0%, #111111 80%);
     }
 }
 

@@ -116,7 +116,7 @@ export default function CodeEditor({
                 />
             </div>
             {files && <PathDisplay path={path} />}
-            <div className="flex w-full h-full bg-bg-workspace rounded-b-lg mt-[-2px]">
+            <div className="flex w-full h-full bg-midnight rounded-b-lg mt-[-2px]">
                 {selectedFileId && (
                     <BothEditorTypes
                         file={files?.find(f => f.id === selectedFileId)}
@@ -145,7 +145,7 @@ const BothEditorTypes = ({ file, handleEditorDidMount }) =>
 
 
 const PathDisplay = ({ path }: { path: string }) => (
-    <div className="-mt-[1px] px-3 py-1 bg-night border-t border-outlinecolor">
+    <div className="-mt-[1px] px-3 py-1 border-t border-outlinecolor">
         <p className="text-xs text-neutral-500">
             {path ? convertPath(path) : ''}
         </p>

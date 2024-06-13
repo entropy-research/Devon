@@ -17,7 +17,6 @@ export default function Landing({ smHealthCheckDone, setSmHealthCheckDone }: {
     useEffect(() => {
         const check = async () => {
             const hasEncryptedData = await checkHasEncryptedData()
-            console.log('hasEncryptedData', hasEncryptedData)
             if (hasEncryptedData) {
                 const modelName = await getUseModelName()
                 setModelName(modelName)

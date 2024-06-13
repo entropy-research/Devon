@@ -2,7 +2,12 @@ import { useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-const FolderPicker = ({ folderPath, setFolderPath, disabled }) => {
+const FolderPicker = ({ folderPath, setFolderPath, disabled = false, showTitle = true }: {
+    folderPath: string
+    setFolderPath: (path: string) => void
+    disabled?: boolean
+    showTitle?: boolean
+}) => {
     const handleDirectoryPicker = e => {
         //@ts-ignore
         window.api.send('get-file-path') 
@@ -30,7 +35,7 @@ const FolderPicker = ({ folderPath, setFolderPath, disabled }) => {
 
     return (
         <div className="flex flex-col gap-3">
-            <p className="text-md">Local Path</p>
+            {showTitle && <p className="text-md">Local Path</p>}
             <div className="flex gap-4">
                 {/* <input>{folderPath}</input> */}
                 <Input

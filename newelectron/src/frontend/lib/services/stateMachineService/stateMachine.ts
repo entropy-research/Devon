@@ -342,10 +342,8 @@ const startSessionActor = fromPromise(async ({
             api_key: input.api_key
         }
     });
-    console.log("API KEY IN START: ", input.api_key)
 
     const events = (await axios.get(`${input?.host}/sessions/${input?.name}/events`)).data;
-    console.log("EVENTS IN START: ", events)
 
     const state = (await axios.get(`${input?.host}/sessions/${input?.name}/state`)).data;
     console.log("STATE IN START: ", state)

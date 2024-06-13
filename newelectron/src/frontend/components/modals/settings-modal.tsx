@@ -17,7 +17,7 @@ import { models } from '@/lib/config'
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
 import Combobox, { ComboboxItem } from '@/components/ui/combobox'
 import { SessionMachineContext } from '@/home'
-
+import FolderPicker from '@/components/ui/folder-picker'
 
 type ExtendedComboboxItem = Model & ComboboxItem & { company: string }
 
@@ -47,16 +47,39 @@ const General = () => {
     const { toast } = useToast()
     const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
     // Checking model
-    const { checkHasEncryptedData, getUseModelName, deleteData } = useSafeStorage()
+    const { checkHasEncryptedData, getUseModelName, deleteData, setUseModelName, getApiKey } = useSafeStorage()
     const sessionActorref = SessionMachineContext.useActorRef()
+    let state = SessionMachineContext.useSelector(state => state)
+
     const [originalModelName, setOriginalModelName] = useState(comboboxItems[0].id)
     const [modelHasSavedApiKey, setModelHasSavedApiKey] = useState(false)
+    const [folderPath, setFolderPath] = useState('')
+    const [initialFolderPath, setInitialFolderPath] = useState<{
+        loading: boolean
+        value: string | null
+    }>({
+        loading: true,
+        value: null
+    })
 
     const clearStorageAndResetSession = () => {
         deleteData()
         toast({ title: 'Storage cleared!' })
         sessionActorref.send({ type: 'session.delete' })
     }
+
+    useEffect(() => {
+        if (!state?.context?.sessionState?.path) {
+            return
+        }
+        setFolderPath(state.context.sessionState.path)
+        if (!initialFolderPath.value) {
+            setInitialFolderPath({
+                loading: false,
+                value: state.context.sessionState.path
+            })
+        }
+    }, [state?.context?.sessionState?.path])
 
     useEffect(() => {
         const check = async () => {
@@ -81,12 +104,76 @@ const General = () => {
         check()
     }, [])
 
+    const fetchApiKey = useCallback(async () => {
+        const res = await getApiKey(selectedModel.id)
+        return res
+    }, [selectedModel.id]);
+
     function handleUseNewModel() {
         sessionActorref.send({ type: 'session.delete' })
+        setUseModelName(selectedModel.id)
+        const _key = fetchApiKey()
+        sessionActorref.send({
+            type: 'session.create', payload: {
+                path: folderPath,
+                agentConfig: {
+                    model: selectedModel.id,
+                    api_key: _key
+                }
+            }
+        })
+        sessionActorref.on("session.creationComplete", () => {
+            sessionActorref.send({
+                type: 'session.init', payload: {
+                    // path: folderPath,
+                    agentConfig: {
+                        model: selectedModel.id,
+                        api_key: _key
+                    }
+                }
+            })
+        })
+    }
+
+    function handleNewChat() {
+        sessionActorref.send({ type: 'session.delete' })
+        sessionActorref.send({
+            type: 'session.create', payload: {
+                path: folderPath,
+                agentConfig: {
+                    model: model,
+                    api_key: apiKey
+                }
+            }
+        })
+        sessionActorref.on("session.creationComplete", () => {
+            sessionActorref.send({
+                type: 'session.init', payload: {
+                    // path: folderPath,
+                    agentConfig: {
+                        model: model,
+                        api_key: apiKey
+                    }
+                }
+            })
+        })
     }
 
     return (
         <div className="pt-4 pb-2 px-2 flex flex-col gap-5">
+            <Card className="bg-midnight">
+                <CardContent className="mt-5 w-full">
+                    <p className="text-lg font-semibold mb-4">
+                        {`Project directory:`}
+                    </p>
+                    <FolderPicker
+                        folderPath={folderPath}
+                        setFolderPath={setFolderPath}
+                        showTitle={false}
+                    />
+                    {!initialFolderPath.loading && initialFolderPath.value !== folderPath && <Button className="mt-5 w-full" onClick={handleNewChat}>Start new chat</Button>}
+                </CardContent>
+            </Card>
             <Card className="bg-midnight">
                 <CardContent>
                     <div className="flex flex-col mt-5 w-full">
@@ -118,7 +205,7 @@ const General = () => {
 
                         </div>
                         {selectedModel.id !== originalModelName && modelHasSavedApiKey && <Button
-                        onClick={handleUseNewModel}
+                            onClick={handleUseNewModel}
                         >
                             {'Use this model'}
                         </Button>}

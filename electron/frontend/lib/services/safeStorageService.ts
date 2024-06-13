@@ -15,7 +15,6 @@ export const useSafeStorage = () => {
     const loadData = async () => {
         //@ts-ignore
         const response = await window.api.invoke('load-data')
-        console.log("load data",response)
         if (response.success) {
             if (response.data) {
                 return JSON.parse(response.data)
