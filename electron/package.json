@@ -70,6 +70,7 @@
     "zod": "^3.23.4"
   },
   "devDependencies": {
+    "@iconify/react": "^5.0.1",
     "@storybook/addon-essentials": "^7.6.17",
     "@storybook/addon-interactions": "^7.6.17",
     "@storybook/addon-links": "^7.6.17",

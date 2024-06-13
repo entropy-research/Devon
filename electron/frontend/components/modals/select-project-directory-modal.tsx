@@ -60,12 +60,14 @@ const SelectProjectDirectoryModal = ({
 
     function afterSubmit() {
         // sessionActorref.send({ type: 'setup', payload: folderPath })
-        sessionActorref.send({ type: 'session.create', payload: {
-            path: folderPath,
-            agentConfig: {
-                model: 'gpt4-o'
+        sessionActorref.send({
+            type: 'session.create', payload: {
+                path: folderPath,
+                agentConfig: {
+                    model: 'gpt4-o'
+                }
             }
-        } })
+        })
         sessionActorref.on("session.creationComplete", () => {
             sessionActorref.send({ type: 'session.init' })
         })
@@ -117,28 +119,28 @@ const SelectProjectDirectoryModal = ({
                     )} */}
 
                     {
-                        state.matches({setup :  "sessionDoesNotExist"}) ?
-                        <>
-                            {page !== 1 && (
-                                <button
-                                    className="top-3 left-3 absolute text-primary mb-2 flex items-center p-1"
+                        state.matches({ setup: "sessionDoesNotExist" }) ?
+                            <>
+                                {page !== 1 && (
+                                    <button
+                                        className="top-3 left-3 absolute text-primary mb-2 flex items-center p-1"
                                     //  onClick={() => setPage(1)}
-                                >
-                                    <ArrowLeft size={18} className="mr-1" />
-                                    {/* {'Back'} */}
-                                </button>
-                            )}
-                            {/* {header} */}
-                            <SelectProjectDirectoryComponent
-                                folderPath={folderPath}
-                                setFolderPath={setFolderPath}
-                            />
-                            <StartChatButton
-                                disabled={!validate()}
-                                onClick={afterSubmit}
-                                folderPath={folderPath}
-                            />
-                        </>  : <></>}
+                                    >
+                                        <ArrowLeft size={18} className="mr-1" />
+                                        {/* {'Back'} */}
+                                    </button>
+                                )}
+                                {/* {header} */}
+                                <SelectProjectDirectoryComponent
+                                    folderPath={folderPath}
+                                    setFolderPath={setFolderPath}
+                                />
+                                <StartChatButton
+                                    disabled={!validate()}
+                                    onClick={afterSubmit}
+                                    folderPath={folderPath}
+                                />
+                            </> : <></>}
                 </div>
             </DialogContent>
         </Dialog>
@@ -188,35 +190,33 @@ export const StartChatButton = ({ onClick, disabled, folderPath }) => {
 const ExistingSessionFound = ({ continueChat, newChat }) => {
 
     return (
-        <div>
-                <div>
-                    <p className="text-2xl font-bold">
-                        Continue previous chat?
-                    </p>
-                    <p className="text-md mt-2 text-neutral-400">
-                        {`Previous task: "`}
-                        <span className="italic">Create a snake game</span>
-                        {`"`}
-                    </p>
-                    <div className="flex flex-col items-center">
-                        <Button
-                            type="submit"
-                            className="bg-primary text-white p-2 rounded-md w-full mt-7"
-                            onClick={continueChat}
-                        >
-                            Continue
-                        </Button>
-                        <div className="bg-neutral-600 h-[1px] w-full mt-8 mb-1"></div>
-                        <p className="text-md m-4 mb-5">Or start a new chat</p>
-                        <Button
-                            variant="outline"
-                            className="text-[#977df5] p-2 rounded-md mt-0 w-full font-bold"
-                            onClick={newChat}
-                        >
-                            New Chat
-                        </Button>
-                    </div>
-                </div>
+        <div className="w-[25rem]">
+            <p className="text-2xl font-bold">
+                Continue previous chat?
+            </p>
+            <p className="text-md mt-2 text-neutral-400">
+                {`Previous task: "`}
+                <span className="italic">Create a snake game</span>
+                {`"`}
+            </p>
+            <div className="flex flex-col items-center">
+                <Button
+                    type="submit"
+                    className="bg-primary text-white p-2 rounded-md w-full mt-7"
+                    onClick={continueChat}
+                >
+                    Continue
+                </Button>
+                <div className="bg-neutral-600 h-[1px] w-full mt-8 mb-1"></div>
+                <p className="text-md m-4 mb-5">Or start a new chat</p>
+                <Button
+                    variant="outline"
+                    className="text-[#977df5] p-2 rounded-md mt-0 w-full font-bold"
+                    onClick={newChat}
+                >
+                    New Chat
+                </Button>
+            </div>
         </div>
     )
 }

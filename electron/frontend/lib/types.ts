@@ -13,6 +13,7 @@ export type File = {
     path: string
     language: string
     value: any
+    icon?: string
 }
 
 export type Model = {
@@ -20,6 +21,12 @@ export type Model = {
     name: string
     company: string
     comingSoon?: boolean
+}
+
+export type SessionMachineProps = {
+    port: number
+    name: string
+    path: string
 }
 
 

@@ -1,15 +1,10 @@
 /* ********************************************************************
  *   Declaration file for the API exposed over the context bridge
  *********************************************************************/
-
-// export interface IBloopAPI {
-//     foo: string
-//     ping: () => Promise<string>
-// }
+export {};
 
 declare global {
     interface Window {
-        // BloopAPI: IBloopAPI,
         api: {
             invoke: (channel: string, ...args: any[]) => Promise<any>
             receive: (
@@ -20,6 +15,7 @@ declare global {
                 channel: string,
                 listener: (...args: any[]) => void
             ) => void
+            send: (channel: string, ...args: any[]) => void
         }
     }
 }

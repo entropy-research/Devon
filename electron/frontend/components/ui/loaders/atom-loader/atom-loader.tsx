@@ -1,5 +1,5 @@
 import React from 'react'
-import './atom.css' // Import the CSS file for the keyframes
+import './atom.css'
 
 interface AtomLoaderProps {
     size?: 'sm' | 'lg'

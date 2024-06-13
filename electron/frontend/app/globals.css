@@ -60,7 +60,7 @@
         --muted: hsl(217.2 32.6% 17.5%);
         --muted-foreground: hsl(215 20.2% 65.1%);
 
-        --accent: hsl(217.2 32.6% 17.5%);
+        --accent: #3c2a7d;
         --accent-foreground: hsl(210 40% 98%);
 
         --destructive: hsl(0 62.8% 30.6%);
@@ -146,6 +146,16 @@
             to top,
             #1e1e1e 50%,
             transparent 100%
+        );
+    }
+
+    .bg-fade-bottom-to-top-midnight {
+        /* TODO don't hardcode color */
+        /* background-image: linear-gradient(to top, #2e2e2e 50%, transparent 100%); */
+        background-image: linear-gradient(
+            to top,
+            #1e1e1e 0%,
+            #111111 80%
         );
     }
 }

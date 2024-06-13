@@ -5,6 +5,8 @@ import ChatMessages from './messages/chat.messages'
 import Input from './input/input'
 import { SessionMachineContext } from '@/app/home'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { theme, bottomPadding } from '@/lib/config'
 
 type Message = {
     role: 'user' | 'assistant' | 'system' | 'function' | 'data' | 'tool'
@@ -25,16 +27,10 @@ export default function ChatMessagesAndInput({
     viewOnly,
     loading,
     sessionId
-    // sessionMachineProps,
 }: {
     viewOnly: boolean
     loading: boolean
     sessionId: string
-    // sessionMachineProps: {
-    //     port: number
-    //     name: string
-    //     path: string
-    // }
 }) {
     const {
         // messagesRef,
@@ -43,22 +39,6 @@ export default function ChatMessagesAndInput({
         isAtBottom,
         scrollToBottom,
     } = useScrollAnchor()
-
-    // const searchParams = useSearchParams()
-    // const [eventState, sendEvent] = useActor(eventHandlingLogic)
-    // let messages = eventState.context.messages
-    // This inits the state machine and starts the session
-
-    let status = ''
-
-    //     const [state] = useMachine(sessionMachine, { input: {
-    //         host: 'http://localhost:' + sessionMachineProps.port,
-    //         name: sessionMachineProps.name,
-    //         path: sessionMachineProps.path,
-    //         reset: false,
-    //         },
-    //     },
-    // )
 
     const state = SessionMachineContext.useSelector(state => state)
 
@@ -88,7 +68,7 @@ export default function ChatMessagesAndInput({
 
     return (
         <div
-            className="flex flex-col flex-2 relative h-full overflow-y-auto"
+            className="flex flex-col flex-2 relative h-full overflow-y-scroll"
             ref={scrollRef}
         >
             <div className="flex-1">
@@ -112,7 +92,7 @@ export default function ChatMessagesAndInput({
             </div>
             {/* {!viewOnly && ( */}
             <div className="sticky bottom-0 w-full">
-                <div className="bg-fade-bottom-to-top pt-20 overflow-hidden rounded-xl -mb-[1px]">
+                <div className={`bg-fade-bottom-to-top pt-20 overflow-hidden rounded-xl -mb-[1px] ${theme.showChatBorders.enabled ? '' : bottomPadding}`}>
                     {/* <ButtonScrollToBottom
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}

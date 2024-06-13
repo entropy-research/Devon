@@ -11,6 +11,7 @@ export default function FileTree({ files, selectedFileId, setSelectedFileId }: {
             elements={files}
             initialSelectedId={selectedFileId ?? undefined}
             indicator
+            loading={files.length === 0}
         />
     )
 }

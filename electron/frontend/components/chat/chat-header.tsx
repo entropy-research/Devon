@@ -1,5 +1,7 @@
 import { SessionMachineContext } from '@/app/home'
 import { CircleArrowDown, Power, Rewind, History } from 'lucide-react'
+import { theme } from '@/lib/config'
+
 export default function ChatHeader({
     sessionId,
     headerIcon,
@@ -19,11 +21,9 @@ export default function ChatHeader({
     }
 
     return (
-        <div className="relative mt-[-5px] items-end pt-1 pb-3 border-outline-night shrink-0 items-left flex flex-row justify-between border-b px-6">
-            {/* <div className="">
-                <p className="text-lg mb-2">Hey there!</p>
-                <p className="text-gray-400 text-sm">{`My name is Devon and I'm a software engineer. Give me coding tasks and I will try my best to solve them!`}</p>
-            </div> */}
+        <div
+            className={`relative ${theme.showChatBorders.enabled ? 'mt-1' : 'mt-4'} items-end pt-1 pb-3 border-outline-night shrink-0 items-left flex flex-row justify-between border-b px-6`}
+        >
             <p className="text-lg font-semibold pb-[1px]">Chat</p>
             <div className="flex gap-3 -mr-2">
                 <RestartButton resetHandler={handleReset} />

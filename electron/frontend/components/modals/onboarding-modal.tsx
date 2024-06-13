@@ -161,13 +161,22 @@ const OnboardingModal = ({
                                         )}
                                     </Popover>
                                 </div>
-                                <Input
-                                    className="w-full"
-                                    type="password"
-                                    value={apiKey}
-                                    onChange={handleApiKeyInputChange}
-                                    disabled={!isChecked || isKeySaved}
-                                />
+                                {isKeySaved ? (
+                                    <Input
+                                        className="w-full"
+                                        type="password"
+                                        value="**********************"
+                                        disabled
+                                    />
+                                ) : (
+                                    <Input
+                                        className="w-full"
+                                        type="password"
+                                        value={apiKey}
+                                        onChange={handleApiKeyInputChange}
+                                        disabled={!isChecked}
+                                    />
+                                )}
                             </div>
                         </DisabledWrapper>
                         <StartChatButton

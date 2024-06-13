@@ -28,3 +28,13 @@ export const models: Model[] = [
         comingSoon: true,
     },
 ]
+
+export const theme = {
+    showChatBorders: {
+        enabled: false,
+        darkChat: true
+    }
+}
+
+export const bottomPadding = theme.showChatBorders.enabled ? 'pb-3' : 'pb-5'
+

@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react'
-import { Paperclip, ArrowRight, CirclePause, Axis3DIcon, CirclePlay } from 'lucide-react'
+import { Paperclip, ArrowRight, CirclePause, CirclePlay } from 'lucide-react'
 import { AutoresizeTextarea } from '@/components/ui/textarea'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import { useSearchParams } from 'next/navigation'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
-import AtomLoader from '@/components/ui/atom-loader/atom-loader'
+import AtomLoader from '@/components/ui/loaders/atom-loader/atom-loader'
 import { SessionMachineContext } from '@/app/home'
 import { useBackendUrl } from '@/contexts/BackendUrlContext'
+import { theme } from '@/lib/config'
 
 const Input = ({
     isAtBottom,
@@ -36,7 +37,7 @@ const Input = ({
     const sessionActorRef = SessionMachineContext.useActorRef()
 
     async function submitUserMessage(value: string) {
-        sessionActorRef.send({type: 'session.sendMessage', message: value})
+        sessionActorRef.send({ type: 'session.sendMessage', message: value })
     }
 
     function checkShouldOpenModal() {
@@ -53,26 +54,26 @@ const Input = ({
     }
 
     async function handlePause() {
-        sessionActorRef.send({type: 'session.toggle'})
+        sessionActorRef.send({ type: 'session.toggle' })
     }
 
     return (
         <div
-            className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
+            className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-0 mt-8' : ''} ${theme.showChatBorders.enabled ? 'pb-5' : ''}`}
         >
-            {(  loading ||
+            {(loading ||
                 eventContext.modelLoading ||
                 eventContext.userRequest ||
                 sessionActorRef.getSnapshot().matches('paused') ||
                 sessionActorRef.getSnapshot().matches('running')) && (
-                <InformationBox
-                    modelLoading={eventContext.modelLoading}
-                    userRequested={eventContext.userRequest}
-                    loading={loading}
-                    paused={sessionActorRef.getSnapshot().matches('paused')}
-                    pauseHandler={handlePause}
-                />
-            )}
+                    <InformationBox
+                        modelLoading={eventContext.modelLoading}
+                        userRequested={eventContext.userRequest}
+                        loading={loading}
+                        paused={sessionActorRef.getSnapshot().matches('paused')}
+                        pauseHandler={handlePause}
+                    />
+                )}
             {!viewOnly && (
                 <>
                     <form
@@ -117,8 +118,9 @@ const Input = ({
                                 />
                             </button> */}
                             <button
-                                className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 xl:right-4"
+                                className={`absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 xl:right-4 ${loading ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}`}
                                 type="submit"
+                                disabled={loading}
                             >
                                 <ArrowRight
                                     className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}
@@ -147,7 +149,7 @@ const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHan
     } = {
         modelLoading: {
             text: 'Devon is working...',
-            accessory: <PauseButton paused={paused} pauseHandler={pauseHandler}/>,
+            accessory: <PauseButton paused={paused} pauseHandler={pauseHandler} />,
         },
         userRequested: {
             text: 'Devon is waiting for your response',
@@ -171,7 +173,7 @@ const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHan
     }
     if (paused) {
         currentType.text = 'Devon is paused'
-        currentType.accessory = <PauseButton paused={paused} pauseHandler={pauseHandler}/>
+        currentType.accessory = <PauseButton paused={paused} pauseHandler={pauseHandler} />
     }
 
     return (

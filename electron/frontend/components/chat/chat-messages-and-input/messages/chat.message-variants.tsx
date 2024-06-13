@@ -1,6 +1,6 @@
 'use client'
 
-import { Bot, User } from 'lucide-react'
+import { Bot, User, Terminal, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { spinner } from './chat.spinner'
 import { CodeBlock } from '@/components/ui/codeblock'
@@ -11,6 +11,7 @@ import { remarkCustomCode } from './remarkCustomCode' // import the custom plugi
 import { StreamableValue } from 'ai/rsc'
 import { useStreamableText } from '@/lib/hooks/chat.use-streamable-text'
 import { TfiThought } from 'react-icons/tfi'
+import { Icon } from '@iconify/react'
 
 // Different types of message bubbles.
 
@@ -98,7 +99,11 @@ export const ThoughtMessage = ({
 }) => {
     const icon = (
         <div className="scale-x-[-1] translate-x-1 flex size-[32px] shrink-0 select-none items-center justify-center rounded-md text-primary-foreground shadow-sm">
-            <TfiThought size={28} />
+            {/* <TfiThought size={28} /> */}
+            <Icon
+                icon="mdi:thinking"
+                className="w-[30px] h-[30px] transform -scale-x-100"
+            />
         </div>
     )
     return <StyledMessage content={content} className={className} icon={icon} />
@@ -111,18 +116,44 @@ export const ToolResponseMessage = ({
     content: string | StreamableValue<string>
     className?: string
 }) => {
-    const icon = <div className="w-[32px]"></div>
+    // const icon = (
+    //     <div className="flex mr-2 opacity-100">
+    //         <div className="w-[46px]"></div>
+    //         <Terminal className="h-5 w-5 text-gray-500 ml-2" />
+    //     </div>
+    // )
+    const icon = <div className="w-[53px]"></div>
     let [command, response] = content.toString().split('|START_RESPONSE|')
-    return <StyledMessage content={command} className={className} icon={icon} />
+    return (
+        <StyledMessage
+            content={command}
+            className={className}
+            icon={icon}
+            noMarginLeft
+        />
+    )
 }
 
-function StyledMessage({ content, className, icon }) {
+function StyledMessage({ content, className, icon, noMarginLeft = false }) {
     const text = useStreamableText(content)
+
+    // return (
+    //     <div className={cn('group relative flex items-start', className)}>
+    //         {icon}
+    //         <div
+    //             className={`${noMarginLeft ? '' : 'ml-6'} flex-1 space-y-2 overflow-hidden`}
+    //         >
+    //             <p>{text}</p>
+    //         </div>
+    //     </div>
+    // )
 
     return (
         <div className={cn('group relative flex items-start', className)}>
             {icon}
-            <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+            <div
+                className={`${noMarginLeft ? '' : 'ml-6'} flex-1 space-y-2 overflow-hidden`}
+            >
                 <MemoizedReactMarkdown
                     className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
                     // remarkPlugins={[remarkGfm, remarkMath, remarkCustomCode]}
