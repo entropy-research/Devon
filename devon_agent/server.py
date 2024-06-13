@@ -78,7 +78,7 @@ async def lifespan(app: fastapi.FastAPI):
         await init_db()
 
         AsyncSessionLocal = sessionmaker(
-            bind=SingletonEngine.get_engine, class_=AsyncSession, expire_on_commit=False
+            bind=SingletonEngine.get_engine(), class_=AsyncSession, expire_on_commit=False
         )
         async with AsyncSessionLocal() as db_session:
             app.db_session = db_session

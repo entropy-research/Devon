@@ -23,16 +23,16 @@ class SingletonEngine:
 
     def __new__(cls, db_path):
         if cls._instance is None:
-            cls._instance = super(SingletonEngine, cls).__new__(cls)
-            cls._instance.engine = create_async_engine(
+            # cls._instance = super(SingletonEngine, cls).__new__(cls)
+            cls._instance = create_async_engine(
                 sqlite_url(db_path), connect_args={"check_same_thread": False}
             )
         return cls._instance
 
-    @property
-    def get_engine(self):
-        print("get_engine", self._instance.engine)
-        return self._instance.engine
+    @classmethod
+    def get_engine(cls):
+        print("get_engine", cls._instance)
+        return cls._instance
 
 
 # ENGINE = create_async_engine(DATABASE_URL, connect_args={"check_same_thread": False})
@@ -44,7 +44,8 @@ def set_db_engine(db_path):
 
 
 async def init_db():
-    engine = SingletonEngine.get_engine
+    print(SingletonEngine.get_engine)
+    engine = SingletonEngine.get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
@@ -83,7 +84,7 @@ async def _delete_data(db: AsyncSession, key):
 
 
 async def _save_session_util(key, value):
-    engine = SingletonEngine.get_engine
+    engine = SingletonEngine.get_engine()
     print()
     AsyncSessionLocal = sessionmaker(
         bind=engine, class_=AsyncSession, expire_on_commit=False
@@ -94,7 +95,7 @@ async def _save_session_util(key, value):
 
 async def _delete_session_util(key):
     AsyncSessionLocal = sessionmaker(
-        bind=SingletonEngine.get_engine, class_=AsyncSession, expire_on_commit=False
+        bind=SingletonEngine.get_engine(), class_=AsyncSession, expire_on_commit=False
     )
     async with AsyncSessionLocal() as db_session:
         await _delete_data(db_session, key)
@@ -113,7 +114,7 @@ async def del_data(db: AsyncSession, data: dict):
 def get_async_session():
 
     AsyncSessionLocal = sessionmaker(
-        bind=SingletonEngine.get_engine, class_=AsyncSession, expire_on_commit=False
+        bind=SingletonEngine.get_engine(), class_=AsyncSession, expire_on_commit=False
     )
 
     return AsyncSessionLocal
