@@ -114,7 +114,7 @@ class TaskAgent(Agent):
                     prompt_type=self.args.prompt_type
                 )
             )
-        print("API KEY", self.api_key)
+        # print("API KEY", self.api_key)
 
         return self.default_models[self.args.model](
                 args=ModelArguments(
