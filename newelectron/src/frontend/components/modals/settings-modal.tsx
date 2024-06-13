@@ -137,12 +137,14 @@ const General = () => {
 
     function handleNewChat() {
         sessionActorref.send({ type: 'session.delete' })
+        setUseModelName(selectedModel.id)
+        const _key = fetchApiKey()
         sessionActorref.send({
             type: 'session.create', payload: {
                 path: folderPath,
                 agentConfig: {
-                    model: model,
-                    api_key: apiKey
+                    model: selectedModel.id,
+                    api_key: _key
                 }
             }
         })
@@ -151,8 +153,8 @@ const General = () => {
                 type: 'session.init', payload: {
                     // path: folderPath,
                     agentConfig: {
-                        model: model,
-                        api_key: apiKey
+                        model: selectedModel.id,
+                        api_key: _key
                     }
                 }
             })
