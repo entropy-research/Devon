@@ -66,8 +66,6 @@ const SelectProjectDirectoryModal = ({
     }
 
     function afterSubmit() {
-        // sessionActorref.send({ type: 'setup', payload: folderPath })
-        console.log("API KEY", apiKey, model)
         sessionActorref.send({
             type: 'session.create', payload: {
                 path: folderPath,

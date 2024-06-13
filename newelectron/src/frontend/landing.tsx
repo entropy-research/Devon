@@ -9,9 +9,10 @@ export default function Landing({ smHealthCheckDone, setSmHealthCheckDone }: {
     smHealthCheckDone: boolean,
     setSmHealthCheckDone: (value: boolean) => void
 }) {
-    const { checkHasEncryptedData, getUseModelName } = useSafeStorage()
+    const { checkHasEncryptedData, getUseModelName, getApiKey } = useSafeStorage()
     const [modelName, setModelName] = useState('')
-    const [onboarded, setOnboarded] = useState(false)
+    const [justOnboarded, setOnboarded] = useState(false)
+    const [hasKey, setHasKey] = useState(false);
 
     useEffect(() => {
         const check = async () => {
@@ -20,7 +21,10 @@ export default function Landing({ smHealthCheckDone, setSmHealthCheckDone }: {
             if (hasEncryptedData) {
                 const modelName = await getUseModelName()
                 setModelName(modelName)
-                console.log('modelName', modelName)
+                const _key = await getApiKey(modelName)
+                if (_key) {
+                    setHasKey(true)
+                }
             }
         }
         check()
@@ -30,8 +34,6 @@ export default function Landing({ smHealthCheckDone, setSmHealthCheckDone }: {
     const state = SessionMachineContext.useSelector(state => state, (a, b) => a.value === b.value)
 
     function afterOnboard(apiKey: string, _modelName: string, folderPath: string) {
-
-        console.log("API KEY", apiKey, _modelName)
         sessionActorref.send({
             type: 'session.create', payload: {
                 path: folderPath,
@@ -66,13 +68,13 @@ export default function Landing({ smHealthCheckDone, setSmHealthCheckDone }: {
         <>
             <Home />
 
-            {smHealthCheckDone && !modelName && <OnboardingModal
+            {smHealthCheckDone && (!modelName || !hasKey) && <OnboardingModal
                 setModelName={setModelName}
                 setOnboarded={setOnboarded}
                 afterOnboard={afterOnboard}
             />}
             <div className="dark">
-                {smHealthCheckDone && !onboarded && modelName && <SelectProjectDirectoryModal
+                {smHealthCheckDone && (!justOnboarded && modelName && hasKey) && <SelectProjectDirectoryModal
                     openProjectModal={!state.can({ type: 'session.toggle' }) && !state.matches('resetting')}
                     hideclose
                     sessionActorref={sessionActorref}

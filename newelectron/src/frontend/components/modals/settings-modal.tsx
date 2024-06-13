@@ -106,7 +106,7 @@ const General = () => {
                             <SafeStoragePopoverContent />
                         </Popover>
                     </div>
-                    <APIKeyComponent key={selectedModel.id} model={selectedModel} />
+                    <APIKeyComponent key={selectedModel.id} model={selectedModel} sessionActorref={sessionActorref}/>
                     {/* <Input
                         className="w-full"
                         type="password"
@@ -158,7 +158,7 @@ const General = () => {
     )
 }
 
-const APIKeyComponent = ({ model }: { model: Model }) => {
+const APIKeyComponent = ({ model, sessionActorref }: { model: Model, sessionActorref: any }) => {
     const { addApiKey, getApiKey, removeApiKey } = useSafeStorage()
     const [key, setKey] = useState('')
     const [isKeyStored, setIsKeyStored] = useState(false)
@@ -196,6 +196,8 @@ const APIKeyComponent = ({ model }: { model: Model }) => {
         setIsKeyStored(false)
         setKey('')
         setIsSaving(false)
+        // Right now even if the current session isn't using the model, it will still reset the session once key deleted
+        sessionActorref.send({ type: 'session.delete' })
     }
 
     return (

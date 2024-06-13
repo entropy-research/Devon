@@ -26,11 +26,13 @@ export const useSafeStorage = () => {
         }
     }
 
-    const saveData = async (data: any) => {
+    const saveData = async (data: any, reload: boolean = true) => {
         const plainText = JSON.stringify(data)
         //@ts-ignore
         const response = await window.api.invoke('save-data', plainText)
-        window.location.reload()
+        if (reload) {
+            window.location.reload()
+        }
     }
 
     const deleteData = async () => {
@@ -45,10 +47,10 @@ export const useSafeStorage = () => {
         return response.success
     }
 
-    const addApiKey = async (keyName: string, keyValue: string) => {
+    const addApiKey = async (keyName: string, keyValue: string, reload: boolean = true) => {
         const data = (await loadData()) || {}
         data[keyName] = keyValue
-        await saveData(data)
+        await saveData(data, reload)
     }
 
     const getApiKey = async (keyName: string) => {
@@ -65,10 +67,10 @@ export const useSafeStorage = () => {
         }
     }
 
-    const setUseModelName = async (modelName: string) => {
+    const setUseModelName = async (modelName: string, reload: boolean = true) => {
         const data = await loadData()
         data.useModelName = modelName
-        await saveData(data)
+        await saveData(data, reload)
     }
 
     const getUseModelName = async () => {

@@ -20,7 +20,6 @@ import { useSafeStorage } from '@/lib/services/safeStorageService'
 import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
 import Combobox, { ComboboxItem } from '@/components/ui/combobox'
 import { models } from '@/lib/config'
-import { SessionMachineContext } from '@/home'
 
 
 const Dialog = lazy(() =>
@@ -54,7 +53,6 @@ const OnboardingModal = ({ setModelName, setOnboarded, afterOnboard }: {
     const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
     const { addApiKey, getApiKey, setUseModelName } = useSafeStorage()
     const [isKeySaved, setIsKeySaved] = useState(false)
-    const sessionActorref = SessionMachineContext.useActorRef()
 
     useEffect(() => {
         const fetchApiKey = async () => {
@@ -71,10 +69,6 @@ const OnboardingModal = ({ setModelName, setOnboarded, afterOnboard }: {
         fetchApiKey()
     }, [selectedModel])
 
-    // const handleCheckboxChange = () => {
-    //     setIsChecked(!isChecked)
-    // }
-
     const handleApiKeyInputChange = (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
@@ -83,9 +77,9 @@ const OnboardingModal = ({ setModelName, setOnboarded, afterOnboard }: {
 
     function afterSubmit() {
         const handleSaveApiKey = async () => {
-            await addApiKey(selectedModel.value, apiKey)
+            await addApiKey(selectedModel.value, apiKey, false)
             setIsKeySaved(true)
-            await setUseModelName(selectedModel.value)
+            await setUseModelName(selectedModel.value, false)
         }
         handleSaveApiKey() // Store the api key
         afterOnboard(apiKey, selectedModel.value, folderPath)
