@@ -1,11 +1,14 @@
 [tool.poetry]
 name = "devon-agent"
-version = "0.1.10"
+version = "0.1.11"
 description = ""
 authors = ["killind-dev <61808204+killind-dev@users.noreply.github.com>","mihir1003 <mihir1003@gmail.com>"]
 readme = "README.md"
 exclude = [
-    "devon_tui",
+    "devon-tui",
+    "electron",
+    "newelectron",
+    "devon_swe_bench_experimental"
 ]
 
 [tool.poetry.dependencies]
@@ -38,6 +41,7 @@ dspy-ai = {version = "^2.4.9", optional = true}
 aiosqlite = "^0.20.0"
 greenlet = "^3.0.3"
 python-dotenv = "^1.0.1"
+
 [tool.poetry.extras]
 swebench = ["swebench", "datasets", "gymnasium"]
 experimental = ["dspy-ai"]

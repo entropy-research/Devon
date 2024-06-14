@@ -12,7 +12,7 @@ import { getPlatform } from './getPlatform';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    extraResource: [`src/bin/${getPlatform().platform}-${getPlatform().arch}/devon_agent`],
+    // extraResource: [`src/bin/${getPlatform().platform}-${getPlatform().arch}/devon_agent`],
   },
   rebuildConfig: {},
   makers: [

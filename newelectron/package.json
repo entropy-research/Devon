@@ -1,17 +1,20 @@
 {
   "name": "devon-ui",
   "productName": "Devon (Alpha)",
-  "version": "1.0.0",
-  "description": "My Electron application description",
+  "version": "0.0.13",
+  "description": "Electron Application for running Devon.",
   "main": ".vite/build/main.js",
   "bin": {
-    "devon": ".vite/build/cli.js"
+    "devon-ui": ".vite/build/cli.js"
   },
+  "files": [
+    ".vite/",
+    "src"
+  ],
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "devDependencies": {

@@ -20,15 +20,17 @@ export default defineConfig((env) => {
         external,
       },
     },
-    plugins: [pluginHotRestart('restart'), viteStaticCopy({
-      targets: [
-        {
-          src: `./src/bin/${getPlatform().platform}-${getPlatform().arch}/devon_agent`,
-          dest: '.',
-          rename: "devon_agent"
-        }
-      ]
-    })],
+    plugins: [pluginHotRestart('restart'), ],
+    // viteStaticCopy({
+      // targets: [
+        // {
+          // src: `./src/bin/${getPlatform().platform}-${getPlatform().arch}/devon_agent`,
+          // dest: '.',
+          // rename: "devon_agent"
+        // }
+      // ]
+    // }
+  // )],
     define,
     resolve: {
       // Load the Node.js entry.
