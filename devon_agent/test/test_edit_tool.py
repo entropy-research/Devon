@@ -1,13 +1,8 @@
-
-
-
-
 from devon_agent.agents.default.agent import TaskAgent
+from devon_agent.environment import LocalEnvironment
 from devon_agent.session import Session, SessionArguments
 from devon_agent.tools import parse_command
 from devon_agent.tools.edittools import EditFileTool
-from devon_agent.environment import LocalEnvironment
-
 
 command = """edit_file
 <<<
@@ -44,32 +39,28 @@ edit_tool = EditFileTool()
 
 session = Session(
     args=SessionArguments(
-        path=".",
-        user_input="",
-        name="test_session",
-        task="test_user",
-        headless=False
+        path=".", user_input="", name="test_session", task="test_user", headless=False
     ),
     agent=TaskAgent(
         name="test_agent",
-            args=None,
-            chat_history=[],
-            interrupt="",
-            temperature=0,
-            api_key=None,
-            scratchpad=""
-        ),
-    persist=False
+        args=None,
+        chat_history=[],
+        interrupt="",
+        temperature=0,
+        api_key=None,
+        scratchpad="",
+    ),
+    persist=False,
 )
 session.init_state()
 session.setup()
 
 ctx = {
-    "session" : session,
-    "environment" : session.default_environment,
+    "session": session,
+    "environment": session.default_environment,
     "state": {},
-    "raw_command": command
+    "raw_command": command,
 }
 
 
-print(edit_tool.function(ctx,command))
+print(edit_tool.function(ctx, command))

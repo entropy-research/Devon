@@ -3,32 +3,30 @@ import inspect
 import json
 import logging
 import os
-import random
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
-from sqlalchemy import create_engine, text
+
 from devon_agent.agents.default.agent import AgentArguments, TaskAgent
-from devon_agent.environment import EnvironmentModule, LocalEnvironment, UserEnvironment
-from devon_agent.models import _save_data, _save_session_util, _delete_session_util, get_async_session, save_data
-from devon_agent.telemetry import Posthog, SessionEventEvent, SessionStartEvent
-from devon_agent.tool import  ToolNotFoundException
-from devon_agent.tools import (
-    parse_command,
-)
-from devon_agent.tools.editortools import CreateFileTool, DeleteFileTool, OpenFileTool, ScrollDownTool, ScrollToLineTool, ScrollUpTool, save_create_file, save_delete_file
+from devon_agent.environment import LocalEnvironment, UserEnvironment
+from devon_agent.models import _delete_session_util, _save_session_util,
+from devon_agent.telemetry import Posthog, SessionStartEvent
+from devon_agent.tool import ToolNotFoundException
+from devon_agent.tools import parse_command
+from devon_agent.tools.editortools import (CreateFileTool, DeleteFileTool,
+                                           OpenFileTool, ScrollDownTool,
+                                           ScrollToLineTool, ScrollUpTool,
+                                           save_create_file, save_delete_file)
 from devon_agent.tools.edittools import EditFileTool, save_edit_file
-from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, ListDirsRecursiveTool, SearchDirTool
+from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, SearchDirTool
 from devon_agent.tools.filetools import SearchFileTool
 from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
 from devon_agent.tools.shelltool import ShellTool
 from devon_agent.tools.usertools import AskUserTool, SetTaskTool
 from devon_agent.tools.utils import get_ignored_files
-
 from devon_agent.utils import DotDict, Event
-from devon_agent.vgit import  find_gitignore_files, get_current_diff, get_last_commit, get_or_create_repo, make_new_branch, safely_revert_to_commit, stash_and_commit_changes, subtract_diffs
 
 
 @dataclass(frozen=False)
@@ -94,9 +92,6 @@ stateDiagram
 """
 
 
-
-
-
 class Session:
     def __init__(self, args: SessionArguments, agent, persist):
         self.name = args.name
@@ -123,39 +118,38 @@ class Session:
         self.status = "paused"
 
         local_environment = LocalEnvironment(self.args.path)
-        local_environment.register_tools({
-            "create_file" : CreateFileTool().register_post_hook(save_create_file),
-            "open_file" : OpenFileTool(),
-            "scroll_up" : ScrollUpTool(),
-            "scroll_down" : ScrollDownTool(),
-            "scroll_to_line" : ScrollToLineTool(),
-            "search_file" : SearchFileTool(),
-            "edit_file" : EditFileTool().register_post_hook(save_edit_file),
-            "search_dir" : SearchDirTool(),
-            "find_file" : FindFileTool(),
-            "get_cwd" : GetCwdTool(),
-            "no_op" : NoOpTool(),
-            "submit" : SubmitTool(),
-            "delete_file" : DeleteFileTool().register_post_hook(save_delete_file),
-        })
+        local_environment.register_tools(
+            {
+                "create_file": CreateFileTool().register_post_hook(save_create_file),
+                "open_file": OpenFileTool(),
+                "scroll_up": ScrollUpTool(),
+                "scroll_down": ScrollDownTool(),
+                "scroll_to_line": ScrollToLineTool(),
+                "search_file": SearchFileTool(),
+                "edit_file": EditFileTool().register_post_hook(save_edit_file),
+                "search_dir": SearchDirTool(),
+                "find_file": FindFileTool(),
+                "get_cwd": GetCwdTool(),
+                "no_op": NoOpTool(),
+                "submit": SubmitTool(),
+                "delete_file": DeleteFileTool().register_post_hook(save_delete_file),
+            }
+        )
         local_environment.set_default_tool(ShellTool())
-        
+
         self.default_environment = local_environment
 
         if self.args.headless:
-            self.environments = {
-                "local" : local_environment
-            }
+            self.environments = {"local": local_environment}
         else:
             user_environment = UserEnvironment(self.args.user_input)
-            user_environment.register_tools({
-                "ask_user" : AskUserTool(),
-                "set_task" : SetTaskTool()
-            })
+            user_environment.register_tools(
+                {"ask_user": AskUserTool(), "set_task": SetTaskTool()}
+            )
 
             self.environments = {
-                "local" : local_environment,
-                "user" : user_environment,
+                "local": local_environment,
+                "user": user_environment,
             }
 
     def init_state(self):
@@ -170,7 +164,7 @@ class Session:
         self.event_id = 0
         self.event_log = []
         self.agent.reset()
-    
+
         self.event_log.append(
             Event(
                 type="Task",
@@ -196,7 +190,7 @@ class Session:
         }
 
     @classmethod
-    def from_dict(cls, data, user_input,persist):
+    def from_dict(cls, data, user_input, persist):
         print(data)
         instance = cls(
             args=SessionArguments(
@@ -213,7 +207,6 @@ class Session:
                 chat_history=data["agent"]["chat_history"],
             ),
             persist=persist,
-
         )
 
         # instance.state = DotDict(data["state"])
@@ -241,15 +234,15 @@ class Session:
         if self.state.task:
             return self.state.task
         return "Task unspecified ask user to specify task"
-    
+
     def get_status(self):
         return self.status
-    
+
     def pause(self):
         if self.status == "terminating" or self.status == "terminated":
             return
         self.status = "paused"
-    
+
     def start(self):
         self.status = "running"
 
@@ -262,10 +255,9 @@ class Session:
         while self.status != "terminated":
             print(self.status)
             time.sleep(2)
-    
+
     def run_event_loop(self):
         while True and not (self.event_id == len(self.event_log)):
-
             if self.status == "terminating":
                 break
 
@@ -274,7 +266,7 @@ class Session:
                 print("Session paused, waiting for resume")
                 time.sleep(2)
                 continue
-            
+
             event = self.event_log[self.event_id]
 
             self.logger.info(f"Event: {event}")
@@ -292,7 +284,9 @@ class Session:
                 self.status = "terminated"
                 break
             elif event["type"] == "Stop" and event["content"]["type"] == "submit":
-                self.state.task = "You have completed your task, ask user for revisions or a new one."
+                self.state.task = (
+                    "You have completed your task, ask user for revisions or a new one."
+                )
                 self.event_log.append(
                     Event(
                         type="Task",
@@ -309,37 +303,34 @@ class Session:
 
         self.status = "terminated"
 
-
     def step_event(self, event):
-        
         new_events = []
         match event["type"]:
             case "Error":
                 new_events.append(
                     {
                         "type": "Stop",
-                        "content": {
-                            "type" : "error",
-                            "message": event["content"]
-                        },
+                        "content": {"type": "error", "message": event["content"]},
                         "producer": event["producer"],
                         "consumer": "user",
                     }
                 )
 
-            case "GitRequest" :
+            case "GitRequest":
                 if event["content"]["type"] == "revert_to_commit":
                     # vgit
                     # safely_revert_to_commit(self.default_environment, event["content"]["commit_to_revert"], event["content"]["commit_to_go_to"])
 
-                    new_events.append({
-                        "type": "GitEvent",
-                        "content" : {
-                            "type" : "revert",
-                            "commit" : event["content"]["commit_to_go_to"],
-                            "files" : [],
+                    new_events.append(
+                        {
+                            "type": "GitEvent",
+                            "content": {
+                                "type": "revert",
+                                "commit": event["content"]["commit_to_go_to"],
+                                "files": [],
+                            },
                         }
-                    })
+                    )
 
             case "ModelRequest":
                 # TODO: Need some quantized timestep for saving persistence that isn't literally every 0.1s
@@ -359,14 +350,14 @@ class Session:
                 else:
                     new_events.append(
                         {
-                        "type": "ModelResponse",
-                        "content": json.dumps(
-                            {"thought": thought, "action": action, "output": output}
-                        ),
-                        "producer": self.agent.name,
-                        "consumer": event["producer"],
-                    }
-                )
+                            "type": "ModelResponse",
+                            "content": json.dumps(
+                                {"thought": thought, "action": action, "output": output}
+                            ),
+                            "producer": self.agent.name,
+                            "consumer": event["producer"],
+                        }
+                    )
 
             case "ToolRequest":
                 tool_name, args = event["content"]["toolname"], event["content"]["args"]
@@ -377,16 +368,15 @@ class Session:
                             {
                                 "type": "Stop",
                                 "content": {
-                                    "type" : tool_name,
-                                    "message": " ".join(args)
+                                    "type": tool_name,
+                                    "message": " ".join(args),
                                 },
                                 "producer": event["producer"],
                                 "consumer": "user",
                             }
                         )
-                    case _:        
+                    case _:
                         try:
-
                             toolname = event["content"]["toolname"]
                             args = event["content"]["args"]
                             raw_command = event["content"]["raw_command"]
@@ -396,17 +386,19 @@ class Session:
                             for _env in list(self.environments.values()):
                                 if toolname in _env.tools:
                                     env = _env
-                            
+
                             if not env:
                                 raise ToolNotFoundException(toolname, self.environments)
 
-                            response = env.tools[toolname]({
-                                "environment": env,
-                                "session": self,
-                                "state": self.state,
-                                "raw_command": raw_command
-                            }, *args)
-
+                            response = env.tools[toolname](
+                                {
+                                    "environment": env,
+                                    "session": self,
+                                    "state": self.state,
+                                    "raw_command": raw_command,
+                                },
+                                *args,
+                            )
 
                             new_events.append(
                                 {
@@ -418,18 +410,23 @@ class Session:
                             )
 
                         except ToolNotFoundException as e:
-                            
-                            if not (self.default_environment and self.default_environment.default_tool):
+                            if not (
+                                self.default_environment
+                                and self.default_environment.default_tool
+                            ):
                                 raise e
-                            
+
                             try:
-                        
-                                response  = self.default_environment.default_tool({
-                                    "state" : self.state,
-                                    "environment" : self.default_environment,
-                                    "session" : self,
-                                    "raw_command" : event["content"]["raw_command"],
-                                }, event["content"]["toolname"], event["content"]["args"])
+                                response = self.default_environment.default_tool(
+                                    {
+                                        "state": self.state,
+                                        "environment": self.default_environment,
+                                        "session": self,
+                                        "raw_command": event["content"]["raw_command"],
+                                    },
+                                    event["content"]["toolname"],
+                                    event["content"]["args"],
+                                )
 
                                 new_events.append(
                                     {
@@ -480,9 +477,9 @@ class Session:
                         {
                             "type": "ToolRequest",
                             "content": {
-                                "toolname" : toolname,
-                                "args" : args,
-                                "raw_command" : content
+                                "toolname": toolname,
+                                "args": args,
+                                "raw_command": content,
                             },
                             "producer": event["producer"],
                             "consumer": event["consumer"],
@@ -492,18 +489,22 @@ class Session:
                     new_events.append(
                         {
                             "type": "ToolResponse",
-                            "content": e.args[0] if len(e.args) > 0 else "Failed to parse command please follow the specified format",
+                            "content": e.args[0]
+                            if len(e.args) > 0
+                            else "Failed to parse command please follow the specified format",
                             "producer": event["producer"],
                             "consumer": event["consumer"],
                         }
                     )
                 except Exception as e:
-                    new_events.append({
-                        "type": "Error",
-                        "content" :str(e),
-                        "producer": event["producer"],
-                        "consumer": event["consumer"],
-                    })
+                    new_events.append(
+                        {
+                            "type": "Error",
+                            "content": str(e),
+                            "producer": event["producer"],
+                            "consumer": event["consumer"],
+                        }
+                    )
 
             case "Interrupt":
                 if self.agent.interrupt:
@@ -533,7 +534,6 @@ class Session:
 
         return new_events
 
-
     def get_available_actions(self) -> list[str]:
         # get all tools for all environments
 
@@ -543,22 +543,20 @@ class Session:
 
         return tools
 
-
     def generate_command_docs(self, format="manpage"):
         """
         Generates a dictionary of function names and their docstrings.
         """
         docs = {}
         for env in self.environments.values():
-            for name,tool in env.tools.items():
+            for name, tool in env.tools.items():
                 signature = inspect.signature(tool.function)
                 docs[name] = {
-                    "docstring" : tool.documentation(format),
-                    "signature" : str(signature),
+                    "docstring": tool.documentation(format),
+                    "signature": str(signature),
                 }
 
         return docs
-
 
     def setup(self):
         if self.args.headless:
@@ -573,19 +571,21 @@ class Session:
             env.setup(self)
             for tool in env.tools.values():
                 print("Setting up tool")
-                tool.setup({
-                    "environment" : env,
-                    "session" : self,
-                    "state" : self.state,
-                })
+                tool.setup(
+                    {
+                        "environment": env,
+                        "session": self,
+                        "state": self.state,
+                    }
+                )
 
         if self.exclude_files:
             # check if devonignore exists, use default env
             devonignore_path = os.path.join(self.base_path, ".devonignore")
-            _,rc = self.default_environment.execute("test -f " + devonignore_path)
+            _, rc = self.default_environment.execute("test -f " + devonignore_path)
             if rc == 0:
                 self.state.exclude_files = get_ignored_files(devonignore_path)
-            
+
             else:
                 # vgit
                 # gitignore_files = find_gitignore_files({
@@ -611,15 +611,16 @@ class Session:
         self.telemetry_client.capture(SessionStartEvent(self.name))
 
     def teardown(self):
-
         for env in self.environments.values():
             env.teardown()
             for tool in env.tools.values():
-                tool.setup({
-                    "environment" : env,
-                    "session" : self,
-                    "state" : self.state,
-                })
+                tool.setup(
+                    {
+                        "environment": env,
+                        "session": self,
+                        "state": self.state,
+                    }
+                )
 
     def persist(self):
         if self.persist_to_db == True:

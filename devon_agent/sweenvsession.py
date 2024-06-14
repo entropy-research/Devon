@@ -1,39 +1,40 @@
-from dataclasses import dataclass
+import inspect
 import json
 import logging
 import os
-import inspect
-from pathlib import Path
 import re
 import tarfile
 import tempfile
 import traceback
+from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Optional
+
 from datasets import load_dataset, load_from_disk
 from ghapi.all import GhApi
+from swebench import KEY_INSTANCE_ID, KEY_MODEL, KEY_PREDICTION
 
 from devon_agent.environments.swebenchenv import SWEEnvEnvironment
 from devon_agent.retrieval.code_index import CodeIndex
 from devon_agent.tool import ToolNotFoundException
 from devon_agent.tools import parse_command
 from devon_agent.tools.codeindex import FindClassTool, FindFunctionTool
-from devon_agent.utils import DotDict
-
-from devon_agent.tools.editortools import CreateFileTool, DeleteFileTool, OpenFileTool, ScrollDownTool, ScrollToLineTool, ScrollUpTool
+from devon_agent.tools.editortools import (CreateFileTool, DeleteFileTool,
+                                           OpenFileTool, ScrollDownTool,
+                                           ScrollToLineTool, ScrollUpTool)
 from devon_agent.tools.edittools import EditFileTool
-from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, ListDirsRecursiveTool, SearchDirTool
+from devon_agent.tools.filesearchtools import (FindFileTool, GetCwdTool,
+                                               ListDirsRecursiveTool,
+                                               SearchDirTool)
 from devon_agent.tools.filetools import SearchFileTool
 from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
 from devon_agent.tools.shelltool import ShellTool
-
-from swebench import KEY_INSTANCE_ID, KEY_MODEL, KEY_PREDICTION
-
+from devon_agent.utils import DotDict
 
 GITHUB_ISSUE_URL_PATTERN = re.compile(r"github\.com\/(.*?)\/(.*?)\/issues\/(\d+)")
 
 
 def build_code_index(ctx, **kwargs):
-
     if ctx["state"].code_index:
         return
     if "cache_path" in kwargs and os.path.exists(kwargs["cache_path"]):
@@ -55,11 +56,10 @@ def build_code_index(ctx, **kwargs):
         ci.initialize()
         print(f"code index built for {ctx['session'].record['instance_id']}")
         ctx["state"].code_index = ci
-    
+
     if "cache_path" in kwargs:
         print(f"saving code index to {kwargs['cache_path']}")
         ci.save_as_json(kwargs["cache_path"])
-
 
 
 def get_commit(api: GhApi, owner: str, repo: str, base_commit: str = None):
@@ -178,11 +178,8 @@ class SWEEnvSessionArguments:
     skip_existing: bool = True
 
 
-
 class SWEEnvSession:
-
     def __init__(self, args: SWEEnvSessionArguments, agent, data, traj_dir):
-
         self.event_log = []
         self.event_index = 0
         self.state = DotDict({})
@@ -211,37 +208,43 @@ class SWEEnvSession:
         # self.issues = specific_issues
 
         self.idx = 1
-        
+
         self.env = args.sweenv
-        
+
         sweenv = args.sweenv
 
-        sweenv.register_tools({
-            "create_file" : CreateFileTool(),
-            "open_file" : OpenFileTool(),
-            "scroll_up" : ScrollUpTool(),
-            "scroll_down" : ScrollDownTool(),
-            "scroll_to_line" : ScrollToLineTool(),
-            "search_file" : SearchFileTool(),
-            "edit_file" : EditFileTool(),
-            "search_dir" : SearchDirTool(),
-            "find_file" : FindFileTool(),
-            "find_function" : FindFunctionTool().register_pre_hook(lambda ctx, **kwargs: build_code_index(ctx, cache_path=f"cache/{self.record['instance_id']}")),
-            "find_class" : FindClassTool().register_pre_hook(lambda ctx, **kwargs: build_code_index(ctx, cache_path=f"cache/{self.record['instance_id']}")),
-            # "list_dirs_recursive" : ListDirsRecursiveTool(),
-            "get_cwd" : GetCwdTool(),
-            "no_op" : NoOpTool(),
-            "submit" : SubmitTool(),
-            "delete_file" : DeleteFileTool(),
-
-        })
+        sweenv.register_tools(
+            {
+                "create_file": CreateFileTool(),
+                "open_file": OpenFileTool(),
+                "scroll_up": ScrollUpTool(),
+                "scroll_down": ScrollDownTool(),
+                "scroll_to_line": ScrollToLineTool(),
+                "search_file": SearchFileTool(),
+                "edit_file": EditFileTool(),
+                "search_dir": SearchDirTool(),
+                "find_file": FindFileTool(),
+                "find_function": FindFunctionTool().register_pre_hook(
+                    lambda ctx, **kwargs: build_code_index(
+                        ctx, cache_path=f"cache/{self.record['instance_id']}"
+                    )
+                ),
+                "find_class": FindClassTool().register_pre_hook(
+                    lambda ctx, **kwargs: build_code_index(
+                        ctx, cache_path=f"cache/{self.record['instance_id']}"
+                    )
+                ),
+                # "list_dirs_recursive" : ListDirsRecursiveTool(),
+                "get_cwd": GetCwdTool(),
+                "no_op": NoOpTool(),
+                "submit": SubmitTool(),
+                "delete_file": DeleteFileTool(),
+            }
+        )
         sweenv.set_default_tool(ShellTool())
         self.default_environment = sweenv
 
-        self.environments = {
-            "swebenchenv": sweenv
-        }
-
+        self.environments = {"swebenchenv": sweenv}
 
     def enter(self):
         self.record = self.data[self.idx]
@@ -256,18 +259,18 @@ class SWEEnvSession:
         #         "state" : self.state,
         #     })
 
-    def reset(self,record):
+    def reset(self, record):
         # self.environments["swebenchenv"].setup()
         self.environments["swebenchenv"].reset(record)
         self.base_path = self.environments["swebenchenv"].base_path
         for tool in self.environments["swebenchenv"].tools.values():
-            tool.setup({
-                "environment" : self.environments["swebenchenv"],
-                "session" : self,
-                "state" : self.state,
-            })
-
-
+            tool.setup(
+                {
+                    "environment": self.environments["swebenchenv"],
+                    "session": self,
+                    "state": self.state,
+                }
+            )
 
     def exit(self):
         self.environments["swebenchenv"].teardown()
@@ -278,7 +281,6 @@ class SWEEnvSession:
         submission = None
 
         while True and not (event_id == len(self.event_log)):
-
             event = self.event_log[event_id]
 
             self.logger.info(f"Event: {event}")
@@ -305,7 +307,7 @@ class SWEEnvSession:
 }
 submit"""
 
-                submission, rc =  self.environments["swebenchenv"].execute(command)
+                submission, rc = self.environments["swebenchenv"].execute(command)
                 pattern = r"\<\<SUBMISSION\|\|(.*)\|\|SUBMISSION\>\>"
                 match = re.search(pattern, submission, re.DOTALL)
                 if match is None:
@@ -317,35 +319,32 @@ submit"""
             self.event_log.extend(events)
 
             event_id += 1
-        
+
         return submission
 
     def run_event_loop(self):
+        """
+        input: data, agent, traj dir, env
+
+        try:
+            #in session
+            for index in data:
+                try:
+                    1. reset environment with instance (should skip/not)
+                    2. setup dirs
+                    3. run loop over submit loop
+                except keyboard exception as e:
+                    raise e
+                except exception:
+                    handle normally + continue
+
+        except:
+            env.close
 
         """
-    input: data, agent, traj dir, env
-    
-    try:
-        #in session
-        for index in data:
-            try:
-                1. reset environment with instance (should skip/not)
-                2. setup dirs
-                3. run loop over submit loop
-            except keyboard exception as e:
-                raise e
-            except exception:
-                handle normally + continue
-
-    except:
-        env.close
-
-    """
 
         for index in range(len(self.data)):
             try:
-
-
                 record = self.data[index]
                 instance_id = record["instance_id"]
                 # instance_id = self.record["instance_id"]
@@ -358,13 +357,14 @@ submit"""
                 os.makedirs(self.traj_dir, exist_ok=True)
 
                 try:
-
-                    self.event_log.append({
-                        "type":"ModelRequest",
-                        "content":"",
-                        "producer":"system",
-                        "consumer":"devon"
-                    })
+                    self.event_log.append(
+                        {
+                            "type": "ModelRequest",
+                            "content": "",
+                            "producer": "system",
+                            "consumer": "devon",
+                        }
+                    )
                     submission = self._run_single_instance_loop()
                 except Exception as e:
                     self.logger.error(f"Error running agent: {e}")
@@ -381,7 +381,6 @@ submit"""
                 # self.env.setup()
                 continue
 
-
     def save_predictions(self, traj_dir, instance_id, submission):
         output_file = Path(traj_dir) / "all_preds.jsonl"
         model_patch = submission
@@ -393,7 +392,6 @@ submit"""
         with open(output_file, "a+") as fp:
             print(json.dumps(datum), file=fp, flush=True)
         self.logger.info(f"Saved predictions to {output_file}")
-
 
     def should_skip(self, traj_dir, instance_id):
         """Check if we should skip this instance based on the instance filter and skip_existing flag."""
@@ -415,7 +413,9 @@ submit"""
             # If the trajectory has no exit status, it's incomplete and we will redo it
             exit_status = data["info"].get("exit_status", None)
             if exit_status == "early_exit" or exit_status is None:
-                self.logger.info(f"Found existing trajectory with no exit status: {log_path}")
+                self.logger.info(
+                    f"Found existing trajectory with no exit status: {log_path}"
+                )
                 self.logger.info("Removing incomplete trajectory...")
                 os.remove(log_path)
             else:
@@ -423,9 +423,7 @@ submit"""
                 return True
             return False
 
-
     def step_event(self, event):
-
         new_events = []
         match event["type"]:
             case "Error":
@@ -479,7 +477,6 @@ submit"""
 
                     case _:
                         try:
-
                             toolname = event["content"]["toolname"]
                             args = event["content"]["args"]
                             raw_command = event["content"]["raw_command"]
@@ -513,7 +510,6 @@ submit"""
                             )
 
                         except ToolNotFoundException as e:
-
                             if not (
                                 self.default_environment
                                 and self.default_environment.default_tool
@@ -521,7 +517,6 @@ submit"""
                                 raise e
 
                             try:
-
                                 response = self.default_environment.default_tool(
                                     {
                                         "state": self.state,
@@ -594,7 +589,7 @@ submit"""
                 pass
 
         return new_events
-    
+
     def get_available_actions(self) -> list[str]:
         # get all tools for all environments
 
@@ -604,18 +599,17 @@ submit"""
 
         return tools
 
-
     def generate_command_docs(self, format="manpage"):
         """
         Generates a dictionary of function names and their docstrings.
         """
         docs = {}
         for env in self.environments.values():
-            for name,tool in env.tools.items():
+            for name, tool in env.tools.items():
                 signature = inspect.signature(tool.function)
                 docs[name] = {
-                    "docstring" : tool.documentation(format),
-                    "signature" : str(signature),
+                    "docstring": tool.documentation(format),
+                    "signature": str(signature),
                 }
 
         return docs

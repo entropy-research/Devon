@@ -1,5 +1,3 @@
-
-
 # swebench dataset
 # probably not gonna use dev, split test further
 
@@ -24,13 +22,13 @@
 # DSPy tool seems to need
 # name [x]
 # input_variable
-# desc 
+# desc
 # __call__ [x]
 
 # we should change this to allow multiple args
 # name [x]
 # input_variables
-# desc 
+# desc
 # __call__ [x]
 
 # dspy documentation format can be added for the tools
@@ -38,12 +36,12 @@
 #  devon agnet predict ~= dspy forward
 
 
-import dspy
-from dspy import Module,ensure_signature,Predict
 import dsp
-turbo = dspy.OpenAI(model='gpt-4o', max_tokens=4028)
-dspy.settings.configure(lm=turbo)
+import dspy
+from dspy import Module, Predict, ensure_signature
 
+turbo = dspy.OpenAI(model="gpt-4o", max_tokens=4028)
+dspy.settings.configure(lm=turbo)
 
 
 class ReAct(Module):
@@ -64,15 +62,17 @@ class ReAct(Module):
         outputs_ = ", ".join([f"`{k}`" for k in self.output_fields.keys()])
 
         instr = []
-        
+
         if self.signature.instructions is not None:
             instr.append(f"{self.signature.instructions}\n")
-        
-        instr.extend([
-            f"You will be given {inputs_} and you will respond with {outputs_}.\n",
-            "To do this, you will interleave Thought, Action, and Observation steps.\n",
-            "Thought can reason about the current situation, and Action can be the following types:\n",
-        ])
+
+        instr.extend(
+            [
+                f"You will be given {inputs_} and you will respond with {outputs_}.\n",
+                "To do this, you will interleave Thought, Action, and Observation steps.\n",
+                "Thought can reason about the current situation, and Action can be the following types:\n",
+            ]
+        )
 
         self.tools["Finish"] = dspy.Example(
             name="Finish",
@@ -155,17 +155,19 @@ class ReAct(Module):
             args.update(output)
 
         observations = [args[key] for key in args if key.startswith("Observation")]
-        
+
         # assumes only 1 output field for now - TODO: handling for multiple output fields
-        return dspy.Prediction(observations=observations, **{list(self.output_fields.keys())[0]: action_val or ""})
+        return dspy.Prediction(
+            observations=observations,
+            **{list(self.output_fields.keys())[0]: action_val or ""},
+        )
+
 
 # class DevonAgent(dspy.Module)
 
 
-
 class DevonAgent(Module):
-
-    def __init__(self, signature, max_iters=15,tools=None):
+    def __init__(self, signature, max_iters=15, tools=None):
         super().__init__()
         self.signature = signature = ensure_signature(signature)
         self.max_iters = max_iters
@@ -175,21 +177,25 @@ class DevonAgent(Module):
         self.input_fields = self.signature.input_fields
         self.output_fields = self.signature.output_fields
 
-        assert len(self.output_fields) == 1, "DevonAgent only supports one output field."
+        assert (
+            len(self.output_fields) == 1
+        ), "DevonAgent only supports one output field."
 
         inputs_ = ", ".join([f"`{k}`" for k in self.input_fields.keys()])
         outputs_ = ", ".join([f"`{k}`" for k in self.output_fields.keys()])
 
         instr = []
-        
+
         if self.signature.instructions is not None:
             instr.append(f"{self.signature.instructions}\n")
-        
-        instr.extend([
-            f"You will be given {inputs_} and you will respond with {outputs_}.\n",
-            "To do this, you will interleave Thought, Action, and Observation steps.\n",
-            "Thought can reason about the current situation, and Action can be the following types:\n",
-        ])
+
+        instr.extend(
+            [
+                f"You will be given {inputs_} and you will respond with {outputs_}.\n",
+                "To do this, you will interleave Thought, Action, and Observation steps.\n",
+                "Thought can reason about the current situation, and Action can be the following types:\n",
+            ]
+        )
 
         self.tools["submit"] = dspy.Example(
             name="submit",
@@ -240,7 +246,7 @@ class DevonAgent(Module):
                 )
 
         return signature_dict
-    
+
     # get parity with agent predict
     def predict(self, output, hop):
         try:
@@ -248,7 +254,7 @@ class DevonAgent(Module):
             action_name, args = parse_command(action)
 
             if action_name == "submit":
-                return 
+                return
 
             result = self.tools[action_name](**args)
             # Handle the case where 'passages' attribute is missing
@@ -276,7 +282,9 @@ class DevonAgent(Module):
             args.update(output)
 
         observations = [args[key] for key in args if key.startswith("Observation")]
-        
-        # assumes only 1 output field for now - TODO: handling for multiple output fields
-        return dspy.Prediction(observations=observations, **{list(self.output_fields.keys())[0]: action_val or ""})
 
+        # assumes only 1 output field for now - TODO: handling for multiple output fields
+        return dspy.Prediction(
+            observations=observations,
+            **{list(self.output_fields.keys())[0]: action_val or ""},
+        )

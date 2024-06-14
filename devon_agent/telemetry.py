@@ -1,17 +1,17 @@
-import posthog
 import logging
 import sys
 from typing import Any, Dict, Optional, Set
 
+import posthog
 
 logger = logging.getLogger(__name__)
 
-from abc import abstractmethod
 import os
-from typing import ClassVar, Dict, Any
 import uuid
-from pathlib import Path
+from abc import abstractmethod
 from enum import Enum
+from pathlib import Path
+from typing import Any, ClassVar, Dict
 
 
 class ServerContext(Enum):

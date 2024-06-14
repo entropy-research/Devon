@@ -1,4 +1,4 @@
-# every tool 
+# every tool
 # - needs context (env,state)
 # - pre and post functions
 
@@ -23,7 +23,6 @@ Often, you want to run operations before and after a tool is called. pre and pos
 Tools are often passed to llms as prompts or function calling. Every tool should supoport generating a prompt in various formats (docstring,markdown,xml,jsonschema,function call, etc.). Util functions will be provided to help with this.
 """
 
-
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -36,8 +35,8 @@ if TYPE_CHECKING:
 
 class ToolContext(ABC):
     state: Any
-    environment: 'EnvironmentModule'
-    session: 'Session'
+    environment: "EnvironmentModule"
+    session: "Session"
 
 
 PreTool = Callable[[ToolContext], None]
@@ -58,7 +57,6 @@ class Tool(ABC):
     def name(self):
         pass
 
-
     @abstractmethod
     def setup(self, context: ToolContext):
         """
@@ -72,14 +70,14 @@ class Tool(ABC):
         pass
 
     @abstractmethod
-    def documentation(self, format = "docstring"): 
+    def documentation(self, format="docstring"):
         """
         Will be passed as prompt or function call to llm.
         """
         pass
 
     @abstractmethod
-    def function(self,context, **kwargs):
+    def function(self, context, **kwargs):
         """
         Excutes the tool and returns the response.
         """
@@ -93,19 +91,22 @@ class Tool(ABC):
             func(context, response)
         return response
 
-    def register_pre_hook(self, func : PreTool):
+    def register_pre_hook(self, func: PreTool):
         self.pre_funcs.append(func)
         return self
 
-    def register_post_hook(self, func : PostTool):
+    def register_post_hook(self, func: PostTool):
         self.post_funcs.append(func)
         return self
 
+
 class ToolNotFoundException(Exception):
     """Exception raised when a tool is not found in the available environments."""
+
     def __init__(self, tool_name, environments):
         self.tool_name = tool_name
         self.environments = environments
-        message = f"Tool '{tool_name}' not found in environments: {list(environments.keys())}"
+        message = (
+            f"Tool '{tool_name}' not found in environments: {list(environments.keys())}"
+        )
         super().__init__(message)
-

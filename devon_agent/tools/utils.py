@@ -2,8 +2,8 @@ import fnmatch
 import io
 import json
 import os
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 from devon_agent.tool import ToolContext
 
@@ -12,14 +12,14 @@ def get_ignored_files(gitignore_path):
     ignored_files = []
 
     # Read the .gitignore file
-    with open(gitignore_path, 'r') as file:
+    with open(gitignore_path, "r") as file:
         gitignore_patterns = file.read().splitlines()
 
     # Iterate over all files and directories in the current directory
-    for root, dirs, files in os.walk('.'):
+    for root, dirs, files in os.walk("."):
         for pattern in gitignore_patterns:
             # Ignore empty lines and comments in .gitignore
-            if pattern.strip() == '' or pattern.startswith('#'):
+            if pattern.strip() == "" or pattern.startswith("#"):
                 continue
 
             # Match files against the pattern
@@ -33,15 +33,11 @@ def get_ignored_files(gitignore_path):
     return ignored_files
 
 
-
-
-
-def normalize_path(path : str, specified_path : str):
+def normalize_path(path: str, specified_path: str):
     specified_path = Path(specified_path).absolute().as_posix()
     if path == os.sep:
         return specified_path
     elif os.path.isabs(path):
-
         if path.lower().startswith(specified_path.lower()):
             path = Path(path)
             return path.absolute().as_posix()
@@ -53,7 +49,7 @@ def normalize_path(path : str, specified_path : str):
         return path.absolute().as_posix()
 
 
-def make_abs_path(ctx : ToolContext, fpath: str) -> str:
+def make_abs_path(ctx: ToolContext, fpath: str) -> str:
     """
     Converts relative paths to absolute paths based on the container's root directory.
 
@@ -70,6 +66,7 @@ def make_abs_path(ctx : ToolContext, fpath: str) -> str:
 
     return normalize_path(fpath, ctx["session"].base_path)
 
+
 def get_cwd(ctx) -> str:
     """
     Gets the current working directory of the container.
@@ -84,6 +81,7 @@ def get_cwd(ctx) -> str:
 
     return result[0].strip() if result[0] else None
 
+
 def cwd_normalize_path(ctx, path):
     if os.path.isabs(path):
         return make_abs_path(ctx, path)
@@ -91,11 +89,13 @@ def cwd_normalize_path(ctx, path):
         print(get_cwd(ctx), path)
         return make_abs_path(ctx, os.path.join(get_cwd(ctx), path))
 
+
 def file_exists(ctx, fpath):
     abs_path = cwd_normalize_path(ctx, fpath)
     out, rc = ctx["environment"].execute(f"test -f {abs_path}")
 
     return rc == 0
+
 
 def _capture_window(lines, index, window_size):
     start_line = index - window_size if index - window_size >= 0 else 0
@@ -121,9 +121,11 @@ def write_file(ctx, file_path: str, content: str = "") -> str:
         exists = file_exists(ctx, abs_path)
         if not exists:
             raise Exception(f"Could not write to file, file does not exist: {abs_path}")
-        
+
         if abs_path not in ctx["state"].editor.files:
-            raise Exception(f"Could not write to file, file not open in editor: {abs_path}")
+            raise Exception(
+                f"Could not write to file, file not open in editor: {abs_path}"
+            )
 
         create_command = f"cat << 'DELIM' > {abs_path} \n" + content + "\nDELIM"
         result = ctx["environment"].execute(create_command)
@@ -138,9 +140,11 @@ def write_file(ctx, file_path: str, content: str = "") -> str:
         return msg
 
     except Exception as e:
-        ctx["session"].logger.error(f"Failed to write to file: {abs_path}. Error: {str(e)}")
+        ctx["session"].logger.error(
+            f"Failed to write to file: {abs_path}. Error: {str(e)}"
+        )
         raise Exception(f"Failed to write to file: {abs_path}. Error: {str(e)}")
-    
+
 
 def check_lint(ctx, code_string: str, file_path: str):
     """
@@ -170,7 +174,6 @@ def check_lint(ctx, code_string: str, file_path: str):
     return results
 
 
-
 def read_file(ctx, file_path: str) -> str:
     """
     Reads the content of a specific file from the docker container.
@@ -183,6 +186,7 @@ def read_file(ctx, file_path: str) -> str:
     """
     result, _ = ctx["environment"].communicate(f"cat '{file_path}'")
     return result
+
 
 def check_lint_entry_equal(a, b):
     """
@@ -199,12 +203,14 @@ def check_lint_entry_equal(a, b):
         return True
     return False
 
+
 def check_lint_entry_in_list(a, b_set):
     """
     Checks if a lint entry is in a list of lint entries.
     """
 
     return any(check_lint_entry_equal(a, entry) for entry in b_set)
+
 
 def _list_files_recursive(ctx, files: list[str]) -> dict:
     base_path = ctx["session"].base_path

@@ -1,17 +1,15 @@
 from devon_agent.tool import Tool, ToolContext
 
-class SubmitTool(Tool):
 
+class SubmitTool(Tool):
     @property
     def name(self):
         return "submit"
-    
+
     def supported_formats(self):
         return ["docstring", "manpage"]
 
-
     def documentation(self, format="docstring"):
-        
         match format:
             case "docstring":
                 return self.function.__doc__
@@ -31,10 +29,9 @@ class SubmitTool(Tool):
 
     def setup(self, ctx):
         pass
-    
-    def function(self, ctx : ToolContext):
+
+    def function(self, ctx: ToolContext):
         pass
 
     def cleanup(self, ctx):
         pass
-

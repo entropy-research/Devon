@@ -1,19 +1,12 @@
-import time
-from sqlalchemy import create_engine, text, delete
-from fastapi import FastAPI, Depends
-from sqlalchemy import create_engine, Column, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
 import json
-from contextlib import asynccontextmanager
 
+from sqlalchemy import Column, Integer, String, Text, delete
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.future import select
+from sqlalchemy.orm import sessionmaker
 
+    
 def sqlite_url(db_path):
     return "sqlite+aiosqlite:///" + db_path
 
@@ -112,7 +105,6 @@ async def del_data(db: AsyncSession, data: dict):
 
 
 def get_async_session():
-
     AsyncSessionLocal = sessionmaker(
         bind=SingletonEngine.get_engine(), class_=AsyncSession, expire_on_commit=False
     )

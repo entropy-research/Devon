@@ -2,6 +2,7 @@
 
 import os
 
+
 def discover_python_files(root_dir, ignore_dirs=None):
     """
     Discovers all Python files in the given directory and its subdirectories,

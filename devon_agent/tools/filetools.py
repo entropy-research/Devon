@@ -1,7 +1,8 @@
 import os
-from devon_agent.tool import Tool, ToolContext
-from devon_agent.tools.utils import _capture_window, cwd_normalize_path, make_abs_path, file_exists
 
+from devon_agent.tool import Tool, ToolContext
+from devon_agent.tools.utils import (_capture_window, cwd_normalize_path,
+                                     file_exists, make_abs_path)
 
 
 class DeleteFileTool(Tool):
@@ -12,20 +13,19 @@ class DeleteFileTool(Tool):
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
 
     def cleanup(self, ctx):
         pass
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return     """
+                return """
     DELETE_FILE(1)                   General Commands Manual                  DELETE_FILE(1)
 
     NAME
@@ -56,8 +56,8 @@ class DeleteFileTool(Tool):
     """
             case _:
                 raise ValueError(f"Invalid format: {format}")
-    
-    def function(self,ctx : ToolContext, file_path: str) -> str:
+
+    def function(self, ctx: ToolContext, file_path: str) -> str:
         """
         command_name: delete_file
         description: Deletes a file at the specified file path.
@@ -71,7 +71,9 @@ class DeleteFileTool(Tool):
 
             exists = file_exists(ctx, abs_path)
             if not exists:
-                raise Exception(f"Could not delete file, file does not exist: {abs_path}")
+                raise Exception(
+                    f"Could not delete file, file does not exist: {abs_path}"
+                )
 
             # Creating the file with initial content
             ctx["environment"].execute(f"rm -f {abs_path}")
@@ -79,7 +81,9 @@ class DeleteFileTool(Tool):
             return f"Successfully deleted file {abs_path}"
 
         except Exception as e:
-            ctx["session"].logger.error(f"Failed to delete file: {abs_path}. Error: {str(e)}")
+            ctx["session"].logger.error(
+                f"Failed to delete file: {abs_path}. Error: {str(e)}"
+            )
             return f"Failed to delete file: {abs_path}. Error: {str(e)}"
 
 
@@ -91,20 +95,19 @@ class CreateFileTool(Tool):
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
 
     def cleanup(self, ctx):
         pass
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return     """
+                return """
     CREATE_FILE(1)                   General Commands Manual                  CREATE_FILE(1)
 
     NAME
@@ -155,16 +158,16 @@ class CreateFileTool(Tool):
     """
             case _:
                 raise ValueError(f"Invalid format: {format}")
-    
-    def function(self,ctx : ToolContext, file_path: str, content: str = "") -> str:
+
+    def function(self, ctx: ToolContext, file_path: str, content: str = "") -> str:
         """
-        command_name: create_file
-        description: Creates a new file at the specified file path with optional initial content.
-        signature: create_file [FILE_PATH] <<<CONTENT>>>
-        example: `create_file "/path/to/script.py" <<<
-import os
-import asyncio
->>>`
+                command_name: create_file
+                description: Creates a new file at the specified file path with optional initial content.
+                signature: create_file [FILE_PATH] <<<CONTENT>>>
+                example: `create_file "/path/to/script.py" <<<
+        import os
+        import asyncio
+        >>>`
         """
         try:
             # Check if file already exists to avoid overwriting
@@ -172,8 +175,10 @@ import asyncio
 
             exists = file_exists(ctx, abs_path)
             if exists:
-                raise Exception(f"Could not create file, file already exists: {abs_path}")
-            
+                raise Exception(
+                    f"Could not create file, file already exists: {abs_path}"
+                )
+
             create_command = (
                 f"mkdir -p $(dirname '{abs_path}') && cat << 'DELIM' > '{abs_path}' \n"
                 + content
@@ -181,11 +186,12 @@ import asyncio
             )
             ctx["environment"].execute(create_command)
 
-            
             exists = file_exists(ctx, abs_path)
             if not exists:
-                raise Exception(f"Could not create file, file does not exist: {abs_path}")
-            
+                raise Exception(
+                    f"Could not create file, file does not exist: {abs_path}"
+                )
+
             return f"Successfully created file {abs_path}"
         except Exception as e:
             ctx["logger"].error(f"Failed to create file: {file_path}. Error: {str(e)}")
@@ -195,7 +201,6 @@ import asyncio
 
 
 class ListFilesTool(Tool):
-
     @property
     def name(self):
         return "list_files"
@@ -203,20 +208,19 @@ class ListFilesTool(Tool):
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
 
     def cleanup(self, ctx):
         pass
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return    """NAME
+                return """NAME
             list_files - list all files in a specific folder
 
     SYNOPSIS
@@ -245,8 +249,8 @@ class ListFilesTool(Tool):
     """
             case _:
                 raise ValueError(f"Invalid format: {format}")
-            
-    def function(self,ctx : ToolContext, folder_path: str = ".") -> list:
+
+    def function(self, ctx: ToolContext, folder_path: str = ".") -> list:
         """
         command_name: list_files
         description: Lists all files in the specified folder.
@@ -259,30 +263,29 @@ class ListFilesTool(Tool):
         result = ctx["environment"].execute(command)
 
         return result
-   
-class ReadFileTool(Tool):
 
+
+class ReadFileTool(Tool):
     @property
     def name(self):
         return "read_file"
-    
+
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
 
     def cleanup(self, ctx):
         pass
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return    """
+                return """
     READ_FILE(1)                   General Commands Manual                  READ_FILE(1)
 
     NAME
@@ -308,8 +311,8 @@ class ReadFileTool(Tool):
     """
             case _:
                 raise ValueError(f"Invalid format: {format}")
-    
-    def function(self, ctx : ToolContext, file_path: str) -> str:
+
+    def function(self, ctx: ToolContext, file_path: str) -> str:
         """
         command_name: read_file
         description: Reads the contents of a file at the specified file path.
@@ -323,18 +326,17 @@ class ReadFileTool(Tool):
         except Exception as e:
             ctx["logger"].error(f"Failed to read file: {file_path}. Error: {str(e)}")
             return f"Failed to read file: {file_path}. Error: {str(e)}"
-        
-    
-class SearchFileTool(Tool):
 
+
+class SearchFileTool(Tool):
     @property
     def name(self):
         return "search_file"
-    
+
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
 
@@ -344,13 +346,12 @@ class SearchFileTool(Tool):
     def supported_formats(self):
         return ["docstring", "manpage"]
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return    """
+                return """
     SEARCH_FILE(1)                   General Commands Manual                  SEARCH_FILE(1)
 
     NAME
@@ -384,22 +385,23 @@ class SearchFileTool(Tool):
     """
             case _:
                 raise ValueError(f"Invalid format: {format}")
-    
-    def function(self,ctx : ToolContext, search_term: str, file_path: str):
+
+    def function(self, ctx: ToolContext, search_term: str, file_path: str):
         """
         command_name: search_file
         description: Searches for the term in the specified file.
-        signature: search_file [SEARCH_TERM] [DIR_PATH] 
+        signature: search_file [SEARCH_TERM] [DIR_PATH]
         example: `search_file "Hello" .`
         """
         abs_path = cwd_normalize_path(ctx, file_path)
-
 
         try:
             # Check if file exists to avoid reading from non-existent files
             content, _ = ctx["environment"].communicate(f"cat '{file_path}'")
         except Exception as e:
-            ctx["session"].logger.error(f"Failed to read file: {file_path}. Error: {str(e)}")
+            ctx["session"].logger.error(
+                f"Failed to read file: {file_path}. Error: {str(e)}"
+            )
             return f"Failed to read file: {file_path}. Error: {str(e)}"
         matches = []
         tolerance = 10
@@ -417,8 +419,5 @@ class SearchFileTool(Tool):
             return f'More than {10} lines matched for "{search_term}" in {abs_path}. Please narrow your search.'
 
         matches = "\n".join(matches)
-        result = (
-            f'Found {num_matches} matches for "{search_term}" in {abs_path}:\n {matches}'
-        )
+        result = f'Found {num_matches} matches for "{search_term}" in {abs_path}:\n {matches}'
         return result
-

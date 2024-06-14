@@ -7,7 +7,6 @@ from pydantic import BaseModel
 
 from devon_agent.utils import LOGGER_NAME
 
-
 logger = logging.getLogger(LOGGER_NAME)
 DATA_LOGGER_NAME = "udiff_data"
 data_logger = logging.getLogger(DATA_LOGGER_NAME)
@@ -412,10 +411,14 @@ def parse_multi_file_diffs(diff: str) -> List[FileContextDiff]:
                         content = lines[i][:]
 
                         if lines[i].startswith("-"):
-                            hunk_lines.append(HunkLine(type="removed", content=content[1:]))
+                            hunk_lines.append(
+                                HunkLine(type="removed", content=content[1:])
+                            )
                             changed_lines += 1
                         elif lines[i].startswith("+"):
-                            hunk_lines.append(HunkLine(type="added", content=content[1:]))
+                            hunk_lines.append(
+                                HunkLine(type="added", content=content[1:])
+                            )
                             changed_lines += 1
                         else:
                             hunk_lines.append(

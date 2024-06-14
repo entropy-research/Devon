@@ -1,13 +1,16 @@
 from typing import Dict, List, Union
 
+
 def llama3_7b_commands_to_command_docs(commands: List[Dict]):
     doc = ""
     for command in commands:
         doc += f"{command['docstring']}\n"
     return doc
 
+
 def editor_repr(editor):
     return "\n\n".join(f"{file}:\n{editor[file]}" for file in editor)
+
 
 def llama3_7b_history_to_bash_history(history):
     # self.history.append(
@@ -34,6 +37,7 @@ def llama3_7b_history_to_bash_history(history):
 """
     return bash_history
 
+
 def object_to_xml(data: Union[dict, bool], root="object"):
     xml = f"<{root}>"
     if isinstance(data, dict):
@@ -45,11 +49,17 @@ def object_to_xml(data: Union[dict, bool], root="object"):
     xml += f"</{root}>"
     return xml
 
+
 def print_tree(directory, level=0, indent=""):
-    return "".join(f"\n{indent}├── {name}/" + print_tree(content, level + 1, indent + "│   ") if isinstance(content, dict) else f"\n{indent}├── {name}" for name, content in directory.items())
+    return "".join(
+        f"\n{indent}├── {name}/" + print_tree(content, level + 1, indent + "│   ")
+        if isinstance(content, dict)
+        else f"\n{indent}├── {name}"
+        for name, content in directory.items()
+    )
+
 
 def llama3_7b_system_prompt_template_v1(command_docs: str):
-
     print(command_docs)
 
     return f"""
@@ -99,6 +109,7 @@ set_task
 THESE COMMANDS WORK LIKE REGULAR BASH COMMANDS
 """
 
+
 def llama3_7b_last_user_prompt_template_v1(issue, editor, cwd, root_dir, scratchpad):
     return f"""
 <SETTING>
@@ -147,6 +158,7 @@ DO NOT run the same command twice in a row, if you need to, call the `no_op` or 
 
 Current task: {issue}
 """
+
 
 def llama3_7b_parse_response(response):
     print(response)

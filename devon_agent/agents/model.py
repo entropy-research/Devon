@@ -1,9 +1,10 @@
-import os
-import litellm
 import logging
-from litellm import completion
+import os
 from dataclasses import dataclass
 from typing import Optional
+
+import litellm
+from litellm import completion
 
 # litellm.telemetry = False
 
@@ -11,6 +12,7 @@ from typing import Optional
 
 logger = logging.getLogger("LiteLLM")
 logger.disabled = True
+
 
 @dataclass(frozen=False)
 class ModelArguments:
@@ -20,6 +22,7 @@ class ModelArguments:
     api_key: Optional[str] = None
     api_base: Optional[str] = None
     prompt_type: Optional[str] = None
+
 
 class HumanModel:
     def __init__(self, args: ModelArguments):
@@ -56,7 +59,7 @@ class AnthropicModel:
         self.args = args
         self.api_model = self.SHORTCUTS.get(args.model_name, args.model_name)
         self.model_metadata = self.MODELS[self.api_model]
-        self.prompt_type = 'anthropic'
+        self.prompt_type = "anthropic"
         if args.api_key is not None:
             self.api_key = args.api_key
         else:
@@ -64,14 +67,14 @@ class AnthropicModel:
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
-                messages=[{"role": "system", "content": system_message}] + messages,
-                max_tokens=self.model_metadata["max_tokens"],
-                model=self.api_model,
-                temperature=self.args.temperature,
-                stop=["</COMMAND>"],
-                api_key=self.api_key,
-            )
-        
+            messages=[{"role": "system", "content": system_message}] + messages,
+            max_tokens=self.model_metadata["max_tokens"],
+            model=self.api_model,
+            temperature=self.args.temperature,
+            stop=["</COMMAND>"],
+            api_key=self.api_key,
+        )
+
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
         return response + "</COMMAND>"
 
@@ -99,7 +102,7 @@ class OpenAiModel:
         self.args = args
         self.api_model = self.SHORTCUTS.get(args.model_name, args.model_name)
         self.model_metadata = self.MODELS.get(self.api_model, {})
-        self.prompt_type = 'openai'
+        self.prompt_type = "openai"
 
         if args.api_key is not None:
             self.api_key = args.api_key
@@ -111,18 +114,17 @@ class OpenAiModel:
 
         if args.prompt_type is not None:
             self.prompt_type = args.prompt_type
-        
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
-                messages=[{"role": "system", "content": system_message}] + messages,
-                max_tokens=self.model_metadata.get("max_tokens", 4096),
-                model=self.api_model,
-                temperature=self.args.temperature,
-                api_key=self.api_key,
-                stop=["</COMMAND>"],
-            )
-        
+            messages=[{"role": "system", "content": system_message}] + messages,
+            max_tokens=self.model_metadata.get("max_tokens", 4096),
+            model=self.api_model,
+            temperature=self.args.temperature,
+            api_key=self.api_key,
+            stop=["</COMMAND>"],
+        )
+
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
         return response + "</COMMAND>"
 
@@ -142,7 +144,7 @@ class GroqModel:
         self.args = args
         self.api_model = self.SHORTCUTS.get(args.model_name, args.model_name)
         self.model_metadata = self.MODELS[self.api_model]
-        self.prompt_type = 'llama3'
+        self.prompt_type = "llama3"
         if args.api_key is not None:
             self.api_key = args.api_key
         else:
@@ -150,14 +152,14 @@ class GroqModel:
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
-                messages=[{"role": "system", "content": system_message}] + messages,
-                max_tokens=self.model_metadata["max_tokens"],
-                model=self.api_model,
-                temperature=self.args.temperature,
-                stop=["</COMMAND>"],
-                api_key=self.api_key,
-            )
-        
+            messages=[{"role": "system", "content": system_message}] + messages,
+            max_tokens=self.model_metadata["max_tokens"],
+            model=self.api_model,
+            temperature=self.args.temperature,
+            stop=["</COMMAND>"],
+            api_key=self.api_key,
+        )
+
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
         return response + "</COMMAND>"
 
@@ -171,18 +173,18 @@ class OllamaModel:
         }
 
         self.api_key = "ollama"
-        self.prompt_type = 'ollama'
+        self.prompt_type = "ollama"
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
         model_completion = completion(
-                messages=[{"role": "system", "content": system_message}] + messages,
-                max_tokens=self.model_metadata["max_tokens"],
-                model=self.api_model,
-                temperature=self.args.temperature,
-                stop=["</command>"],
-                api_base="http://localhost:11434",
-                api_key=self.api_key,
-            )
+            messages=[{"role": "system", "content": system_message}] + messages,
+            max_tokens=self.model_metadata["max_tokens"],
+            model=self.api_model,
+            temperature=self.args.temperature,
+            stop=["</command>"],
+            api_base="http://localhost:11434",
+            api_key=self.api_key,
+        )
 
         response = model_completion.choices[0].message.content.rstrip("</command>")
         return response + "</command>"

@@ -1,38 +1,37 @@
-from dataclasses import dataclass
 import json
 import logging
 import os
-from pathlib import Path
 import traceback
+from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Optional
 
-from devon_agent.agents.default.agent import TaskAgent
-
-from devon_agent.environments.swebenchenv import SWEEnvEnvironment
-from devon_agent.sweenvsession import (
-    SWEEnvSession,
-    SWEEnvSessionArguments,
-    get_instances,
-)
 from swebench import KEY_INSTANCE_ID, KEY_MODEL, KEY_PREDICTION
 
+from devon_agent.agents.default.agent import TaskAgent
+from devon_agent.environments.swebenchenv import SWEEnvEnvironment
+from devon_agent.sweenvsession import (SWEEnvSession, SWEEnvSessionArguments,
+                                       get_instances)
 from devon_agent.utils import Event
+
 
 @dataclass
 class Args:
-    image_name : str
-    container_name : Optional[str] = None
-    timeout : Optional[int] = None
-    no_mirror : Optional[bool] = False
-    model : str = "claude-opus"
-    temperature : float = 0.0
-    data_path : str = "princeton-nlp/SWE-bench_Lite"
-    exp_name : str = "default"
-    split : str = "test"
-    specific_issues : Optional[List[str]] = None
-    skip_existing : bool = False
+    image_name: str
+    container_name: Optional[str] = None
+    timeout: Optional[int] = None
+    no_mirror: Optional[bool] = False
+    model: str = "claude-opus"
+    temperature: float = 0.0
+    data_path: str = "princeton-nlp/SWE-bench_Lite"
+    exp_name: str = "default"
+    split: str = "test"
+    specific_issues: Optional[List[str]] = None
+    skip_existing: bool = False
+
 
 logger = logging.getLogger(__name__)
+
 
 def process_batch(args):
     print(args)
@@ -96,9 +95,8 @@ def process_batch(args):
                 # container_name=args.container_name,
                 # timeout=args.timeout,
                 # no_mirror=args.no_mirror,
-
                 sweenv=env,
-                skip_existing=True
+                skip_existing=True,
             ),
             agent=agent,
             data=data,
@@ -114,10 +112,6 @@ def process_batch(args):
 
 if __name__ == "__main__":
     args = Args(
-        image_name="swe-agent",
-        timeout=300,
-        container_name="swe-agent",
-        model="gpt4-o"
+        image_name="swe-agent", timeout=300, container_name="swe-agent", model="gpt4-o"
     )
     process_batch(args)
-

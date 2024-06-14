@@ -1,32 +1,32 @@
-import os
 import json
+import os
+
 from devon_agent.tool import Tool, ToolContext
-from devon_agent.tools.utils import cwd_normalize_path, get_cwd, make_abs_path, _list_files_recursive
+from devon_agent.tools.utils import (_list_files_recursive, cwd_normalize_path,
+                                     get_cwd, make_abs_path)
 
 
 class SearchDirTool(Tool):
-    
     @property
     def name(self):
         return "search_dir"
-    
+
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
-        
+
     def cleanup(self, ctx):
         pass
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return    """NAME
+                return """NAME
             search_dir - search for a term in all files in a directory
 
     SYNOPSIS
@@ -57,8 +57,8 @@ class SearchDirTool(Tool):
                     """
             case _:
                 raise ValueError(f"Invalid format: {format}")
-    
-    def function(self,ctx : ToolContext, search_term: str, dir: str = "./"):
+
+    def function(self, ctx: ToolContext, search_term: str, dir: str = "./"):
         """
         command_name: search_dir
         description: Searches for the term in all files in the specified directory.
@@ -71,7 +71,7 @@ class SearchDirTool(Tool):
         abs_path = cwd_normalize_path(ctx, dir)
 
         command = f"find {abs_path} -type f ! -path '*/.*' -exec grep -nIH '{search_term}' {{}} + | cut -d: -f1 | sort | uniq -c"
-        result = ctx["environment"].execute(command) 
+        result = ctx["environment"].execute(command)
 
         matches = result[0].strip()
         if not matches:
@@ -96,7 +96,6 @@ class SearchDirTool(Tool):
 
 
 class FindFileTool(Tool):
-    
     @property
     def name(self):
         return "find_file"
@@ -104,20 +103,19 @@ class FindFileTool(Tool):
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
-        
+
     def cleanup(self, ctx):
         pass
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return    """FIND_FILE(1)        General Commands Manual        FIND_FILE(1)
+                return """FIND_FILE(1)        General Commands Manual        FIND_FILE(1)
 
     NAME
         find_file - search for a file by name within the file system
@@ -152,12 +150,12 @@ class FindFileTool(Tool):
     FIND_FILE(1)         April 2024         FIND_FILE(1)"""
             case _:
                 raise ValueError(f"Invalid format: {format}")
-            
-    def function(self,ctx : ToolContext, file_path: str):
+
+    def function(self, ctx: ToolContext, file_path: str):
         """
         command_name: find_file
         description: Finds a file by its name within the file system.
-        signature: find_file [FILE_NAME] 
+        signature: find_file [FILE_NAME]
         example: `find_file README.md`
         """
         filename = os.path.basename(file_path)
@@ -170,7 +168,6 @@ class FindFileTool(Tool):
 
 
 class ListDirsRecursiveTool(Tool):
-    
     @property
     def name(self):
         return "list_dirs_recursive"
@@ -178,20 +175,19 @@ class ListDirsRecursiveTool(Tool):
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
-        
+
     def cleanup(self, ctx):
         pass
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return    """LIST_DIRS_RECURSIVE(1)        General Commands Manual        LIST_DIRS_RECURSIVE(1)
+                return """LIST_DIRS_RECURSIVE(1)        General Commands Manual        LIST_DIRS_RECURSIVE(1)
 
     NAME
         list_dirs_recursive - lists out the directory tree starting at FILE_PATH
@@ -220,12 +216,12 @@ class ListDirsRecursiveTool(Tool):
     LIST_DIRS_RECURSIVE(1)         April 2024         LIST_DIRS_RECURSIVE(1)"""
             case _:
                 raise ValueError(f"Invalid format: {format}")
-            
-    def function(self,ctx : ToolContext, file_path: str):
+
+    def function(self, ctx: ToolContext, file_path: str):
         """
         command_name: list_recursive_dirs
         description: Returns the entire directory tree in its entirety from the file system.
-        signature: list_recursive_dirs [DIR_PATH] 
+        signature: list_recursive_dirs [DIR_PATH]
         example: `list_recursive_dirs .`
         """
 
@@ -235,7 +231,6 @@ class ListDirsRecursiveTool(Tool):
 
 
 class GetCwdTool(Tool):
-    
     @property
     def name(self):
         return "get_cwd"
@@ -243,20 +238,19 @@ class GetCwdTool(Tool):
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
-        
+
     def cleanup(self, ctx):
         pass
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return    """NAME
+                return """NAME
             get_cwd - get the current working directory
 
     SYNOPSIS
@@ -275,12 +269,11 @@ class GetCwdTool(Tool):
                     """
             case _:
                 raise ValueError(f"Invalid format: {format}")
-    
-    def function(self,ctx : ToolContext):
+
+    def function(self, ctx: ToolContext):
         """
         get_cwd
         Returns the current working directory.
         """
 
         return get_cwd(ctx)
-

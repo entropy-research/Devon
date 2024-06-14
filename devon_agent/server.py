@@ -1,27 +1,21 @@
 import asyncio
-from contextlib import asynccontextmanager
 import json
 import os
+from contextlib import asynccontextmanager
 from time import sleep
 from typing import Any, Dict, List, Optional
 
 import fastapi
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
-import json
-from contextlib import asynccontextmanager
+
 from devon_agent.agents.default.agent import AgentArguments, TaskAgent
-from devon_agent.models import  Base, SingletonEngine, init_db, load_data, set_db_engine
-from devon_agent.session import (
-    Event,
-    Session,
-    SessionArguments,
-)
-from fastapi.middleware.cors import CORSMiddleware
-
-
-from fastapi.responses import StreamingResponse
+from devon_agent.models import (SingletonEngine, init_db, load_data,
+                                set_db_engine)
+from devon_agent.session import Session, SessionArguments
 
 # API
 # SESSION
@@ -63,22 +57,21 @@ def get_user_input(session: str):
         return result
 
 
-
 @asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
-
     # Hacky but it works
     global sessions
     if app.persist:
         if app.db_path:
-            
             set_db_engine(app.db_path)
         else:
             set_db_engine("./devon_environment.db")
         await init_db()
 
         AsyncSessionLocal = sessionmaker(
-            bind=SingletonEngine.get_engine(), class_=AsyncSession, expire_on_commit=False
+            bind=SingletonEngine.get_engine(),
+            class_=AsyncSession,
+            expire_on_commit=False,
         )
         async with AsyncSessionLocal() as db_session:
             app.db_session = db_session
@@ -91,7 +84,7 @@ async def lifespan(app: fastapi.FastAPI):
             for k, v in sessions.items():
                 v.setup()
                 # background_tasks.add_task(v.run_event_loop)
-                
+
     yield
 
 
@@ -148,7 +141,7 @@ def create_session(
             path, user_input=lambda: get_user_input(session), name=session
         ),
         agent,
-        app.persist
+        app.persist,
     )
 
     sessions[session].init_state()
@@ -174,7 +167,11 @@ def delete_session(session: str):
 
 
 @app.patch("/sessions/{session}/start")
-def start_session(session: str, background_tasks: fastapi.BackgroundTasks, api_key: Optional[str] = None):
+def start_session(
+    session: str,
+    background_tasks: fastapi.BackgroundTasks,
+    api_key: Optional[str] = None,
+):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
 
@@ -186,7 +183,7 @@ def start_session(session: str, background_tasks: fastapi.BackgroundTasks, api_k
 
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    
+
     session_obj.start()
 
     return session
@@ -227,7 +224,7 @@ def reset_session(session: str, background_tasks: fastapi.BackgroundTasks):
 
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    session_buffers[session]="terminate"
+    session_buffers[session] = "terminate"
     session_obj.terminate()
     session_obj.init_state()
     session_obj.setup()
@@ -239,7 +236,7 @@ def reset_session(session: str, background_tasks: fastapi.BackgroundTasks):
 
 
 @app.get("/sessions/{session}/status")
-def get_session_status(session : str):
+def get_session_status(session: str):
     if session not in sessions:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
     session_obj = sessions.get(session)
@@ -255,7 +252,7 @@ def get_session_state(session: str):
     session_obj = sessions.get(session)
     if not session_obj:
         raise fastapi.HTTPException(status_code=404, detail="Session not found")
-    
+
     state = session_obj.state.to_dict()
     state["path"] = session_obj.base_path
     return state
@@ -316,9 +313,9 @@ async def read_events_stream(session: str):
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     import sys
+
+    import uvicorn
 
     port = 8000  # Default port
     if len(sys.argv) > 1:

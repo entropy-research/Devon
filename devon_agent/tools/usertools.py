@@ -2,11 +2,10 @@ from devon_agent.tool import Tool, ToolContext
 
 
 class AskUserTool(Tool):
-
     @property
     def name(self):
         return "AskUserTool"
-    
+
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
@@ -17,8 +16,7 @@ class AskUserTool(Tool):
     def cleanup(self, context: ToolContext):
         pass
 
-    def documentation(self, format = "docstring"): 
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
@@ -44,7 +42,7 @@ class AskUserTool(Tool):
             case _:
                 raise ValueError(f"Invalid format: {format}")
 
-    def function(self, context : ToolContext, question: str, **kwargs):
+    def function(self, context: ToolContext, question: str, **kwargs):
         """
         command_name: ask_user
         description: The ask_user command asks the user for their input
@@ -53,12 +51,12 @@ class AskUserTool(Tool):
         """
         return context["environment"].execute(input=question)
 
-class SetTaskTool(Tool):
 
+class SetTaskTool(Tool):
     @property
     def name(self):
         return "SetTaskTool"
-    
+
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
@@ -69,8 +67,7 @@ class SetTaskTool(Tool):
     def cleanup(self, context: ToolContext):
         pass
 
-    def documentation(self, format = "docstring"): 
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
@@ -96,12 +93,14 @@ class SetTaskTool(Tool):
             case _:
                 raise ValueError(f"Invalid format: {format}")
 
-    def function(self, context : ToolContext, **kwargs):
+    def function(self, context: ToolContext, **kwargs):
         """
         command_name: set_task
         description: The set_task command asks the user for the next task to perform
         signature: set_task
         example: `set_task`
         """
-        context["session"].state.task = context["environment"].execute(input="what is my next task?")
+        context["session"].state.task = context["environment"].execute(
+            input="what is my next task?"
+        )
         return context["session"].state.task
