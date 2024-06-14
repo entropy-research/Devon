@@ -11,7 +11,7 @@ from typing import Any, List, Optional
 
 from devon_agent.agents.default.agent import AgentArguments, TaskAgent
 from devon_agent.environment import LocalEnvironment, UserEnvironment
-from devon_agent.models import _delete_session_util, _save_session_util,
+from devon_agent.models import _delete_session_util, _save_session_util
 from devon_agent.telemetry import Posthog, SessionStartEvent
 from devon_agent.tool import ToolNotFoundException
 from devon_agent.tools import parse_command

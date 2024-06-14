@@ -130,7 +130,7 @@ let appWindow = new BrowserWindow({
 appWindow.maximize()
 appWindow.setMenu(null)
 appWindow.show()
-appWindow.webContents.openDevTools()
+// appWindow.webContents.openDevTools()
 appWindow.on('closed', () => {
   appWindow = null
 })
@@ -154,7 +154,7 @@ const createWindow = () => {
   }
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 };
 const controller = new AbortController()
 
