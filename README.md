@@ -54,6 +54,14 @@ npm install -g devon-tui
 npx devon-ui
 ```
 
+If you already have devon_agent or devon-tui installed, update it by running:
+```bash
+npm uninstall -g devon-tui
+npm install -g devon-tui
+
+pipx install --force devon_agent
+```
+
 This installs the Python backend, and the cli command to run the tool
 
 ### Thats it! Happy building :)
