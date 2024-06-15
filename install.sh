@@ -54,12 +54,30 @@ fi
 echo "Devon Backend is installed successfully."
 
 echo "Installing Devon TUI..."
+
+# Check if devon-tui npm package exists
+if npm list -g devon-tui@latest &> /dev/null
+then
+    echo "devon-tui package is already installed."
+    npm uninstall -g devon-tui
+    echo "devon-tui package is uninstalled."
+else
+    echo "devon-tui package is not installed. Installing now..."
+fi
+
 npm install -g devon-tui@latest 
 # check if devon-tui is installed
 if ! command -v devon-tui &> /dev/null
 then
     echo "Devon TUI is not installed. Please install it manually by running 'npm install -g devon-tui' or 'sudo npm install -g devon-tui'."
     exit 1
+fi
+
+if npm list -g devon-ui@latest &> /dev/null
+then
+    echo "Devon UI is already installed. Uninstalling it..."
+    npm uninstall -g devon-ui
+    echo "Devon UI is uninstalled."
 fi
 
 echo "Installing Devon UI..."

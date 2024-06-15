@@ -1,7 +1,7 @@
 {
   "name": "devon-ui",
   "productName": "Devon (Alpha)",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Electron Application for running Devon.",
   "main": ".vite/build/main.js",
   "bin": {
@@ -26,14 +26,13 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
     "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron-forge/plugin-vite": "^7.4.0",
-    "@electron/fuses": "^1.8.0",
+    "@electron-forge/maker-dmg": "^7.4.0",
     "@iconify/react": "^5.0.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "autoprefixer": "^10.4.19",
-    "electron": "31.0.0",
     "eslint": "^8.0.1",
     "eslint-import-resolver-alias": "^1.1.2",
     "eslint-import-resolver-typescript": "^3.6.1",
@@ -43,7 +42,9 @@
     "ts-node": "^10.0.0",
     "typescript": "~4.5.4",
     "vite": "^5.0.12",
-    "vite-plugin-static-copy": "^1.0.5"
+    "vite-plugin-static-copy": "^1.0.5",
+    "electron": "31.0.0"
+
   },
   "keywords": [],
   "author": {
@@ -53,7 +54,8 @@
   "license": "MIT",
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "dependencies": {
-    "@electron-forge/maker-dmg": "^7.4.0",
+    "@electron/fuses": "^1.8.0",
+    "electron": "31.0.0",
     "@monaco-editor/react": "^4.6.0",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-checkbox": "^1.0.4",
