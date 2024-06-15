@@ -65,6 +65,9 @@ Then to *run* the main ui, the command is:
 ```bash
 npx devon-ui
 ```
+
+It's that simple.
+
 For the terminal ui:
 
 1. Navigate to your project folder and open the terminal.
