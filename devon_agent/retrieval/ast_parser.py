@@ -1,5 +1,6 @@
 import ast
 
+
 def parse_python_file(file_path):
     """
     Parses a Python file and returns its Abstract Syntax Tree (AST).
@@ -19,4 +20,3 @@ def parse_python_file(file_path):
     except Exception as e:
         print(f"Error: {e}")
         return None
-

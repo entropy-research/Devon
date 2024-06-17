@@ -44,8 +44,22 @@ curl -sSL https://raw.githubusercontent.com/entropy-research/Devon/main/install.
 *Or to install using `pipx` + `npm`:*
 
 ```bash
+# For the backend
 pipx install devon_agent
-npm install -g devon-tui 
+
+# For the terminal ui
+npm install -g devon-tui
+
+# And for the main UI
+npx devon-ui
+```
+
+If you already have devon_agent or devon-tui installed, update it by running:
+```bash
+npm uninstall -g devon-tui
+npm install -g devon-tui
+
+pipx install --force devon_agent
 ```
 
 This installs the Python backend, and the cli command to run the tool
@@ -54,9 +68,18 @@ This installs the Python backend, and the cli command to run the tool
 
 
 # Running the agent
-Navigate to your project folder and open the terminal.
 
-Set your Anthropic API or OpenAI API key as an environment variable:
+Then to *run* the main ui, the command is:
+```bash
+npx devon-ui
+```
+
+It's that simple.
+
+For the terminal ui:
+
+1. Navigate to your project folder and open the terminal.
+2. Set your Anthropic API or OpenAI API key as an environment variable:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -70,7 +93,7 @@ export OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 export GROQ_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-Then to *run*, the command is:
+3. Then to *run* the terminal-ui, the command is:
 ```bash
 devon
 ```

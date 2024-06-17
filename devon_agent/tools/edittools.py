@@ -1,8 +1,13 @@
 import os
+
 from devon_agent.tool import Tool, ToolContext
-from devon_agent.tools.utils import make_abs_path, check_lint, check_lint_entry_in_list, read_file, write_file
-from devon_agent.udiff import Hallucination, apply_file_context_diffs, extract_all_diffs, log_failed_diff, log_successful_diff
-from devon_agent.vgit import commit_files, simple_stash_and_commit_changes, stash_and_commit_changes
+from devon_agent.tools.utils import (check_lint, check_lint_entry_in_list,
+                                     make_abs_path, read_file, write_file)
+from devon_agent.udiff import (Hallucination, apply_file_context_diffs,
+                               extract_all_diffs, log_failed_diff,
+                               log_successful_diff)
+
+# from devon_agent.vgit import commit_files, simple_stash_and_commit_changes, stash_and_commit_changes
 
 
 def apply_diff(ctx, multi_file_diffs):
@@ -29,9 +34,9 @@ def apply_diff(ctx, multi_file_diffs):
         tgt_file_abs = make_abs_path(ctx, tgt_file)
 
         src_file_exists = (
-            ctx["environment"].execute(f"test -e {src_file_abs} && echo 'exists'")[
-                0
-            ].strip()
+            ctx["environment"]
+            .execute(f"test -e {src_file_abs} && echo 'exists'")[0]
+            .strip()
             == "exists"
         )
 
@@ -139,6 +144,7 @@ def real_write_diff(ctx, diff):
 
     return "\n".join(["Failed to edit file"] + [f[1].args[0] for f in failures])
 
+
 class EditFileTool(Tool):
     @property
     def name(self):
@@ -147,15 +153,14 @@ class EditFileTool(Tool):
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
-        
+
     def cleanup(self, ctx):
         pass
-    
-    def documentation(self, format = "docstring"):
-        
+
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
@@ -194,11 +199,11 @@ class EditFileTool(Tool):
                     Line 3
                     Line 4
                     Line 5>>>"""
-            
+
             case _:
                 raise ValueError(f"Invalid format: {format}")
-    
-    def function(self, ctx : ToolContext, *args, **kwargs) -> str:
+
+    def function(self, ctx: ToolContext, *args, **kwargs) -> str:
         """
         command_name: edit_file
         description: Applies a unified diff to files in the file system
@@ -215,10 +220,10 @@ class EditFileTool(Tool):
         Line 5
         >>>`
         """
-        #extract diff
-        #apply diff
-        #lint
-        #write files
+        # extract diff
+        # apply diff
+        # lint
+        # write files
 
         return real_write_diff(ctx, ctx["raw_command"])
 
@@ -227,17 +232,17 @@ def save_edit_file(ctx, response):
     """
     save_edit_file - post func for edit_file
     """
-    if "Successfully edited file(s)" in response:
-        files = response.split(":")[1].split(", ")
-        commit = commit_files(ctx["environment"],files, "Deleted file(s) " + " ".join(files))
-        if commit:
-            ctx["session"].event_log.append({
-                "type": "GitEvent",
-                "content" : {
-                    "type" : "commit",
-                    "commit" : commit,
-                    "files" : files,
-                }
-            })
+    # vgit
+    # if "Successfully edited file(s)" in response:
+    #     files = response.split(":")[1].split(", ")
+    #     commit = commit_files(ctx["environment"],files, "Deleted file(s) " + " ".join(files))
+    #     if commit:
+    #         ctx["session"].event_log.append({
+    #             "type": "GitEvent",
+    #             "content" : {
+    #                 "type" : "commit",
+    #                 "commit" : commit,
+    #                 "files" : files,
+    #             }
+    #         })
     return response
-

@@ -94,6 +94,7 @@ SETTING: You are an autonomous programmer, and you're working directly in the co
   However, the environment does NOT support interactive session commands (e.g. python, vim), so please do not invoke them.
 """
 
+
 def openai_last_user_prompt_template_v3(issue, editor, cwd, root_dir, scratchpad):
     return f"""We're currently solving the following issue within our repository. Here's the issue text:
   TASK:
@@ -137,6 +138,7 @@ def openai_last_user_prompt_template_v3(issue, editor, cwd, root_dir, scratchpad
   (Current directory: {cwd})
   bash-$
 """
+
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]

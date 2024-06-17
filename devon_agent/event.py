@@ -1,10 +1,6 @@
-
-
-
 from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Literal, Optional, TypedDict
-
 
 
 class Event(TypedDict):
@@ -15,7 +11,6 @@ class Event(TypedDict):
     trajectory_id: str
     metadata: Dict[str, Any]
     timestamp: Optional[str]
-    
 
 
 # decorator for wrapping functions that add events for call and return
@@ -31,7 +26,9 @@ def eventifyResult(event_type: str):
                 timestamp=None,
             )
             return event
+
         return wrapper
+
     return decorator
 
 
@@ -44,7 +41,7 @@ class EventLoop(ABC):
 
     def get_events(self):
         return self.events
-    
+
     def clear_events(self):
         self.events = []
 
@@ -56,4 +53,3 @@ class EventLoop(ABC):
 
     def unsuscribe(self, event_type: str, callback: Callable):
         pass
-

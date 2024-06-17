@@ -1,9 +1,12 @@
 # ast_extractor.py
 
 import ast
-from devon_agent.retrieval.codebase_graph import add_node, add_edge
-import networkx as nx
 import os
+
+import networkx as nx
+
+from devon_agent.retrieval.codebase_graph import add_edge, add_node
+
 
 def extract_info_from_ast(graph, ast_tree, file_path):
     # Add file node to the graph
@@ -29,7 +32,7 @@ def extract_info_from_ast(graph, ast_tree, file_path):
     add_edge(graph, directory_path, file_path, "contains", {})
 
     # Define a visitor class to traverse the AST
-        # Define a visitor class to traverse the AST
+    # Define a visitor class to traverse the AST
     class ASTVisitor(ast.NodeVisitor):
         def __init__(self):
             self.current_scope = []
@@ -91,7 +94,11 @@ def extract_info_from_ast(graph, ast_tree, file_path):
             # Add edge from the current scope to the function
             if self.current_scope:
                 parent = self.current_scope[-1]
-                add_node(graph, parent + "." + function_name + ":" + file_path, function_attrs)
+                add_node(
+                    graph,
+                    parent + "." + function_name + ":" + file_path,
+                    function_attrs,
+                )
                 add_edge(graph, parent, function_name, "defines", {})
             else:
                 # If not inside a class, add edge from file to function
@@ -115,7 +122,9 @@ def extract_info_from_ast(graph, ast_tree, file_path):
                 if self.current_scope:
                     current_node = self.current_scope[-1]
                     try:
-                        graph.nodes[current_node]["dependencies"]["imports"].append(imported_module)
+                        graph.nodes[current_node]["dependencies"]["imports"].append(
+                            imported_module
+                        )
                     except:
                         pass
                     # graph.nodes[current_node]["dependencies"]["imports"].append(imported_module)
@@ -132,7 +141,9 @@ def extract_info_from_ast(graph, ast_tree, file_path):
             if self.current_scope:
                 current_node = self.current_scope[-1]
                 try:
-                    graph.nodes[current_node]["dependencies"]["imports"].append(imported_module)
+                    graph.nodes[current_node]["dependencies"]["imports"].append(
+                        imported_module
+                    )
                 except Exception:
                     pass
             # else:
@@ -140,7 +151,6 @@ def extract_info_from_ast(graph, ast_tree, file_path):
             #     file_node = file_path
             #     graph.nodes[file_node]["dependencies"]["imports"].append(imported_module)
 
-        
         def visit_Call(self, node):
             called_function = None
             if isinstance(node.func, ast.Name):
@@ -156,9 +166,13 @@ def extract_info_from_ast(graph, ast_tree, file_path):
                 call_lineno = node.lineno
                 if self.current_scope:
                     caller = self.current_scope[-1]
-                    add_edge(graph, caller, called_function, "calls", {"file_path": file_path, "line_number": call_lineno})
-
-
+                    add_edge(
+                        graph,
+                        caller,
+                        called_function,
+                        "calls",
+                        {"file_path": file_path, "line_number": call_lineno},
+                    )
 
     # Create an instance of the ASTVisitor
     visitor = ASTVisitor()

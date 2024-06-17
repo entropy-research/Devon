@@ -1,9 +1,9 @@
 {
 	"name": "devon-tui",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"license": "Apache-2.0",
 	"bin": {
-		"devon": "dist/cli.js"
+		"devon-tui": "dist/cli.js"
 	},
 	"type": "module",
 	"engines": {
@@ -22,32 +22,32 @@
 	"dependencies": {
 		"@types/eventsource": "^1.1.15",
 		"@xstate/react": "^4.1.1",
-		"axios": "^1.6.8",
+		"axios": "^1.7.2",
 		"eventsource": "^2.0.2",
-		"ink": "^4.1.0",
+		"ink": "^4.4.1",
 		"ink-spinner": "^5.0.0",
 		"ink-text-input": "^5.0.1",
-		"inquirer": "^9.2.22",
+		"inquirer": "^9.2.23",
 		"meow": "^11.0.0",
 		"portfinder": "^1.0.32",
-		"react": "^18.2.0",
-		"xstate": "^5.13.0"
+		"react": "^18.3.1",
+		"xstate": "^5.13.1"
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^3.0.1",
 		"@types/inquirer": "^9.0.7",
 		"@types/jest": "^29.5.12",
-		"@types/react": "^18.0.32",
+		"@types/react": "^18.3.3",
 		"@vdemedes/prettier-config": "^2.0.1",
-		"ava": "^5.2.0",
-		"chalk": "^5.2.0",
+		"ava": "^5.3.1",
+		"chalk": "^5.3.0",
 		"eslint-config-xo-react": "^0.27.0",
-		"eslint-plugin-react": "^7.32.2",
-		"eslint-plugin-react-hooks": "^4.6.0",
+		"eslint-plugin-react": "^7.34.2",
+		"eslint-plugin-react-hooks": "^4.6.2",
 		"ink-testing-library": "^3.0.0",
-		"prettier": "^2.8.7",
-		"ts-node": "^10.9.1",
-		"typescript": "^5.0.3",
+		"prettier": "^2.8.8",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.4.5",
 		"xo": "^0.53.1"
 	},
 	"ava": {
@@ -66,5 +66,6 @@
 			"react/prop-types": "off"
 		}
 	},
-	"prettier": "@vdemedes/prettier-config"
+	"prettier": "@vdemedes/prettier-config",
+	"packageManager": "pnpm@9.1.4+sha512.9df9cf27c91715646c7d675d1c9c8e41f6fce88246f1318c1aa6a1ed1aeb3c4f032fcdf4ba63cc69c4fe6d634279176b5358727d8f2cc1e65b65f43ce2f8bfb0"
 }

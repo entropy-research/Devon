@@ -191,3 +191,9 @@ dist
 .yarn
 
 build
+
+.devon.config
+.devon_environment.db
+devon_environment.db
+
+TODO

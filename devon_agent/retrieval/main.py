@@ -1,19 +1,19 @@
 # main.py
 
-from functools import reduce
 import json
 import os
 import tarfile
 import tempfile
-from devon_agent.retrieval.file_discovery import discover_python_files
-from devon_agent.retrieval.ast_parser import parse_python_file
+from functools import reduce
+
 from devon_agent.retrieval.ast_extractor import extract_info_from_ast
+from devon_agent.retrieval.ast_parser import parse_python_file
 from devon_agent.retrieval.codebase_graph import create_graph
+from devon_agent.retrieval.file_discovery import discover_python_files
 
 
 class FunctionTable:
-    
-    def __init__(self,temp_dir=None):
+    def __init__(self, temp_dir=None):
         self.function_table = {}
         self.temp_dir = temp_dir if temp_dir is not None else ""
 
@@ -25,7 +25,7 @@ class FunctionTable:
             self.function_table[function_name].append(location)
 
     def get_function(self, function_name, default):
-        result =  self.function_table.get(function_name, default)
+        result = self.function_table.get(function_name, default)
         if len(result) == 1:
             return result[0]
         else:
@@ -33,22 +33,32 @@ class FunctionTable:
 
     def get_function_with_location(self, function_name):
         # functions =  self.function_table.get(function_name, {})
-        functions = reduce(lambda a, b: a+b, [self.function_table.get(k, {}) for k in list(self.function_table.keys()) if k.lower() == function_name.lower()], [])
+        functions = reduce(
+            lambda a, b: a + b,
+            [
+                self.function_table.get(k, {})
+                for k in list(self.function_table.keys())
+                if k.lower() == function_name.lower()
+            ],
+            [],
+        )
         if len(functions) == 0:
             return {}
-        
+
         results = []
         for function in functions:
             result = {}
             result["location"] = function.get("location", {})
-            if result["location"].get("file_path","").startswith(self.temp_dir):
-                result["location"]["file_path"] = result["location"]["file_path"][len(self.temp_dir):]
-            result["code"] = function.get("code","")
+            if result["location"].get("file_path", "").startswith(self.temp_dir):
+                result["location"]["file_path"] = result["location"]["file_path"][
+                    len(self.temp_dir) :
+                ]
+            result["code"] = function.get("code", "")
             if len(result["code"].split("/n")) > 20:
                 result["code"] = "\n".join(result["code"].split("/n")[:20]) + "\n..."
             results.append(result)
         return results
-    
+
     def save_to_file(self, file_path):
         if not os.path.exists(os.path.dirname(file_path)):
             os.makedirs(os.path.dirname(file_path))
@@ -59,40 +69,48 @@ class FunctionTable:
         with open(file_path, "r") as f:
             self.function_table = json.load(f)
 
-class ClassTable:
 
-    def __init__(self,temp_dir=None):
+class ClassTable:
+    def __init__(self, temp_dir=None):
         self.class_table = {}
         self.temp_dir = temp_dir if temp_dir is not None else ""
-
 
     def add_class(self, class_name, location):
         if class_name not in self.class_table:
             self.class_table[class_name] = [location]
         else:
             self.class_table[class_name].append(location)
-    
+
     def get_class(self, class_name, default):
-        result =  self.class_table.get(class_name, default)
+        result = self.class_table.get(class_name, default)
         if len(result) == 1:
             return result[0]
         else:
             return result
-    
+
     def get_class_with_location(self, class_name: str):
         # classes = self.class_table.get(class_name, {})
-        classes = reduce(lambda a,b: a+b, [self.class_table.get(k, {}) for k in list(self.class_table.keys()) if k.lower() == class_name.lower()], [])
+        classes = reduce(
+            lambda a, b: a + b,
+            [
+                self.class_table.get(k, {})
+                for k in list(self.class_table.keys())
+                if k.lower() == class_name.lower()
+            ],
+            [],
+        )
 
         if len(classes) == 0:
             return {}
 
         results = []
         for _class in classes:
-
-            result  = {}
+            result = {}
             result["location"] = _class["location"]
-            if result["location"].get("file_path","").startswith(self.temp_dir):
-                result["location"]["file_path"] = result["location"]["file_path"][len(self.temp_dir):]
+            if result["location"].get("file_path", "").startswith(self.temp_dir):
+                result["location"]["file_path"] = result["location"]["file_path"][
+                    len(self.temp_dir) :
+                ]
             result["code"] = _class["code"]
             results.append(result)
         return results
@@ -106,7 +124,8 @@ class ClassTable:
     def load_from_file(self, file_path):
         with open(file_path, "r") as f:
             self.class_table = json.load(f)
-    
+
+
 def analyze_codebase(root_dir, ignore_dirs=None):
     """
     Analyzes the Python codebase and builds a graph representation.
@@ -135,6 +154,7 @@ def analyze_codebase(root_dir, ignore_dirs=None):
 
     return graph
 
+
 # # Specify the root directory of your Python codebase
 # codebase_root = "."
 
@@ -152,7 +172,6 @@ def analyze_codebase(root_dir, ignore_dirs=None):
 # #  add all function nodes to function table with their name as key
 
 
-
 # # print(codebase_graph.nodes(data=True))
 # for node in codebase_graph.nodes(data=True):
 #     if node[1].get("type","") == "function":
@@ -162,22 +181,22 @@ def analyze_codebase(root_dir, ignore_dirs=None):
 # for node in codebase_graph.nodes(data=True):
 #     if node[1].get("type","") == "class":
 #         class_table[node[0]] = node[1]
-    
 
 
 # print_node_details(codebase_graph)
 # print_node_attributes(codebase_graph, "extract_info_from_ast")
 # print_function_calls(codebase_graph, "extract_info_from_ast")
 
-def get_function_defn(function_name, function_table : FunctionTable):
+
+def get_function_defn(function_name, function_table: FunctionTable):
     return function_table.get_function_with_location(function_name)
 
-def get_class_defn(class_name, class_table : ClassTable):
+
+def get_class_defn(class_name, class_table: ClassTable):
     # print(class_table.class_table.keys())
 
     return class_table.get_class_with_location(class_name)
     # return class_table[class_name].get("location", {})
-
 
 
 # function_table = {}
@@ -186,7 +205,6 @@ def get_class_defn(class_name, class_table : ClassTable):
 
 
 def initialize_archive(archive_path, class_table, function_table):
-
     # open archive into temporary directory
     archive = tarfile.open(archive_path)
     temp_dir = tempfile.mkdtemp()
@@ -199,17 +217,14 @@ def initialize_archive(archive_path, class_table, function_table):
     codebase_graph = analyze_codebase(codebase_root, ignore_dirs=ignore_directories)
 
     for node in codebase_graph.nodes(data=True):
-        if node[1].get("type","") == "function":
+        if node[1].get("type", "") == "function":
             function_table.add_function(node[0], node[1])
-        elif node[1].get("type","") == "class":
+        elif node[1].get("type", "") == "class":
             class_table.add_class(node[0], node[1])
     return codebase_graph
 
 
-
-
 def initialize_repository(repo_path, class_table, function_table):
-
     codebase_root = repo_path
 
     # print(codebase_root)
@@ -224,21 +239,25 @@ def initialize_repository(repo_path, class_table, function_table):
     codebase_graph = analyze_codebase(codebase_root, ignore_dirs=ignore_directories)
     # print(codebase_graph.nodes())
     for node in codebase_graph.nodes(data=True):
-        if node[1].get("type","") == "function":
-            node[1]["location"]["file_path"] = node[1]["location"]["file_path"][len(codebase_root):]
-            name,filepath = node[0].split(":")
+        if node[1].get("type", "") == "function":
+            node[1]["location"]["file_path"] = node[1]["location"]["file_path"][
+                len(codebase_root) :
+            ]
+            name, filepath = node[0].split(":")
             function_table.add_function(name, node[1])
-        elif node[1].get("type","") == "class":
-            node[1]["location"]["file_path"] = node[1]["location"]["file_path"][len(codebase_root):]
-            name,filepath = node[0].split(":")
+        elif node[1].get("type", "") == "class":
+            node[1]["location"]["file_path"] = node[1]["location"]["file_path"][
+                len(codebase_root) :
+            ]
+            name, filepath = node[0].split(":")
             class_table.add_class(name, node[1])
             # print(node[0])
 
-
     # print(function_table)
     # print(class_table)
-    
+
     return codebase_graph
+
 
 if __name__ == "__main__":
     codebase_root = "/Users/mihirchintawar/sympy"
@@ -251,11 +270,9 @@ if __name__ == "__main__":
 
     assert "_print_Basic" in function_table.function_table.keys()
     assert "MathMLPresentationPrinter" in class_table.class_table.keys()
-    assert "MathMLPresentationPrinter._print_Basic" in function_table.function_table.keys()
+    assert (
+        "MathMLPresentationPrinter._print_Basic" in function_table.function_table.keys()
+    )
 
 
 # _print_Basic
-
-
-
-        

@@ -1,124 +1,52 @@
-'use client'
-import { nanoid } from '@/lib/chat.utils'
-import { AI } from '@/lib/chat/chat.actions'
-import { auth } from '@/chat.auth'
-import { Session } from '@/lib/chat.types'
-import { getMissingKeys } from '@/app/chat.actions'
-import { ChatProps } from '@/lib/chat.types'
-// import { getChat } from '@/app/chat.actions'
-import { getChatById } from '@/lib/services/chatService'
-import { Chat } from '@/lib/chat.types'
-import Home from './home'
+"use client"
+import { useEffect, useState } from 'react'
 import Landing from './landing'
-import { getChat, createChat } from '@/lib/services/chatService2'
-// import { useRouter } from 'next/router';
-import { QueryClient, QueryClientProvider } from 'react-query'
-import { useEffect } from 'react'
-import { BackendUrlProvider } from '../contexts/BackendUrlContext'
+import { useBackendUrl } from '@/contexts/BackendUrlContext'
+import { SessionContextProviderComponent } from './home'
+import AtomLoader from '@/components/ui/loaders/atom-loader/atom-loader'
 
-const queryClient = new QueryClient()
-
-// export default async function IndexPage() {
-//     // const router = useRouter();
-
-//     const session = (await auth()) as Session
-//     const missingKeys = await getMissingKeys()
-//     const userId = session?.user?.id
-//     // const chatId = nanoid()
-//     const chatId = '1'
-//     let chat: Chat = await loadChat(chatId)
-//     // let chat: Chat | null = null
-//     const initialized = false
-
-//     async function loadChat(chatId) {
-//         let _chat = await getChat(chatId)
-//         if (!_chat) {
-//             // Create a new chat if it does not exist
-//             _chat = {
-//                 id: chatId,
-//                 title: 'title',
-//                 createdAt: new Date(),
-//                 userId: userId ?? '1',
-//                 path: './',
-//                 messages: [],
-//                 // sharePath: 'sharePath',
-//             }
-//             createChat(_chat)
-//         }
-//         return _chat
-//     }
-
-//     const chatProps: ChatProps = {
-//         id: chat?.id ?? '',
-//         session: session,
-//         missingKeys: missingKeys,
-//     }
-
-//     return (
-//         <AI initialAIState={{ chatId: chat.id, messages: chat.messages }}>
-//             <Landing chatProps={chatProps} />
-//         </AI>
-//     )
-// }
 
 export default function IndexPage() {
-    // const router = useRouter();
 
-    let session: Session | null = null
-    let missingKeys: string[] = []
-    let chat: Chat | null = null
+    const { backendUrl } = useBackendUrl()
+
+    const [sessionMachineProps, setSessionMachineProps] = useState<{
+        host: string
+        name: string
+    } | null>(null)
 
     useEffect(() => {
-        async function fetchData() {
-            const session = (await auth()) as Session
-            const missingKeys = await getMissingKeys()
-            const userId = session?.user?.id
-            // const chatId = nanoid()
-            const chatId = '1'
-            let chat: Chat = await loadChat(chatId)
-            // let chat: Chat | null = null
-            const initialized = false
-
-            async function loadChat(chatId) {
-                let _chat = await getChat(chatId)
-                if (!_chat) {
-                    // Create a new chat if it does not exist
-                    _chat = {
-                        id: chatId,
-                        title: 'title',
-                        createdAt: new Date(),
-                        userId: userId ?? '1',
-                        path: './',
-                        messages: [],
-                        // sharePath: 'sharePath',
-                    }
-                    createChat(_chat)
-                }
-                return _chat
-            }
-
-            const chatProps: ChatProps = {
-                id: chat?.id ?? '',
-                session: session,
-                missingKeys: missingKeys,
-            }
+        if (backendUrl) {
+            setSessionMachineProps({ host: backendUrl, name: "UI" })
         }
-        fetchData()
+    }, [backendUrl])
+
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        // Ensure the loader is displayed for at least 3 seconds
+        const minimumLoadingDuration = 1500
+        const timer = setTimeout(() => {
+            setIsLoading(false)
+        }, minimumLoadingDuration)
+
+        return () => clearTimeout(timer)
     }, [])
 
-    const chatProps: ChatProps = {
-        id: chat?.id ?? '',
-        session: session,
-        missingKeys: missingKeys,
-    }
-
     return (
-        <QueryClientProvider client={queryClient}>
-            <BackendUrlProvider>
-                {/* <AI initialAIState={{ chatId: chat.id, messages: chat.messages }}> */}
-                <Landing chatProps={chatProps} />
-                {/* </AI> */}
-            </BackendUrlProvider>
-        </QueryClientProvider>
+        <>
+            {sessionMachineProps && !isLoading ? (
+                <SessionContextProviderComponent sessionMachineProps={sessionMachineProps}>
+                    <Landing />
+                </SessionContextProviderComponent>
+            ) : <div className="absolute top-0 left-0 w-full h-full bg-night z-50">
+                <div className="fixed left-[50%] top-[50%] grid translate-x-[-50%] translate-y-[-50%]">
+                    <div className="flex items-center justify-center flex-col gap-10">
+                        <AtomLoader size="lg" />
+                        <p className="text-2xl">{`Devon's cleaning up his desk...`}</p>
+                    </div>
+                </div>
+            </div>}
+        </>
     )
 }

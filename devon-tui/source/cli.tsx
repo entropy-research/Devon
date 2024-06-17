@@ -1,21 +1,13 @@
 #!/usr/bin/env node
 import React from 'react';
-import {render} from 'ink';
+import { render } from 'ink';
 import meow from 'meow';
 import fs from 'fs';
 import path from 'path';
 import inquirer from 'inquirer';
-import {App} from './app_sm.js';
+import { App } from './app_sm.js';
 import portfinder from 'portfinder';
 import childProcess from 'node:child_process';
-// import {writeLogLine} from './utils.js';
-
-// TODO:
-// - [ ] provide headless mode
-// - [ ] handle error output
-// - [ ] handle debug console
-// - [ ] if window big show editor and cli
-// - [ ] paginate outputs
 
 type Config = {
 	modelName: string;
@@ -80,7 +72,7 @@ if (cli.flags.version) {
 
 const controller = new AbortController();
 
-const {input} = cli;
+const { input } = cli;
 
 if (input[0] === 'configure') {
 	// Handle the configure subcommand
@@ -156,16 +148,6 @@ if (input[0] === 'configure') {
 			});
 		});
 } else {
-	// Handle the start subcommand (default)
-	// Handle the start subcommand (default)
-
-	// // check if anthropic key is set
-	// if (!process.env['ANTHROPIC_API_KEY'] && !process.env['OPENAI_API_KEY']) {
-	// 	console.log(
-	// 		'Please set the ANTHROPIC_API_KEY or OPENAI_API_KEY environment variable to use the Devon TUI.',
-	// 	);
-	// 	process.exit(1);
-	// }
 
 	let api_key: string | undefined = undefined;
 	let modelName: string | undefined = undefined;
@@ -229,14 +211,6 @@ if (input[0] === 'configure') {
 			'server',
 			'--port',
 			port.toString(),
-			'--model',
-			modelName as string,
-			'--api_key',
-			api_key as string,
-			'--api_base',
-			api_base as string,
-			'--prompt_type',
-			prompt_type as string,
 		]);
 
 		let reset = false;
@@ -259,14 +233,6 @@ if (input[0] === 'configure') {
 						'server',
 						'--port',
 						port.toString(),
-						'--model',
-						modelName as string,
-						'--api_key',
-						api_key as string,
-						'--api_base',
-						api_base as string,
-						'--prompt_type',
-						prompt_type as string,
 					],
 					{
 						signal: controller.signal,
@@ -283,7 +249,14 @@ if (input[0] === 'configure') {
 					});
 				}
 
-				const {waitUntilExit} = render(<App port={port} reset={reset} />, {
+
+
+				const { waitUntilExit } = render(<App port={port} reset={reset} agentConfig={{
+					api_key: api_key as string,
+					model: modelName as string,
+					prompt_type: prompt_type as string,
+					api_base: api_base as string,
+				}} />, {
 					exitOnCtrlC: true,
 				});
 

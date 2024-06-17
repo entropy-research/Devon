@@ -1,7 +1,10 @@
 from devon_agent.tool import PreTool, Tool, ToolContext
-from devon_agent.tools.utils import make_abs_path, file_exists, read_file, cwd_normalize_path
+from devon_agent.tools.utils import (cwd_normalize_path, file_exists,
+                                     make_abs_path, read_file)
 from devon_agent.utils import DotDict
-from devon_agent.vgit import commit_files, simple_stash_and_commit_changes, stash_and_commit_changes
+from devon_agent.vgit import (commit_files, simple_stash_and_commit_changes,
+                              stash_and_commit_changes)
+
 
 def load_file_to_editor(ctx, file_path):
     """
@@ -11,24 +14,26 @@ def load_file_to_editor(ctx, file_path):
     contents = read_file(ctx, abs_path)
     ctx["state"].editor.files[abs_path]["lines"] = contents
 
+
 def refresh_editor(ctx):
     if ctx["state"].editor is None:
         raise ValueError("Editor is not set")
     for path in list(ctx["state"].editor.files.keys()):
         load_file_to_editor(ctx, path)
 
+
 PAGE_SIZE = 200
 
-class OpenFileTool(Tool):
 
+class OpenFileTool(Tool):
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     @property
     def name(self):
         return "open_file"
-    
+
     def setup(self, ctx: ToolContext):
         ctx["state"].editor = DotDict({})
         ctx["state"].editor.files = {}
@@ -37,13 +42,12 @@ class OpenFileTool(Tool):
     def cleanup(self, ctx: ToolContext):
         del ctx["state"].editor
 
-    def documentation(self, format = "docstring"):
-
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return     """
+                return """
     OPEN_FILE(1)                   General Commands Manual                  OPEN_FILE(1)
 
     NAME
@@ -92,7 +96,7 @@ class OpenFileTool(Tool):
 
             if abs_path in ctx["state"].editor.files:
                 raise Exception(f"File {abs_path} already open in editor")
-            
+
             exists = file_exists(ctx, abs_path)
             if not exists:
                 raise Exception(f"Could not open file, file does not exist: {abs_path}")
@@ -105,21 +109,21 @@ class OpenFileTool(Tool):
             return f"File {abs_path} opened in editor"
 
         except Exception as e:
-            ctx["session"].logger.error(f"Failed to open file: {file_path}. Error: {str(e)}")
+            ctx["session"].logger.error(
+                f"Failed to open file: {file_path}. Error: {str(e)}"
+            )
             return f"Failed to open file: {file_path}. Error: {str(e)}"
 
 
-
 class CloseFileTool(Tool):
-
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     @property
     def name(self):
         return "close_file"
-    
+
     def setup(self, ctx: ToolContext):
         ctx["state"].editor = {}
         ctx["state"].editor.files = {}
@@ -128,13 +132,12 @@ class CloseFileTool(Tool):
     def cleanup(self, ctx: ToolContext):
         del ctx["state"].editor
 
-    def documentation(self, format = "docstring"):
-
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return     """
+                return """
     CLOSE_FILE(1)                   General Commands Manual                  CLOSE_FILE(1)
 
     NAME
@@ -181,7 +184,6 @@ class CloseFileTool(Tool):
 
         abs_path = cwd_normalize_path(ctx, file_path)
 
-
         if abs_path not in ctx["state"].editor.files:
             raise Exception(f"File {abs_path} not open in editor")
 
@@ -193,11 +195,11 @@ class DeleteFileTool(Tool):
     @property
     def name(self):
         return "delete_file"
-    
+
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     def setup(self, ctx):
         pass
 
@@ -207,13 +209,12 @@ class DeleteFileTool(Tool):
     def supported_formats(self):
         return ["docstring", "manpage"]
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return     """
+                return """
     DELETE_FILE(1)                   General Commands Manual                  DELETE_FILE(1)
 
     NAME
@@ -244,8 +245,8 @@ class DeleteFileTool(Tool):
     """
             case _:
                 raise ValueError(f"Invalid format: {format}")
-    
-    def function(self,ctx : ToolContext, file_path: str) -> str:
+
+    def function(self, ctx: ToolContext, file_path: str) -> str:
         """
         command_name: delete_file
         description: deletes a file
@@ -259,7 +260,9 @@ class DeleteFileTool(Tool):
 
             exists = file_exists(ctx, abs_path)
             if not exists:
-                raise Exception(f"Could not delete file, file does not exist: {abs_path}")
+                raise Exception(
+                    f"Could not delete file, file does not exist: {abs_path}"
+                )
 
             # Creating the file with initial content
             ctx["environment"].execute(f"rm -f {abs_path}")
@@ -270,16 +273,17 @@ class DeleteFileTool(Tool):
             return f"Successfully deleted file {abs_path}"
 
         except Exception as e:
-            ctx["session"].logger.error(f"Failed to delete file: {file_path}. Error: {str(e)}")
+            ctx["session"].logger.error(
+                f"Failed to delete file: {file_path}. Error: {str(e)}"
+            )
             return f"Failed to delete file: {file_path}. Error: {str(e)}"
 
 
 class CreateFileTool(Tool):
-    
     @property
     def name(self):
         return "create_file"
-    
+
     def setup(self, ctx):
         pass
 
@@ -289,13 +293,12 @@ class CreateFileTool(Tool):
     def supported_formats(self):
         return ["docstring", "manpage"]
 
-    def documentation(self, format = "docstring"):
-        
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
             case "manpage":
-                return     """
+                return """
     CREATE_FILE(1)                   General Commands Manual                  CREATE_FILE(1)
 
     NAME
@@ -349,8 +352,8 @@ class CreateFileTool(Tool):
     """
             case _:
                 raise ValueError(f"Invalid format: {format}")
-    
-    def function(self,ctx : ToolContext, file_path: str, content: str = "") -> str:
+
+    def function(self, ctx: ToolContext, file_path: str, content: str = "") -> str:
         """
         command_name: create_file
         description: creates a file in your editor interface and file system
@@ -366,7 +369,9 @@ class CreateFileTool(Tool):
 
             exists = file_exists(ctx, abs_path)
             if exists:
-                raise Exception(f"Could not create file, file already exists: {file_path}")
+                raise Exception(
+                    f"Could not create file, file already exists: {file_path}"
+                )
 
             # Creating the file with initial content
 
@@ -385,28 +390,29 @@ class CreateFileTool(Tool):
             if not exists:
                 raise Exception(f"Command failed to create file: {file_path}")
 
-            ctx["state"].editor.files[abs_path] = {} 
+            ctx["state"].editor.files[abs_path] = {}
             ctx["state"].editor.files[abs_path]["lines"] = content
             ctx["state"].editor.files[abs_path]["page"] = 0
             return f"Successfully created file {file_path}"
 
         except Exception as e:
-            ctx["session"].logger.error(f"Failed to create file: {file_path}. Error: {str(e)}")
+            ctx["session"].logger.error(
+                f"Failed to create file: {file_path}. Error: {str(e)}"
+            )
             # traceback.print_exc()
             # raise e
             return f"Failed to create file: {file_path}. Error: {str(e)}"
 
 
 class ScrollUpTool(Tool):
-
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     @property
     def name(self):
         return "scroll_up_in_editor"
-    
+
     def setup(self, ctx: ToolContext):
         ctx["state"].editor.files = {}
         ctx["state"].editor.PAGE_SIZE = PAGE_SIZE
@@ -414,8 +420,7 @@ class ScrollUpTool(Tool):
     def cleanup(self, ctx: ToolContext):
         del ctx["state"].editor
 
-    def documentation(self, format = "docstring"):
-
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
@@ -464,12 +469,14 @@ class ScrollUpTool(Tool):
         signature: scroll_up [FILE_PATH]
         example: `scroll_up ./README.md`
         """
-        
+
         abs_path = cwd_normalize_path(ctx, file_path)
 
         exists = file_exists(ctx, abs_path)
         if not exists:
-            raise Exception(f"Could not scroll in file, file does not exist: {abs_path}")
+            raise Exception(
+                f"Could not scroll in file, file does not exist: {abs_path}"
+            )
 
         if abs_path not in ctx["state"].editor.files:
             raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
@@ -484,20 +491,19 @@ class ScrollUpTool(Tool):
             new_page_number = old_page_number - 1
 
         ctx["state"].editor.files[abs_path]["page"] = new_page_number
-        
+
         return f"Scrolled up in file {abs_path} to line {ctx['state'].editor.PAGE_SIZE * new_page_number}"
 
 
 class ScrollDownTool(Tool):
-
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     @property
     def name(self):
         return "scroll_down"
-    
+
     def setup(self, ctx: ToolContext):
         ctx["state"].editor.files = {}
         ctx["state"].editor.PAGE_SIZE = PAGE_SIZE
@@ -505,8 +511,7 @@ class ScrollDownTool(Tool):
     def cleanup(self, ctx: ToolContext):
         del ctx["state"].editor
 
-    def documentation(self, format = "docstring"):
-
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
@@ -560,7 +565,9 @@ class ScrollDownTool(Tool):
 
         exists = file_exists(ctx, abs_path)
         if not exists:
-            raise Exception(f"Could not scroll in file, file does not exist: {abs_path}")
+            raise Exception(
+                f"Could not scroll in file, file does not exist: {abs_path}"
+            )
 
         if abs_path not in ctx["state"].editor.files:
             raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
@@ -582,15 +589,14 @@ class ScrollDownTool(Tool):
 
 
 class ScrollToLineTool(Tool):
-
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
+
     @property
     def name(self):
         return "scroll_to_line"
-    
+
     def setup(self, ctx: ToolContext):
         ctx["state"].editor.files = {}
         ctx["state"].editor.PAGE_SIZE = PAGE_SIZE
@@ -598,8 +604,7 @@ class ScrollToLineTool(Tool):
     def cleanup(self, ctx: ToolContext):
         del ctx["state"].editor
 
-    def documentation(self, format = "docstring"):
-
+    def documentation(self, format="docstring"):
         match format:
             case "docstring":
                 return self.function.__doc__
@@ -654,7 +659,9 @@ SCROLL_TO_LINE(1)         April 2024         SCROLL_TO_LINE(1)
 
         exists = file_exists(ctx, abs_path)
         if not exists:
-            raise Exception(f"Could not scroll in file, file does not exist: {abs_path}")
+            raise Exception(
+                f"Could not scroll in file, file does not exist: {abs_path}"
+            )
 
         if abs_path not in ctx["state"].editor.files:
             raise Exception(f"Could not scroll in file, file is not open: {abs_path}")
@@ -675,7 +682,6 @@ SCROLL_TO_LINE(1)         April 2024         SCROLL_TO_LINE(1)
         return f"Scrolled to window containing line {line_number} in file {abs_path}. Window starts at line {window_start_line}."
 
 
-
 def save_create_file(ctx, response):
     """
     save_create_file - post func for create_file
@@ -683,33 +689,35 @@ def save_create_file(ctx, response):
 
     if "Successfully created file " in response:
         files = response.split("Successfully created file ")[1].split(" ")
-        commit = commit_files(ctx["environment"], files, "created file(s) " + " ".join(files))
-        if commit:
-            ctx["session"].event_log.append({
-                "type": "GitEvent",
-                "content" : {
-                    "type" : "commit",
-                    "commit" : commit,
-                    "files" : files,
-                }
-            })
+        # vgit
+        # commit = commit_files(ctx["environment"], files, "created file(s) " + " ".join(files))
+        # if commit:
+        #     ctx["session"].event_log.append({
+        #         "type": "GitEvent",
+        #         "content" : {
+        #             "type" : "commit",
+        #             "commit" : commit,
+        #             "files" : files,
+        #         }
+        #     })
         return f"Successfully saved file {files[0]} to git repository"
-    
+
+
 def save_delete_file(ctx, response):
     """
     save_delete_file - post func for delete_file
     """
     if "Successfully deleted file " in response:
         files = response.split("Successfully deleted file ")[1].split(" ")
-        commit = commit_files(ctx["environment"], files, "Deleted file(s) " + " ".join(files))
-        if commit:
-            ctx["session"].event_log.append({
-                "type": "GitEvent",
-                "content" : {
-                    "type" : "commit",
-                    "commit" : commit,
-                    "files" : files,
-                }
-            })
+        # vgit
+        # commit = commit_files(ctx["environment"], files, "Deleted file(s) " + " ".join(files))
+        # if commit:
+        #     ctx["session"].event_log.append({
+        #         "type": "GitEvent",
+        #         "content" : {
+        #             "type" : "commit",
+        #             "commit" : commit,
+        #             "files" : files,
+        #         }
+        #     })
         return f"Successfully saved file {files[0]} to git repository"
-    

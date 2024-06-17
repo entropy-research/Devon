@@ -1,7 +1,8 @@
 import os
+from dataclasses import dataclass
+
 from devon_agent.retrieval.code_index import CodeIndex
 from devon_agent.tool import Tool
-from dataclasses import dataclass
 
 
 def setup_code_index(ctx, **kwargs):
@@ -33,24 +34,20 @@ def cleanup_code_index(ctx, code_index, **kwargs):
 
 
 class FindFunctionTool(Tool):
-
     @property
     def name(self):
         return "create_file"
 
     def setup(self, ctx, **kwargs):
-
         self.code_index = setup_code_index(ctx, **kwargs)
 
     def cleanup(self, ctx):
-
         cleanup_code_index(ctx, self.code_index, **self.kwargs)
 
     def supported_formats(self):
         return ["docstring", "manpage"]
 
     def documentation(self, format="docstring"):
-
         match format:
             case "docstring":
                 return self.function.__doc__
@@ -107,7 +104,6 @@ EXAMPLES
 
 
 class FindClassTool(Tool):
-
     @property
     def name(self):
         return "find_class"
@@ -122,7 +118,6 @@ class FindClassTool(Tool):
         return ["docstring", "manpage"]
 
     def documentation(self, format="docstring"):
-
         match format:
             case "docstring":
                 return self.function.__doc__

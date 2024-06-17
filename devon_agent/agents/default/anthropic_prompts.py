@@ -128,7 +128,10 @@ A single executable command goes here, this can include bash commands, just no i
 </RESPONSE FORMAT>
 """
 
-def anthropic_last_user_prompt_template_v3(issue, history, editor, cwd, root_dir, scratchpad):
+
+def anthropic_last_user_prompt_template_v3(
+    issue, history, editor, cwd, root_dir, scratchpad
+):
     return f"""
 <SETTING>
 
@@ -200,6 +203,7 @@ Single executable command here
 - You only have access to code contained in {root_dir}
 - Your current directory is {cwd}
 </EDITING TIPS>"""
+
 
 def parse_response(response):
     thought = response.split("<THOUGHT>")[1].split("</THOUGHT>")[0]

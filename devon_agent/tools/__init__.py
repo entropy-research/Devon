@@ -41,6 +41,7 @@ import re
 
 #     return fn_name, args
 
+
 def parse_command(command: str) -> tuple:
     """
     Parses a command string into its function name and arguments.
@@ -70,8 +71,8 @@ def parse_command(command: str) -> tuple:
     args = [arg.strip('"').strip("'") for arg in args]
     return fn_name, args
 
-def get_commands(input_string: str):
 
+def get_commands(input_string: str):
     command = ""
     remainder = input_string
 

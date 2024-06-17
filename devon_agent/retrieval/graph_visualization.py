@@ -19,6 +19,7 @@ def print_nodes_with_children(graph):
                 print(f"  - {child}")
             print()
 
+
 def print_node_details(graph):
     """
     Prints all the nodes in the graph along with their details.
@@ -52,7 +53,7 @@ def print_node_details(graph):
 
         called_functions = []
         for _, dest_node, edge_attrs in graph.out_edges(node, data=True):
-            if edge_attrs.get('type') == 'calls':
+            if edge_attrs.get("type") == "calls":
                 called_functions.append(dest_node)
 
         if called_functions:
@@ -67,6 +68,7 @@ def print_node_details(graph):
         #     print(f"  - {attr}: {value}")
 
         print()
+
 
 def print_node_attributes(graph, node):
     """
@@ -84,6 +86,7 @@ def print_node_attributes(graph, node):
     else:
         print(f"Node '{node}' not found in the graph.")
 
+
 def print_file_functions(graph, file_path):
     """
     Prints all the functions defined in a specific file.
@@ -95,8 +98,12 @@ def print_file_functions(graph, file_path):
     print("----------------------------")
 
     for node in graph.nodes:
-        if graph.nodes[node].get("type") == "function" and graph.nodes[node].get("location", {}).get("file_path") == file_path:
+        if (
+            graph.nodes[node].get("type") == "function"
+            and graph.nodes[node].get("location", {}).get("file_path") == file_path
+        ):
             print(node)
+
 
 def print_function_calls(graph, function_name):
     """

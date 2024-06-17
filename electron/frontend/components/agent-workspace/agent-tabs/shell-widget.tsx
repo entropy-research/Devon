@@ -1,90 +1,24 @@
-import { IDisposable, Terminal as XtermTerminal } from '@xterm/xterm'
+import { Terminal as XtermTerminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
 import React, { useEffect, useRef, useState } from 'react'
 
-// import socket from "../socket/socket";
-import { fetchSessionEvents } from '@/lib/services/sessionService/use-fetch-session-events'
-import { useSearchParams } from 'next/navigation'
-import FileTabs from '@/components/file-tabs/file-tabs'
-
-export default function ShellWidget() {
-    const searchParams = useSearchParams()
-    const chatId = searchParams.get('chat')
-
-    const [messages, setMessages] = useState([])
-    useEffect(() => {
-        if (!chatId || chatId === 'New') return
-        const fetchAndUpdateMessages = () => {
-            fetchSessionEvents(chatId)
-                .then(data => {
-                    setMessages(getOnlyToolResponse(data))
-                })
-                .catch(error => {
-                    console.error('Error fetching session events:', error)
-                })
-        }
-        const intervalId = setInterval(fetchAndUpdateMessages, 4000)
-
-        return () => {
-            clearInterval(intervalId)
-        }
-    }, [chatId])
-
-    return <Terminal messages={messages} />
-}
-
-function getOnlyToolResponse(messages) {
-    return messages?.filter(message => message.type === 'EnvironmentResponse')
-}
-
-// Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/Terminal.tsx
-class JsonWebsocketAddon {
-    _socket: WebSocket
-
-    _disposables: IDisposable[]
-
-    constructor(_socket: WebSocket) {
-        this._socket = _socket
-        this._disposables = []
-    }
-
-    activate(terminal: XtermTerminal) {
-        this._disposables.push(
-            terminal.onData(data => {
-                const payload = JSON.stringify({ action: 'terminal', data })
-                this._socket.send(payload)
-            })
-        )
-        this._socket.addEventListener('message', event => {
-            const { action, args, observation, content } = JSON.parse(
-                event.data
-            )
-            if (action === 'run') {
-                terminal.writeln(args.command)
-            }
-            if (observation === 'run') {
-                content.split('\n').forEach((line: string) => {
-                    terminal.writeln(line)
-                })
-                terminal.write('\n$ ')
-            }
-        })
-    }
-
-    dispose() {
-        this._disposables.forEach(d => d.dispose())
-        this._socket.removeEventListener('message', () => {})
-    }
-}
+import type { Message } from '@/lib/services/stateMachineService/stateMachine'
 
 /**
  * The terminal's content is set by write messages. To avoid complicated state logic,
  * we keep the terminal persistently open as a child of <App /> and hidden when not in use.
  */
 
-function Terminal({ messages }): JSX.Element {
+const promptStr = 'bash> '
+
+export default function ShellWidget({
+    messages,
+}: {
+    messages: Message[]
+}): JSX.Element {
     const terminalRef = useRef<HTMLDivElement>(null)
     const terminalInstanceRef = useRef<XtermTerminal | null>(null)
+    const [renderedMessages, setRenderedMessages] = useState<Message[]>([])
 
     useEffect(() => {
         async function addOn() {
@@ -109,21 +43,18 @@ function Terminal({ messages }): JSX.Element {
             // is too large and switching tabs causes a layout shift.
             cols: 0,
             fontFamily: "Menlo, Monaco, 'Courier New', monospace",
-            fontSize: 14,
+            fontSize: 11,
             theme: {
-                // background: bgColor,
+                background: '#111111',
             },
             cursorBlink: true,
         })
 
         terminal.open(terminalRef.current as HTMLDivElement)
         terminalInstanceRef.current = terminal // Store the terminal instance
-        terminal.write('> ')
+        terminal.write(promptStr)
 
         addOn()
-
-        // const jsonWebsocketAddon = new JsonWebsocketAddon(socket);
-        // terminal.loadAddon(jsonWebsocketAddon);
 
         return () => {
             terminal.dispose()
@@ -134,31 +65,54 @@ function Terminal({ messages }): JSX.Element {
     useEffect(() => {
         const terminal = terminalInstanceRef.current
         if (terminal) {
-            terminal.clear() // Clear the existing content
-            messages.forEach(message => {
-                terminal.writeln(message.content)
-                terminal.write('\n> ') // Add prompt after each message
+            const messagesToRender = messages.filter(message => !renderedMessages.includes(message))
+            // terminal.clear() // Clear the existing content
+            messagesToRender.forEach((message, idx) => {
+                let [command, response] = message.text.split('|START_RESPONSE|')
+                let commandMsgs = command.slice(18).trim().split('\n')
+                commandMsgs.forEach((line, index) => {
+                    if (index === 0) {
+                        const firstLineItems = line.trim().split(' ')
+                        let end: string | undefined = undefined
+
+                        // Check if the last item in the first line is "<<<"
+                        if (
+                            firstLineItems[firstLineItems.length - 1] === '<<<'
+                        ) {
+                            end = firstLineItems.pop() // Remove the "<<<"
+                        }
+
+                        // Construct the command string
+                        line = promptStr + firstLineItems.join(' ')
+                        if (end) {
+                            terminal.writeln(line)
+                            terminal.writeln(end)
+                            return
+                        }
+                    }
+                    terminal.writeln(line)
+                })
+                if (response) {
+                    let responseMsgs = response.trim().split('\n')
+                    responseMsgs.forEach(line => {
+                        terminal.writeln(line)
+                    })
+                }
+                setRenderedMessages(prevMessages => [...prevMessages, message])
             })
         }
-    }, [messages])
+    }, [messages, renderedMessages])
 
     return (
-        <div className="h-full flex flex-col">
-            <div className="flex items-center justify-start">
-            {[{ id: 1, name: 'default' }].map(file => (
-                <button
-                    key={file.id}
-                    className={`bg-black px-5 py-3 text-md border-t-4 min-w-[150px] ${file.id === 1 ? 'border-t-aqua outline outline-gray-500 outline-[1.5px] rounded-t-lg' : 'border-transparent'}`}
-                    // onClick={() => updateSelectedFile(file)}
-                >
-                    {file.name}
-                </button>
-            ))}
-            </div>
-            <div className="h-full bg-black rounded-b-lg">
+        <div className="h-full flex flex-col bg-midnight">
+            <div
+                id="terminal-wrapper"
+                className="flex-grow flex bg-midnight w-full pl-3 pr-[1px] pt-3 overflow-hidden border-t border-outlinecolor"
+            >
                 <div
+                    id="terminal-ref"
                     ref={terminalRef}
-                    className="w-full px-3 pt-3 h-full overflow-scroll"
+                    className="w-full overflow-auto"
                 />
             </div>
         </div>

@@ -36,20 +36,19 @@
 
         --border: hsl(214.3 31.8% 91.4%);
         --input: hsl(214.3 31.8% 91.4%);
-        --ring: hsl(222.2 84% 4.9%);
-
+        --ring: white;
         --radius: 0.5rem;
     }
 
     .dark {
         color: white;
-        --background: hsl(0, 0%, 14%);
+        --background: #1e1e1e;
         --foreground: hsl(210 40% 98%);
 
         --card: var(--dark-primary-background);
         --card-foreground: white;
 
-        --popover: hsl(222.2 84% 4.9%);
+        --popover: #111111;
         --popover-foreground: hsl(210 40% 98%);
 
         --primary: hsl(210 40% 98%);
@@ -61,7 +60,7 @@
         --muted: hsl(217.2 32.6% 17.5%);
         --muted-foreground: hsl(215 20.2% 65.1%);
 
-        --accent: hsl(217.2 32.6% 17.5%);
+        --accent: #3c2a7d;
         --accent-foreground: hsl(210 40% 98%);
 
         --destructive: hsl(0 62.8% 30.6%);
@@ -69,7 +68,7 @@
 
         --border: var(--dark-outline);
         --input: var(--dark-outline);
-        --ring: hsl(212.7 26.8% 83.9%);
+        --ring: white;
     }
 }
 
@@ -82,6 +81,17 @@
         font-feature-settings:
             'rlig' 1,
             'calt' 1;
+    }
+
+    html {
+        font-size: 85%;
+    }
+
+    /* Accessibility border for tabbing */
+    *:focus-visible {
+        outline: 1px solid #2353cc;
+        border-radius: 3px;
+        /* box-shadow: 0 0 0 1px white; */
     }
 }
 
@@ -96,19 +106,23 @@
         scrollbar-width: none; /* Firefox */
     }
 
+    /* If you want to disable the scrollbars for all browsers globally:
+
     * {
-        scrollbar-width: none; /* For Firefox */
-        -ms-overflow-style: none; /* For Internet Explorer and Edge */
+        scrollbar-width: none; // For Firefox
+        -ms-overflow-style: none; // For Internet Explorer and Edge
     }
 
     *::-webkit-scrollbar {
-        display: none; /* For Chrome, Safari, and Opera */
+        display: none; // For Chrome, Safari, and Opera
     }
+
+    */
 }
 
 @layer components {
     .smooth-hover {
-        @apply transition duration-200 hover:bg-gray-100 dark:hover:bg-night;
+        @apply transition duration-200 hover:bg-gray-100 dark:hover:bg-batman;
     }
 
     .text-ellipsis {
@@ -121,11 +135,31 @@
 
     .bg-fade-bottom-to-top {
         /* TODO don't hardcode color */
-        background-image: linear-gradient(to top, #2e2e2e 0%, transparent 100%);
+        /* background-image: linear-gradient(to top, #2e2e2e 0%, transparent 100%); */
+        background-image: linear-gradient(to top, #1e1e1e 0%, transparent 100%);
     }
 
     .bg-fade-bottom-to-top2 {
         /* TODO don't hardcode color */
-        background-image: linear-gradient(to top, #2e2e2e 50%, transparent 100%);
+        /* background-image: linear-gradient(to top, #2e2e2e 50%, transparent 100%); */
+        background-image: linear-gradient(
+            to top,
+            #1e1e1e 50%,
+            transparent 100%
+        );
     }
+
+    .bg-fade-bottom-to-top-midnight {
+        /* TODO don't hardcode color */
+        /* background-image: linear-gradient(to top, #2e2e2e 50%, transparent 100%); */
+        background-image: linear-gradient(to top, #1e1e1e 0%, #111111 80%);
+    }
+}
+
+#header-drag-region {
+    -webkit-app-region: drag;
+}
+
+.no-drag {
+    -webkit-app-region: no-drag;
 }
