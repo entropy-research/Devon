@@ -233,7 +233,6 @@ class SWEEnvSession:
             "no_op" : NoOpTool(),
             "submit" : SubmitTool(),
             "delete_file" : DeleteFileTool(),
-
         })
         sweenv.set_default_tool(ShellTool())
         self.default_environment = sweenv

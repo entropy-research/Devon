@@ -1,6 +1,7 @@
 import os
 from devon_agent.tool import Tool, ToolContext
 from devon_agent.tools.utils import _capture_window, cwd_normalize_path, make_abs_path, file_exists
+from devon_agent.retrieval.file_tree.file_tree_tool import FileTreeTool
 
 
 
@@ -422,3 +423,83 @@ class SearchFileTool(Tool):
         )
         return result
 
+
+
+class FileTreeDisplay(Tool):
+
+    @property
+    def name(self):
+        return "file_tree_display"
+    
+    @property
+    def supported_formats(self):
+        return ["docstring", "manpage"]
+    
+    def setup(self, ctx):
+        root_dir = ctx["session"].base_path
+        self.fileTreeTool = FileTreeTool(root_dir=root_dir)
+        pass
+
+    def cleanup(self, ctx):
+        pass
+
+    def supported_formats(self):
+        return ["docstring", "manpage"]
+
+    def documentation(self, format="docstring"):
+        match format:
+            case "docstring":
+                return self.function.__doc__
+            case "manpage":
+                return """
+    FILE_TREE_DISPLAY(1)                   General Commands Manual                  FILE_TREE_DISPLAY(1)
+
+    NAME
+            file_tree_display - display the file tree structure in YAML format
+
+    SYNOPSIS
+            file_tree_display [DIR_PATH]
+
+    DESCRIPTION
+            The file_tree_display command generates a YAML representation of the file tree 
+            structure starting from the specified directory. If DIR_PATH is not provided, 
+            it generates the file tree for the entire project.
+
+    OPTIONS
+            DIR_PATH
+                    The path of the directory to start generating the file tree from. If not 
+                    provided, the command starts from the project root directory.
+
+    RETURN VALUE
+            The file_tree_display command returns the YAML representation of the file tree 
+            structure as a string.
+
+    EXAMPLES
+            To display the file tree of the current project:
+
+                    file_tree_display
+
+            To display the file tree starting from a specific directory:
+
+                    file_tree_display "/path/to/directory"
+    """
+            case _:
+                raise ValueError(f"Invalid format: {format}")
+
+    def function(self, ctx: ToolContext, dir_path: str = None) -> str:
+        """
+        command_name: file_tree_display
+        description: Displays the file tree structure in YAML format starting from the specified directory.
+                     If no directory is specified, displays the file tree for the entire project.
+        signature: file_tree_display [DIR_PATH]
+        example: `file_tree_display "/path/to/directory"`
+        """
+        try:
+            if dir_path is None:
+                dir_path = self.fileTreeTool.root_dir
+
+            result_list, result_tree = self.fileTreeTool.get_large_tree(dir_path, 500, 20)
+            return result_tree
+        except Exception as e:
+            ctx["session"].logger.error(f"Failed to display file tree for directory: {dir_path}. Error: {str(e)}")
+            return f"Failed to display file tree for directory: {dir_path}. Error: {str(e)}"

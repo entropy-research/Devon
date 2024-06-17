@@ -20,13 +20,16 @@ from devon_agent.tools import (
 from devon_agent.tools.editortools import CreateFileTool, DeleteFileTool, OpenFileTool, ScrollDownTool, ScrollToLineTool, ScrollUpTool, save_create_file, save_delete_file
 from devon_agent.tools.edittools import EditFileTool, save_edit_file
 from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, ListDirsRecursiveTool, SearchDirTool
-from devon_agent.tools.filetools import SearchFileTool
+from devon_agent.tools.filetools import SearchFileTool, FileTreeDisplay
 from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
 from devon_agent.tools.shelltool import ShellTool
 from devon_agent.tools.usertools import AskUserTool, SetTaskTool
 
 from devon_agent.utils import DotDict, Event
 from devon_agent.vgit import  get_current_diff, get_last_commit, get_or_create_repo, make_new_branch, safely_revert_to_commit, stash_and_commit_changes, subtract_diffs
+from devon_agent.tools.codenav import CodeGoTo, CodeSearch
+from devon_agent.tools.semantic_search import SemanticSearch
+
 
 
 @dataclass(frozen=False)
@@ -123,11 +126,15 @@ class Session:
             "edit_file" : EditFileTool().register_post_hook(save_edit_file),
             "search_dir" : SearchDirTool(),
             "find_file" : FindFileTool(),
+            "code_search": CodeSearch(),
+            "code_goto": CodeGoTo(),
+            "file_tree_display": FileTreeDisplay(),
             # "list_dirs_recursive" : ListDirsRecursiveTool(),
             "get_cwd" : GetCwdTool(),
             "no_op" : NoOpTool(),
             "submit" : SubmitTool(),
             "delete_file" : DeleteFileTool().register_post_hook(save_delete_file),
+            "semantic_search": SemanticSearch(),
         })
         local_environment.set_default_tool(ShellTool())
         self.default_environment = local_environment
