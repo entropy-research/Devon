@@ -66,6 +66,7 @@ class AnthropicModel:
             self.api_key = os.getenv("ANTHROPIC_API_KEY")
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
+        print(self.api_key)
         model_completion = completion(
             messages=[{"role": "system", "content": system_message}] + messages,
             max_tokens=self.model_metadata["max_tokens"],

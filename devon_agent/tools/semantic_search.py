@@ -1,6 +1,5 @@
 from devon_agent.semantic_search.code_graph_manager import CodeGraphManager
 from devon_agent.tool import Tool, ToolContext
-import chromadb
 from devon_agent.agents.model import AnthropicModel, ModelArguments
 import chromadb.utils.embedding_functions as embedding_functions
 import os
@@ -21,12 +20,21 @@ class SemanticSearch(Tool):
     def setup(self, ctx):
         self.base_path = ctx["session"].base_path
         # self.vectorDB = chromadb.PersistentClient(path=os.path.join(self.base_path, "vectorDB"))
-        self.vectorDB_path = os.path.join(self.base_path, "/vectorDB")
-        self.graph_path = os.path.join(self.base_path, "/graph/graph.pickle")
+        self.vectorDB_path = os.path.join(self.base_path, "vectorDB")
+        self.graph_path = os.path.join(self.base_path, "graph/graph.pickle")
+        self.collection_name = "collection"
         self.manager = CodeGraphManager(self.graph_path, self.vectorDB_path, self.base_path)
+        try:
+            self.manager.delete_collection(self.collection_name)
+        except:
+            pass
         self.manager.create_graph()
-
+        
     def cleanup(self, ctx):
+        try:
+            self.manager.delete_collection(self.collection_name)
+        except:
+            pass
         pass
 
     def documentation(self, format="docstring"):
@@ -93,20 +101,20 @@ class SemanticSearch(Tool):
             model_args = ModelArguments(
                 model_name="claude-3-opus-20240229",
                 temperature=0.5,
-                api_key=os.environ.get("OPENAI_API_KEY")
+                api_key=os.getenv("ANTHROPIC_API_KEY")
             )
             opus = AnthropicModel(model_args)
 
             # Run the semantic search function
             openai_ef = embedding_functions.OpenAIEmbeddingFunction(
                 api_key=os.environ.get("OPENAI_API_KEY"),
-                model_name=os.getenv("ANTHROPIC_API_KEY")
+                model_name="text-embedding-ada-002"
             )
 
-            collection_name = "code-graph-14"
+            
             # collection_name = "devon-5"
 
-            response = self.manager.load_graph_and_perform_operations(query_text, collection_name)
+            response = self.manager.load_graph_and_perform_operations(query_text, self.collection_name)
             # print(response)
             # print(asyncio.run(get_completion(agent_prompt(query_text, (response)), size="large")))
 

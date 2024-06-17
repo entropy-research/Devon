@@ -285,7 +285,8 @@ const createSessionActor = fromPromise(async ({
         });
         return response;
     } catch (e) {
-        console.log(e)
+        // console.log(e)
+        console.log("error creating session")
         throw e
     }
 })

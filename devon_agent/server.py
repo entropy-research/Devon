@@ -80,9 +80,9 @@ async def lifespan(app: fastapi.FastAPI):
                 k: Session.from_dict(v, lambda: get_user_input(k), persist=True)
                 for (k, v) in data.items()
             }
-            sessions = data
-            for k, v in sessions.items():
-                v.setup()
+            # sessions = data
+            # for k, v in sessions.items():
+                # v.setup()
                 # background_tasks.add_task(v.run_event_loop)
 
     yield
@@ -178,6 +178,7 @@ def start_session(
     session_obj = sessions.get(session)
     session_obj.agent.api_key = api_key
     if session not in running_sessions:
+        session.setup()
         background_tasks.add_task(sessions[session].run_event_loop)
         running_sessions.append(session)
 

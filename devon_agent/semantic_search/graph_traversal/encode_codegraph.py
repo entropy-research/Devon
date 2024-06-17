@@ -1,11 +1,15 @@
 import asyncio
 from collections import deque
+from devon_agent.semantic_search.llm import (get_completion, code_explainer_prompt)
+import anyio
 
 async def process_node(graph, node):
     node_data = graph.nodes[node]
     code = node_data.get("text", "")
     
     doc = await get_completion(code_explainer_prompt(code), model="anthropic")
+
+    print("here4")
     
     print("==========")
     print(f"Codeblock name: {node_data.get('signature')}, {node_data.get('type')}")
@@ -27,7 +31,7 @@ async def process_node_async(graph, node, retries=1):
     return None
 
 async def process_level_async(graph, nodes, level, retries=2, batch_size=70):
-    print("here")
+    print("here3")
     for i in range(0, len(nodes), batch_size):
         batch = nodes[i:i + batch_size]
         tasks = [process_node_async(graph, node, retries=retries) for node in batch]
@@ -36,8 +40,10 @@ async def process_level_async(graph, nodes, level, retries=2, batch_size=70):
             # print("Code:\n" + result)
             pass
 
-def generate_doc_level_wise(graph, edge_types=["FUNCTION_DEFINITION", "CLASS_DEFINITION", "CONTAINS"], batch_size=30):
+async def generate_doc_level_wise(graph, edge_types=["FUNCTION_DEFINITION", "CLASS_DEFINITION", "CONTAINS"], batch_size=30):
     root_node = graph.graph["root_node_id"]
+
+    print("here2")
 
     # Perform a breadth-first search (BFS) starting from the root node
     queue = deque([(root_node, 0)])
@@ -63,4 +69,4 @@ def generate_doc_level_wise(graph, edge_types=["FUNCTION_DEFINITION", "CLASS_DEF
             if node_level == level and graph.nodes[node].get("type", "directory") != "directory"
         ]
         if nodes_to_process:
-            asyncio.run(process_level_async(graph, nodes_to_process, level, batch_size=batch_size))
+            await process_level_async(graph, nodes_to_process, level, batch_size=batch_size)

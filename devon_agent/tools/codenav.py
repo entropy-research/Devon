@@ -20,7 +20,7 @@ class CodeSearch(Tool):
     def setup(self, ctx):
         self.base_path = ctx["session"].base_path
 
-        self.temp_dir = tempfile.TemporaryDirectory(delete=False)
+        self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_dir_path = self.temp_dir.name
 
     def cleanup(self, ctx):
@@ -70,7 +70,7 @@ class CodeSearch(Tool):
         """
         try:
             # Run the text_search function
-            output = code_nav_devon.text_search(self.base_path, self.temp_dir_path, text)
+            output = code_nav_devon.text_search(self.base_path, self.temp_dir_path, text, True)
             return output
         except Exception as e:
             ctx["session"].logger.error(f"Search failed for text: {text}. Error: {str(e)}")
@@ -93,7 +93,7 @@ class CodeGoTo(Tool):
     def setup(self, ctx):
         self.base_path = ctx["session"].base_path
 
-        self.temp_dir = tempfile.TemporaryDirectory(delete=False)
+        self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_dir_path = self.temp_dir.name
 
     def cleanup(self, ctx):

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from devon_agent.semantic_search.graph_construction.utils import format_nodes, tree_parser
 from pathlib import Path
 
 import tree_sitter_languages
@@ -7,7 +8,6 @@ from llama_index.core.schema import BaseNode, Document, NodeRelationship
 from llama_index.core.text_splitter import CodeSplitter
 from llama_index.packs.code_hierarchy import CodeHierarchyNodeParser
 
-from blar_graph.graph_construction.utils import format_nodes, tree_parser
 
 
 class BaseParser(ABC):

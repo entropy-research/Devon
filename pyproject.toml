@@ -41,15 +41,15 @@ dspy-ai = {version = "^2.4.9", optional = true}
 aiosqlite = "^0.20.0"
 greenlet = "^3.0.3"
 
-code-nav-devon = { path = "/Users/arnav/Desktop/python_binding/code_nav_devon", develop = true }
 
-chromadb = "^0.5.0"
-
+chromadb = "0.5.0"
 
 llama-index-packs-code-hierarchy = "^0.1.5"
 llama-index = "^0.10.45"
 python-dotenv = "^1.0.1"
 
+code-nav-devon = "^0.1.0"
+numpy = "<=1.26.4"
 [tool.poetry.extras]
 swebench = ["swebench", "datasets", "gymnasium"]
 experimental = ["dspy-ai"]

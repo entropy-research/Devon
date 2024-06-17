@@ -1,3 +1,4 @@
+import anyio
 import uuid
 import networkx as nx
 import chromadb
@@ -5,7 +6,7 @@ import asyncio
 import tiktoken
 from devon_agent.semantic_search.graph_construction.core.graph_builder import GraphConstructor
 from devon_agent.semantic_search.graph_traversal.encode_codegraph import (generate_doc_level_wise)
-from Devon.devon_agent.semantic_search.graph_traversal.value_extractor import (extract_chromadb_values)
+from devon_agent.semantic_search.graph_traversal.value_extractor import (extract_chromadb_values)
 import chromadb.utils.embedding_functions as embedding_functions
 from dotenv import load_dotenv
 import os
@@ -31,7 +32,9 @@ class CodeGraphManager:
         
         # repo_id = str(uuid.uuid4())
         self.graph_constructor.build_graph(self.root_path)
-        generate_doc_level_wise(self.graph_constructor.graph)
+        print("here")
+        print("here11")
+        asyncio.run(generate_doc_level_wise(self.graph_constructor.graph))
         self.graph_constructor.save_graph(self.graph_path)
 
     def generate_embeddings(self, docs):
@@ -133,6 +136,10 @@ class CodeGraphManager:
                 processed_node_ids.add(node_id)
         
         return self.format_response_for_llm(complete_responses)
+    
+    def delete_collection(self, collection_name):
+        client = chromadb.PersistentClient(path=self.db_path)
+        client.delete_collection(collection_name)
 
     def format_response_for_llm(self, response):
         formatted_string = ""
