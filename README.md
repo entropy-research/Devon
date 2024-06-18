@@ -95,7 +95,7 @@ export GROQ_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 3. Then to *run* the terminal-ui, the command is:
 ```bash
-devon
+devon-tui
 ```
 
 It's as easy as that.
@@ -107,7 +107,7 @@ It's as easy as that.
 
 To run in *debug* mode, the command is:
 ```bash
-devon --debug
+devon-tui --debug
 ```
 
 ---
@@ -125,7 +125,7 @@ ollama run deepseek-coder:6.7b
 
 4. Then configure devon to use the model
 ```bash
-devon configure
+devon-tui configure
 
 Configuring Devon CLI...
 ? Select the model name: 
@@ -137,14 +137,14 @@ Configuring Devon CLI...
 
 4. And finally, run it with:
 ```
-devon --api_key=FOSS
+devon-tui --api_key=FOSS
 ```
 
 ---
 
 For a list of all commands available:
 ```bash
-devon --help
+devon-tui --help
 ```
 
 # Features
@@ -173,7 +173,7 @@ devon --help
   - [x] Ollama deepseek-6.7b
   - [ ] Google Gemini 1.5 Pro
 - Launch plugin system for tool and agent builders
-- Create self-hostable Electron app
+- Improve our self-hostable Electron app
 - Set SOTA on [SWE-bench Lite](https://www.swebench.com/lite.html)
 
 > View our current thoughts on next steps [**here**](https://docs.google.com/document/d/e/2PACX-1vTjLCQcWE_n-uUHFhtBkxTCIJ4FFe5ftY_E4_q69SjXhuEZv_CYpLaQDh3HqrJlAxsgikUx0sTzf9le/pub)
@@ -187,6 +187,8 @@ devon --help
 
 ### Past milestones
 
+- [x] **June 14, 2024** - Launch Electron UI v0.0.13
+- [x] **June 1, 2024** - Devon V2 Beta Electron UI
 - [x] **May 19, 2024** - GPT4o support + better interface support v0.1.7
 - [x] **May 10, 2024** - Complete interactive agent v0.1.0
 - [x] **May 10, 2024** - Add steerability features
@@ -204,7 +206,10 @@ devon --help
 2. Add alternative models and agents to:
     - a) Reduce end user cost and
     - b) Reduce end user latency
-3. Introduce Electron app and new UI
+3. Electron app
+    - Better code diff view
+    - Timeline interface
+    - Send user file events/changes to Devon
 
 
 
