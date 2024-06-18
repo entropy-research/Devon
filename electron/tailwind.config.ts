@@ -6,9 +6,9 @@ import containerQueries from '@tailwindcss/container-queries'
 const config: Config = {
   darkMode: 'class',
   content: [
-    './frontend/app/**/*.{js,ts,jsx,tsx,mdx}',
-    './frontend/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './frontend/components/ui/*.{js,ts,jsx,tsx,mdx}',
+    './src/frontend/*.{js,ts,jsx,tsx,mdx}',
+    './src/frontend/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/frontend/components/ui/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     container: {
