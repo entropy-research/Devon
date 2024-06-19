@@ -4,7 +4,7 @@ import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { useState } from 'react'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { File } from '@/lib/types'
-import { mapLanguage, mapIcon } from './lib/services/fileService'
+import { mapLanguage, mapIcon } from '../lib/services/fileService'
 
 export default function CodeEditor({
     isExpandedVariant = false,
