@@ -1,7 +1,7 @@
 import './globals.css'
 import { useEffect } from 'react'
 import { Toaster } from '@/components/ui/toaster'
-import HeaderSidebar from '@/components/header-sidebar'
+import AppHeader from '@/components/app-header'
 import { BackendUrlProvider } from './contexts/backend-url-context'
 import Page from './page'
 
@@ -27,7 +27,7 @@ function App() {
                 <div className="flex w-full h-full overflow-hidden">
                     <div className="relative w-full overflow-hidden bg-day transition-colors duration-200 dark:bg-night flex">
                         <BackendUrlProvider>
-                            <HeaderSidebar />
+                            <AppHeader />
                             <main className="mt-[54px] flex flex-row w-full">
                                 <Page />
                             </main>

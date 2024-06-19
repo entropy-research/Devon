@@ -1,5 +1,5 @@
 import CodeEditor from './code-editor'
-import ShellPanel from '@/components/panels/shell/shell-panel'
+import ShellPanel from '@/panels/shell/shell-panel'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Bot } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'

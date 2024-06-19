@@ -6,7 +6,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import EditorPanel from '@/components/panels/editor/editor-panel'
+import EditorPanel from '@/panels/editor/editor-panel'
 import { File } from '@/lib/types'
 import { Icon } from '@iconify/react' // https://iconify.design/docs/icon-components/react/
 import { Skeleton } from '@/components/ui/skeleton'

@@ -7,7 +7,7 @@ import {
     CirclePlay,
 } from 'lucide-react'
 import { AutoresizeTextarea } from '@/components/ui/textarea'
-import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
+import { useEnterSubmit } from '@/panels/chat/lib/hooks/chat.use-enter-submit'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
@@ -63,7 +63,9 @@ const ChatInputField = ({
 
     return (
         <div
-            className={`w-full relative grid align-middle px-5 ${!viewOnly ? 'pb-7 mt-8' : ''}`}
+            className={`w-full relative grid align-middle px-5 ${
+                !viewOnly ? 'pb-7 mt-8' : ''
+            }`}
         >
             {(loading ||
                 eventContext.modelLoading ||
@@ -126,7 +128,9 @@ const ChatInputField = ({
                                 type="submit"
                             >
                                 <ArrowRight
-                                    className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}
+                                    className={`h-4 w-4 ${
+                                        focused ? 'text-primary' : ''
+                                    }`}
                                 />
                             </button>
                         </div>

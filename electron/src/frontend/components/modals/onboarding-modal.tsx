@@ -12,7 +12,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover'
 import { useSafeStorage } from '@/lib/services/safeStorageService'
-import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
+import SafeStoragePopoverContent from '@/components/modals/safe-storage-popover-content'
 import Combobox, { ComboboxItem } from '@/components/ui/combobox'
 import { models } from '@/lib/config'
 

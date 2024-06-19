@@ -1,10 +1,10 @@
 import Editor, { Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
-import FileTabs from '@/components/panels/editor/components/file-tabs/file-tabs'
+import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { useState } from 'react'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { File } from '@/lib/types'
-import { mapLanguage, mapIcon } from '@/lib/services/fileService'
+import { mapLanguage, mapIcon } from './lib/services/fileService'
 
 export default function CodeEditor({
     isExpandedVariant = false,
@@ -153,7 +153,9 @@ const PathDisplay = ({
     selectedFileId: string
 }) => (
     <div
-        className={`-mt-[1px] px-3 py-1 border-t border-outlinecolor ${selectedFileId ? 'bg-night' : ''}`}
+        className={`-mt-[1px] px-3 py-1 border-t border-outlinecolor ${
+            selectedFileId ? 'bg-night' : ''
+        }`}
     >
         <p className="text-xs text-neutral-500">
             {path ? convertPath(path) : ''}

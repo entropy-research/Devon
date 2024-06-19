@@ -14,7 +14,7 @@ import { useBackendUrl } from '@/contexts/backend-url-context'
 // import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
 // import SettingsModal from '@/components/modals/settings-modal'
 
-const HeaderSidebar = () => {
+const AppHeader = () => {
     const [expanded, setExpanded] = useState(false)
     // const pathname = usePathname()
 
@@ -58,4 +58,4 @@ const HeaderSidebar = () => {
     )
 }
 
-export default HeaderSidebar
+export default AppHeader

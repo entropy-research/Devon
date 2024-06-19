@@ -1,22 +1,20 @@
-import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
-import ChatMessages from './messages/chat.messages'
-import ChatInputField from './input/chat-input-field'
+import ChatHeader from './components/chat-header'
+import { useScrollAnchor } from '@/panels/chat/lib/hooks/chat.use-scroll-anchor'
+import ChatMessages from './components/messages/chat.messages'
+import ChatInputField from './components/input/chat-input-field'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Skeleton } from '@/components/ui/skeleton'
-export default function ChatMessagesAndInput({
-    viewOnly,
-    loading,
+
+export default function Chat({
     sessionId,
-    // sessionMachineProps,
+    viewOnly = false,
+    headerIcon,
+    loading = false,
 }: {
-    viewOnly: boolean
-    loading: boolean
-    sessionId: string
-    // sessionMachineProps: {
-    //     port: number
-    //     name: string
-    //     path: string
-    // }
+    sessionId: string | null
+    viewOnly?: boolean
+    headerIcon?: JSX.Element
+    loading?: boolean
 }) {
     const {
         // messagesRef,
@@ -26,21 +24,7 @@ export default function ChatMessagesAndInput({
         scrollToBottom,
     } = useScrollAnchor()
 
-    // const searchParams = useSearchParams()
-    // const [eventState, sendEvent] = useActor(eventHandlingLogic)
-    // let messages = eventState.context.messages
-    // This inits the state machine and starts the session
-
     let status = ''
-
-    //     const [state] = useMachine(sessionMachine, { input: {
-    //         host: 'http://localhost:' + sessionMachineProps.port,
-    //         name: sessionMachineProps.name,
-    //         path: sessionMachineProps.path,
-    //         reset: false,
-    //         },
-    //     },
-    // )
 
     const state = SessionMachineContext.useSelector(state => state)
 
@@ -60,56 +44,62 @@ export default function ChatMessagesAndInput({
         status = 'Interrupt:'
     }
 
-    // useEffect(() => {
-    //     missingKeys?.map(key => {
-    //         toast({
-    //             title: `Missing ${key} environment variable!`,
-    //         })
-    //     })
-    // }, [toast, missingKeys])
-
     return (
-        <div
-            className="flex flex-col flex-2 relative h-full overflow-y-auto"
-            ref={scrollRef}
-        >
-            <div className="flex-1">
-                {/* <div
+        <div className="rounded-lg h-full w-full max-w-4xl flex flex-col flex-2">
+            <ChatHeader sessionId={sessionId} headerIcon={headerIcon} />
+            <div className="flex-1 overflow-y-auto">
+                {/* {!backendStarted && <div>Initializing...</div>} */}
+                {/* {backendStarted && sessionMachineProps && ( */}
+                {/* {sessionMachineProps && (    */}
+                {/* {loading ? (
+                    <p>Loading Chat Messages and Input</p>
+                ) : ( */}
+                <div
+                    className="flex flex-col flex-2 relative h-full overflow-y-auto"
+                    ref={scrollRef}
+                >
+                    <div className="flex-1">
+                        {/* <div
                     className={cn('pt-4 md:pt-10 bg-red-500', className)}
                     ref={messagesRef}
                 > */}
-                {!state.matches('running') && !state.matches('paused') ? (
-                    <LoadingSkeleton />
-                ) : (
-                    messages &&
-                    messages.length > 0 && (
-                        <ChatMessages
-                            messages={messages}
-                            spinning={eventState.modelLoading}
-                        />
-                    )
-                )}
-                <div className="h-px w-full" ref={visibilityRef}></div>
-                {/* </div> */}
-            </div>
-            {/* {!viewOnly && ( */}
-            <div className="sticky bottom-0 w-full">
-                <div className="bg-fade-bottom-to-top pt-20 overflow-hidden rounded-xl -mb-[1px]">
-                    {/* <ButtonScrollToBottom
+                        {!state.matches('running') &&
+                        !state.matches('paused') ? (
+                            <LoadingSkeleton />
+                        ) : (
+                            messages &&
+                            messages.length > 0 && (
+                                <ChatMessages
+                                    messages={messages}
+                                    spinning={eventState.modelLoading}
+                                />
+                            )
+                        )}
+                        <div className="h-px w-full" ref={visibilityRef}></div>
+                        {/* </div> */}
+                    </div>
+                    {/* {!viewOnly && ( */}
+                    <div className="sticky bottom-0 w-full">
+                        <div className="bg-fade-bottom-to-top pt-20 overflow-hidden rounded-xl -mb-[1px]">
+                            {/* <ButtonScrollToBottom
                         isAtBottom={isAtBottom}
                         scrollToBottom={scrollToBottom}
                     /> */}
-                    <ChatInputField
-                        isAtBottom={isAtBottom}
-                        scrollToBottom={scrollToBottom}
-                        viewOnly={viewOnly}
-                        eventContext={eventState}
-                        loading={!state.matches('running')}
-                        sessionId={sessionId}
-                    />
+                            <ChatInputField
+                                isAtBottom={isAtBottom}
+                                scrollToBottom={scrollToBottom}
+                                viewOnly={viewOnly}
+                                eventContext={eventState}
+                                loading={!state.matches('running')}
+                                sessionId={sessionId}
+                            />
+                        </div>
+                    </div>
+                    {/* )} */}
                 </div>
+                {/* )} */}
+                {/* )} */}
             </div>
-            {/* )} */}
         </div>
     )
 }

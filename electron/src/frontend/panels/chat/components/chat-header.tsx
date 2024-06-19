@@ -1,6 +1,6 @@
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { CircleArrowDown, Power, Rewind, History, Settings } from 'lucide-react'
-import SettingsModal from '../modals/settings-modal'
+import SettingsModal from '../../../components/modals/settings-modal'
 
 export default function ChatHeader({
     sessionId,

@@ -10,7 +10,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover'
 import { CircleHelp, Settings } from 'lucide-react'
-import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
+import SafeStoragePopoverContent from '@/components/modals/safe-storage-popover-content'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Model } from '@/lib/types'
 import { models } from '@/lib/config'

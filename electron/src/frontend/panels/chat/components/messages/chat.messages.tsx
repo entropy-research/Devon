@@ -4,7 +4,7 @@ import {
     ToolResponseMessage,
     ThoughtMessage,
     SpinnerMessage,
-} from '@/components/chat/chat-messages-and-input/messages/chat.message-variants'
+} from '@/panels/chat/components/messages/chat.message-variants'
 import { NotebookPen } from 'lucide-react'
 export interface ChatMessages {
     messages: any[]

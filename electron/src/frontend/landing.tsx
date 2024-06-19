@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react'
 import OnboardingModal from '@/components/modals/onboarding-modal'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import { useSafeStorage } from './lib/services/safeStorageService'
-import Chat from '@/components/chat/chat'
+import Chat from '@/panels/chat/chat-panel'
 import {
     ResizableHandle,
     ResizablePanel,
     ResizablePanelGroup,
 } from '@/components/ui/resizable'
-import EditorPanel from '@/components/panels/editor/editor-panel'
+import EditorPanel from '@/panels/editor/editor-panel'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 
 export default function Landing({
