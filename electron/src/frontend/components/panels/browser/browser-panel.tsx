@@ -1,10 +1,5 @@
-import React from 'react'
-
-export default function BrowserWidget() {
-    return <Browser />
-}
 // Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/Browser.tsx
-function Browser(): JSX.Element {
+export default function BrowserPanel(): JSX.Element {
     const url = ''
     const screenshotSrc = ''
 

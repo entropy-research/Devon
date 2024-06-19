@@ -8,7 +8,7 @@ import type { Message } from '@/lib/types'
  * we keep the terminal persistently open as a child of <App /> and hidden when not in use.
  */
 
-export default function ShellWidget({
+export default function ShellPanel({
     messages,
 }: {
     messages: Message[]

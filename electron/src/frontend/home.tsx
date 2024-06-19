@@ -8,7 +8,7 @@ import {
 import { createActorContext } from '@xstate/react'
 import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { useSafeStorage } from '@/lib/services/safeStorageService'
-import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
+import EditorPanel from '@/components/panels/editor/editor-panel'
 
 export const SessionMachineContext = createActorContext(newSessionMachine)
 
@@ -79,7 +79,7 @@ export default function Home() {
                 </ResizablePanel>
                 <ResizableHandle className="" />
                 <ResizablePanel className="flex-col w-full hidden md:flex">
-                    <EditorWidget chatId={'UI'} />
+                    <EditorPanel chatId={'UI'} />
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>

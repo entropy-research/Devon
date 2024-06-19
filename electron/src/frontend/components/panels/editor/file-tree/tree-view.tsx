@@ -1,5 +1,3 @@
-'use client'
-
 import { cn } from '@/lib/utils'
 import React, { forwardRef, useCallback, useRef } from 'react'
 import useResizeObserver from 'use-resize-observer'

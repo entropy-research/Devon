@@ -1,5 +1,3 @@
-'use client'
-
 export const spinner = (
     <svg
         fill="none"

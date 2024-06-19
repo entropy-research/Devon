@@ -80,7 +80,7 @@ const steps: StepType[] = [
     },
 ]
 
-const TimelineWidget: React.FC = () => {
+const TimelinePanel: React.FC = () => {
     const [activeStep, setActiveStep] = useState(0)
     const [subStepFinished, setSubStepFinished] = useState(false)
 
@@ -154,7 +154,7 @@ const Step: React.FC<{
                     /**
                      * This setTimeout ensures setSubStepFinished is called after the state update
                         Or else you get the error:
-                        Cannot update a component (`TimelineWidget`) while rendering a different component (`Step`). To locate the bad setState() call inside `Step`,
+                        Cannot update a component (`TimelinePanel`) while rendering a different component (`Step`). To locate the bad setState() call inside `Step`,
                      */
                     setTimeout(() => {
                         setSubStepFinished(true)
@@ -284,4 +284,4 @@ const SubStep: React.FC<{
     )
 }
 
-export default TimelineWidget
+export default TimelinePanel

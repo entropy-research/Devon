@@ -1,4 +1,3 @@
-'use client'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
 import ChatMessages from './messages/chat.messages'
 import ChatInputField from './input/chat-input-field'

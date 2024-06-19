@@ -1,5 +1,5 @@
 import CodeEditor from './code-editor'
-import ShellWidget from '@/panels/shell/shell-panel'
+import ShellPanel from '@/components/panels/shell/shell-panel'
 import { SessionMachineContext } from '@/home'
 import { Bot } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
@@ -25,7 +25,7 @@ const boilerplateFile2 = {
     },
 }
 
-const EditorWidget = ({
+const EditorPanel = ({
     isExpandedVariant = false,
 }: {
     chatId: string | null
@@ -44,10 +44,16 @@ const EditorWidget = ({
 
     return (
         <div
-            className={`flex flex-col h-full w-full ${showEditorBorders ? 'pb-7' : ''}`}
+            className={`flex flex-col h-full w-full ${
+                showEditorBorders ? 'pb-7' : ''
+            }`}
         >
             <div
-                className={`flex flex-row h-full ${showEditorBorders ? 'rounded-md border bg-midnight border-outlinecolor pt-0 mr-3 overflow-hidden' : ''}`}
+                className={`flex flex-row h-full ${
+                    showEditorBorders
+                        ? 'rounded-md border bg-midnight border-outlinecolor pt-0 mr-3 overflow-hidden'
+                        : ''
+                }`}
             >
                 <div className="flex flex-col flex-grow w-full h-full">
                     <div className="w-full border-b border-outlinecolor flex justify-center py-1 relative">
@@ -84,7 +90,7 @@ const EditorWidget = ({
                         />
                     </div>
                     <div className={`h-[23vh] ${showEditorBorders ? '' : ''}`}>
-                        <ShellWidget messages={messages} />
+                        <ShellPanel messages={messages} />
                     </div>
                 </div>
             </div>
@@ -92,4 +98,4 @@ const EditorWidget = ({
     )
 }
 
-export default EditorWidget
+export default EditorPanel

@@ -1,10 +1,8 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { GitPullRequest, LayoutPanelLeft, Columns2 } from 'lucide-react'
+import { useState } from 'react'
+import { GitPullRequest, LayoutPanelLeft } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 
 const AgentWorkspaceHeader = ({
-    viewMode,
     toggleViewMode,
     visibilityProps: {
         showPlanner,
@@ -13,7 +11,6 @@ const AgentWorkspaceHeader = ({
         setShowTimeline,
     },
 }: {
-    viewMode: ViewMode
     toggleViewMode: () => void
     visibilityProps: {
         showPlanner: boolean
@@ -42,11 +39,7 @@ const AgentWorkspaceHeader = ({
                         // className={`flex p-2 items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${viewMode === ViewMode.Panel ? 'bg-gray-100 dark:bg-batman' : ''}`}
                         className={`flex p-2 items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman`}
                     >
-                        {viewMode === ViewMode.Panel ? (
-                            <Columns2 size="1.4rem" />
-                        ) : (
-                            <LayoutPanelLeft size="1.3rem" />
-                        )}
+                        <LayoutPanelLeft size="1.3rem" />
                     </button>
                 </div>
             )}

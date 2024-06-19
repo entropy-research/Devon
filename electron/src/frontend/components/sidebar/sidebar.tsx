@@ -1,4 +1,3 @@
-'use client'
 import { List, Settings } from 'lucide-react'
 import {
     useContext,
