@@ -24,12 +24,8 @@ import {
     setup, raise, assign, fromPromise, emit, log
     // createActor
 } from 'xstate';
+import type { Message } from '@/lib/types'
 
-
-export type Message = {
-    text: string;
-    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error';
-};
 
 type ServerEvent = {
     type:

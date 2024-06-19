@@ -1,8 +1,7 @@
 import { Terminal as XtermTerminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
 import { useEffect, useRef, useState } from 'react'
-
-import type { Message } from '@/lib/services/stateMachineService/stateMachine'
+import type { Message } from '@/lib/types'
 
 /**
  * The terminal's content is set by write messages. To avoid complicated state logic,
@@ -105,7 +104,7 @@ export default function ShellWidget({
         <div className="h-full flex flex-col bg-midnight">
             <div
                 id="terminal-wrapper"
-                className="flex-grow flex bg-midnight w-full pl-3 pr-[1px] pt-3 overflow-hidden border-t border-outlinecolor"
+                className="flex-grow flex bg-midnight w-full px-3 pr-[1px] pt-4 overflow-hidden border-t border-outlinecolor"
             >
                 <div
                     id="terminal-ref"

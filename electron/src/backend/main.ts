@@ -6,6 +6,7 @@ import portfinder from 'portfinder'
 import fs from 'fs'
 
 const DEBUG_MODE = false
+const DEV_MODE = true
 
 function writeToLogFile(logMessage: string) {
   if (!DEBUG_MODE) {
@@ -186,12 +187,14 @@ app.on('window-all-closed', () => {
 
 
 app.on('browser-window-focus', function () {
-  globalShortcut.register("CommandOrControl+R", () => {
+  if (!DEV_MODE) {
+    globalShortcut.register("CommandOrControl+R", () => {
       console.log("CommandOrControl+R is pressed: Shortcut Disabled");
-  });
-  globalShortcut.register("F5", () => {
-      console.log("F5 is pressed: Shortcut Disabled");
-  });
+    });
+    globalShortcut.register("F5", () => {
+        console.log("F5 is pressed: Shortcut Disabled");
+    });
+  }
 });
 
 app.on('browser-window-blur', function () {

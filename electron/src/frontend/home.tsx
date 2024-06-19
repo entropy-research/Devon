@@ -6,7 +6,6 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from '@/components/ui/resizable'
-import { ViewMode } from '@/lib/types'
 import { createActorContext } from '@xstate/react'
 import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
 import { useSafeStorage } from "@/lib/services/safeStorageService"
@@ -70,7 +69,7 @@ export default function Home() {
         <div className="w-full flex flex-row">
             <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel
-                    className={`flex ${ViewMode.Panel === ViewMode.Panel ? 'flex-row' : 'flex-col'} w-full relative justify-center`}
+                    className={`flex flex-col w-full relative justify-center`}
                 >
                     {/* <SidebarItem
                         text="Settings"

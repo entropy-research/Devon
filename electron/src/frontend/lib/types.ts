@@ -1,8 +1,3 @@
-enum ViewMode {
-    Panel,
-    Grid,
-}
-
 export type File = {
     id: string
     name: string
@@ -19,5 +14,7 @@ export type Model = {
     comingSoon?: boolean
 }
 
-
-export { ViewMode }
+export type Message = {
+    text: string;
+    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error';
+};

@@ -1,26 +1,9 @@
 'use client'
-import { Session } from '@/lib/chat.types'
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
 import ChatMessages from './messages/chat.messages'
 import ChatInputField from './input/chat-input-field'
 import { SessionMachineContext } from '@/home'
 import { Skeleton } from '@/components/ui/skeleton'
-
-type Message = {
-    role: 'user' | 'assistant' | 'system' | 'function' | 'data' | 'tool'
-    content: string
-    id: string
-    name?: string
-}
-
-// TODO: Get rid of / correct this type later. Was from old chat component
-export interface ChatProps extends React.ComponentProps<'div'> {
-    initialMessages?: Message[]
-    id?: string
-    session?: Session
-    missingKeys?: string[]
-}
-
 export default function ChatMessagesAndInput({
     viewOnly,
     loading,
