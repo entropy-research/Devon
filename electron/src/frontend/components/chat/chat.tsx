@@ -25,12 +25,12 @@ export default function Chat({
                 {/* {loading ? (
                     <p>Loading Chat Messages and Input</p>
                 ) : ( */}
-                    <ChatMessagesAndInput
-                        viewOnly={viewOnly}
-                        loading={loading}
-                        sessionId={sessionId as string}
-                        // sessionMachineProps={sessionMachineProps}
-                    />
+                <ChatMessagesAndInput
+                    viewOnly={viewOnly}
+                    loading={loading}
+                    sessionId={sessionId as string}
+                    // sessionMachineProps={sessionMachineProps}
+                />
                 {/* )} */}
                 {/* )} */}
             </div>

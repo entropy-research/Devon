@@ -37,7 +37,9 @@ const EditorWidget = ({
             message => message.type === 'tool'
         )
     )
-    const path = SessionMachineContext.useSelector(state => state.context?.sessionState?.path ?? ".")
+    const path = SessionMachineContext.useSelector(
+        state => state.context?.sessionState?.path ?? '.'
+    )
     const showEditorBorders = true
 
     return (
@@ -55,9 +57,17 @@ const EditorWidget = ({
                             <div className="w-[9px] h-[9px] bg-green-500 rounded-full"></div>
                         </div>
                         <button
-                            onClick={() => toast({ title: 'Hey! ~ Devon waves at you ~ 👋' })}
-                            className="group smooth-hover bg-night px-[100px] border border-outlinecolor rounded-md my-1 flex gap-[5px] items-center">
-                            <Bot size={12} className="group-hover:smooth-hover group-hover:text-white text-neutral-400 mb-[2px] -ml-2" />
+                            onClick={() =>
+                                toast({
+                                    title: 'Hey! ~ Devon waves at you ~ 👋',
+                                })
+                            }
+                            className="group smooth-hover bg-night px-[100px] border border-outlinecolor rounded-md my-1 flex gap-[5px] items-center"
+                        >
+                            <Bot
+                                size={12}
+                                className="group-hover:smooth-hover group-hover:text-white text-neutral-400 mb-[2px] -ml-2"
+                            />
                             <p className="group-hover:smooth-hover group-hover:text-white text-[0.8rem] text-neutral-400">
                                 Devon
                             </p>
@@ -73,9 +83,7 @@ const EditorWidget = ({
                             path={path}
                         />
                     </div>
-                    <div
-                        className={`h-[23vh] ${showEditorBorders ? '' : ''}`}
-                    >
+                    <div className={`h-[23vh] ${showEditorBorders ? '' : ''}`}>
                         <ShellWidget messages={messages} />
                     </div>
                 </div>

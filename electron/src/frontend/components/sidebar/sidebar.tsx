@@ -1,6 +1,13 @@
 'use client'
 import { List, Settings } from 'lucide-react'
-import { useContext, createContext, useState, useRef, SetStateAction, Dispatch } from 'react'
+import {
+    useContext,
+    createContext,
+    useState,
+    useRef,
+    SetStateAction,
+    Dispatch,
+} from 'react'
 import SidebarHeader from './sidebar-header'
 import SidebarChatLogs from './sidebar-chat-logs'
 import SidebarItem from './sidebar-item'

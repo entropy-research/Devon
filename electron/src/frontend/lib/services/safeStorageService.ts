@@ -46,7 +46,11 @@ export const useSafeStorage = () => {
         return response.success
     }
 
-    const addApiKey = async (keyName: string, keyValue: string, reload: boolean = true) => {
+    const addApiKey = async (
+        keyName: string,
+        keyValue: string,
+        reload: boolean = true
+    ) => {
         const data = (await loadData()) || {}
         data[keyName] = keyValue
         await saveData(data, reload)
@@ -65,7 +69,10 @@ export const useSafeStorage = () => {
         }
     }
 
-    const setUseModelName = async (modelName: string, reload: boolean = true) => {
+    const setUseModelName = async (
+        modelName: string,
+        reload: boolean = true
+    ) => {
         const data = await loadData()
         data.useModelName = modelName
         await saveData(data, reload)

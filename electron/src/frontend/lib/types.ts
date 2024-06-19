@@ -15,6 +15,6 @@ export type Model = {
 }
 
 export type Message = {
-    text: string;
-    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error';
-};
+    text: string
+    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error'
+}

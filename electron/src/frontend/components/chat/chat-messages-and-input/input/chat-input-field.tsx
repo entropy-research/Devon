@@ -1,5 +1,11 @@
 import { useState, useRef } from 'react'
-import { Paperclip, ArrowRight, CirclePause, Axis3DIcon, CirclePlay } from 'lucide-react'
+import {
+    Paperclip,
+    ArrowRight,
+    CirclePause,
+    Axis3DIcon,
+    CirclePlay,
+} from 'lucide-react'
 import { AutoresizeTextarea } from '@/components/ui/textarea'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
@@ -13,7 +19,7 @@ const ChatInputField = ({
     viewOnly,
     eventContext,
     loading,
-    sessionId
+    sessionId,
 }: {
     isAtBottom: boolean
     scrollToBottom: () => void
@@ -64,14 +70,14 @@ const ChatInputField = ({
                 eventContext.userRequest ||
                 sessionActorRef.getSnapshot().matches('paused') ||
                 sessionActorRef.getSnapshot().matches('running')) && (
-                    <InformationBox
-                        modelLoading={eventContext.modelLoading}
-                        userRequested={eventContext.userRequest}
-                        loading={loading}
-                        paused={sessionActorRef.getSnapshot().matches('paused')}
-                        pauseHandler={handlePause}
-                    />
-                )}
+                <InformationBox
+                    modelLoading={eventContext.modelLoading}
+                    userRequested={eventContext.userRequest}
+                    loading={loading}
+                    paused={sessionActorRef.getSnapshot().matches('paused')}
+                    pauseHandler={handlePause}
+                />
+            )}
             {!viewOnly && (
                 <>
                     <form
@@ -136,8 +142,13 @@ const ChatInputField = ({
     )
 }
 
-const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHandler }) => {
-
+const InformationBox = ({
+    modelLoading,
+    userRequested,
+    loading,
+    paused,
+    pauseHandler,
+}) => {
     const types: {
         [key: string]: {
             text: string
@@ -146,7 +157,9 @@ const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHan
     } = {
         modelLoading: {
             text: 'Devon is working...',
-            accessory: <PauseButton paused={paused} pauseHandler={pauseHandler} />,
+            accessory: (
+                <PauseButton paused={paused} pauseHandler={pauseHandler} />
+            ),
         },
         userRequested: {
             text: 'Devon is waiting for your response',
@@ -170,7 +183,9 @@ const InformationBox = ({ modelLoading, userRequested, loading, paused, pauseHan
     }
     if (paused) {
         currentType.text = 'Devon is taking a coffee break (paused)'
-        currentType.accessory = <PauseButton paused={paused} pauseHandler={pauseHandler} />
+        currentType.accessory = (
+            <PauseButton paused={paused} pauseHandler={pauseHandler} />
+        )
     }
 
     return (

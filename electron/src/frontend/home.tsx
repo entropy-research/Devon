@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import Chat from '@/components/chat/chat'
 import {
@@ -8,19 +7,19 @@ import {
 } from '@/components/ui/resizable'
 import { createActorContext } from '@xstate/react'
 import { newSessionMachine } from '@/lib/services/stateMachineService/stateMachine'
-import { useSafeStorage } from "@/lib/services/safeStorageService"
+import { useSafeStorage } from '@/lib/services/safeStorageService'
 import EditorWidget from '@/components/agent-workspace/agent-tabs/editor-widget/editor-widget'
-
 
 export const SessionMachineContext = createActorContext(newSessionMachine)
 
 export const SessionContextProviderComponent = ({
-    sessionMachineProps, children
+    sessionMachineProps,
+    children,
 }: {
     sessionMachineProps: {
         host: string
         name: string
-    },
+    }
     children: any
 }) => {
     return (
@@ -29,7 +28,7 @@ export const SessionContextProviderComponent = ({
                 input: {
                     host: sessionMachineProps.host,
                     name: sessionMachineProps.name,
-                    reset: true
+                    reset: true,
                 },
             }}
         >
@@ -39,7 +38,6 @@ export const SessionContextProviderComponent = ({
 }
 
 export default function Home() {
-
     // const sessionMachineRef = SessionMachineContext.useActorRef()
     // const { getApiKey } = useSafeStorage();
     // const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
@@ -60,8 +58,6 @@ export default function Home() {
     //     })
     // }, [])
 
-
-
     // const state = SessionMachineContext.useSelector(state => state)
     // console.log(state.context.serverEventContext)
     // Get session id and path from url
@@ -79,13 +75,11 @@ export default function Home() {
                         route="/settings"
                         expanded={true}
                     /> */}
-                    <Chat
-                        sessionId={"UI"}
-                    />
+                    <Chat sessionId={'UI'} />
                 </ResizablePanel>
                 <ResizableHandle className="" />
                 <ResizablePanel className="flex-col w-full hidden md:flex">
-                    <EditorWidget chatId={"UI"} />
+                    <EditorWidget chatId={'UI'} />
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>

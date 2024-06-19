@@ -1,17 +1,16 @@
 import React from 'react'
 
-
 export default function BrowserWidget() {
     return <Browser />
 }
 // Source: https://github.com/OpenDevin/OpenDevin/blob/main/frontend/src/components/Browser.tsx
 function Browser(): JSX.Element {
-
     const url = ''
-    const screenshotSrc = '';
+    const screenshotSrc = ''
 
     const imgSrc =
-        screenshotSrc && (screenshotSrc as string).startsWith('data:image/png;base64,')
+        screenshotSrc &&
+        (screenshotSrc as string).startsWith('data:image/png;base64,')
             ? screenshotSrc
             : `data:image/png;base64,${screenshotSrc || ''}`
 

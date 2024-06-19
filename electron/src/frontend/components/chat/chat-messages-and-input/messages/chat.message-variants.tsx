@@ -9,7 +9,6 @@ import { remarkCustomCode } from './remarkCustomCode' // import the custom plugi
 import { TfiThought } from 'react-icons/tfi'
 import { Icon } from '@iconify/react'
 
-
 // Different types of message bubbles.
 
 export function UserMessage({ children }: { children: React.ReactNode }) {
@@ -118,7 +117,15 @@ export const ToolResponseMessage = ({
     return <StyledMessage content={command} className={className} icon={icon} />
 }
 
-function StyledMessage({ content, className, icon }: { content: string, className: string, icon: JSX.Element }) {
+function StyledMessage({
+    content,
+    className,
+    icon,
+}: {
+    content: string
+    className: string
+    icon: JSX.Element
+}) {
     const text = content
 
     return (

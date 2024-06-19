@@ -1,7 +1,6 @@
 import { Bot, SquarePen } from 'lucide-react'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 
-
 const SidebarHeader = ({ expanded }: { expanded: boolean }) => {
     const handleClick = e => {
         e.preventDefault()
@@ -13,8 +12,11 @@ const SidebarHeader = ({ expanded }: { expanded: boolean }) => {
             className={`flex flex-row ${expanded && 'border-b border-outline-day dark:border-outline-night mx-2'} pb-4 items-center justify-between`}
         >
             <>
-                <a href="/?chat=New" onClick={handleClick} className="flex mb-6">
-                </a>
+                <a
+                    href="/?chat=New"
+                    onClick={handleClick}
+                    className="flex mb-6"
+                ></a>
                 {/* <SelectProjectDirectoryModal
                     trigger={
                         <button className={expanded ? 'visible' : 'hidden'}>

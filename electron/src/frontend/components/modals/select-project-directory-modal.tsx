@@ -33,7 +33,7 @@ const SelectProjectDirectoryModal = ({
     header,
     sessionActorref,
     state,
-    model
+    model,
 }: {
     trigger?: JSX.Element
     openProjectModal?: boolean
@@ -48,18 +48,17 @@ const SelectProjectDirectoryModal = ({
     const [open, setOpen] = useState(false)
     const [page, setPage] = useState(1)
 
-    const { getApiKey } = useSafeStorage();
+    const { getApiKey } = useSafeStorage()
     const [apiKey, setApiKey] = useState('')
     // const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
     useEffect(() => {
-        getApiKey(model).then((value) => {
+        getApiKey(model).then(value => {
             if (value) {
                 setApiKey(value)
             }
         })
     }, [])
-
 
     function validate() {
         return folderPath !== ''
@@ -67,23 +66,25 @@ const SelectProjectDirectoryModal = ({
 
     function afterSubmit() {
         sessionActorref.send({
-            type: 'session.create', payload: {
+            type: 'session.create',
+            payload: {
                 path: folderPath,
                 agentConfig: {
                     model: model,
-                    api_key: apiKey
-                }
-            }
+                    api_key: apiKey,
+                },
+            },
         })
-        sessionActorref.on("session.creationComplete", () => {
+        sessionActorref.on('session.creationComplete', () => {
             sessionActorref.send({
-                type: 'session.init', payload: {
+                type: 'session.init',
+                payload: {
                     // path: folderPath,
                     agentConfig: {
                         model: model,
-                        api_key: apiKey
-                    }
-                }
+                        api_key: apiKey,
+                    },
+                },
             })
         })
         setOpen(false)
@@ -103,33 +104,44 @@ const SelectProjectDirectoryModal = ({
 
     return (
         <Suspense fallback={<></>}>
-            {(state.matches("sessionReady") || state.matches({ setup: "sessionDoesNotExist" })) && <Dialog open={open} onOpenChange={handleOpenChange}>
-                {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-                <DialogContent
-                    hideclose={hideclose ? true.toString() : false.toString()}
-                >
-                    <div className="dark mx-8 my-4">
-                        {state.matches("sessionReady") ?
-                            <>
-                                <ExistingSessionFound
-                                    continueChat={() => {
-                                        sessionActorref.send({
-                                            type: 'session.init', payload: {
-                                                agentConfig: {
-                                                    model: model,
-                                                    api_key: apiKey
-                                                }
-                                            }
-                                        })
-                                    }}
-                                    newChat={() => {
-                                        sessionActorref.send({ type: 'session.delete' })
-                                    }}
-                                />
-                            </> : <></>
+            {(state.matches('sessionReady') ||
+                state.matches({ setup: 'sessionDoesNotExist' })) && (
+                <Dialog open={open} onOpenChange={handleOpenChange}>
+                    {trigger && (
+                        <DialogTrigger asChild>{trigger}</DialogTrigger>
+                    )}
+                    <DialogContent
+                        hideclose={
+                            hideclose ? true.toString() : false.toString()
                         }
+                    >
+                        <div className="dark mx-8 my-4">
+                            {state.matches('sessionReady') ? (
+                                <>
+                                    <ExistingSessionFound
+                                        continueChat={() => {
+                                            sessionActorref.send({
+                                                type: 'session.init',
+                                                payload: {
+                                                    agentConfig: {
+                                                        model: model,
+                                                        api_key: apiKey,
+                                                    },
+                                                },
+                                            })
+                                        }}
+                                        newChat={() => {
+                                            sessionActorref.send({
+                                                type: 'session.delete',
+                                            })
+                                        }}
+                                    />
+                                </>
+                            ) : (
+                                <></>
+                            )}
 
-                        {/* {sessions?.length > 0 && page === 1 ? (
+                            {/* {sessions?.length > 0 && page === 1 ? (
                         <ExistingSessionFound
                             sessions={sessions}
                             setPage={setPage}
@@ -141,15 +153,17 @@ const SelectProjectDirectoryModal = ({
                         <></>
                     )} */}
 
-                        {
-                            state.matches({ setup: "sessionDoesNotExist" }) ?
+                            {state.matches({ setup: 'sessionDoesNotExist' }) ? (
                                 <>
                                     {page !== 1 && (
                                         <button
                                             className="top-3 left-3 absolute text-primary mb-2 flex items-center p-1"
-                                        //  onClick={() => setPage(1)}
+                                            //  onClick={() => setPage(1)}
                                         >
-                                            <ArrowLeft size={18} className="mr-1" />
+                                            <ArrowLeft
+                                                size={18}
+                                                className="mr-1"
+                                            />
                                             {/* {'Back'} */}
                                         </button>
                                     )}
@@ -163,10 +177,14 @@ const SelectProjectDirectoryModal = ({
                                         onClick={afterSubmit}
                                         folderPath={folderPath}
                                     />
-                                </> : <></>}
-                    </div>
-                </DialogContent>
-            </Dialog>}
+                                </>
+                            ) : (
+                                <></>
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </Suspense>
     )
 }
@@ -199,7 +217,6 @@ export const SelectProjectDirectoryComponent = ({
 }
 
 export const StartChatButton = ({ onClick, disabled, folderPath }) => {
-
     return (
         <Button
             disabled={disabled}
@@ -212,13 +229,10 @@ export const StartChatButton = ({ onClick, disabled, folderPath }) => {
 }
 
 const ExistingSessionFound = ({ continueChat, newChat }) => {
-
     return (
         <div className="dark">
             <div>
-                <p className="text-2xl font-bold">
-                    Continue previous chat?
-                </p>
+                <p className="text-2xl font-bold">Continue previous chat?</p>
                 {/* <p className="text-md mt-2 text-neutral-400">
                         {`Previous task: "`}
                         <span className="italic">Create a snake game</span>

@@ -17,7 +17,7 @@ const SidebarChatLogs = () => {
     const { deleteSession } = useDeleteSession()
     // const router = useRouter()
     // const searchParams = useSearchParams()
-    const sessionId = "UI"
+    const sessionId = 'UI'
 
     useEffect(() => {
         refreshSessions()
@@ -81,7 +81,9 @@ const SidebarChatLogs = () => {
                                     </PopoverTrigger>
                                     <PopoverContent className="bg-night w-fit p-0">
                                         <button
-                                            onClick={() => deleteChat(session.name)}
+                                            onClick={() =>
+                                                deleteChat(session.name)
+                                            }
                                             className="flex gap-2 justify-start items-center p-2 pr-3 text-sm"
                                         >
                                             <Trash size={16} /> Delete session

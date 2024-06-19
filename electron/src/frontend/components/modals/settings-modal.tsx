@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-    CardHeader,
-    CardContent,
-    Card,
-} from '@/components/ui/card'
+import { CardHeader, CardContent, Card } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { useSafeStorage } from '@/lib/services/safeStorageService'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
 import { CircleHelp, Settings } from 'lucide-react'
 import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -34,9 +34,7 @@ const SettingsModal = ({ trigger }: { trigger: JSX.Element }) => {
     const [open, setOpen] = useState(false)
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                {trigger}
-            </DialogTrigger>
+            <DialogTrigger asChild>{trigger}</DialogTrigger>
             <DialogContent className="w-[500px]">
                 <General setOpen={setOpen} />
             </DialogContent>
@@ -48,11 +46,19 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
     const { toast } = useToast()
     const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
     // Checking model
-    const { checkHasEncryptedData, getUseModelName, deleteData, setUseModelName, getApiKey } = useSafeStorage()
+    const {
+        checkHasEncryptedData,
+        getUseModelName,
+        deleteData,
+        setUseModelName,
+        getApiKey,
+    } = useSafeStorage()
     const sessionActorref = SessionMachineContext.useActorRef()
     let state = SessionMachineContext.useSelector(state => state)
 
-    const [originalModelName, setOriginalModelName] = useState(comboboxItems[0].id)
+    const [originalModelName, setOriginalModelName] = useState(
+        comboboxItems[0].id
+    )
     const [modelHasSavedApiKey, setModelHasSavedApiKey] = useState(false)
     const [folderPath, setFolderPath] = useState('')
     const [initialFolderPath, setInitialFolderPath] = useState<{
@@ -60,7 +66,7 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
         value: string | null
     }>({
         loading: true,
-        value: null
+        value: null,
     })
 
     const clearStorageAndResetSession = () => {
@@ -77,7 +83,7 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
         if (!initialFolderPath.value) {
             setInitialFolderPath({
                 loading: false,
-                value: state.context.sessionState.path
+                value: state.context.sessionState.path,
             })
         }
     }, [state?.context?.sessionState?.path])
@@ -88,7 +94,9 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
             if (hasEncryptedData) {
                 const modelName: string = await getUseModelName()
                 if (modelName) {
-                    const foundModel = models.find(model => model.id === modelName)
+                    const foundModel = models.find(
+                        model => model.id === modelName
+                    )
                     if (foundModel) {
                         const extendedComboboxModel = {
                             ...foundModel,
@@ -108,30 +116,32 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
     const fetchApiKey = useCallback(async () => {
         const res = await getApiKey(selectedModel.id)
         return res
-    }, [selectedModel.id]);
+    }, [selectedModel.id])
 
     function handleUseNewModel() {
         sessionActorref.send({ type: 'session.delete' })
         setUseModelName(selectedModel.id)
         const _key = fetchApiKey()
         sessionActorref.send({
-            type: 'session.create', payload: {
+            type: 'session.create',
+            payload: {
                 path: folderPath,
                 agentConfig: {
                     model: selectedModel.id,
-                    api_key: _key
-                }
-            }
+                    api_key: _key,
+                },
+            },
         })
-        sessionActorref.on("session.creationComplete", () => {
+        sessionActorref.on('session.creationComplete', () => {
             sessionActorref.send({
-                type: 'session.init', payload: {
+                type: 'session.init',
+                payload: {
                     // path: folderPath,
                     agentConfig: {
                         model: selectedModel.id,
-                        api_key: _key
-                    }
-                }
+                        api_key: _key,
+                    },
+                },
             })
         })
         setOpen(false)
@@ -148,23 +158,25 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
         setUseModelName(selectedModel.id)
         const _key = fetchApiKey()
         sessionActorref.send({
-            type: 'session.create', payload: {
+            type: 'session.create',
+            payload: {
                 path: folderPath,
                 agentConfig: {
                     model: selectedModel.id,
-                    api_key: _key
-                }
-            }
+                    api_key: _key,
+                },
+            },
         })
-        sessionActorref.on("session.creationComplete", () => {
+        sessionActorref.on('session.creationComplete', () => {
             sessionActorref.send({
-                type: 'session.init', payload: {
+                type: 'session.init',
+                payload: {
                     // path: folderPath,
                     agentConfig: {
                         model: selectedModel.id,
-                        api_key: _key
-                    }
-                }
+                        api_key: _key,
+                    },
+                },
             })
         })
         setOpen(false)
@@ -181,7 +193,9 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                         folderPath={folderPath}
                         setFolderPath={setFolderPath}
                         showTitle={false}
-                        customButton={<Button onClick={handleChangePath}>Change</Button>}
+                        customButton={
+                            <Button onClick={handleChangePath}>Change</Button>
+                        }
                     />
                     {/* Commenting out for now, just does a refresh instead rn */}
                     {/* {!initialFolderPath.loading && initialFolderPath.value !== folderPath && <Button className="mt-5 w-full" onClick={handleNewChat}>Start new chat</Button>} */}
@@ -192,7 +206,9 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                     <div className="flex flex-col mt-5 w-full">
                         <div className="flex items-center justify-between mb-4 gap-3">
                             <p className="text-lg font-semibold">
-                                {selectedModel.id !== originalModelName ? `Set new model: ` : `Current model:`}
+                                {selectedModel.id !== originalModelName
+                                    ? `Set new model: `
+                                    : `Current model:`}
                             </p>
                             <div className="flex gap-3">
                                 <Combobox
@@ -215,15 +231,20 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                                 </PopoverTrigger>
                                 <SafeStoragePopoverContent />
                             </Popover>
-
                         </div>
-                        {selectedModel.id !== originalModelName && modelHasSavedApiKey && <Button
-                            onClick={handleUseNewModel}
-                        >
-                            {'Use this model'}
-                        </Button>}
+                        {selectedModel.id !== originalModelName &&
+                            modelHasSavedApiKey && (
+                                <Button onClick={handleUseNewModel}>
+                                    {'Use this model'}
+                                </Button>
+                            )}
                     </div>
-                    <APIKeyComponent key={selectedModel.id} model={selectedModel} sessionActorref={sessionActorref} setModelHasSavedApiKey={setModelHasSavedApiKey} />
+                    <APIKeyComponent
+                        key={selectedModel.id}
+                        model={selectedModel}
+                        sessionActorref={sessionActorref}
+                        setModelHasSavedApiKey={setModelHasSavedApiKey}
+                    />
                     {/* <Input
                         className="w-full"
                         type="password"
@@ -261,12 +282,21 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                             <PopoverTrigger className="ml-[2px]">
                                 <CircleHelp size={14} />
                             </PopoverTrigger>
-                            <PopoverContent side='top' className="bg-night w-fit p-2 px-3">Clears your keys from Electron Safe Storage and clears the session</PopoverContent>
+                            <PopoverContent
+                                side="top"
+                                className="bg-night w-fit p-2 px-3"
+                            >
+                                Clears your keys from Electron Safe Storage and
+                                clears the session
+                            </PopoverContent>
                         </Popover>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <Button className="w-fit" onClick={clearStorageAndResetSession}>
+                    <Button
+                        className="w-fit"
+                        onClick={clearStorageAndResetSession}
+                    >
                         Clear Storage
                     </Button>
                 </CardContent>
@@ -275,8 +305,17 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
     )
 }
 
-const APIKeyComponent = ({ model, sessionActorref, setModelHasSavedApiKey }: { model: Model, sessionActorref: any, setModelHasSavedApiKey: (value: boolean) => void }) => {
-    const { addApiKey, getApiKey, removeApiKey, setUseModelName } = useSafeStorage()
+const APIKeyComponent = ({
+    model,
+    sessionActorref,
+    setModelHasSavedApiKey,
+}: {
+    model: Model
+    sessionActorref: any
+    setModelHasSavedApiKey: (value: boolean) => void
+}) => {
+    const { addApiKey, getApiKey, removeApiKey, setUseModelName } =
+        useSafeStorage()
     const [key, setKey] = useState('')
     const [isKeyStored, setIsKeyStored] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
@@ -296,7 +335,6 @@ const APIKeyComponent = ({ model, sessionActorref, setModelHasSavedApiKey }: { m
         } else {
             setIsKeyStored(false)
             setModelHasSavedApiKey(false)
-
         }
         setIsLoading(false)
     }, [model.id])

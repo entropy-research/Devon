@@ -115,7 +115,14 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
                         className="smooth-hover text-xs hover:bg-zinc-800 focus-visible:ring-1 focus-visible:ring-slate-700 focus-visible:ring-offset-0"
                         onClick={onCopy}
                     >
-                        {isCopied ? <CopyCheck size={16} /> : <Copy size={16} className="text-neutral-500 hover:text-white"/>}
+                        {isCopied ? (
+                            <CopyCheck size={16} />
+                        ) : (
+                            <Copy
+                                size={16}
+                                className="text-neutral-500 hover:text-white"
+                            />
+                        )}
                         <span className="sr-only">Copy code</span>
                     </Button>
                 </div>

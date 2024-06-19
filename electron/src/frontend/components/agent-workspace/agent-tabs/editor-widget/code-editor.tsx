@@ -20,22 +20,25 @@ export default function CodeEditor({
 
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
 
-    const files: File[] = SessionMachineContext.useSelector(
-        state => {
-            if (state.context.sessionState?.editor && state.context.sessionState.editor.files) {
-                return Object.keys(state.context.sessionState.editor.files).map(filename => ({
+    const files: File[] = SessionMachineContext.useSelector(state => {
+        if (
+            state.context.sessionState?.editor &&
+            state.context.sessionState.editor.files
+        ) {
+            return Object.keys(state.context.sessionState.editor.files).map(
+                filename => ({
                     id: filename,
                     name: filename.split('/').pop() ?? 'unnamed_file',
                     path: filename,
                     language: mapLanguage(filename.split('/').pop()),
                     value: state.context.sessionState.editor.files[filename],
                     icon: mapIcon(filename.split('/').pop()),
-                }))
-            } else {
-                return []
-            }
+                })
+            )
+        } else {
+            return []
         }
-    )
+    })
 
     if (files && files.length > 0 && !selectedFileId) {
         setSelectedFileId(files[0].id)
@@ -85,8 +88,6 @@ export default function CodeEditor({
     //     )
     // }
 
-
-
     const bgColor = getComputedStyle(document.documentElement)
         .getPropertyValue('--bg-workspace')
         .trim()
@@ -115,7 +116,9 @@ export default function CodeEditor({
                     loading={files.length === 0}
                 />
             </div>
-            {files && <PathDisplay path={path} selectedFileId={selectedFileId} />}
+            {files && (
+                <PathDisplay path={path} selectedFileId={selectedFileId} />
+            )}
             <div className="flex w-full h-full bg-midnight rounded-b-lg mt-[-2px]">
                 {selectedFileId && (
                     <BothEditorTypes
@@ -128,8 +131,7 @@ export default function CodeEditor({
     )
 }
 
-const BothEditorTypes = ({ file, handleEditorDidMount }) =>
-(
+const BothEditorTypes = ({ file, handleEditorDidMount }) => (
     <Editor
         className="h-full"
         theme="vs-dark"
@@ -143,9 +145,16 @@ const BothEditorTypes = ({ file, handleEditorDidMount }) =>
     />
 )
 
-
-const PathDisplay = ({ path, selectedFileId }: { path: string, selectedFileId: string }) => (
-    <div className={`-mt-[1px] px-3 py-1 border-t border-outlinecolor ${selectedFileId ? 'bg-night' : ''}`}>
+const PathDisplay = ({
+    path,
+    selectedFileId,
+}: {
+    path: string
+    selectedFileId: string
+}) => (
+    <div
+        className={`-mt-[1px] px-3 py-1 border-t border-outlinecolor ${selectedFileId ? 'bg-night' : ''}`}
+    >
         <p className="text-xs text-neutral-500">
             {path ? convertPath(path) : ''}
         </p>

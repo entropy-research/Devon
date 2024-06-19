@@ -2,7 +2,13 @@ import { useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-const FolderPicker = ({ folderPath, setFolderPath, disabled = false, showTitle = true, customButton }: {
+const FolderPicker = ({
+    folderPath,
+    setFolderPath,
+    disabled = false,
+    showTitle = true,
+    customButton,
+}: {
     folderPath: string
     setFolderPath: (path: string) => void
     disabled?: boolean
@@ -44,13 +50,17 @@ const FolderPicker = ({ folderPath, setFolderPath, disabled = false, showTitle =
                     onChange={handleInputChange}
                     disabled={true} // TODO: Don't have path validation on input of string yet so disable for now. See comment above as well
                 />
-                {customButton ? customButton : <Button
-                    className=""
-                    onClick={handleDirectoryPicker}
-                    disabled={disabled}
-                >
-                    Choose...
-                </Button>}
+                {customButton ? (
+                    customButton
+                ) : (
+                    <Button
+                        className=""
+                        onClick={handleDirectoryPicker}
+                        disabled={disabled}
+                    >
+                        Choose...
+                    </Button>
+                )}
             </div>
         </div>
     )

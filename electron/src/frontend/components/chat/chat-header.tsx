@@ -55,17 +55,20 @@ const RestartButton = ({ resetHandler }) => {
 
 const ConfigureButton = () => {
     return (
-        <SettingsModal trigger={<button className="group flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 smooth-hover">
-            <Settings
-                size={14}
-                className="group-hover:transition text-gray-400 duration-300 mb-[1px] group-hover:text-white"
-            />
-            <p className="group-hover:transition duration-300 text-gray-400 group-hover:text-white">
-                Configure session
-            </p>
-        </button>} />
+        <SettingsModal
+            trigger={
+                <button className="group flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 smooth-hover">
+                    <Settings
+                        size={14}
+                        className="group-hover:transition text-gray-400 duration-300 mb-[1px] group-hover:text-white"
+                    />
+                    <p className="group-hover:transition duration-300 text-gray-400 group-hover:text-white">
+                        Configure session
+                    </p>
+                </button>
+            }
+        />
     )
-
 }
 
 const StopButton = ({ stopHandler }) => {

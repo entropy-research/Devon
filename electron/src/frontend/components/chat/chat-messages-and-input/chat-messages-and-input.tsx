@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function ChatMessagesAndInput({
     viewOnly,
     loading,
-    sessionId
+    sessionId,
     // sessionMachineProps,
 }: {
     viewOnly: boolean

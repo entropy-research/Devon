@@ -47,7 +47,7 @@ const useTree = () => {
     return context
 }
 
-interface TreeViewComponentProps extends React.HTMLAttributes<HTMLDivElement> { }
+interface TreeViewComponentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 type Direction = 'rtl' | 'ltr' | undefined
 
@@ -82,7 +82,6 @@ const Tree = forwardRef<HTMLDivElement, TreeViewProps>(
         },
         ref
     ) => {
-
         const [expendedItems, setExpendedItems] = useState<
             string[] | undefined
         >(initialExpendedItems)
@@ -239,7 +238,7 @@ const TreeIndicator = forwardRef<
 TreeIndicator.displayName = 'TreeIndicator'
 
 interface FolderComponentProps
-    extends React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item> { }
+    extends React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item> {}
 
 type FolderProps = {
     expendedItems?: string[]
@@ -371,7 +370,10 @@ const File = forwardRef<
                     onClick={() => selectItem(value)}
                 >
                     {fileIcon ? (
-                        <Icon icon={fileIcon} className="h-4 w-4 ml-[2px] mr-2" />
+                        <Icon
+                            icon={fileIcon}
+                            className="h-4 w-4 ml-[2px] mr-2"
+                        />
                     ) : (
                         <FileIcon className="h-4 w-4 ml-[2px] mr-2 text-gray-300" />
                     )}
@@ -396,21 +398,24 @@ const CollapseButton = forwardRef<
 >(({ className, elements, expandAll = false, children, ...props }, ref) => {
     const { expendedItems, setExpendedItems } = useTree()
 
-    const expendAllTree = useCallback((elements: TreeViewElement[]) => {
-        const expandTree = (element: TreeViewElement) => {
-            const isSelectable = element.isSelectable ?? true
-            if (
-                isSelectable &&
-                element.children &&
-                element.children.length > 0
-            ) {
-                setExpendedItems?.(prev => [...(prev ?? []), element.id])
-                element.children.forEach(expandTree)
+    const expendAllTree = useCallback(
+        (elements: TreeViewElement[]) => {
+            const expandTree = (element: TreeViewElement) => {
+                const isSelectable = element.isSelectable ?? true
+                if (
+                    isSelectable &&
+                    element.children &&
+                    element.children.length > 0
+                ) {
+                    setExpendedItems?.(prev => [...(prev ?? []), element.id])
+                    element.children.forEach(expandTree)
+                }
             }
-        }
 
-        elements.forEach(expandTree)
-    }, [setExpendedItems])
+            elements.forEach(expandTree)
+        },
+        [setExpendedItems]
+    )
 
     const closeAll = useCallback(() => {
         setExpendedItems?.([])

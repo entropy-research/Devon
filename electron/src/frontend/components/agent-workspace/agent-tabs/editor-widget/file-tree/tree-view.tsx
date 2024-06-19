@@ -4,15 +4,10 @@ import { cn } from '@/lib/utils'
 import React, { forwardRef, useCallback, useRef } from 'react'
 import useResizeObserver from 'use-resize-observer'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import {
-    Tree,
-    Folder,
-    File,
-    TreeViewElement,
-} from './tree-view-api'
+import { Tree, Folder, File, TreeViewElement } from './tree-view-api'
 import { Skeleton } from '@/components/ui/skeleton'
 
-interface TreeViewComponentProps extends React.HTMLAttributes<HTMLDivElement> { }
+interface TreeViewComponentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 type TreeViewProps = {
     initialSelectedId?: string
@@ -23,15 +18,15 @@ type TreeViewProps = {
     indicator?: boolean
     loading?: boolean
 } & (
-        | {
-            initialExpendedItems?: string[]
-            expandAll?: false
-        }
-        | {
-            initialExpendedItems?: undefined
-            expandAll: true
-        }
-    ) &
+    | {
+          initialExpendedItems?: string[]
+          expandAll?: false
+      }
+    | {
+          initialExpendedItems?: undefined
+          expandAll: true
+      }
+) &
     TreeViewComponentProps
 
 export const TreeView = ({

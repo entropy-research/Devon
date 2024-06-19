@@ -1,9 +1,4 @@
-import {
-    useState,
-    Suspense,
-    lazy,
-    useEffect,
-} from 'react'
+import { useState, Suspense, lazy, useEffect } from 'react'
 import { CircleHelp } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import DisabledWrapper from '@/components/ui/disabled-wrapper'
@@ -20,7 +15,6 @@ import { useSafeStorage } from '@/lib/services/safeStorageService'
 import SafeStoragePopoverContent from '@/components/safe-storage-popover-content'
 import Combobox, { ComboboxItem } from '@/components/ui/combobox'
 import { models } from '@/lib/config'
-
 
 const Dialog = lazy(() =>
     import('@/components/ui/dialog').then(module => ({
@@ -43,10 +37,18 @@ const comboboxItems: ExtendedComboboxItem[] = models
         company: model.company,
     }))
 
-const OnboardingModal = ({ setModelName, setOnboarded, afterOnboard }: {
+const OnboardingModal = ({
+    setModelName,
+    setOnboarded,
+    afterOnboard,
+}: {
     setModelName: (value: string) => void
     setOnboarded: (value: boolean) => void
-    afterOnboard: (apiKey: string, modelName: string, folderPath: string) => void
+    afterOnboard: (
+        apiKey: string,
+        modelName: string,
+        folderPath: string
+    ) => void
 }) => {
     const [folderPath, setFolderPath] = useState('')
     const [apiKey, setApiKey] = useState('')
@@ -109,10 +111,7 @@ const OnboardingModal = ({ setModelName, setOnboarded, afterOnboard }: {
                                 setFolderPath={setFolderPath}
                             />
                         </DisabledWrapper>
-                        <DisabledWrapper
-                            disabled={false}
-                            className="w-full"
-                        >
+                        <DisabledWrapper disabled={false} className="w-full">
                             <div className="flex flex-col mt-10 w-full">
                                 <div className="flex items-center justify-between mb-4 gap-3">
                                     <p className="text-lg font-semibold">

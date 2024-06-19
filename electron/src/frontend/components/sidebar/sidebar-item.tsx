@@ -6,16 +6,15 @@ function SidebarItem({
     active,
     route,
     alert,
-    expanded
+    expanded,
 }: {
     icon: JSX.Element
     text: string
     active: boolean
     route: string
-    alert: boolean,
+    alert: boolean
     expanded: boolean
 }) {
-
     return (
         <div
             className={`
@@ -25,14 +24,14 @@ function SidebarItem({
     `}
         >
             {/* <Link href={route} className="flex"> */}
-                {expanded && icon}
-                <span
-                    className={`overflow-hidden transition-all flex items-start ${
-                        expanded ? 'w-52 ml-3' : 'w-0'
-                    }`}
-                >
-                    {expanded && text}
-                </span>
+            {expanded && icon}
+            <span
+                className={`overflow-hidden transition-all flex items-start ${
+                    expanded ? 'w-52 ml-3' : 'w-0'
+                }`}
+            >
+                {expanded && text}
+            </span>
             {/* </Link> */}
             {alert && (
                 <div

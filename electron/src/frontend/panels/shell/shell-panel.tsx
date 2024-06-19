@@ -62,7 +62,9 @@ export default function ShellWidget({
     useEffect(() => {
         const terminal = terminalInstanceRef.current
         if (terminal) {
-            const messagesToRender = messages.filter(message => !renderedMessages.includes(message))
+            const messagesToRender = messages.filter(
+                message => !renderedMessages.includes(message)
+            )
             // terminal.clear() // Clear the existing content
             messagesToRender.forEach((message, idx) => {
                 let [command, response] = message.text.split('|START_RESPONSE|')
