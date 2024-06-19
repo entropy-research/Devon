@@ -1,6 +1,6 @@
 import CodeEditor from './code-editor'
 import ShellPanel from '@/components/panels/shell/shell-panel'
-import { SessionMachineContext } from '@/home'
+import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Bot } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 

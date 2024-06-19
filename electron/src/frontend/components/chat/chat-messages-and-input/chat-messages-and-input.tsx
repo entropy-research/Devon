@@ -1,7 +1,7 @@
 import { useScrollAnchor } from '@/lib/hooks/chat.use-scroll-anchor'
 import ChatMessages from './messages/chat.messages'
 import ChatInputField from './input/chat-input-field'
-import { SessionMachineContext } from '@/home'
+import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Skeleton } from '@/components/ui/skeleton'
 export default function ChatMessagesAndInput({
     viewOnly,

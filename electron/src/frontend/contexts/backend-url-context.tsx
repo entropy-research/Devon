@@ -5,7 +5,7 @@ const BackendUrlContext = createContext<{
     backendUrl: string | null
 }>({ port: null, backendUrl: null })
 
-export const BackendUrlProvider = ({ children }) => {
+export const BackendUrlProvider = ({ children }: React.PropsWithChildren<{}>) => {
     const [port, setPort] = useState<number | null>(null)
     const [backendUrl, setBackendUrl] = useState<string | null>(null)
 

@@ -2,7 +2,7 @@ import './globals.css'
 import { useEffect } from 'react'
 import { Toaster } from '@/components/ui/toaster'
 import HeaderSidebar from '@/components/header-sidebar'
-import { BackendUrlProvider } from './contexts/BackendUrlContext'
+import { BackendUrlProvider } from './contexts/backend-url-context'
 import Page from './page'
 
 function App() {
@@ -30,7 +30,6 @@ function App() {
                             <HeaderSidebar />
                             <main className="mt-[54px] flex flex-row w-full">
                                 <Page />
-                                {/* {children} */}
                             </main>
                         </BackendUrlProvider>
                     </div>

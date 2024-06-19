@@ -9,7 +9,7 @@ import {
 import { useState } from 'react'
 import Sidebar from '@/components/sidebar/sidebar'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
-import { useBackendUrl } from '@/contexts/BackendUrlContext'
+import { useBackendUrl } from '@/contexts/backend-url-context'
 // import Link from 'next/link'
 // import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
 // import SettingsModal from '@/components/modals/settings-modal'

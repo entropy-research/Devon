@@ -1,8 +1,15 @@
-import Home, { SessionMachineContext } from './home'
+import { useState, useEffect } from 'react'
 import OnboardingModal from '@/components/modals/onboarding-modal'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import { useSafeStorage } from './lib/services/safeStorageService'
-import { useEffect, useState } from 'react'
+import Chat from '@/components/chat/chat'
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from '@/components/ui/resizable'
+import EditorPanel from '@/components/panels/editor/editor-panel'
+import { SessionMachineContext } from '@/contexts/session-machine-context'
 
 export default function Landing({
     smHealthCheckDone,
@@ -82,7 +89,27 @@ export default function Landing({
 
     return (
         <>
-            <Home />
+            <div className="w-full flex flex-row">
+                <ResizablePanelGroup direction="horizontal">
+                    <ResizablePanel
+                        className={`flex flex-col w-full relative justify-center`}
+                    >
+                        {/* <SidebarItem
+                        text="Settings"
+                        icon={<Settings className="text-primary" />}
+                        active={true}
+                        alert={false}
+                        route="/settings"
+                        expanded={true}
+                    /> */}
+                        <Chat sessionId={'UI'} />
+                    </ResizablePanel>
+                    <ResizableHandle className="" />
+                    <ResizablePanel className="flex-col w-full hidden md:flex">
+                        <EditorPanel chatId={'UI'} />
+                    </ResizablePanel>
+                </ResizablePanelGroup>
+            </div>
 
             {smHealthCheckDone && (!modelName || !hasKey) && (
                 <OnboardingModal

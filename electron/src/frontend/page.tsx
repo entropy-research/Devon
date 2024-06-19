@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
+import { SessionContextProviderComponent } from '@/contexts/session-machine-context'
 import Landing from './landing'
-import { useBackendUrl } from '@/contexts/BackendUrlContext'
-import { SessionContextProviderComponent } from './home'
+import { useBackendUrl } from '@/contexts/backend-url-context'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 
 export default function IndexPage() {

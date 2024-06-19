@@ -10,8 +10,8 @@ import { AutoresizeTextarea } from '@/components/ui/textarea'
 import { useEnterSubmit } from '@/lib/hooks/chat.use-enter-submit'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
-import { SessionMachineContext } from '@/home'
-import { useBackendUrl } from '@/contexts/BackendUrlContext'
+import { SessionMachineContext } from '@/contexts/session-machine-context'
+import { useBackendUrl } from '@/contexts/backend-url-context'
 
 const ChatInputField = ({
     isAtBottom,

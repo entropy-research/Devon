@@ -1,4 +1,4 @@
-import { SessionMachineContext } from '@/home'
+import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { CircleArrowDown, Power, Rewind, History, Settings } from 'lucide-react'
 import SettingsModal from '../modals/settings-modal'
 

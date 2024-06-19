@@ -1,8 +1,8 @@
 import Editor, { Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
-import FileTabs from '@/components/file-tabs/file-tabs'
+import FileTabs from '@/components/panels/editor/components/file-tabs/file-tabs'
 import { useState } from 'react'
-import { SessionMachineContext } from '@/home'
+import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { File } from '@/lib/types'
 import { mapLanguage, mapIcon } from '@/lib/services/fileService'
 

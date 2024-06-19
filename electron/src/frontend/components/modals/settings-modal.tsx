@@ -16,7 +16,7 @@ import { Model } from '@/lib/types'
 import { models } from '@/lib/config'
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
 import Combobox, { ComboboxItem } from '@/components/ui/combobox'
-import { SessionMachineContext } from '@/home'
+import { SessionMachineContext } from '@/contexts/session-machine-context'
 import FolderPicker from '@/components/ui/folder-picker'
 
 type ExtendedComboboxItem = Model & ComboboxItem & { company: string }

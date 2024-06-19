@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { useBackendUrl } from '@/contexts/BackendUrlContext'
+import { useBackendUrl } from '@/contexts/backend-url-context'
 
 export async function getSessions(backendUrl: string) {
     if (!backendUrl) {
