@@ -1,4 +1,4 @@
-import CodeEditor from './code-editor'
+import CodeEditor from './components/code-editor'
 import ShellPanel from '@/panels/shell/shell-panel'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Bot } from 'lucide-react'
