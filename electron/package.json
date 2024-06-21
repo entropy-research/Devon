@@ -90,6 +90,8 @@
         "react-resizable-panels": "^2.0.19",
         "react-syntax-highlighter": "^15.5.0",
         "react-textarea-autosize": "^8.5.3",
+        "remark-gfm": "^4.0.0",
+        "remark-math": "^6.0.0",
         "tailwind-merge": "^2.3.0",
         "tailwindcss-animate": "^1.0.7",
         "xstate": "^5.13.0"

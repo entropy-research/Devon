@@ -4,7 +4,7 @@ import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { useState } from 'react'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { File } from '@/lib/types'
-import { mapLanguage, mapIcon } from '../lib/services/fileService'
+import { getLanguageFromFilename, getIconFromFilename } from '@/lib/programming-language-utils'
 
 export default function CodeEditor({
     isExpandedVariant = false,
@@ -26,13 +26,13 @@ export default function CodeEditor({
             state.context.sessionState.editor.files
         ) {
             return Object.keys(state.context.sessionState.editor.files).map(
-                filename => ({
-                    id: filename,
-                    name: filename.split('/').pop() ?? 'unnamed_file',
-                    path: filename,
-                    language: mapLanguage(filename.split('/').pop()),
-                    value: state.context.sessionState.editor.files[filename],
-                    icon: mapIcon(filename.split('/').pop()),
+                filepath => ({
+                    id: filepath,
+                    name: filepath.split('/').pop() ?? 'unnamed_file',
+                    path: filepath,
+                    language: getLanguageFromFilename((filepath.split('/').pop())),
+                    value: state.context.sessionState.editor.files[filepath],
+                    icon: getIconFromFilename(filepath.split('/').pop()),
                 })
             )
         } else {
@@ -163,7 +163,7 @@ const PathDisplay = ({
     </div>
 )
 
-function convertPath(path) {
+export function convertPath(path: string) {
     // Split the path based on the separator, either "/" or "\"
     const parts = path.split(/[/\\]/)
 

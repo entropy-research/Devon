@@ -48,7 +48,7 @@ llama-index-packs-code-hierarchy = "^0.1.5"
 llama-index = "^0.10.45"
 python-dotenv = "^1.0.1"
 
-code-nav-devon = "^0.1.0"
+code-nav-devon = "^0.1.1"
 numpy = "<=1.26.4"
 [tool.poetry.extras]
 swebench = ["swebench", "datasets", "gymnasium"]

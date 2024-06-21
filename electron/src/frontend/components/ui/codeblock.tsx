@@ -7,10 +7,15 @@ import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 import { Copy, CopyCheck, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/use-toast'
+import { convertPath } from '@/panels/editor/components/code-editor'
+import { Icon } from '@iconify/react'
+import { getIconFromLanguage } from '@/lib/programming-language-utils'
 
 interface Props {
     language: string
     value: string
+    path: string
 }
 
 interface languageMap {
@@ -53,8 +58,9 @@ export const generateRandomString = (length: number, lowercase = false) => {
     return lowercase ? result.toLowerCase() : result
 }
 
-const CodeBlock: FC<Props> = memo(({ language, value }) => {
+const CodeBlock: FC<Props> = memo(({ language, value, path }) => {
     const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 })
+    const { toast } = useToast()
 
     const downloadAsFile = () => {
         if (typeof window === 'undefined') {
@@ -90,12 +96,22 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
     const onCopy = () => {
         if (isCopied) return
         copyToClipboard(value)
+        toast({
+            title: 'Copied to clipboard!',
+        })
     }
 
     return (
-        <div className="relative w-full font-sans codeblock bg-zinc-950 rounded-md">
-            <div className="flex items-center justify-between w-full pl-4 py-0 pr-1 bg-zinc-800 text-zinc-100 rounded-t-md">
-                <span className="text-xs lowercase">{language}</span>
+        <div className="relative w-full font-sans codeblock bg-zinc-950 rounded-md my-5">
+            <div className="flex items-center justify-between w-full pl-3 py-0 pr-1 bg-zinc-800 text-zinc-100 rounded-t-md">
+                <div className="flex">
+                    {language && <Icon
+                        icon={getIconFromLanguage(language)}
+                        className="h-4 w-4 mr-2"
+                    />}
+                    <span className="text-xs lowercase">{language}</span>
+                </div>
+
                 <div className="flex items-center space-x-1">
                     {/* <Button
                         variant="ghost"
@@ -124,6 +140,11 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
                     </Button>
                 </div>
             </div>
+            {path && (
+                <span className="text-xs lowercase px-4">
+                    {convertPath(path)}
+                </span>
+            )}
             <SyntaxHighlighter
                 language={language}
                 style={coldarkDark}

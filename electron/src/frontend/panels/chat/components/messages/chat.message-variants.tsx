@@ -3,10 +3,10 @@ import { cn } from '@/lib/utils'
 import { spinner } from './chat.spinner'
 import { CodeBlock } from '@/components/ui/codeblock'
 import { MemoizedReactMarkdown } from './chat.memoized-react-markdown'
-// import remarkGfm from 'remark-gfm'
-// import remarkMath from 'remark-math'
-import { remarkCustomCode } from './remarkCustomCode' // import the custom plugin
-import { TfiThought } from 'react-icons/tfi'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+// import { remarkCustomCode } from './remarkCustomCode' // import the custom plugin
+// import { TfiThought } from 'react-icons/tfi'
 import { Icon } from '@iconify/react'
 
 // Different types of message bubbles.
@@ -117,69 +117,80 @@ export const ToolResponseMessage = ({
     return <StyledMessage content={command} className={className} icon={icon} />
 }
 
-function StyledMessage({
-    content,
-    className,
-    icon,
-}: {
-    content: string
-    className: string
-    icon: JSX.Element
-}) {
-    const text = content
+const StyledMessage = ({ content, className, icon }) => {
+    const path = extractPath(content)
+    const textWithoutPath = path
+        ? content.replace(`# ${path}`, '').trim()
+        : content
 
     return (
         <div className={cn('group relative flex items-start', className)}>
             {icon}
             <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+                {path && (
+                    <div className="text-sm text-gray-500 mb-2">
+                        <strong>Path:</strong> {path}
+                    </div>
+                )}
                 <MemoizedReactMarkdown
                     className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
-                    // remarkPlugins={[remarkGfm, remarkMath, remarkCustomCode]}
-                    // remarkPlugins={[remarkCustomCode]}
+                    remarkPlugins={[remarkGfm, remarkMath]}
                     components={{
                         p({ children }) {
                             return <p className="mb-2 last:mb-0">{children}</p>
                         },
                         code({ node, inline, className, children, ...props }) {
-                            if (children.length) {
-                                if (children[0] == '▍') {
-                                    return (
-                                        <span className="mt-1 animate-pulse cursor-default">
-                                            ▍
-                                        </span>
-                                    )
-                                }
+                            // Extract the path from the code block
+                            const codeContent = String(children).replace(
+                                /\n$/,
+                                ''
+                            )
+                            const path = extractPath(codeContent)
+                            const textWithoutPath = path
+                                ? codeContent.replace(`# ${path}`, '').trim()
+                                : codeContent
 
-                                children = (children as string).replace(
-                                    '`▍`',
-                                    '▍'
-                                )
-                            }
-
-                            const match = /language-(\w+)/.exec(className || '')
-
-                            if (inline) {
+                            if (inline || !className) {
                                 return (
-                                    <code className={className} {...props}>
+                                    <code
+                                        className={cn(
+                                            className,
+                                            'bg-black px-[4px] py-[3px] rounded-md text-white text-[0.9rem]'
+                                        )}
+                                        {...props}
+                                    >
                                         {children}
                                     </code>
                                 )
                             }
 
+                            const match = /language-(\w+)/.exec(className || '')
+
                             return (
-                                <CodeBlock
-                                    key={Math.random()}
-                                    language={(match && match[1]) || ''}
-                                    value={String(children).replace(/\n$/, '')}
-                                    {...props}
-                                />
+                                <>
+                                    <CodeBlock
+                                        key={Math.random()}
+                                        language={(match && match[1]) || ''}
+                                        value={textWithoutPath}
+                                        path={path}
+                                        {...props}
+                                    />
+                                </>
                             )
                         },
                     }}
                 >
-                    {text}
+                    {textWithoutPath}
                 </MemoizedReactMarkdown>
             </div>
         </div>
     )
+}
+
+const extractPath = (content: string) => {
+    const pathMatch = content.match(/^# (\/[^\s]+)/)
+    if (pathMatch) {
+        return pathMatch[1]
+    }
+    return null
 }

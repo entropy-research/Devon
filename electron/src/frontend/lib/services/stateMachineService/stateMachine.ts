@@ -95,15 +95,12 @@ export const eventHandlingLogic = fromTransition(
                 return {
                     ...state,
                     toolMessage:
-                        'Running command: ' + event.content.raw_command,
+                        'Running command: ' + event.content.raw_command.trim(),
                 }
             }
             case 'ToolResponse': {
-                let tool_message = state.toolMessage + '\n> ' + event.content
-                if (tool_message.length > 2000) {
-                    tool_message = tool_message.slice(2000)
-                }
-
+                let tool_message =
+                    state.toolMessage + '|START_RESPONSE|' + event.content
                 return {
                     ...state,
                     toolMessage: '',

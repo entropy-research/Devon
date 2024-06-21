@@ -68,7 +68,7 @@ export default function ShellPanel({
             // terminal.clear() // Clear the existing content
             messagesToRender.forEach((message, idx) => {
                 let [command, response] = message.text.split('|START_RESPONSE|')
-                let commandMsgs = command.slice(18).trim().split('\n')
+                let commandMsgs = command.trim().split('\n')
                 commandMsgs.forEach((line, index) => {
                     if (index === 0) {
                         const firstLineItems = line.trim().split(' ')
@@ -82,7 +82,7 @@ export default function ShellPanel({
                         }
 
                         // Construct the command string
-                        line = 'bash>  ' + firstLineItems.join(' ')
+                        line = firstLineItems.join(' ')
                         if (end) {
                             terminal.writeln(line)
                             terminal.writeln(end)
