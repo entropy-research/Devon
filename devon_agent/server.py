@@ -120,7 +120,7 @@ def get_indexes():
     client = chromadb.PersistentClient(path=os.path.join(app.db_path, "vectorDB"))
 
     return [
-        collection.name
+        collection.name[1:].replace("_", "/")
         for collection in client.list_collections()
     ]
 
