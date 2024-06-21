@@ -39,7 +39,7 @@ const FolderPicker = ({
     }, [])
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 w-full">
             {showTitle && <p className="text-md">Local Path</p>}
             <div className="flex justify-between">
                 {/* <input>{folderPath}</input> */}

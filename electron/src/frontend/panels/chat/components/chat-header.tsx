@@ -1,6 +1,14 @@
 import { SessionMachineContext } from '@/contexts/session-machine-context'
-import { CircleArrowDown, Power, Rewind, History, Settings } from 'lucide-react'
-import SettingsModal from '../../../components/modals/settings-modal'
+import {
+    CircleArrowDown,
+    Power,
+    Rewind,
+    History,
+    Settings,
+    TextQuote,
+} from 'lucide-react'
+import SettingsModal from '@/components/modals/settings-modal'
+import IndexesModal from '@/components/modals/indexes-modal'
 
 export default function ChatHeader({
     sessionId,
@@ -19,6 +27,10 @@ export default function ChatHeader({
         sessionActorRef.send({ type: 'session.pause' })
     }
 
+    async function handleIndexes() {
+        // sessionActorRef.send({ type: 'session.indexes' })
+    }
+
     return (
         <div className="relative mt-[-5px] items-end pt-1 pb-3 border-outline-night shrink-0 items-left flex flex-row justify-between border-b px-6">
             {/* <div className="">
@@ -27,6 +39,7 @@ export default function ChatHeader({
             </div> */}
             <p className="text-lg font-semibold pb-[1px]">Chat</p>
             <div className="flex gap-3 -mr-2">
+                <IndexesButton indexesHandler={handleIndexes} />
                 <RestartButton resetHandler={handleReset} />
                 {/* <StopButton stopHandler={handleStop} /> */}
                 <ConfigureButton />
@@ -36,7 +49,28 @@ export default function ChatHeader({
     )
 }
 
-const RestartButton = ({ resetHandler }) => {
+const IndexesButton = ({ indexesHandler }: { indexesHandler: () => void }) => {
+    return (
+        <IndexesModal
+            trigger={
+                <button
+                    onClick={indexesHandler}
+                    className="group flex items-center gap-2 px-3 py-1 rounded-md mb-[-4px] -mr-2 smooth-hover"
+                >
+                    <TextQuote
+                        size={14}
+                        className="group-hover:transition text-gray-400 duration-300 mb-[1px] group-hover:text-white"
+                    />
+                    <p className="group-hover:transition duration-300 text-gray-400 group-hover:text-white">
+                        Indexes
+                    </p>
+                </button>
+            }
+        />
+    )
+}
+
+const RestartButton = ({ resetHandler }: { resetHandler: () => void }) => {
     return (
         <button
             onClick={resetHandler}
@@ -71,7 +105,7 @@ const ConfigureButton = () => {
     )
 }
 
-const StopButton = ({ stopHandler }) => {
+const StopButton = ({ stopHandler }: { stopHandler: () => void }) => {
     return (
         <button
             onClick={stopHandler}

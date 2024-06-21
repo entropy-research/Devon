@@ -131,7 +131,10 @@ export default function CodeEditor({
     )
 }
 
-const BothEditorTypes = ({ file, handleEditorDidMount }) => (
+const BothEditorTypes = ({ file, handleEditorDidMount }: {
+    file: File | undefined
+    handleEditorDidMount: (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => void
+}) => (
     <Editor
         className="h-full"
         theme="vs-dark"

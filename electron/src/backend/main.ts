@@ -36,9 +36,7 @@ let serverProcess: ChildProcess
 portfinder.setBasePort(10000)
 let use_port = NaN
 const spawnAppWindow = async () => {
-    const db_path = path.join(
-        app.getPath('userData')
-    )
+    const db_path = path.join(app.getPath('userData'))
     await portfinder
         .getPortPromise()
         .then((port: number) => {

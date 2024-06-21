@@ -152,6 +152,12 @@ const InformationBox = ({
     loading,
     paused,
     pauseHandler,
+}: {
+    modelLoading: boolean
+    userRequested: boolean
+    loading: boolean
+    paused: boolean
+    pauseHandler: () => void
 }) => {
     const types: {
         [key: string]: {
@@ -173,6 +179,12 @@ const InformationBox = ({
             text: 'Devon is gathering himself...',
             accessory: <></>,
         },
+        paused: {
+            text: 'Devon is taking a coffee break (paused)',
+            accessory: (
+                <PauseButton paused={paused} pauseHandler={pauseHandler} />
+            ),
+        },
     }
 
     let currentType
@@ -182,14 +194,10 @@ const InformationBox = ({
         currentType = types.modelLoading
     } else if (userRequested) {
         currentType = types.userRequested
+    } else if (paused) {
+        currentType = types.paused
     } else {
         currentType = types.loading
-    }
-    if (paused) {
-        currentType.text = 'Devon is taking a coffee break (paused)'
-        currentType.accessory = (
-            <PauseButton paused={paused} pauseHandler={pauseHandler} />
-        )
     }
 
     return (
@@ -207,7 +215,13 @@ const InformationBox = ({
 
 export default ChatInputField
 
-const PauseButton = ({ paused, pauseHandler }) => {
+const PauseButton = ({
+    paused,
+    pauseHandler,
+}: {
+    paused: boolean
+    pauseHandler: () => void
+}) => {
     if (paused) {
         return (
             <button
