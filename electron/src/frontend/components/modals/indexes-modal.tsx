@@ -8,6 +8,7 @@ import axios from 'axios'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Check } from 'lucide-react'
 import CircleSpinner from '@/components/ui/circle-spinner/circle-spinner'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type IndexStatus = 'pending' | 'done' | 'error'
 
@@ -31,6 +32,7 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
     >({})
     const [newIndexPath, setNewIndexPath] = useState('')
     const [error, setError] = useState<string | null>(null)
+    const [selectedIndex, setSelectedIndex] = useState<string | null>(null)
 
     useEffect(() => {
         fetchIndexes()
@@ -116,6 +118,19 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
         }
     }
 
+    const handleIndexSelection = (index: string) => {
+        setSelectedIndex(prevIndex => (prevIndex === index ? null : index))
+    }
+
+    const handleStartChat = () => {
+        if (selectedIndex) {
+            // Implement the logic to start a chat with the selected index
+            console.log(`Starting chat with index: ${selectedIndex}`)
+            // You might want to close the modal or navigate to a chat interface here
+            setOpen(false)
+        }
+    }
+
     return (
         <div className="pt-4 pb-2 px-2 flex flex-col gap-5">
             <Card className="bg-midnight">
@@ -128,9 +143,12 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                             folderPath={newIndexPath}
                             setFolderPath={setNewIndexPath}
                             showTitle={false}
+                            buttonClassName="px-5"
                         />
                         {newIndexPath && (
-                            <Button onClick={handleAddIndex}>Add Index</Button>
+                            <Button onClick={handleAddIndex}>
+                                Create an Index
+                            </Button>
                         )}
                     </div>
                     {error && (
@@ -144,8 +162,28 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                                     index={index}
                                     status={indexStatuses[index]}
                                     onRemove={handleRemoveIndex}
+                                    deselect={() =>
+                                        selectedIndex === index &&
+                                        setSelectedIndex(undefined)
+                                    }
+                                    isSelected={selectedIndex === index}
+                                    onSelect={handleIndexSelection}
                                 />
                             ))}
+                            {selectedIndex && (
+                                <div className="w-full flex flex-col items-center mt-4">
+                                    <p className="text-md mb-4 font-semibold">
+                                        Start a new chat with this index?
+                                    </p>
+                                    <Button
+                                        onClick={handleStartChat}
+                                        // className="w-2/3"
+                                        className="px-5"
+                                    >
+                                        New Chat
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardContent>
@@ -158,14 +196,42 @@ const IndexItem = ({
     index,
     status,
     onRemove,
+    onSelect,
+    isSelected,
 }: {
     index: string
     status: IndexStatus
     onRemove: (path: string) => void
+    onSelect: (index: string) => void
+    isSelected: boolean
 }) => {
     return (
         <div className="flex items-center justify-between py-2">
-            <div className="flex items-center flex-grow mr-4 relative">
+            <div
+                className={`flex items-center flex-grow mr-4 relative ${
+                    status === 'done' ? 'cursor-pointer' : 'cursor-not-allowed'
+                }`}
+                onClick={() => {
+                    if (status === 'done') {
+                        onSelect(index)
+                    }
+                }}
+            >
+                {status === 'done' ? (
+                    <div
+                        className={`w-4 h-4 rounded-full border-[1.5px] mr-2 flex items-center justify-center ${
+                            isSelected
+                                ? 'border-primary border'
+                                : 'border-input'
+                        }`}
+                    >
+                        {isSelected && (
+                            <div className="w-[7px] h-[7px] rounded-full bg-primary absolute" />
+                        )}
+                    </div>
+                ) : (
+                    <Skeleton className="w-4 h-4 rounded-full mr-2"></Skeleton>
+                )}
                 <Input
                     value={index}
                     readOnly
@@ -181,21 +247,14 @@ const IndexItem = ({
                 )}
             </div>
             <div className="flex items-center gap-2">
-                {/* {status === 'pending' && (
-                    <span className="text-yellow-500">Indexing...</span>
-                )} */}
-                {/* {status !== 'done' && (
-                    <span className="text-yellow-500">Indexing...</span>
-                )} */}
                 {status === 'error' && (
                     <span className="text-red-500">Error</span>
                 )}
                 <Button
                     onClick={() => onRemove(index)}
                     variant="outline-thin"
-                    // disabled={status === 'pending'}
                     disabled={status !== 'done'}
-                    className="min-w-[82px]"
+                    className="w-[88px]"
                 >
                     {status !== 'done' ? 'Indexing...' : `Remove`}
                 </Button>

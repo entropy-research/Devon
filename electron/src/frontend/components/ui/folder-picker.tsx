@@ -8,12 +8,14 @@ const FolderPicker = ({
     disabled = false,
     showTitle = true,
     customButton,
+    buttonClassName,
 }: {
     folderPath: string
     setFolderPath: (path: string) => void
     disabled?: boolean
     showTitle?: boolean
     customButton?: React.ReactNode
+    buttonClassName?: string
 }) => {
     const handleDirectoryPicker = e => {
         //@ts-ignore
@@ -54,7 +56,7 @@ const FolderPicker = ({
                     customButton
                 ) : (
                     <Button
-                        className=""
+                        className={`${buttonClassName}`}
                         onClick={handleDirectoryPicker}
                         disabled={disabled}
                     >
