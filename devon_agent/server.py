@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from time import sleep
 from typing import Any, Dict, List, Optional
 from devon_agent.semantic_search.code_graph_manager import CodeGraphManager
@@ -63,8 +64,10 @@ async def lifespan(app: fastapi.FastAPI):
     # Hacky but it works
     global sessions
     if app.persist:
+        print(app.db_path)
         if app.db_path:
-            set_db_engine(app.db_path + "/devon_environment.db")
+            db_path = Path(app.db_path) / "devon_environment.db"
+            set_db_engine(db_path.as_posix())
         else:
             app.db_path = "."
             set_db_engine("./devon_environment.db")
