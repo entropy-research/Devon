@@ -26,6 +26,7 @@ const IndexesModal = ({ trigger }: { trigger: JSX.Element }) => {
 
 const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
     const host = SessionMachineContext.useSelector(state => state.context.host)
+    const sessionActorref = SessionMachineContext.useActorRef()
     const [indexes, setIndexes] = useState<string[]>([])
     const [indexStatuses, setIndexStatuses] = useState<
         Record<string, IndexStatus>
@@ -124,9 +125,11 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
 
     const handleStartChat = () => {
         if (selectedIndex) {
-            // Implement the logic to start a chat with the selected index
-            console.log(`Starting chat with index: ${selectedIndex}`)
-            // You might want to close the modal or navigate to a chat interface here
+            sessionActorref.send({
+                type: 'session.delete',
+            })
+            const searchParams = new URLSearchParams(window.location.search)
+            searchParams.set('path', encodeURIComponent(selectedIndex))
             setOpen(false)
         }
     }
@@ -162,10 +165,6 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                                     index={index}
                                     status={indexStatuses[index]}
                                     onRemove={handleRemoveIndex}
-                                    deselect={() =>
-                                        selectedIndex === index &&
-                                        setSelectedIndex(undefined)
-                                    }
                                     isSelected={selectedIndex === index}
                                     onSelect={handleIndexSelection}
                                 />

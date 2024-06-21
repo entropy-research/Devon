@@ -50,6 +50,7 @@ const SelectProjectDirectoryModal = ({
 
     const { getApiKey } = useSafeStorage()
     const [apiKey, setApiKey] = useState('')
+
     // const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Panel)
 
     useEffect(() => {
@@ -216,7 +217,7 @@ export const SelectProjectDirectoryComponent = ({
     )
 }
 
-export const StartChatButton = ({ onClick, disabled, folderPath }) => {
+export const StartChatButton = ({ onClick, disabled }) => {
     return (
         <Button
             disabled={disabled}

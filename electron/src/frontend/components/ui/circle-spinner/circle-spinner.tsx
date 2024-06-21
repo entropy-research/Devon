@@ -3,7 +3,8 @@ import { cn } from '@/lib/utils'
 import './circle-spinner.css' // Import the CSS file for the keyframes
 
 interface CircleSpinnerProps {
-    size?: 'sm' | 'lg'
+    size?: 'sm' | 'lg',
+    className?: string
 }
 
 const CircleSpinner: React.FC<CircleSpinnerProps> = ({

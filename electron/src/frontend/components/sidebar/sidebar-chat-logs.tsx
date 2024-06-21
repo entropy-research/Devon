@@ -9,7 +9,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import handleNavigate from './handleNavigate'
 
 const SidebarChatLogs = () => {
     const { sessions, loading, error, refreshSessions } = useReadSessions()
@@ -34,7 +33,6 @@ const SidebarChatLogs = () => {
             await refreshSessions() // Then refresh the list of sessions
         } catch (error) {
             console.error('Failed to delete or refresh sessions:', error)
-            // TODO: Optionally set an error state here and show it in the UI
         }
     }
 
