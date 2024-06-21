@@ -65,6 +65,7 @@ class TaskAgent(Agent):
         "claude-opus": AnthropicModel,
         "claude-haiku": AnthropicModel,
         "claude-sonnet": AnthropicModel,
+        "claude-3-5-sonnet": AnthropicModel,
         "gpt4": OpenAiModel,
         "gpt4-turbo": OpenAiModel,
         "llama-3-70b": GroqModel,
@@ -88,6 +89,9 @@ class TaskAgent(Agent):
             "prompt_type": "anthropic",
         },
         "claude-sonnet": {
+            "prompt_type": "anthropic",
+        },
+        "claude-3-5-sonnet": {
             "prompt_type": "anthropic",
         },
         "llama-3-70b": {

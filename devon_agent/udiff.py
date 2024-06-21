@@ -761,9 +761,13 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
                 # Raise hallucination due to not matching full src lines -> this is actually a precision error not a context lines problem
                 raise Hallucination(incorrect_context_prompt)
 
-            applied_code = apply_indent(
-                src_lines, new_lines, src_start, begin_end, stop_start, src_end
-            )
+            # applied_code = apply_indent(
+            #     src_lines, new_lines, src_start, begin_end, stop_start, src_end
+            # )
+
+
+
+            
             # applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
             # applied_code = new_lines
 

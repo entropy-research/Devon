@@ -260,7 +260,7 @@ ipcMain.on('get-port', event => {
 ipcMain.on('get-file-path', event => {
     dialog
         .showOpenDialog({
-            properties: ['openDirectory'],
+            properties: ['openDirectory',"createDirectory"],
         })
         .then(result => {
             if (!result.canceled && result.filePaths.length > 0) {
