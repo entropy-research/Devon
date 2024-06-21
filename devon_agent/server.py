@@ -4,6 +4,7 @@ import os
 from contextlib import asynccontextmanager
 from time import sleep
 from typing import Any, Dict, List, Optional
+from devon_agent.semantic_search.code_graph_manager import CodeGraphManager
 
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,7 +17,7 @@ from devon_agent.agents.default.agent import AgentArguments, TaskAgent
 from devon_agent.models import (SingletonEngine, init_db, load_data,
                                 set_db_engine)
 from devon_agent.session import Session, SessionArguments
-
+import chromadb
 # API
 # SESSION
 # - get sessions
@@ -63,8 +64,9 @@ async def lifespan(app: fastapi.FastAPI):
     global sessions
     if app.persist:
         if app.db_path:
-            set_db_engine(app.db_path)
+            set_db_engine(app.db_path + "/devon_environment.db")
         else:
+            app.db_path = "."
             set_db_engine("./devon_environment.db")
         await init_db()
 
@@ -110,6 +112,57 @@ def read_root():
     return {"content": "Hello from Devon!"}
 
 
+@app.get("/indexes")
+def get_indexes():
+    client = chromadb.PersistentClient(path=os.path.join(app.db_path, "vectorDB"))
+
+    return [
+        collection.name
+        for collection in client.list_collections()
+    ]
+
+index_tasks = {}
+
+@app.post("/indexes/{index}")
+def create_index(index: str,background_tasks: fastapi.BackgroundTasks):
+
+    def register_task(task,**kwargs):
+        index_tasks[index] = "running"
+        task(**kwargs)
+        print("task complete")
+        index_tasks[index] = "done"
+
+    vectorDB_path = os.path.join(app.db_path, "vectorDB")
+    graph_path = os.path.join(app.db_path, "graph/graph.pickle")
+    collection_name = "P"+index.replace("%2F", "_")
+    manager = CodeGraphManager(graph_path, vectorDB_path, collection_name,os.environ.get("OPENAI_API_KEY"),index.replace("%2F", "/"))
+    background_tasks.add_task(register_task,manager.create_graph)
+
+@app.get("/indexes/{index}/status")
+def get_index_status(index: str,background_tasks: fastapi.BackgroundTasks):
+    print(index_tasks,index, index in index_tasks, list(index_tasks.keys())[0])
+    if index not in index_tasks:
+        print("pending")
+        return "pending"
+    else:
+        print(index_tasks[index])
+        return index_tasks[index]
+
+
+
+@app.delete("/indexes/{index}")
+def delete_index(index: str):
+    vectorDB_path = os.path.join(app.db_path, "vectorDB")
+    graph_path = os.path.join(app.db_path, "graph/graph.pickle")
+    collection_name = "P"+index.replace("%2F", "_")
+    manager = CodeGraphManager(graph_path, vectorDB_path, collection_name,os.environ.get("OPENAI_API_KEY"),index.replace("%2F", "/"))
+    try:
+        manager.delete_collection(collection_name)
+    except Exception as e:
+        print(e)
+        return "error"
+    return "done"
+
 @app.get("/sessions")
 def get_sessions():
     # TODO: figure out the right information to send
@@ -138,7 +191,7 @@ def create_session(
 
     sessions[session] = Session(
         SessionArguments(
-            path, user_input=lambda: get_user_input(session), name=session
+            path, user_input=lambda: get_user_input(session), name=session,db_path=app.db_path if app.db_path else "."
         ),
         agent,
         app.persist,

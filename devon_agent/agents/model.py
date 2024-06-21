@@ -34,10 +34,12 @@ class HumanModel:
         command = input("enter your command here")
         print(f"<THOUGHT>\n{thought}\n</THOUGHT>\n<COMMAND>\n{command}\n</COMMAND>")
         return f"<THOUGHT>\n{thought}\n</THOUGHT>\n<COMMAND>\n{command}\n</COMMAND>"
-
-
+    
 class AnthropicModel:
     MODELS = {
+        "claude-3-5-sonnet-20240620": {
+            "max_tokens": 4096,
+        },
         "claude-3-opus-20240229": {
             "max_tokens": 4096,
         },
@@ -50,6 +52,7 @@ class AnthropicModel:
     }
 
     SHORTCUTS = {
+        "claude-3-5-sonnet": "claude-3-5-sonnet-20240620",
         "claude-opus": "claude-3-opus-20240229",
         "claude-sonnet": "claude-3-sonnet-20240229",
         "claude-haiku": "claude-3-haiku-20240307",
@@ -189,3 +192,21 @@ class OllamaModel:
 
         response = model_completion.choices[0].message.content.rstrip("</command>")
         return response + "</command>"
+
+
+if __name__ == "__main__":
+    from outlines import models, generate
+    from outlines.models.openai import OpenAIConfig
+    from openai import OpenAI
+
+
+    json_grammar = outlines.grammars.json
+
+    client = OpenAI()
+    config = OpenAIConfig("gpt-4o")
+    litellm.drop_params=True
+    client.chat.completions.create = litellm.acompletion
+    model = models.openai(client, config)
+    generator = generate.cfg(model, json_grammar)
+    answer = generator("What is 2+2?")
+    print(answer)

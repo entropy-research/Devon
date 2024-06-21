@@ -16,85 +16,89 @@ import os
 load_dotenv()
 
 class CodeGraphManager:
-    def __init__(self, graph_path, db_path, root_path=None):
+    def __init__(self, graph_path, db_path, collection_name, OPENAI_API_KEY, root_path=None):
         self.graph_path = graph_path
         self.db_path = db_path
         self.root_path = root_path
         self.graph_constructor = GraphConstructor("python")
         self.openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-                api_key=os.getenv("OPENAI_API_KEY"),
+                api_key=OPENAI_API_KEY,
                 model_name="text-embedding-ada-002"
             )
+        self.collection_name = collection_name
     
     def create_graph(self):
-        if not self.root_path:
-            raise ValueError("Root path is not provided")
-        
-        # repo_id = str(uuid.uuid4())
-        self.graph_constructor.build_graph(self.root_path)
-        print("here")
-        print("here11")
-        asyncio.run(generate_doc_level_wise(self.graph_constructor.graph))
-        self.graph_constructor.save_graph(self.graph_path)
-
-    def generate_embeddings(self, docs):
-        return self.openai_ef(docs)
-
-    def load_graph(self):
-        self.graph_constructor.load_graph(self.graph_path)
-
-    def load_graph_and_perform_operations(self, query_text, collection_name):
 
         def count_tokens(text: str) -> int:
             encoding = tiktoken.get_encoding("cl100k_base")
             num_tokens = len(encoding.encode(text))
             return num_tokens
 
-        self.load_graph()
+
+        if not self.root_path:
+            raise ValueError("Root path is not provided")
+        
+        # repo_id = str(uuid.uuid4())
+        self.graph_constructor.build_graph(self.root_path)
+        asyncio.run(generate_doc_level_wise(self.graph_constructor.graph))
+        # self.graph_constructor.save_graph(self.graph_path)
 
         client = chromadb.PersistentClient(path=self.db_path)
-        try:
-            collection = client.get_collection(name=collection_name, embedding_function=self.openai_ef)
-        except:
-            print("collection not found")
-            collection = client.create_collection(name=collection_name, embedding_function=self.openai_ef)
-            print("collection created")
-            node_ids, docs, metadatas, codes = extract_chromadb_values(self.graph_constructor.graph)
 
-            docs_and_code = []
-            combined_ids = []
-            combined_metadatas = []
+        collection = client.create_collection(name=self.collection_name, embedding_function=self.openai_ef)
+        print("collection created")
+        node_ids, docs, metadatas, codes = extract_chromadb_values(self.graph_constructor.graph)
 
-            for i in range(len(docs)):
-                doc = docs[i]
-                code = codes[i]
-                combined_text = f"documentation - \n{doc} \n--code-- - \n{code}"
+        docs_and_code = []
+        combined_ids = []
+        combined_metadatas = []
+
+        for i in range(len(docs)):
+            doc = docs[i]
+            code = codes[i]
+            combined_text = f"documentation - \n{doc} \n--code-- - \n{code}"
+            
+            if count_tokens(combined_text) > 8000:
+                # Split into separate entries
+                doc_metadata = metadatas[i].copy()
+                code_metadata = metadatas[i].copy()
+                doc_metadata["split_type"] = "documentation"
+                code_metadata["split_type"] = "code"
+
+                doc_id = f"{node_ids[i]}-doc"
+                code_id = f"{node_ids[i]}-code"
                 
-                if count_tokens(combined_text) > 8000:
-                    # Split into separate entries
-                    doc_metadata = metadatas[i].copy()
-                    code_metadata = metadatas[i].copy()
-                    doc_metadata["split_type"] = "documentation"
-                    code_metadata["split_type"] = "code"
+                docs_and_code.append(f"documentation - \n{doc}")
+                docs_and_code.append(f"--code-- - \n{code}")
+                combined_ids.extend([doc_id, code_id])
+                combined_metadatas.extend([doc_metadata, code_metadata])
+                
+            else:
+                docs_and_code.append(combined_text)
+                combined_ids.append(node_ids[i])
+                combined_metadatas.append(metadatas[i])
 
-                    doc_id = f"{node_ids[i]}-doc"
-                    code_id = f"{node_ids[i]}-code"
-                    
-                    docs_and_code.append(f"documentation - \n{doc}")
-                    docs_and_code.append(f"--code-- - \n{code}")
-                    combined_ids.extend([doc_id, code_id])
-                    combined_metadatas.extend([doc_metadata, code_metadata])
-                    
-                else:
-                    docs_and_code.append(combined_text)
-                    combined_ids.append(node_ids[i])
-                    combined_metadatas.append(metadatas[i])
-
-            print("embedding")
-            embeddings = self.generate_embeddings(docs_and_code)
-            print("embedding done")
-
+        print("embedding")
+        embeddings = self.generate_embeddings(docs_and_code)
+        print("embedding done")
+        if len(embeddings) > 0:
             collection.add(ids=combined_ids, documents=docs_and_code, embeddings=embeddings, metadatas=combined_metadatas)
+
+    def generate_embeddings(self, docs):
+        if docs:
+            return self.openai_ef(docs)
+        else:
+            return []
+
+    def load_graph(self):
+        self.graph_constructor.load_graph(self.graph_path)
+
+    def query(self, query_text):
+
+        client = chromadb.PersistentClient(path=self.db_path)
+
+        collection = client.get_collection(name=self.collection_name, embedding_function=self.openai_ef)
+        
 
         # Use a set to keep track of already processed node_ids
         processed_node_ids = set()

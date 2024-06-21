@@ -1,6 +1,6 @@
 from devon_agent.semantic_search.code_graph_manager import CodeGraphManager
 from devon_agent.tool import Tool, ToolContext
-from devon_agent.agents.model import AnthropicModel, ModelArguments
+from devon_agent.agents.model import AnthropicModel, ModelArguments, OpenAiModel
 import chromadb.utils.embedding_functions as embedding_functions
 import os
 
@@ -18,17 +18,14 @@ class SemanticSearch(Tool):
         return ["docstring", "manpage"]
 
     def setup(self, ctx):
-        self.base_path = ctx["session"].base_path
+        self.db_path = ctx["session"].db_path
         # self.vectorDB = chromadb.PersistentClient(path=os.path.join(self.base_path, "vectorDB"))
-        self.vectorDB_path = os.path.join(self.base_path, "vectorDB")
-        self.graph_path = os.path.join(self.base_path, "graph/graph.pickle")
-        self.collection_name = "collection"
-        self.manager = CodeGraphManager(self.graph_path, self.vectorDB_path, self.base_path)
-        try:
-            self.manager.delete_collection(self.collection_name)
-        except:
-            pass
+        self.vectorDB_path = os.path.join(self.db_path, "vectorDB")
+        self.graph_path = os.path.join(self.db_path, "graph/graph.pickle")
+        self.collection_name = ctx["session"].base_path
+        self.manager = CodeGraphManager(self.graph_path, self.vectorDB_path, self.db_path)
         self.manager.create_graph()
+        
         
     def cleanup(self, ctx):
         try:
@@ -99,17 +96,17 @@ class SemanticSearch(Tool):
         try:
 
             model_args = ModelArguments(
-                model_name="claude-3-opus-20240229",
+                model_name="gpt-4o",
                 temperature=0.5,
-                api_key=os.getenv("ANTHROPIC_API_KEY")
+                api_key=os.getenv("OPENAI_API_KEY")
             )
-            opus = AnthropicModel(model_args)
+            opus = OpenAiModel(model_args)
 
             # Run the semantic search function
-            openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-                api_key=os.environ.get("OPENAI_API_KEY"),
-                model_name="text-embedding-ada-002"
-            )
+            # openai_ef = embedding_functions.OpenAIEmbeddingFunction(
+            #     api_key=os.environ.get("OPENAI_API_KEY"),
+            #     model_name="text-embedding-ada-002"
+            # )
 
             
             # collection_name = "devon-5"

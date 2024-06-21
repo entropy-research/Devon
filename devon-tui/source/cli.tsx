@@ -8,6 +8,7 @@ import inquirer from 'inquirer';
 import { App } from './app_sm.js';
 import portfinder from 'portfinder';
 import childProcess from 'node:child_process';
+import axios from 'axios';
 
 type Config = {
 	modelName: string;
@@ -147,7 +148,88 @@ if (input[0] === 'configure') {
 				process.exit(0);
 			});
 		});
-} else {
+} else if (input[0] === 'index') {
+
+	portfinder.setBasePort(cli.flags.port);
+	portfinder.getPort(async function (_: any, port: number) {
+		if (!childProcess.spawnSync('devon_agent', ['--help']).stdout) {
+			console.error(
+				'The "devon" command is not available. Please ensure it is installed and in your PATH.',
+			);
+			process.exit(1);
+		}
+		console.log([
+			'server',
+			'--port',
+			port.toString(),
+		]);
+
+		const subProcess = childProcess.spawn(
+			'devon_agent',
+			[
+				'server',
+				'--port',
+				port.toString(),
+			],
+			{
+				signal: controller.signal,
+			},
+		);
+
+		subProcess.stdout.on('data', (data) => {
+			console.log(data.toString('utf8'));
+		});
+
+		subProcess.stderr.on('data', (data) => {
+			console.error(data.toString('utf8'));
+		});
+
+
+
+		let retries = 0;
+		const maxRetries = 5;
+		const retryInterval = 10000; // 1 second
+
+		const indexDirectory = async () => {
+
+			while (retries < maxRetries) {
+				try {
+					
+				await axios.delete(`http://localhost:${port}/indexes/${encodeURIComponent(process.cwd().replace(/\//g, '%2F'))}`);
+				await axios.post(`http://localhost:${port}/indexes/${encodeURIComponent(process.cwd().replace(/\//g, '%2F'))}`);
+				break;
+
+
+				} catch (error) {
+					retries++;
+					// console.log(error)
+					console.log(`Retrying indexing (attempt ${retries}/${maxRetries})...`);
+					await new Promise(resolve => setTimeout(resolve, retryInterval));
+					// indexDirectory();
+					} 
+				}
+		}
+
+		await indexDirectory();
+
+		let status = "pending";
+		while (status !== "done") {
+			try {
+				const response = await axios.get(`http://localhost:${port}/indexes/${encodeURIComponent(process.cwd().replace(/\//g, '%2F'))}/status`);
+				status = response.data;
+			await new Promise(resolve => setTimeout(resolve, 5000));
+			} catch (error) {
+				console.error('Failed to get index status.');
+				subProcess.kill('SIGKILL');
+				process.exit(1);
+			}
+
+		}
+		subProcess.kill('SIGKILL');
+	});
+}
+
+else {
 
 	let api_key: string | undefined = undefined;
 	let modelName: string | undefined = undefined;
@@ -156,13 +238,15 @@ if (input[0] === 'configure') {
 
 	if (cli.flags.apiKey) {
 		api_key = cli.flags['apiKey'];
-	} else if (process.env['OPENAI_API_KEY']) {
-		api_key = process.env['OPENAI_API_KEY'];
-		modelName = 'gpt4-o';
+	} 
+	// else if (process.env['OPENAI_API_KEY']) {
+	// 	api_key = process.env['OPENAI_API_KEY'];
+	// 	modelName = 'gpt4-o';
 		// prompt_type = "openai";
-	} else if (process.env['ANTHROPIC_API_KEY']) {
+	// }
+	 else if (process.env['ANTHROPIC_API_KEY']) {
 		api_key = process.env['ANTHROPIC_API_KEY'];
-		modelName = 'claude-opus';
+		modelName = 'claude-3-5-sonnet';
 	} else if (process.env['GROQ_API_KEY']) {
 		api_key = process.env['GROQ_API_KEY'];
 		modelName = 'llama-3-70b';

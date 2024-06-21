@@ -33,7 +33,7 @@ from devon_agent.vgit import  get_current_diff, get_last_commit, get_or_create_r
 from devon_agent.tools.codenav import CodeGoTo, CodeSearch
 from devon_agent.tools.semantic_search import SemanticSearch
 
-
+import chromadb
 
 @dataclass(frozen=False)
 class SessionArguments:
@@ -41,9 +41,11 @@ class SessionArguments:
     # environments: List[str]
     user_input: Any
     name: str
+    db_path : str
     task: Optional[str] = None
     # config: Optional[Dict[str, Any]] = None
     headless: Optional[bool] = False
+  
 
 
 """
@@ -123,6 +125,8 @@ class Session:
 
         self.status = "paused"
 
+        self.client = chromadb.PersistentClient(path=os.path.join(args.db_path, "vectorDB"))
+
         local_environment = LocalEnvironment(self.args.path)
         local_environment.register_tools(
             {
@@ -142,11 +146,17 @@ class Session:
                 "code_search": CodeSearch(),
                 "code_goto": CodeGoTo(),
                 "file_tree_display": FileTreeDisplay(),
-                "semantic_search": SemanticSearch(),
             }
         )
         local_environment.set_default_tool(ShellTool())
 
+        for collection in self.client.list_collections():
+            if collection.name.replace("_", "/")[1:] == self.base_path:
+                print("added semantic search")
+                local_environment.register_tools({
+                    "semantic_search": SemanticSearch(),
+
+                })
         self.default_environment = local_environment
 
         if self.args.headless:
@@ -191,6 +201,7 @@ class Session:
             "name": self.name,
             "event_history": [event for event in self.event_log],
             "cwd": self.environments["local"].get_cwd(),
+            "db_path": self.args.db_path,
             "agent": {
                 "name": self.agent.name,
                 "config": self.agent.args.model_dump(),
@@ -209,6 +220,7 @@ class Session:
                 user_input=user_input,
                 name=data["name"],
                 task=data["task"] if "task" in data else None,
+                db_path=data["db_path"] if "db_path" in data else "."
             ),
             agent=TaskAgent(
                 name=data["agent"]["name"],
