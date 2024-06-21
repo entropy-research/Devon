@@ -7,8 +7,8 @@ export const models: Model[] = [
         company: 'OpenAI',
     },
     {
-        id: 'claude-opus',
-        name: 'Claude 3 Opus',
+        id: 'claude-3-5-sonnet',
+        name: 'Claude 3.5 Sonnet',
         company: 'Anthropic',
     },
     {
