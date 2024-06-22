@@ -39,7 +39,7 @@ export default function ChatHeader({
             </div> */}
             <p className="text-lg font-semibold pb-[1px]">Chat</p>
             <div className="flex gap-3 -mr-2">
-                <IndexesButton indexesHandler={handleIndexes} />
+                {/* <IndexesButton indexesHandler={handleIndexes} /> */}
                 <RestartButton resetHandler={handleReset} />
                 {/* <StopButton stopHandler={handleStop} /> */}
                 <ConfigureButton />
