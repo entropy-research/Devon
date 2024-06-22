@@ -1,8 +1,11 @@
+from devon_agent.agents.default.agent import TaskAgent
 from devon_agent.semantic_search.code_graph_manager import CodeGraphManager
 from devon_agent.tool import Tool, ToolContext
 from devon_agent.agents.model import AnthropicModel, ModelArguments, OpenAiModel
 import chromadb.utils.embedding_functions as embedding_functions
 import os
+
+from devon_agent.utils import encode_path
 
 class SemanticSearch(Tool):
     def __init__(self):
@@ -23,8 +26,8 @@ class SemanticSearch(Tool):
         self.vectorDB_path = os.path.join(self.db_path, "vectorDB")
         self.graph_path = os.path.join(self.db_path, "graph/graph.pickle")
         self.collection_name = ctx["session"].base_path
-        self.manager = CodeGraphManager(self.graph_path, self.vectorDB_path, self.db_path)
-        self.manager.create_graph()
+        self.manager = CodeGraphManager(self.graph_path, self.vectorDB_path, encode_path(ctx["session"].base_path) , os.environ.get("OPENAI_API_KEY"), ctx["session"].base_path)
+        # self.manager.create_graph()
         
         
     def cleanup(self, ctx):
@@ -94,13 +97,13 @@ class SemanticSearch(Tool):
         #     return formatted_string
 
         try:
-
-            model_args = ModelArguments(
-                model_name="gpt-4o",
-                temperature=0.5,
-                api_key=os.getenv("OPENAI_API_KEY")
-            )
-            opus = OpenAiModel(model_args)
+            agent : TaskAgent = ctx["session"].agent
+            # model_args = ModelArguments(
+            #     model_name=agent.args.model,
+            #     temperature=0.5,
+            #     api_key=agent.args.api_key
+            # )
+            opus = agent.current_model
 
             # Run the semantic search function
             # openai_ef = embedding_functions.OpenAIEmbeddingFunction(
@@ -111,7 +114,7 @@ class SemanticSearch(Tool):
             
             # collection_name = "devon-5"
 
-            response = self.manager.load_graph_and_perform_operations(query_text, self.collection_name)
+            response = self.manager.query(query_text)
             # print(response)
             # print(asyncio.run(get_completion(agent_prompt(query_text, (response)), size="large")))
 

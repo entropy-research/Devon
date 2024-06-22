@@ -127,6 +127,8 @@ class Session:
 
         self.client = chromadb.PersistentClient(path=os.path.join(args.db_path, "vectorDB"))
 
+        self.db_path = args.db_path
+
         local_environment = LocalEnvironment(self.args.path)
         local_environment.register_tools(
             {
@@ -152,7 +154,7 @@ class Session:
 
         for collection in self.client.list_collections():
             # print(collection.name,collection.name.replace("_", "/")[1:],self.base_path)
-            if decode_path(collection.name[1:]) == self.base_path:
+            if decode_path(collection.name) == self.base_path:
                 print("added semantic search")
                 local_environment.register_tools({
                     "semantic_search": SemanticSearch(),
