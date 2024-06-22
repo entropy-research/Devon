@@ -148,86 +148,87 @@ if (input[0] === 'configure') {
 				process.exit(0);
 			});
 		});
-} else if (input[0] === 'index') {
+} 
+// else if (input[0] === 'index') {
 
-	portfinder.setBasePort(cli.flags.port);
-	portfinder.getPort(async function (_: any, port: number) {
-		if (!childProcess.spawnSync('devon_agent', ['--help']).stdout) {
-			console.error(
-				'The "devon" command is not available. Please ensure it is installed and in your PATH.',
-			);
-			process.exit(1);
-		}
-		console.log([
-			'server',
-			'--port',
-			port.toString(),
-		]);
+// 	portfinder.setBasePort(cli.flags.port);
+// 	portfinder.getPort(async function (_: any, port: number) {
+// 		if (!childProcess.spawnSync('devon_agent', ['--help']).stdout) {
+// 			console.error(
+// 				'The "devon" command is not available. Please ensure it is installed and in your PATH.',
+// 			);
+// 			process.exit(1);
+// 		}
+// 		console.log([
+// 			'server',
+// 			'--port',
+// 			port.toString(),
+// 		]);
 
-		const subProcess = childProcess.spawn(
-			'devon_agent',
-			[
-				'server',
-				'--port',
-				port.toString(),
-			],
-			{
-				signal: controller.signal,
-			},
-		);
+// 		const subProcess = childProcess.spawn(
+// 			'devon_agent',
+// 			[
+// 				'server',
+// 				'--port',
+// 				port.toString(),
+// 			],
+// 			{
+// 				signal: controller.signal,
+// 			},
+// 		);
 
-		subProcess.stdout.on('data', (data) => {
-			console.log(data.toString('utf8'));
-		});
+// 		subProcess.stdout.on('data', (data) => {
+// 			console.log(data.toString('utf8'));
+// 		});
 
-		subProcess.stderr.on('data', (data) => {
-			console.error(data.toString('utf8'));
-		});
+// 		subProcess.stderr.on('data', (data) => {
+// 			console.error(data.toString('utf8'));
+// 		});
 
 
 
-		let retries = 0;
-		const maxRetries = 5;
-		const retryInterval = 10000; // 1 second
+// 		let retries = 0;
+// 		const maxRetries = 5;
+// 		const retryInterval = 10000; // 1 second
 
-		const indexDirectory = async () => {
+// 		const indexDirectory = async () => {
 
-			while (retries < maxRetries) {
-				try {
+// 			while (retries < maxRetries) {
+// 				try {
 					
-				await axios.delete(`http://localhost:${port}/indexes/${encodeURIComponent(process.cwd().replace(/\//g, '%2F'))}`);
-				await axios.post(`http://localhost:${port}/indexes/${encodeURIComponent(process.cwd().replace(/\//g, '%2F'))}`);
-				break;
+// 				await axios.delete(`http://localhost:${port}/indexes/${encodeURIComponent(process.cwd().replace(/\//g, '%2F'))}`);
+// 				await axios.post(`http://localhost:${port}/indexes/${encodeURIComponent(process.cwd().replace(/\//g, '%2F'))}`);
+// 				break;
 
 
-				} catch (error) {
-					retries++;
-					// console.log(error)
-					console.log(`Retrying indexing (attempt ${retries}/${maxRetries})...`);
-					await new Promise(resolve => setTimeout(resolve, retryInterval));
-					// indexDirectory();
-					} 
-				}
-		}
+// 				} catch (error) {
+// 					retries++;
+// 					// console.log(error)
+// 					console.log(`Retrying indexing (attempt ${retries}/${maxRetries})...`);
+// 					await new Promise(resolve => setTimeout(resolve, retryInterval));
+// 					// indexDirectory();
+// 					} 
+// 				}
+// 		}
 
-		await indexDirectory();
+// 		await indexDirectory();
 
-		let status = "pending";
-		while (status !== "done") {
-			try {
-				const response = await axios.get(`http://localhost:${port}/indexes/${encodeURIComponent(process.cwd().replace(/\//g, '%2F'))}/status`);
-				status = response.data;
-			await new Promise(resolve => setTimeout(resolve, 5000));
-			} catch (error) {
-				console.error('Failed to get index status.');
-				subProcess.kill('SIGKILL');
-				process.exit(1);
-			}
+// 		let status = "pending";
+// 		while (status !== "done") {
+// 			try {
+// 				const response = await axios.get(`http://localhost:${port}/indexes/${encodeURIComponent(process.cwd().replace(/\//g, '%2F'))}/status`);
+// 				status = response.data;
+// 			await new Promise(resolve => setTimeout(resolve, 5000));
+// 			} catch (error) {
+// 				console.error('Failed to get index status.');
+// 				subProcess.kill('SIGKILL');
+// 				process.exit(1);
+// 			}
 
-		}
-		subProcess.kill('SIGKILL');
-	});
-}
+// 		}
+// 		subProcess.kill('SIGKILL');
+// 	});
+// }
 
 else {
 
