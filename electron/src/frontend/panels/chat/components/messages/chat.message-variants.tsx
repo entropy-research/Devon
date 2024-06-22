@@ -8,6 +8,9 @@ import remarkMath from 'remark-math'
 // import { remarkCustomCode } from './remarkCustomCode' // import the custom plugin
 // import { TfiThought } from 'react-icons/tfi'
 import { Icon } from '@iconify/react'
+import { parseDiff, Diff, Hunk } from 'react-diff-view'
+import 'react-diff-view/style/index.css'
+import './diff-view.css'
 
 // Different types of message bubbles.
 
@@ -114,6 +117,34 @@ export const ToolResponseMessage = ({
 }) => {
     const icon = <div className="w-[32px]"></div>
     let [command, response] = content.toString().split('|START_RESPONSE|')
+    if (command.includes('edit_file')) {
+        // Delete everything before the first newline
+        const indexOfFirstNewline = command.indexOf('\n')
+        if (indexOfFirstNewline !== -1) {
+            command = command.substring(indexOfFirstNewline + 1)
+        }
+        const files = parseDiff(command)
+        return (
+            <div className="flex ml-[50px]">
+                {files.map(file => {
+                    return (
+                        <Diff
+                            key={file.oldRevision + '-' + file.newRevision}
+                            viewType="unified"
+                            diffType={file.type}
+                            hunks={file.hunks}
+                        >
+                            {hunks =>
+                                hunks.map(hunk => (
+                                    <Hunk key={hunk.content} hunk={hunk} />
+                                ))
+                            }
+                        </Diff>
+                    )
+                })}
+            </div>
+        )
+    }
     return <StyledMessage content={command} className={className} icon={icon} />
 }
 

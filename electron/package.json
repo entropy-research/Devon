@@ -84,6 +84,7 @@
         "monaco-editor": "^0.49.0",
         "portfinder": "^1.0.32",
         "react": "^18.3.1",
+        "react-diff-view": "^3.2.1",
         "react-dom": "^18.3.1",
         "react-icons": "^5.2.1",
         "react-markdown": "^9.0.1",

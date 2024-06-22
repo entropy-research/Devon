@@ -1,0 +1,24 @@
+:root {
+    --diff-background-color: #1e1e1e;
+    --diff-text-color: #d4d4d4;
+    --diff-font-family: Consolas, Courier, monospace;
+    --diff-selection-background-color: #264f78;
+    --diff-selection-text-color: var(--diff-text-color);
+    --diff-gutter-insert-background-color: #294c2d;
+    --diff-gutter-insert-text-color: #bff5c6;
+    --diff-gutter-delete-background-color: #5e2929;
+    --diff-gutter-delete-text-color: #f7b6a9;
+    --diff-gutter-selected-background-color: #3a3d41;
+    --diff-gutter-selected-text-color: var(--diff-text-color);
+    --diff-code-insert-background-color: #182a1d;
+    --diff-code-insert-text-color: #bde1c2;
+    --diff-code-delete-background-color: #371c1c;
+    --diff-code-delete-text-color: #ffe2dc;
+    --diff-code-insert-edit-background-color: #1e4620;
+    --diff-code-insert-edit-text-color: #bde1c2;
+    --diff-code-delete-edit-background-color: #4b1818;
+    --diff-code-delete-edit-text-color: #f48771;
+    --diff-code-selected-background-color: #264f78;
+    --diff-code-selected-text-color: var(--diff-text-color);
+    --diff-omit-gutter-line-color: #cb2a1d;
+}
