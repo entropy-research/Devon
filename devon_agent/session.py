@@ -152,14 +152,14 @@ class Session:
         )
         local_environment.set_default_tool(ShellTool())
 
-        for collection in self.client.list_collections():
-            # print(collection.name,collection.name.replace("_", "/")[1:],self.base_path)
-            if decode_path(collection.name) == self.base_path:
-                print("added semantic search")
-                local_environment.register_tools({
-                    "semantic_search": SemanticSearch(),
+        # for collection in self.client.list_collections():
+        #     # print(collection.name,collection.name.replace("_", "/")[1:],self.base_path)
+        #     if decode_path(collection.name) == self.base_path:
+        #         print("added semantic search")
+        #         local_environment.register_tools({
+        #             "semantic_search": SemanticSearch(),
 
-                })
+        #         })
         self.default_environment = local_environment
 
         if self.args.headless:
