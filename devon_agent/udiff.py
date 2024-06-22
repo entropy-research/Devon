@@ -769,7 +769,7 @@ def apply_context_diff(file_content: str, file_diff: FileContextDiff) -> str:
 
             
             # applied_code = apply_indent_to_new_lines(src_lines, src_start, src_end, new_lines)
-            # applied_code = new_lines
+            applied_code = new_lines
 
             # insert lines
             i = 0
