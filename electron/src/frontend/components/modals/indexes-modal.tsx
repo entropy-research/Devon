@@ -10,7 +10,12 @@ import { Check } from 'lucide-react'
 import CircleSpinner from '@/components/ui/circle-spinner/circle-spinner'
 import { Skeleton } from '@/components/ui/skeleton'
 
-type IndexStatus = 'pending' | 'done' | 'error'
+type IndexStatus = 'running' | 'done' | 'error'
+
+interface IndexItem {
+    path: string
+    status: IndexStatus
+}
 
 const IndexesModal = ({ trigger }: { trigger: JSX.Element }) => {
     const [open, setOpen] = useState(false)
@@ -27,10 +32,7 @@ const IndexesModal = ({ trigger }: { trigger: JSX.Element }) => {
 const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
     const host = SessionMachineContext.useSelector(state => state.context.host)
     const sessionActorref = SessionMachineContext.useActorRef()
-    const [indexes, setIndexes] = useState<string[]>([])
-    const [indexStatuses, setIndexStatuses] = useState<
-        Record<string, IndexStatus>
-    >({})
+    const [indexes, setIndexes] = useState<IndexItem[]>([])
     const [newIndexPath, setNewIndexPath] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [selectedIndex, setSelectedIndex] = useState<string | null>(null)
@@ -42,23 +44,18 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
     useEffect(() => {
         const interval = setInterval(() => {
             indexes.forEach(index => {
-                if (indexStatuses[index] !== 'done') {
-                    checkIndexStatus(index)
+                if (index.status !== 'done') {
+                    checkIndexStatus(index.path)
                 }
             })
-        }, 5000)
+        }, 3000)
         return () => clearInterval(interval)
-    }, [indexes, indexStatuses])
+    }, [indexes])
 
     const fetchIndexes = async () => {
         try {
             const response = await axios.get(`${host}/indexes`)
             setIndexes(response.data)
-            const statuses: Record<string, IndexStatus> = {}
-            response.data.forEach((index: string) => {
-                statuses[index] = 'done'
-            })
-            setIndexStatuses(statuses)
         } catch (error) {
             console.error('Failed to fetch indexes:', error)
             setError('Failed to fetch indexes. Please try again.')
@@ -69,12 +66,7 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
         try {
             const encodedPath = encodeURIComponent(path.replace(/\//g, '%2F'))
             await axios.delete(`${host}/indexes/${encodedPath}`)
-            setIndexes(indexes.filter(index => index !== path))
-            setIndexStatuses(prev => {
-                const newStatuses = { ...prev }
-                delete newStatuses[path]
-                return newStatuses
-            })
+            setIndexes(indexes.filter(index => index.path !== path))
         } catch (error) {
             console.error('Failed to remove index:', error)
             setError('Failed to remove index. Please try again.')
@@ -91,11 +83,10 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                 await axios.delete(`${host}/indexes/${encodedPath}`)
                 await axios.post(`${host}/indexes/${encodedPath}`)
 
-                setIndexes([...indexes, newIndexPath])
-                setIndexStatuses(prev => ({
-                    ...prev,
-                    [newIndexPath]: 'pending',
-                }))
+                setIndexes([
+                    ...indexes,
+                    { path: newIndexPath, status: 'running' },
+                ])
                 setNewIndexPath('')
                 checkIndexStatus(newIndexPath)
             } catch (error) {
@@ -112,15 +103,23 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                 `${host}/indexes/${encodedPath}/status`
             )
             const status = response.data
-            setIndexStatuses(prev => ({ ...prev, [path]: status }))
+            setIndexes(prevIndexes =>
+                prevIndexes.map(index =>
+                    index.path === path ? { ...index, status } : index
+                )
+            )
         } catch (error) {
             console.error('Failed to get index status:', error)
-            setIndexStatuses(prev => ({ ...prev, [path]: 'error' }))
+            setIndexes(prevIndexes =>
+                prevIndexes.map(index =>
+                    index.path === path ? { ...index, status: 'error' } : index
+                )
+            )
         }
     }
 
-    const handleIndexSelection = (index: string) => {
-        setSelectedIndex(prevIndex => (prevIndex === index ? null : index))
+    const handleIndexSelection = (path: string) => {
+        setSelectedIndex(prevIndex => (prevIndex === path ? null : path))
     }
 
     const handleStartChat = () => {
@@ -139,7 +138,7 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
             <Card className="bg-midnight">
                 <CardContent className="mt-5 w-full">
                     <h2 className="text-lg font-semibold mb-4">
-                        Directory Indexes
+                        Directory indexes
                     </h2>
                     <div className="flex items-center mb-2 gap-4">
                         <FolderPicker
@@ -157,15 +156,14 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                     {error && (
                         <div className="text-red-500 mb-2 mt-6">{error}</div>
                     )}
-                    {indexes && indexes.length > 0 && (
+                    {indexes.length > 0 && (
                         <div className={'mt-6'}>
                             {indexes.map(index => (
-                                <IndexItem
-                                    key={index}
+                                <IndexItemComponent
+                                    key={index.path}
                                     index={index}
-                                    status={indexStatuses[index]}
                                     onRemove={handleRemoveIndex}
-                                    isSelected={selectedIndex === index}
+                                    isSelected={selectedIndex === index.path}
                                     onSelect={handleIndexSelection}
                                 />
                             ))}
@@ -176,7 +174,6 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                                     </p>
                                     <Button
                                         onClick={handleStartChat}
-                                        // className="w-2/3"
                                         className="px-5"
                                     >
                                         New Chat
@@ -191,73 +188,88 @@ const IndexList = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
     )
 }
 
-const IndexItem = ({
+const IndexItemComponent = ({
     index,
-    status,
     onRemove,
     onSelect,
     isSelected,
 }: {
-    index: string
-    status: IndexStatus
+    index: IndexItem
     onRemove: (path: string) => void
-    onSelect: (index: string) => void
+    onSelect: (path: string) => void
     isSelected: boolean
 }) => {
     return (
-        <div className="flex items-center justify-between py-2">
-            <div
-                className={`flex items-center flex-grow mr-4 relative ${
-                    status === 'done' ? 'cursor-pointer' : 'cursor-not-allowed'
-                }`}
-                onClick={() => {
-                    if (status === 'done') {
-                        onSelect(index)
-                    }
-                }}
-            >
-                {status === 'done' ? (
-                    <div
-                        className={`w-4 h-4 rounded-full border-[1.5px] mr-2 flex items-center justify-center ${
-                            isSelected
-                                ? 'border-primary border'
-                                : 'border-input'
-                        }`}
-                    >
-                        {isSelected && (
-                            <div className="w-[7px] h-[7px] rounded-full bg-primary absolute" />
-                        )}
-                    </div>
-                ) : (
-                    <Skeleton className="w-4 h-4 rounded-full mr-2"></Skeleton>
-                )}
-                <Input
-                    value={index}
-                    readOnly
-                    className="bg-night border-none text-white pr-8 text-ellipsis"
-                />
-                {status === 'done' ? (
-                    <Check
-                        className="text-green-500 absolute right-2"
-                        size={14}
-                    />
-                ) : (
-                    <CircleSpinner className="text-green-500 absolute right-2" />
-                )}
-            </div>
-            <div className="flex items-center gap-2">
-                {status === 'error' && (
-                    <span className="text-red-500">Error</span>
-                )}
-                <Button
-                    onClick={() => onRemove(index)}
-                    variant="outline-thin"
-                    disabled={status !== 'done'}
-                    className="w-[88px]"
+        <div className="py-2 w-full flex flex-col items-center">
+            <div className="flex items-center justify-between gap-2 w-full">
+                <div
+                    className={`flex items-center flex-grow mr-2 relative ${
+                        index.status === 'done'
+                            ? 'cursor-pointer'
+                            : 'cursor-not-allowed'
+                    }`}
+                    onClick={() => {
+                        if (index.status === 'done') {
+                            onSelect(index.path)
+                        }
+                    }}
                 >
-                    {status !== 'done' ? 'Indexing...' : `Remove`}
-                </Button>
+                    {index.status === 'done' ? (
+                        <div
+                            className={`w-4 h-4 rounded-full border-[1.5px] mr-2 flex items-center justify-center ${
+                                isSelected
+                                    ? 'border-primary border'
+                                    : 'border-input'
+                            }`}
+                        >
+                            {isSelected && (
+                                <div className="w-[7px] h-[7px] rounded-full bg-primary absolute" />
+                            )}
+                        </div>
+                    ) : (
+                        <Skeleton className="w-4 h-4 rounded-full mr-2"></Skeleton>
+                    )}
+                    <Input
+                        value={index.path}
+                        readOnly
+                        className={`flex-1 bg-night border-none pr-8 text-ellipsis ${
+                            index.status !== 'done'
+                                ? 'cursor-not-allowed text-neutral-500'
+                                : 'cursor-pointer text-white'
+                        }`}
+                    />
+                    {index.status === 'done' ? (
+                        <Check
+                            className="text-green-500 absolute right-2"
+                            size={14}
+                        />
+                    ) : index.status === 'running' ? (
+                        <CircleSpinner
+                            className="absolute right-2"
+                            color="#636363"
+                        />
+                    ) : <p>{index.status}</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                    {index.status === 'error' && (
+                        <span className="text-red-500">Error</span>
+                    )}
+                    <Button
+                        onClick={() => onRemove(index.path)}
+                        variant="outline-thin"
+                        disabled={index.status !== 'done'}
+                        className="w-[88px]"
+                    >
+                        {index.status === 'running' ? 'Indexing...' : `Remove`}
+                    </Button>
+                </div>
             </div>
+            {index.status === 'running' && (
+                <span className="text-sm mt-2 text-neutral-500">
+                    This directory is being indexed... feel free to close the
+                    tab and check back later!
+                </span>
+            )}
         </div>
     )
 }

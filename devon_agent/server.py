@@ -21,12 +21,14 @@ from devon_agent.session import Session, SessionArguments
 import chromadb
 
 from devon_agent.utils import decode_path, encode_path
+from urllib.parse import unquote
+
 # API
 # SESSION
 # - get sessions
 # - create session
 # - start session
-# repond session
+# respond session
 # interrupt session
 # stop session
 # delete session
@@ -120,11 +122,31 @@ def read_root():
 @app.get("/indexes")
 def get_indexes():
     client = chromadb.PersistentClient(path=os.path.join(app.db_path, "vectorDB"))
-    print(client.list_collections())
-    return [
+    
+    # Get completed indexes from ChromaDB
+    completed_indexes = [
         decode_path(collection.name)
         for collection in client.list_collections()
     ]
+    
+    # Decode the keys from index_tasks
+    in_progress_indexes = [unquote(key).replace("%2F", "/") for key in index_tasks.keys()]
+    
+    # Combine completed indexes with in-progress indexes
+    all_indexes = set(completed_indexes + in_progress_indexes)
+    
+    # Create a list of dictionaries with index information
+    index_info = []
+    for index in all_indexes:
+        # For in-progress tasks, we need to re-encode the path to check in index_tasks
+        encoded_index = index.replace("/", "%2F")
+        status = index_tasks.get(encoded_index, "done")  # If not in index_tasks, it's completed
+        index_info.append({
+            "path": index,
+            "status": status
+        })
+    
+    return index_info
 
 index_tasks = {}
 
