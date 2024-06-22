@@ -19,6 +19,8 @@ from devon_agent.models import (SingletonEngine, init_db, load_data,
                                 set_db_engine)
 from devon_agent.session import Session, SessionArguments
 import chromadb
+
+from devon_agent.utils import decode_path, encode_path
 # API
 # SESSION
 # - get sessions
@@ -118,9 +120,9 @@ def read_root():
 @app.get("/indexes")
 def get_indexes():
     client = chromadb.PersistentClient(path=os.path.join(app.db_path, "vectorDB"))
-
+    print(client.list_collections())
     return [
-        collection.name[1:].replace("_", "/")
+        decode_path(collection.name)
         for collection in client.list_collections()
     ]
 
@@ -137,7 +139,8 @@ def create_index(index: str,background_tasks: fastapi.BackgroundTasks):
 
     vectorDB_path = os.path.join(app.db_path, "vectorDB")
     graph_path = os.path.join(app.db_path, "graph/graph.pickle")
-    collection_name = "P"+index.replace("%2F", "_")
+    collection_name = encode_path(index.replace("%2F", "/"))
+    print(collection_name)
     manager = CodeGraphManager(graph_path, vectorDB_path, collection_name,os.environ.get("OPENAI_API_KEY"),index.replace("%2F", "/"))
     background_tasks.add_task(register_task,manager.create_graph)
 
@@ -157,7 +160,7 @@ def get_index_status(index: str,background_tasks: fastapi.BackgroundTasks):
 def delete_index(index: str):
     vectorDB_path = os.path.join(app.db_path, "vectorDB")
     graph_path = os.path.join(app.db_path, "graph/graph.pickle")
-    collection_name = "P"+index.replace("%2F", "_")
+    collection_name = encode_path(index.replace("%2F", "/"))
     manager = CodeGraphManager(graph_path, vectorDB_path, collection_name,os.environ.get("OPENAI_API_KEY"),index.replace("%2F", "/"))
     try:
         manager.delete_collection(collection_name)

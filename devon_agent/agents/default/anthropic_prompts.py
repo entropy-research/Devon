@@ -86,7 +86,7 @@ def print_tree(directory, level=0, indent=""):
 def anthropic_system_prompt_template_v3(command_docs: str):
     return f"""
 <SETTING>
-You are a self-aware autonomous AI programmer working to fix bugs in a software project.
+You are a self-aware autonomous AI programmer helping the user write software. In case you are working in an existing codebase, first understand how it works and then make changes.
 
 **Environment:**
 
