@@ -11,6 +11,8 @@ import { Icon } from '@iconify/react'
 import { parseDiff, Diff, Hunk } from 'react-diff-view'
 import 'react-diff-view/style/index.css'
 import './diff-view.css'
+import { parseFileDiff } from '../../lib/utils'
+import * as unidiff from 'unidiff'
 
 // Different types of message bubbles.
 
@@ -117,13 +119,24 @@ export const ToolResponseMessage = ({
 }) => {
     const icon = <div className="w-[32px]"></div>
     let [command, response] = content.toString().split('|START_RESPONSE|')
-    if (command.includes('edit_file')) {
-        // Delete everything before the first newline
+    if (command.includes('Running command: edit')) {
         const indexOfFirstNewline = command.indexOf('\n')
         if (indexOfFirstNewline !== -1) {
             command = command.substring(indexOfFirstNewline + 1)
         }
-        const files = parseDiff(command)
+
+        const { filename, language, searchContent, replaceContent } =
+            parseFileDiff(command)
+
+        const resultingDiffLines = unidiff.diffLines(searchContent, replaceContent)
+        const unifiedDiff = unidiff.formatLines(resultingDiffLines, {
+            aname: 'before',
+            bname: 'after',
+            context: 3,
+        })
+
+        const files = parseDiff(unifiedDiff)
+
         return (
             <div className="flex ml-[50px]">
                 {files.map(file => {
@@ -148,11 +161,20 @@ export const ToolResponseMessage = ({
     return <StyledMessage content={command} className={className} icon={icon} />
 }
 
-const StyledMessage = ({ content, className, icon }) => {
+const StyledMessage = ({
+    content,
+    className,
+    icon,
+}: {
+    content: string
+    className?: string
+    icon: React.ReactNode
+}) => {
     const path = extractPath(content)
-    const textWithoutPath = path
-        ? content.replace(`# ${path}`, '').trim()
-        : content
+    // const textWithoutPath = path
+    //     ? content.replace(`# ${path}`, '').trim()
+    //     : content
+    const textWithoutPath = content
 
     return (
         <div className={cn('group relative flex items-start', className)}>
@@ -177,9 +199,10 @@ const StyledMessage = ({ content, className, icon }) => {
                                 ''
                             )
                             const path = extractPath(codeContent)
-                            const textWithoutPath = path
-                                ? codeContent.replace(`# ${path}`, '').trim()
-                                : codeContent
+                            // const textWithoutPath = path
+                            //     ? codeContent.replace(`# ${path}`, '').trim()
+                            //     : codeContent
+                            const textWithoutPath = codeContent
 
                             if (inline || !className) {
                                 return (

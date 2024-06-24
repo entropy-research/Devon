@@ -98,6 +98,7 @@
         "remark-math": "^6.0.0",
         "tailwind-merge": "^2.3.0",
         "tailwindcss-animate": "^1.0.7",
+        "unidiff": "^1.0.4",
         "use-resize-observer": "^9.1.0",
         "xstate": "^5.13.0"
     }
