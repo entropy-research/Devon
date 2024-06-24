@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import CodeEditor from './components/code-editor'
 import ShellPanel from '@/panels/shell/shell-panel'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
@@ -27,6 +27,7 @@ const boilerplateFile = {
 `,
     },
 }
+
 const boilerplateFile2 = {
     id: 'hello.py',
     name: 'hello.py',
@@ -46,6 +47,7 @@ const EditorPanel = ({
 }) => {
     const { toast } = useToast()
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
+    const prevInitialFilesRef = useRef<File[]>([])
 
     const messages = SessionMachineContext.useSelector(state =>
         state.context.serverEventContext.messages.filter(
@@ -78,11 +80,31 @@ const EditorPanel = ({
             return []
         }
     })
+
     const files = useFileWatcher(initialFiles, path)
+
+    useEffect(() => {
+        const prevInitialFiles = prevInitialFilesRef.current
+        // console.log('prev', prevInitialFiles) // For debugging
+
+        // Detect new files in initialFiles
+        const newFiles = initialFiles.filter(
+            file =>
+                !prevInitialFiles.some(prevFile => prevFile.path === file.path)
+        )
+        // console.log('new', newFiles)  // For debugging
+
+        if (newFiles.length > 0 && selectedFileId !== newFiles[0].id) {
+            setSelectedFileId(newFiles[0].id)
+        }
+
+        // Update the ref for the next comparison
+        prevInitialFilesRef.current = initialFiles
+    }, [initialFiles])
 
     if (files && files.length > 0 && !selectedFileId) {
         setSelectedFileId(files[0].id)
-    } else if ((!files || files.length === 0) && selectedFileId) {
+    } else if (!files || (files.length === 0 && selectedFileId)) {
         setSelectedFileId(null)
     }
 
@@ -125,7 +147,10 @@ const EditorPanel = ({
                     </div>
                     <div className="flex flex-grow overflow-hidden">
                         <ResizablePanelGroup direction="horizontal">
-                            <ResizablePanel defaultSize={20} className="flex-none w-40 bg-midnight border-r border-outlinecolor">
+                            <ResizablePanel
+                                defaultSize={20}
+                                className="flex-none w-40 bg-midnight border-r border-outlinecolor"
+                            >
                                 <FileTree
                                     files={files}
                                     selectedFileId={selectedFileId}
@@ -134,7 +159,10 @@ const EditorPanel = ({
                                 />
                             </ResizablePanel>
                             <ResizableHandle />
-                            <ResizablePanel defaultSize={80} className="flex-grow flex flex-col overflow-hidden">
+                            <ResizablePanel
+                                defaultSize={80}
+                                className="flex-grow flex flex-col overflow-hidden"
+                            >
                                 <CodeEditor
                                     files={files}
                                     selectedFileId={selectedFileId}

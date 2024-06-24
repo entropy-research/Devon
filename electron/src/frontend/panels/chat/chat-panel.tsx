@@ -45,7 +45,8 @@ export default function Chat({
     }
 
     return (
-        <div className="rounded-lg h-full w-full max-w-4xl flex flex-col flex-2">
+        // <div className="rounded-lg h-full w-full max-w-4xl flex flex-col flex-2">
+        <div className="rounded-lg h-full w-full flex flex-col flex-2">
             <ChatHeader sessionId={sessionId} headerIcon={headerIcon} />
             <div className="flex-1 overflow-y-auto">
                 {/* {!backendStarted && <div>Initializing...</div>} */}
