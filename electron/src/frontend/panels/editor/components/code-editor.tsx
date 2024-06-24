@@ -1,7 +1,9 @@
+import { useEffect, useState, useRef } from 'react'
 import Editor, { Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { File } from '@/lib/types'
+
 export default function CodeEditor({
     files,
     selectedFileId,
@@ -17,13 +19,23 @@ export default function CodeEditor({
     showEditorBorders: boolean
     path: string
 }): JSX.Element {
-    // const searchParams = useSearchParams()
-    // const chatId = searchParams.get('chat')
+    const [popoverVisible, setPopoverVisible] = useState(false)
+    const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 })
+    const [selectionInfo, setSelectionInfo] = useState<{
+        path: string | null
+        selection: string
+        startLineNumber: number
+        endLineNumber: number
+        startColumn: number
+        endColumn: number
+    } | null>(null)
+    const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
 
     const handleEditorDidMount = (
         editor: editor.IStandaloneCodeEditor,
         monaco: Monaco
     ) => {
+        editorRef.current = editor
         monaco.editor.defineTheme('theme', {
             base: 'vs-dark',
             inherit: true,
@@ -34,51 +46,76 @@ export default function CodeEditor({
         })
 
         monaco.editor.setTheme('theme')
+
+        editor.onDidChangeCursorSelection(e => {
+            const selection = editor.getSelection()
+            if (selection && !selection.isEmpty()) {
+                const range = new monaco.Range(
+                    selection.startLineNumber,
+                    selection.startColumn,
+                    selection.endLineNumber,
+                    selection.endColumn
+                )
+                const lineHeight = editor.getOption(
+                    monaco.editor.EditorOption.lineHeight
+                )
+                const top =
+                    editor.getTopForLineNumber(range.endLineNumber) +
+                    lineHeight +
+                    50
+                // const left = editor.getOffsetForColumn(
+                //     range.startLineNumber,
+                //     range.startColumn
+                // ) + 20
+                const lineNumberColWidth = 57
+                const left = lineNumberColWidth
+
+                const selectedText = editor.getModel()?.getValueInRange(range)
+                const startLineNumber = selection.startLineNumber
+                const endLineNumber = selection.endLineNumber
+                const startColumn = selection.startColumn
+                const endColumn = selection.endColumn
+
+                setSelectionInfo({
+                    path: selectedFileId,
+                    selection: selectedText,
+                    startLineNumber,
+                    endLineNumber,
+                    startColumn,
+                    endColumn,
+                })
+
+                setPopoverPosition({ top, left })
+                // setPopoverVisible(true)
+            } else {
+                setPopoverVisible(false)
+            }
+        })
     }
 
-    // if (!selectedFileId) {
-    //     return (
-    //         <>
-    //             <FileTabs
-    //                 files={files}
-    //                 selectedFileId={selectedFileId ?? files[0]?.id}
-    //                 setSelectedFileId={setSelectedFileId}
-    //                 // chatId={chatId}
-    //                 className={showEditorBorders ? '' : 'mr-[13px]'}
-    //                 isExpandedVariant={isExpandedVariant}
-    //             />
-    //             {files.length > 0 && (
-    //                 <PathDisplay path={'/Users/devon/projects/hello_world'} />
-    //             )}
-    //             <div className="w-full bg-workspace rounded-b-lg mt-[-2px]">
-    //                 {selectedFileId && (
-    //                     <BothEditorTypes
-    //                         file={files?.find(f => f.id === selectedFileId)}
-    //                         handleEditorDidMount={handleEditorDidMount}
-    //                     />
-    //                 )}
-    //             </div>
-    //         </>
-    //     )
-    // }
+    // Add a mouseup event listener to show the popover
+    useEffect(() => {
+        const handleMouseUp = () => {
+            const selection = editorRef.current?.getSelection()
+            if (selection && !selection.isEmpty()) {
+                setPopoverVisible(true)
+            }
+        }
 
-    const bgColor = getComputedStyle(document.documentElement)
-        .getPropertyValue('--bg-workspace')
-        .trim()
+        window.addEventListener('mouseup', handleMouseUp)
+        return () => {
+            window.removeEventListener('mouseup', handleMouseUp)
+        }
+    }, [])
 
-    // if (isExpandedVariant) {
-    //     return (
-    //         <div className="w-full bg-workspace rounded-b-lg overflow-hidden">
-    //             <BothEditorTypes
-    //                 file={files?.find(f => f.id === selectedFileId)}
-    //                 handleEditorDidMount={handleEditorDidMount}
-    //             />
-    //         </div>
-    //     )
-    // }
+    const handleAddCodeReference = () => {
+        console.log(JSON.stringify(selectionInfo, null, 2))
+        // Add your logic to handle the selected text
+        setPopoverVisible(false)
+    }
 
     return (
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden relative">
             <div className="flex-none overflow-x-auto whitespace-nowrap bg-night border-b border-outlinecolor">
                 <FileTabs
                     files={files}
@@ -98,6 +135,19 @@ export default function CodeEditor({
                         file={files?.find(f => f.id === selectedFileId)}
                         handleEditorDidMount={handleEditorDidMount}
                     />
+                )}
+                {popoverVisible && (
+                    <div
+                        className="absolute bg-night px-3 py-2 rounded-md shadow border hover:border-primary smooth-hover text-sm hover:bg-night"
+                        style={{
+                            top: popoverPosition.top,
+                            left: popoverPosition.left,
+                        }}
+                    >
+                        <button onClick={handleAddCodeReference}>
+                            Mention snippet in chat
+                        </button>
+                    </div>
                 )}
             </div>
         </div>
