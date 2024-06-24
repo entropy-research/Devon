@@ -30,7 +30,7 @@ from devon_agent.tools.usertools import AskUserTool, RespondUserTool
 from devon_agent.tools.utils import get_ignored_files
 from devon_agent.utils import DotDict, Event, decode_path
 from devon_agent.tools.codenav import CodeGoTo, CodeSearch
-from devon_agent.tools.semantic_search import SemanticSearch
+
 
 import chromadb
 
@@ -152,14 +152,14 @@ class Session:
         )
         local_environment.set_default_tool(ShellTool())
 
-        for collection in self.client.list_collections():
+        # for collection in self.client.list_collections():
             # print(collection.name,collection.name.replace("_", "/")[1:],self.base_path)
-            if decode_path(collection.name) == self.base_path:
-                print("added semantic search")
-                local_environment.register_tools({
-                    "semantic_search": SemanticSearch(),
-                    "respond" : RespondUserTool(),
-                })
+            # if decode_path(collection.name) == self.base_path:
+            #     print("added semantic search")
+            #     local_environment.register_tools({
+            #         "semantic_search": SemanticSearch(),
+            #         "respond" : RespondUserTool(),
+            #     })
         self.default_environment = local_environment
 
         if self.args.headless:
