@@ -78,13 +78,12 @@ export default function CodeEditor({
     // }
 
     return (
-        <div className="flex flex-col w-full h-full">
-            <div className="flex-none overflow-x-auto whitespace-nowrap">
+        <div className="flex flex-col h-full overflow-hidden">
+            <div className="flex-none overflow-x-auto whitespace-nowrap bg-night border-b border-outlinecolor">
                 <FileTabs
                     files={files}
                     selectedFileId={selectedFileId ?? null}
                     setSelectedFileId={setSelectedFileId}
-                    // chatId={chatId}
                     className={showEditorBorders ? '' : ''}
                     isExpandedVariant={isExpandedVariant}
                     loading={files.length === 0}
@@ -93,7 +92,7 @@ export default function CodeEditor({
             {files && (
                 <PathDisplay path={path} selectedFileId={selectedFileId} />
             )}
-            <div className="flex w-full h-full bg-midnight rounded-b-lg mt-[-2px]">
+            <div className="flex-grow w-full bg-midnight rounded-b-lg mt-[-2px] overflow-auto">
                 {selectedFileId && (
                     <BothEditorTypes
                         file={files?.find(f => f.id === selectedFileId)}

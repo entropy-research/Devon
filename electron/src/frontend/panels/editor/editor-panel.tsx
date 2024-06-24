@@ -118,7 +118,7 @@ const EditorPanel = ({
                             </p>
                         </button>
                     </div>
-                    <div className="flex flex-grow overflow-auto">
+                    <div className="flex flex-grow overflow-hidden">
                         <div className="flex-none w-40 bg-midnight border-r border-outlinecolor">
                             <FileTree
                                 files={files}
@@ -126,14 +126,16 @@ const EditorPanel = ({
                                 setSelectedFileId={setSelectedFileId}
                             />
                         </div>
-                        <CodeEditor
-                            files={files}
-                            selectedFileId={selectedFileId}
-                            setSelectedFileId={setSelectedFileId}
-                            isExpandedVariant={isExpandedVariant}
-                            showEditorBorders={showEditorBorders}
-                            path={path}
-                        />
+                        <div className="flex-grow flex flex-col overflow-hidden">
+                            <CodeEditor
+                                files={files}
+                                selectedFileId={selectedFileId}
+                                setSelectedFileId={setSelectedFileId}
+                                isExpandedVariant={isExpandedVariant}
+                                showEditorBorders={showEditorBorders}
+                                path={path}
+                            />
+                        </div>
                     </div>
                     <div className={`h-[23vh] ${showEditorBorders ? '' : ''}`}>
                         <ShellPanel messages={messages} />
