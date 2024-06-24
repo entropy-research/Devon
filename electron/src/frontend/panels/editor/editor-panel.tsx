@@ -124,6 +124,7 @@ const EditorPanel = ({
                                 files={files}
                                 selectedFileId={selectedFileId}
                                 setSelectedFileId={setSelectedFileId}
+                                projectPath={path}
                             />
                         </div>
                         <div className="flex-grow flex flex-col overflow-hidden">

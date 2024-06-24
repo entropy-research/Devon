@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-
 import {
     getLanguageFromFilename,
     getIconFromFilename,
@@ -18,16 +17,16 @@ const useFileWatcher = (initialFiles: File[], dirPath: string) => {
     useEffect(() => {
         const startWatching = async () => {
             if (!dirPath) {
-                return
+                return () => {}
             }
-            console.log('Starting file watcher', dirPath)
+
             const success = await window.api.invoke('watch-dir', dirPath)
             if (!success) {
                 console.error('Failed to start watching directory')
-                return
+                return () => {}
             }
 
-            window.api.receive('file-changes', (events: FileEvent[]) => {
+            const handleFileChanges = (events: FileEvent[]) => {
                 setFiles(prevFiles => {
                     const fileMap = new Map(
                         prevFiles.map(file => [file.path, file])
@@ -60,7 +59,9 @@ const useFileWatcher = (initialFiles: File[], dirPath: string) => {
 
                     return Array.from(fileMap.values())
                 })
-            })
+            }
+
+            window.api.receive('file-changes', handleFileChanges)
 
             return () => {
                 window.api.send('unsubscribe')
@@ -68,7 +69,18 @@ const useFileWatcher = (initialFiles: File[], dirPath: string) => {
             }
         }
 
-        startWatching()
+        let cleanup: () => void
+
+        startWatching().then(cleanupFn => {
+            cleanup = cleanupFn
+        })
+
+        return () => {
+            if (cleanup) {
+                cleanup()
+            }
+            setFiles([])
+        }
     }, [dirPath])
 
     return files

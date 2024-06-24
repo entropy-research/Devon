@@ -225,7 +225,7 @@ const TreeIndicator = forwardRef<
             dir={direction}
             ref={ref}
             className={cn(
-                'h-full w-px bg-muted absolute left-1.5 rtl:right-1.5 py-3 rounded-md hover:bg-slate-300 duration-300 ease-in-out',
+                'h-full w-px bg-batman absolute left-4 rtl:right-1.5 py-3 rounded-md hover:bg-slate-300 duration-300 ease-in-out',
                 className
             )}
             {...props}
@@ -279,20 +279,33 @@ const Folder = forwardRef<
             >
                 <AccordionPrimitive.Trigger
                     className={cn(
-                        `flex items-center gap-1 text-sm rounded-md`,
-                        className,
+                        `flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman`,
                         {
-                            'bg-muted rounded-md': isSelect && isSelectable,
+                            'bg-night': isSelect && isSelectable,
                             'cursor-pointer': isSelectable,
                             'cursor-not-allowed opacity-50': !isSelectable,
-                        }
+                        },
+                        className
                     )}
                     disabled={!isSelectable}
                     onClick={() => handleExpand(value)}
                 >
+                    {/* {expendedItems?.includes(value)
+                        ? openIcon ?? <FolderOpenIcon className="h-4 w-4 mr-1" />
+                        : closeIcon ?? <FolderIcon className="h-4 w-4 mr-1" />} */}
                     {expendedItems?.includes(value)
-                        ? openIcon ?? <FolderOpenIcon className="h-4 w-4" />
-                        : closeIcon ?? <FolderIcon className="h-4 w-4" />}
+                        ? openIcon ?? (
+                              <Icon
+                                  icon="vscode-icons:default-folder-opened"
+                                  className="h-4 w-4 mr-2 ml-[2px]"
+                              />
+                          )
+                        : closeIcon ?? (
+                              <Icon
+                                  icon="vscode-icons:default-folder"
+                                  className="h-4 w-4 mr-2 ml-[2px]"
+                              />
+                          )}
                     <span>{element}</span>
                 </AccordionPrimitive.Trigger>
                 <AccordionPrimitive.Content className="text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down relative overflow-hidden h-full">

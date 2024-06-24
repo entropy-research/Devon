@@ -78,9 +78,7 @@
     }
     body {
         @apply bg-background text-foreground;
-        font-feature-settings:
-            'rlig' 1,
-            'calt' 1;
+        font-feature-settings: 'rlig' 1, 'calt' 1;
     }
 
     html {
@@ -118,6 +116,40 @@
     }
 
     */
+
+    .horizontal-scrollbar {
+        position: relative;
+        overflow-x: auto;
+    }
+
+    .horizontal-scrollbar::after {
+        content: '';
+        display: block;
+        height: 0px;
+        background: #1e1e1e;
+    }
+
+    .horizontal-scrollbar::-webkit-scrollbar {
+        height: 3px;
+        background-color: #1e1e1e;
+        position: absolute;
+    }
+
+    .horizontal-scrollbar::-webkit-scrollbar-thumb {
+        background-color: transparent;
+        border-radius: 4px;
+        transition: background-color 0.3s ease, opacity 0.3s ease;
+        opacity: 0;
+    }
+
+    .group:hover .horizontal-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(131, 131, 131, 0.5);
+        opacity: 1;
+    }
+
+    .horizontal-scrollbar::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
 }
 
 @layer components {

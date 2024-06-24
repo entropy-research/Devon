@@ -4,6 +4,30 @@ import path from 'path'
 
 const parcelWatcher = require('@parcel/watcher')
 
+const IGNORE_PATTERNS = [
+    '.DS_Store',
+    '._*',
+    '.AppleDouble',
+    'Thumbs.db',
+    'desktop.ini',
+    '.*.swp',
+    '.*.swo',
+    '.*~',
+    '*.tmp',
+    'node_modules',
+    '.git',
+    '__pycache__',
+]
+
+const shouldIgnoreFile = (filePath: string): boolean => {
+    return IGNORE_PATTERNS.some(pattern => {
+        const regex = new RegExp(
+            pattern.replace(/\./g, '\\.').replace(/\*/g, '.*')
+        )
+        return regex.test(filePath)
+    })
+}
+
 ipcMain.handle('watch-dir', async (event, dirPath) => {
     const fileContents = new Map()
 
@@ -13,6 +37,10 @@ ipcMain.handle('watch-dir', async (event, dirPath) => {
 
         for (const file of files) {
             const filePath = path.join(dir, file.name)
+            if (shouldIgnoreFile(filePath)) {
+                continue
+            }
+
             if (file.isDirectory()) {
                 fileEvents.push(...(await readDirectory(filePath)))
             } else {
@@ -42,6 +70,8 @@ ipcMain.handle('watch-dir', async (event, dirPath) => {
             event.sender.send('file-changes', initialEvents)
         }, 1000)
 
+        let timeoutId: NodeJS.Timeout | null = null
+
         const subscription = await parcelWatcher.subscribe(
             dirPath,
             async (err: any, events: any) => {
@@ -52,6 +82,10 @@ ipcMain.handle('watch-dir', async (event, dirPath) => {
 
                 const updatedEvents = []
                 for (const e of events) {
+                    if (shouldIgnoreFile(e.path)) {
+                        continue
+                    }
+
                     if (e.type === 'update') {
                         try {
                             const newContent = await fsPromise.readFile(
@@ -72,7 +106,14 @@ ipcMain.handle('watch-dir', async (event, dirPath) => {
                         updatedEvents.push(e)
                     }
                 }
-                event.sender.send('file-changes', updatedEvents)
+
+                // Debounce the event sending
+                if (timeoutId) {
+                    clearTimeout(timeoutId)
+                }
+                timeoutId = setTimeout(() => {
+                    event.sender.send('file-changes', updatedEvents)
+                }, 500) // Adjust debounce timing as needed
             }
         )
 

@@ -127,6 +127,17 @@ const BothEditorTypes = ({
     />
 )
 
+function getPathBeforeLastSlash(str: string) {
+    // Remove trailing slash if it exists
+    str = str.replace(/\/$/, '')
+
+    // Find the position of the last slash
+    const lastSlashIndex = str.lastIndexOf('/')
+
+    // Return the substring before the last slash
+    return lastSlashIndex !== -1 ? str.substring(0, lastSlashIndex) : ''
+}
+
 const PathDisplay = ({
     path,
     selectedFileId,
@@ -135,12 +146,18 @@ const PathDisplay = ({
     selectedFileId: string
 }) => (
     <div
-        className={`-mt-[1px] px-3 py-1 border-t border-outlinecolor ${
-            selectedFileId ? 'bg-night' : ''
+        className={`px-3 pb-[4px] ${
+            selectedFileId ? 'bg-night -mt-[2px]' : 'pt-[3px]'
         }`}
     >
         <p className="text-xs text-neutral-500">
-            {path ? convertPath(path) : ''}
+            {selectedFileId
+                ? convertPath(
+                      selectedFileId.replace(getPathBeforeLastSlash(path), '')
+                  )
+                : path
+                ? convertPath(path)
+                : ''}
         </p>
     </div>
 )

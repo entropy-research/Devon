@@ -138,7 +138,7 @@ const mappings: Mappings = {
     },
     tsx: {
         language: 'typescript',
-        icon: 'vscode-icons:file-type-typescript-official',
+        icon: 'vscode-icons:file-type-reactts',
     },
     spec: { language: 'typespec', icon: 'file-icons:typespec' },
     vb: { language: 'vb', icon: 'vscode-icons:file-type-visualstudio' },
@@ -146,6 +146,11 @@ const mappings: Mappings = {
     xml: { language: 'xml', icon: 'vscode-icons:file-type-xml' },
     yaml: { language: 'yaml', icon: 'vscode-icons:file-type-yaml' },
     yml: { language: 'yaml', icon: 'vscode-icons:file-type-yaml' },
+    ipynb: { language: 'jupyter', icon: 'vscode-icons:jupyter' },
+    txt: { language: 'txt', icon: 'vscode-icons:file-type-text' },
+    gitignore: { language: 'gitignore', icon: 'vscode-icons:file-type-git' },
+    json: { language: 'json', icon: 'vscode-icons:file-type-json' },
+    env: { language: 'dotenv', icon: 'vscode-icons:file-type-dotenv'}
 }
 
 // Function to get language from filename
