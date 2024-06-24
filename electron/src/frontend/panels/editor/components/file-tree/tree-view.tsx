@@ -1,9 +1,11 @@
 import { cn } from '@/lib/utils'
-import React, { forwardRef, useCallback, useRef } from 'react'
+import React, { forwardRef, useCallback, useRef, useState } from 'react'
 import useResizeObserver from 'use-resize-observer'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Tree, Folder, File, TreeViewElement } from './tree-view-api'
 import { Skeleton } from '@/components/ui/skeleton'
+import * as AccordionPrimitive from '@radix-ui/react-accordion'
+import { ChevronDown } from 'lucide-react'
 
 interface TreeViewComponentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -15,6 +17,7 @@ type TreeViewProps = {
     setSelectedFileId: (id: string) => void
     indicator?: boolean
     loading?: boolean
+    projectName?: string
 } & (
     | {
           initialExpendedItems?: string[]
@@ -38,8 +41,10 @@ export const TreeView = ({
     expandAll,
     indicator = false,
     loading = false,
+    projectName,
 }: TreeViewProps) => {
     const containerRef = useRef<HTMLDivElement>(null)
+    const [openItems, setOpenItems] = useState<string[]>(['1'])
 
     const { getVirtualItems, getTotalSize } = useVirtualizer({
         count: elements.length,
@@ -86,26 +91,53 @@ export const TreeView = ({
                 className
             )}
         >
-            <Tree
-                files={files}
-                selectedFileId={selectedFileId}
-                setSelectedFileId={setSelectedFileId}
-                initialSelectedId={initialSelectedId}
-                initialExpendedItems={initialExpendedItems}
-                elements={elements}
-                style={{ height, width }}
-                className="h-full overflow-y-auto"
-                id="tree"
+            <AccordionPrimitive.Root
+                type="multiple"
+                value={openItems}
+                onValueChange={setOpenItems}
             >
-                {getVirtualItems().map(element => (
-                    <TreeItem
-                        aria-label="Root"
-                        key={element.key}
-                        elements={[elements[element.index]]}
-                        indicator={indicator}
-                    />
-                ))}
-            </Tree>
+                <AccordionPrimitive.Item value={'1'}>
+                    <AccordionPrimitive.Trigger className="flex w-full">
+                        {projectName && (
+                            <span className="flex pl-1 pr-1 py-1 items-center w-full flex-1 truncate text-left">
+                                <ChevronDown
+                                    className={cn(
+                                        'h-4 w-4 transition-transform duration-200 ease-in-out text-neutral-500 mr-[3px]',
+                                        openItems.includes('1')
+                                            ? ''
+                                            : '-rotate-90'
+                                    )}
+                                />
+                                <p className="uppercase text-xs font-semibold text-neutral-500 flex-1 truncate text-left">
+                                    {projectName}
+                                </p>
+                            </span>
+                        )}
+                    </AccordionPrimitive.Trigger>
+                    <AccordionPrimitive.Content className="text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down relative overflow-hidden h-full">
+                        <Tree
+                            files={files}
+                            selectedFileId={selectedFileId}
+                            setSelectedFileId={setSelectedFileId}
+                            initialSelectedId={initialSelectedId}
+                            initialExpendedItems={initialExpendedItems}
+                            elements={elements}
+                            style={{ height, width }}
+                            className="h-full overflow-y-auto"
+                            id="tree"
+                        >
+                            {getVirtualItems().map(element => (
+                                <TreeItem
+                                    aria-label="Root"
+                                    key={element.key}
+                                    elements={[elements[element.index]]}
+                                    indicator={indicator}
+                                />
+                            ))}
+                        </Tree>
+                    </AccordionPrimitive.Content>
+                </AccordionPrimitive.Item>
+            </AccordionPrimitive.Root>
         </div>
     )
 }

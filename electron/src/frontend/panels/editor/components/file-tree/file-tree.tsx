@@ -22,7 +22,8 @@ export default function FileTree({
             elements={fileTree}
             initialSelectedId={selectedFileId ?? undefined}
             indicator
-            loading={files.length === 0}
+            loading={!projectPath && files.length === 0}
+            projectName={projectPath ? projectPath.split('/').pop() : undefined}
         />
     )
 }

@@ -137,17 +137,16 @@ export default function CodeEditor({
                     />
                 )}
                 {popoverVisible && (
-                    <div
+                    <button
+                        onClick={handleAddCodeReference}
                         className="absolute bg-night px-3 py-2 rounded-md shadow border hover:border-primary smooth-hover text-sm hover:bg-night"
                         style={{
                             top: popoverPosition.top,
                             left: popoverPosition.left,
                         }}
                     >
-                        <button onClick={handleAddCodeReference}>
-                            Mention snippet in chat
-                        </button>
-                    </div>
+                        Mention snippet in chat
+                    </button>
                 )}
             </div>
         </div>

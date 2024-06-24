@@ -14,11 +14,12 @@ import React, { ReactNode } from 'react'
 
 interface CustomScrollbarProps {
     children: ReactNode
+    innerRef?: React.RefObject<HTMLDivElement>
 }
 
-const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children }) => {
+const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children, innerRef }) => {
     return (
-        <div className="horizontal-scrollbar overflow-x-auto">{children}</div>
+        <div ref={innerRef} className="horizontal-scrollbar overflow-x-auto">{children}</div>
     )
 }
 
@@ -45,48 +46,51 @@ const FileTabs = ({
     loading?: boolean
 }) => {
     const fileRefs = useRef(new Map<string, HTMLButtonElement>())
+    const scrollContainerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (selectedFileId && fileRefs.current.has(selectedFileId)) {
             const selectedFileElement = fileRefs.current.get(selectedFileId)
-            if (selectedFileElement) {
-                setTimeout(() => {
-                    selectedFileElement.scrollIntoView({
-                        // behavior: 'smooth',
-                        block: 'nearest',
-                        inline: 'center',
-                    })
-                }, 0)
+            const scrollContainer = scrollContainerRef.current
+            if (selectedFileElement && scrollContainer) {
+                const elementRect = selectedFileElement.getBoundingClientRect()
+                const containerRect = scrollContainer.getBoundingClientRect()
+
+                if (elementRect.left < containerRect.left) {
+                    // Element is out of view on the left side
+                    scrollContainer.scrollLeft -=
+                        containerRect.left - elementRect.left
+                } else if (elementRect.right > containerRect.right) {
+                    // Element is out of view on the right side
+                    scrollContainer.scrollLeft +=
+                        elementRect.right - containerRect.right
+                }
             }
         }
     }, [selectedFileId])
+
+    const showSelectedTabSkeleton = false
 
     return (
         <div
             className={`flex justify-between bg-[#141414] items-center group ${className}`}
         >
-            <CustomScrollbar>
+            <CustomScrollbar innerRef={scrollContainerRef}>
                 <div className="flex items-center justify-start no-scrollbar">
-                    {loading
+                    {false // Set to loading or false
                         ? Array.from({ length: 2 }).map((_, index) => (
                               <button
                                   key={index}
-                                  className={`flex justify-center items-center px-4 ${
-                                      false ? 'pr-5' : ''
-                                  } py-[6px] text-sm border-t-[1.5px] ${
-                                      index === 0
-                                          ? `border-t-primary rounded-t-sm bg-night border-b-[1px] border-b-night ${
-                                                index === 0
-                                                    ? 'border-r-[1px] border-r-outlinecolor'
-                                                    : 'border-x-[1px] border-x-outlinecolor'
-                                            } z-10`
-                                          : 'border-transparent outline outline-[1px] outline-outlinecolor'
+                                  className={`flex justify-center items-center px-4 py-[8px] text-sm border-t-[1.5px] ${
+                                      showSelectedTabSkeleton && index === 0
+                                          ? `border-t-primary rounded-t-sm bg-night border-b-[1px] border-b-night border-r-[1px] border-r-outlinecolor z-10`
+                                          : 'border-r border-r-outlinecolor border-t-transparent'
                                   }`}
                               >
                                   <Skeleton
                                       key={index}
                                       className={`w-[68px] h-3 my-[3px] rounded-[3px] ${
-                                          index === 0
+                                          showSelectedTabSkeleton && index === 0
                                               ? 'bg-neutral-800'
                                               : 'bg-night'
                                       }`}
@@ -110,9 +114,9 @@ const FileTabs = ({
                                           ? `border-t-primary rounded-t-sm bg-night border-b-[1px] border-b-night ${
                                                 index === 0
                                                     ? 'border-r-[1px] border-r-outlinecolor'
-                                                    : 'border-x-[1px] border-x-outlinecolor'
+                                                    : 'border-r-[1px] border-x-outlinecolor'
                                             } z-10`
-                                          : 'border-transparent outline outline-[1px] outline-outlinecolor'
+                                          : 'border-t-transparent border-r border-b'
                                   }`}
                                   onClick={() => setSelectedFileId(file.id)}
                               >

@@ -1,7 +1,7 @@
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import * as AccordionPrimitive from '@radix-ui/react-accordion'
-import { FileIcon, FolderIcon, FolderOpenIcon } from 'lucide-react'
+import { FileIcon } from 'lucide-react'
 import React, {
     createContext,
     forwardRef,
@@ -12,6 +12,12 @@ import React, {
 } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@iconify/react'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 type TreeViewElement = {
     id: string
@@ -277,37 +283,47 @@ const Folder = forwardRef<
                 value={value}
                 className="relative overflow-hidden h-full"
             >
-                <AccordionPrimitive.Trigger
-                    className={cn(
-                        `flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman`,
-                        {
-                            'bg-night': isSelect && isSelectable,
-                            'cursor-pointer': isSelectable,
-                            'cursor-not-allowed opacity-50': !isSelectable,
-                        },
-                        className
-                    )}
-                    disabled={!isSelectable}
-                    onClick={() => handleExpand(value)}
-                >
-                    {/* {expendedItems?.includes(value)
-                        ? openIcon ?? <FolderOpenIcon className="h-4 w-4 mr-1" />
-                        : closeIcon ?? <FolderIcon className="h-4 w-4 mr-1" />} */}
-                    {expendedItems?.includes(value)
-                        ? openIcon ?? (
-                              <Icon
-                                  icon="vscode-icons:default-folder-opened"
-                                  className="h-4 w-4 mr-2 ml-[2px]"
-                              />
-                          )
-                        : closeIcon ?? (
-                              <Icon
-                                  icon="vscode-icons:default-folder"
-                                  className="h-4 w-4 mr-2 ml-[2px]"
-                              />
-                          )}
-                    <span>{element}</span>
-                </AccordionPrimitive.Trigger>
+                <TooltipProvider delayDuration={1500}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <AccordionPrimitive.Trigger
+                                className={cn(
+                                    `flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman`,
+                                    {
+                                        'bg-night': isSelect && isSelectable,
+                                        'cursor-pointer': isSelectable,
+                                        'cursor-not-allowed opacity-50':
+                                            !isSelectable,
+                                    },
+                                    className
+                                )}
+                                disabled={!isSelectable}
+                                onClick={() => handleExpand(value)}
+                            >
+                                {expendedItems?.includes(value)
+                                    ? openIcon ?? (
+                                          <Icon
+                                              icon="vscode-icons:default-folder-opened"
+                                              className="h-4 w-4 mr-2 ml-[2px]"
+                                          />
+                                      )
+                                    : closeIcon ?? (
+                                          <Icon
+                                              icon="vscode-icons:default-folder"
+                                              className="h-4 w-4 mr-2 ml-[2px]"
+                                          />
+                                      )}
+                                <span className="flex-1 truncate text-left">
+                                    {element}
+                                </span>
+                            </AccordionPrimitive.Trigger>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" align="end">
+                            <p>{value}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+
                 <AccordionPrimitive.Content className="text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down relative overflow-hidden h-full">
                     {element && indicator && (
                         <TreeIndicator aria-hidden="true" />
@@ -362,37 +378,46 @@ const File = forwardRef<
         const isSelected = isSelect ?? selectedId === value
         return (
             <AccordionPrimitive.Item value={value} className="relative w-full">
-                <AccordionPrimitive.Trigger
-                    ref={ref}
-                    {...props}
-                    dir={direction}
-                    disabled={!isSelectable}
-                    aria-label="File"
-                    className={cn(
-                        'flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman',
-                        {
-                            'bg-night': isSelected && isSelectable,
-                        },
-                        isSelectable
-                            ? 'cursor-pointer'
-                            : 'opacity-50 cursor-not-allowed',
-                        className
-                    )}
-                    onClick={() => selectItem(value)}
-                >
-                    {fileIcon ? (
-                        <Icon
-                            icon={fileIcon}
-                            className="h-4 w-4 ml-[2px] mr-2"
-                        />
-                    ) : (
-                        <FileIcon className="h-4 w-4 ml-[2px] mr-2 text-gray-300" />
-                    )}
-                    {children}
-                    {isSelected && (
-                        <span className="absolute top-0 left-0 h-full w-[1.5px] bg-primary" />
-                    )}
-                </AccordionPrimitive.Trigger>
+                <TooltipProvider delayDuration={1500}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <AccordionPrimitive.Trigger
+                                ref={ref}
+                                {...props}
+                                dir={direction}
+                                disabled={!isSelectable}
+                                aria-label="File"
+                                className={cn(
+                                    'flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman',
+                                    {
+                                        'bg-night': isSelected && isSelectable,
+                                    },
+                                    isSelectable
+                                        ? 'cursor-pointer'
+                                        : 'opacity-50 cursor-not-allowed',
+                                    className
+                                )}
+                                onClick={() => selectItem(value)}
+                            >
+                                {fileIcon ? (
+                                    <Icon
+                                        icon={fileIcon}
+                                        className="h-4 w-4 ml-[2px] mr-2"
+                                    />
+                                ) : (
+                                    <FileIcon className="h-4 w-4 ml-[2px] mr-2 text-gray-300" />
+                                )}
+                                {children}
+                                {isSelected && (
+                                    <span className="absolute top-0 left-0 h-full w-[1.5px] bg-primary" />
+                                )}
+                            </AccordionPrimitive.Trigger>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" align="end">
+                            <p>{value}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </AccordionPrimitive.Item>
         )
     }

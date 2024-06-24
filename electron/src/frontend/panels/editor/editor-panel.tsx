@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import CodeEditor from './components/code-editor'
 import ShellPanel from '@/panels/shell/shell-panel'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
@@ -16,6 +16,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from '@/components/ui/resizable'
+import EditorPanelHeader from './components/editor-panel-header'
 
 const boilerplateFile = {
     id: 'main.py',
@@ -45,7 +46,6 @@ const EditorPanel = ({
     chatId: string | null
     isExpandedVariant?: boolean
 }) => {
-    const { toast } = useToast()
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
     const prevInitialFilesRef = useRef<File[]>([])
 
@@ -122,29 +122,7 @@ const EditorPanel = ({
                 }`}
             >
                 <div className="flex flex-col flex-grow w-full h-full">
-                    <div className="w-full border-b border-outlinecolor flex justify-center py-1 relative">
-                        <div className="flex space-x-2 ml-2 mr-4 absolute left-1 top-[11px] opacity-80">
-                            <div className="w-[9px] h-[9px] bg-red-500 rounded-full"></div>
-                            <div className="w-[9px] h-[9px] bg-yellow-400 rounded-full"></div>
-                            <div className="w-[9px] h-[9px] bg-green-500 rounded-full"></div>
-                        </div>
-                        <button
-                            onClick={() =>
-                                toast({
-                                    title: 'Hey! ~ Devon waves at you ~ 👋',
-                                })
-                            }
-                            className="group smooth-hover bg-night px-[100px] border border-outlinecolor rounded-md my-1 flex gap-[5px] items-center"
-                        >
-                            <Bot
-                                size={12}
-                                className="group-hover:smooth-hover group-hover:text-white text-neutral-400 mb-[2px] -ml-2"
-                            />
-                            <p className="group-hover:smooth-hover group-hover:text-white text-[0.8rem] text-neutral-400">
-                                Devon
-                            </p>
-                        </button>
-                    </div>
+                    <EditorPanelHeader path={path} />
                     <div className="flex flex-grow overflow-hidden">
                         <ResizablePanelGroup direction="horizontal">
                             <ResizablePanel
