@@ -1,50 +1,24 @@
 import Editor, { Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
-import { useState } from 'react'
-import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { File } from '@/lib/types'
-import { getLanguageFromFilename, getIconFromFilename } from '@/lib/programming-language-utils'
-
 export default function CodeEditor({
+    files,
+    selectedFileId,
+    setSelectedFileId,
     isExpandedVariant = false,
     showEditorBorders,
     path,
 }: {
+    files: File[]
+    selectedFileId: string | null
+    setSelectedFileId: (id: string) => void
     isExpandedVariant?: boolean
     showEditorBorders: boolean
     path: string
 }): JSX.Element {
     // const searchParams = useSearchParams()
     // const chatId = searchParams.get('chat')
-
-    const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
-
-    const files: File[] = SessionMachineContext.useSelector(state => {
-        if (
-            state.context.sessionState?.editor &&
-            state.context.sessionState.editor.files
-        ) {
-            return Object.keys(state.context.sessionState.editor.files).map(
-                filepath => ({
-                    id: filepath,
-                    name: filepath.split('/').pop() ?? 'unnamed_file',
-                    path: filepath,
-                    language: getLanguageFromFilename((filepath.split('/').pop())),
-                    value: state.context.sessionState.editor.files[filepath],
-                    icon: getIconFromFilename(filepath.split('/').pop()),
-                })
-            )
-        } else {
-            return []
-        }
-    })
-
-    if (files && files.length > 0 && !selectedFileId) {
-        setSelectedFileId(files[0].id)
-    } else if ((!files || files.length === 0) && selectedFileId) {
-        setSelectedFileId(null)
-    }
 
     const handleEditorDidMount = (
         editor: editor.IStandaloneCodeEditor,
@@ -131,9 +105,15 @@ export default function CodeEditor({
     )
 }
 
-const BothEditorTypes = ({ file, handleEditorDidMount }: {
+const BothEditorTypes = ({
+    file,
+    handleEditorDidMount,
+}: {
     file: File | undefined
-    handleEditorDidMount: (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => void
+    handleEditorDidMount: (
+        editor: editor.IStandaloneCodeEditor,
+        monaco: Monaco
+    ) => void
 }) => (
     <Editor
         className="h-full"

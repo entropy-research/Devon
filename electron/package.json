@@ -55,6 +55,7 @@
     "dependencies": {
         "@electron/fuses": "^1.8.0",
         "@monaco-editor/react": "^4.6.0",
+        "@parcel/watcher": "^2.4.1",
         "@radix-ui/react-accordion": "^1.1.2",
         "@radix-ui/react-checkbox": "^1.0.4",
         "@radix-ui/react-dialog": "^1.0.5",
@@ -66,6 +67,7 @@
         "@radix-ui/react-tabs": "^1.0.4",
         "@radix-ui/react-toast": "^1.1.5",
         "@tailwindcss/container-queries": "^0.1.1",
+        "@tanstack/react-virtual": "^3.7.0",
         "@vitejs/plugin-react": "^4.3.1",
         "@xstate/react": "^4.1.1",
         "@xterm/addon-fit": "^0.10.0",
@@ -95,6 +97,7 @@
         "remark-math": "^6.0.0",
         "tailwind-merge": "^2.3.0",
         "tailwindcss-animate": "^1.0.7",
+        "use-resize-observer": "^9.1.0",
         "xstate": "^5.13.0"
     }
 }

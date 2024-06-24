@@ -11,6 +11,7 @@ import path from 'path'
 import { ChildProcess, spawn } from 'child_process'
 import portfinder from 'portfinder'
 import fs from 'fs'
+import './plugins/editor'
 
 const DEBUG_MODE = false
 const DEV_MODE = true
@@ -260,7 +261,7 @@ ipcMain.on('get-port', event => {
 ipcMain.on('get-file-path', event => {
     dialog
         .showOpenDialog({
-            properties: ['openDirectory',"createDirectory"],
+            properties: ['openDirectory', 'createDirectory'],
         })
         .then(result => {
             if (!result.canceled && result.filePaths.length > 0) {

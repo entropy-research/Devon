@@ -22,9 +22,12 @@ type Channel =
     | 'get-port'
     | 'get-port-response'
     | 'server-error'
+    | 'watch-dir' // For editor
+    | 'file-changes' // For editor
+    | 'unsubscribe' // For editor
 
 const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
-    send: ['get-file-path', 'ping', 'server-port', 'get-port'],
+    send: ['get-file-path', 'ping', 'server-port', 'get-port', 'unsubscribe'],
     invoke: [
         'ping',
         'get-file-path',
@@ -35,12 +38,14 @@ const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
         'delete-encrypted-data',
         'check-has-encrypted-data',
         'spawn-devon-agent',
+        'watch-dir',
     ],
     receive: [
         'file-path-response',
         'server-port',
         'get-port-response',
         'server-error',
+        'file-changes',
     ],
 }
 

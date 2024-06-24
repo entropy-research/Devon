@@ -1,8 +1,16 @@
+import { useState } from 'react'
 import CodeEditor from './components/code-editor'
 import ShellPanel from '@/panels/shell/shell-panel'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Bot } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
+import FileTree from './components/file-tree/file-tree'
+import { File } from '@/lib/types'
+import {
+    getLanguageFromFilename,
+    getIconFromFilename,
+} from '@/lib/programming-language-utils'
+import useFileWatcher from './lib/hooks/use-file-watcher'
 
 const boilerplateFile = {
     id: 'main.py',
@@ -32,15 +40,46 @@ const EditorPanel = ({
     isExpandedVariant?: boolean
 }) => {
     const { toast } = useToast()
+    const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
+
     const messages = SessionMachineContext.useSelector(state =>
         state.context.serverEventContext.messages.filter(
             message => message.type === 'tool'
         )
     )
     const path = SessionMachineContext.useSelector(
-        state => state.context?.sessionState?.path ?? '.'
+        state => state.context?.sessionState?.path ?? ''
     )
     const showEditorBorders = true
+
+    const initialFiles: File[] = SessionMachineContext.useSelector(state => {
+        if (
+            state.context.sessionState?.editor &&
+            state.context.sessionState.editor.files
+        ) {
+            return Object.keys(state.context.sessionState.editor.files).map(
+                filepath => ({
+                    id: filepath,
+                    name: filepath.split('/').pop() ?? 'unnamed_file',
+                    path: filepath,
+                    language: getLanguageFromFilename(
+                        filepath.split('/').pop()
+                    ),
+                    value: state.context.sessionState.editor.files[filepath],
+                    icon: getIconFromFilename(filepath.split('/').pop()),
+                })
+            )
+        } else {
+            return []
+        }
+    })
+    const files = useFileWatcher(initialFiles, path)
+
+    if (files && files.length > 0 && !selectedFileId) {
+        setSelectedFileId(files[0].id)
+    } else if ((!files || files.length === 0) && selectedFileId) {
+        setSelectedFileId(null)
+    }
 
     return (
         <div
@@ -80,10 +119,17 @@ const EditorPanel = ({
                         </button>
                     </div>
                     <div className="flex flex-grow overflow-auto">
-                        {/* <div className="flex-none w-40 bg-midnight border-r border-outlinecolor"> */}
-                        {/* <FileTree /> */}
-                        {/* </div> */}
+                        <div className="flex-none w-40 bg-midnight border-r border-outlinecolor">
+                            <FileTree
+                                files={files}
+                                selectedFileId={selectedFileId}
+                                setSelectedFileId={setSelectedFileId}
+                            />
+                        </div>
                         <CodeEditor
+                            files={files}
+                            selectedFileId={selectedFileId}
+                            setSelectedFileId={setSelectedFileId}
                             isExpandedVariant={isExpandedVariant}
                             showEditorBorders={showEditorBorders}
                             path={path}
