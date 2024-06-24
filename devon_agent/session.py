@@ -15,21 +15,20 @@ from devon_agent.models import _delete_session_util, _save_session_util
 from devon_agent.telemetry import Posthog, SessionStartEvent
 from devon_agent.tool import ToolNotFoundException
 from devon_agent.tools import parse_command
+from devon_agent.tools.editorblock import EditBlockTool
 from devon_agent.tools.editortools import (CreateFileTool, DeleteFileTool,
                                            OpenFileTool, ScrollDownTool,
                                            ScrollToLineTool, ScrollUpTool,
                                            save_create_file, save_delete_file)
-from devon_agent.tools.edittools import EditFileTool, save_edit_file
 from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, SearchDirTool
 from devon_agent.tools.filetools import SearchFileTool
-from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, ListDirsRecursiveTool, SearchDirTool
+from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, SearchDirTool
 from devon_agent.tools.filetools import SearchFileTool, FileTreeDisplay
-from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
+from devon_agent.tools.lifecycle import NoOpTool
 from devon_agent.tools.shelltool import ShellTool
-from devon_agent.tools.usertools import AskUserTool, SetTaskTool
+from devon_agent.tools.usertools import AskUserTool, RespondUserTool
 from devon_agent.tools.utils import get_ignored_files
 from devon_agent.utils import DotDict, Event, decode_path
-from devon_agent.vgit import  get_current_diff, get_last_commit, get_or_create_repo, make_new_branch, safely_revert_to_commit, stash_and_commit_changes, subtract_diffs
 from devon_agent.tools.codenav import CodeGoTo, CodeSearch
 from devon_agent.tools.semantic_search import SemanticSearch
 
@@ -138,12 +137,13 @@ class Session:
                 "scroll_down": ScrollDownTool(),
                 "scroll_to_line": ScrollToLineTool(),
                 "search_file": SearchFileTool(),
-                "edit_file": EditFileTool().register_post_hook(save_edit_file),
+                # "edit_file": EditFileTool().register_post_hook(save_edit_file),
+                "edit": EditBlockTool(),
                 "search_dir": SearchDirTool(),
                 "find_file": FindFileTool(),
                 "get_cwd": GetCwdTool(),
                 "no_op": NoOpTool(),
-                "submit": SubmitTool(),
+                # "submit": SubmitTool(),
                 "delete_file": DeleteFileTool().register_post_hook(save_delete_file),
                 "code_search": CodeSearch(),
                 "code_goto": CodeGoTo(),
@@ -158,7 +158,7 @@ class Session:
                 print("added semantic search")
                 local_environment.register_tools({
                     "semantic_search": SemanticSearch(),
-
+                    "respond" : RespondUserTool(),
                 })
         self.default_environment = local_environment
 
@@ -167,7 +167,7 @@ class Session:
         else:
             user_environment = UserEnvironment(self.args.user_input)
             user_environment.register_tools(
-                {"ask_user": AskUserTool(), "set_task": SetTaskTool()}
+                {"ask_user": AskUserTool()}
             )
 
             self.environments = {
@@ -330,6 +330,7 @@ class Session:
 
     def step_event(self, event):
         new_events = []
+        print("event",event)
         match event["type"]:
             case "Error":
                 new_events.append(

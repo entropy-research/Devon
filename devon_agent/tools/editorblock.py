@@ -3,14 +3,16 @@ import re
 from difflib import SequenceMatcher
 from pathlib import Path
 
-from devon_agent.tool import Tool
+from devon_agent.tool import Tool, ToolContext
 
 # from .editblock_prompts import EditBlockPrompts
+import re
+from pathlib import Path
+from difflib import SequenceMatcher
 
+from devon_agent.tools.utils import make_abs_path, read_file, write_file
 
 class EditBlockTool(Tool):
-
-
     @property
     def name(self):
         return "edit_file"
@@ -18,538 +20,373 @@ class EditBlockTool(Tool):
     @property
     def supported_formats(self):
         return ["docstring", "manpage"]
-    
-    def function(self, context, **kwargs):
-        raw_command = context["raw_command"]
-        edits = self.get_edits()
-        return self.apply_edits(edits)
 
-    
-    def get_edits(self):
-        content = self.partial_response_content
-
-        # might raise ValueError for malformed ORIG/UPD blocks
-        edits = list(find_original_update_blocks(content, self.fence))
-
-        return edits
-        
-
-
-class EditBlockCoder(Coder):
-    edit_format = "diff"
-
-    def __init__(self, *args, **kwargs):
-        self.gpt_prompts = EditBlockPrompts()
-        super().__init__(*args, **kwargs)
-
-    def get_edits(self):
-        content = self.partial_response_content
-
-        # might raise ValueError for malformed ORIG/UPD blocks
-        edits = list(find_original_update_blocks(content, self.fence))
-
-        return edits
-
-    def apply_edits(self, edits):
-        failed = []
-        passed = []
-        for edit in edits:
-            path, original, updated = edit
-            full_path = self.abs_root_path(path)
-            content = self.io.read_text(full_path)
-            new_content = do_replace(full_path, content, original, updated, self.fence)
-            if not new_content:
-                # try patching any of the other files in the chat
-                for full_path in self.abs_fnames:
-                    content = self.io.read_text(full_path)
-                    new_content = do_replace(full_path, content, original, updated, self.fence)
-                    if new_content:
-                        break
-
-            if new_content:
-                self.io.write_text(full_path, new_content)
-                passed.append(edit)
-            else:
-                failed.append(edit)
-
-        if not failed:
-            return
-
-        blocks = "block" if len(failed) == 1 else "blocks"
-
-        res = f"# {len(failed)} SEARCH/REPLACE {blocks} failed to match!\n"
-        for edit in failed:
-            path, original, updated = edit
-
-            full_path = self.abs_root_path(path)
-            content = self.io.read_text(full_path)
-
-            res += f"""
-## SearchReplaceNoExactMatch: This SEARCH block failed to exactly match lines in {path}
-<<<<<<< SEARCH
-{original}=======
-{updated}>>>>>>> REPLACE
-
-"""
-            did_you_mean = find_similar_lines(original, content)
-            if did_you_mean:
-                res += f"""Did you mean to match some of these actual lines from {path}?
-
-{self.fence[0]}
-{did_you_mean}
-{self.fence[1]}
-
-"""
-
-            if updated in content:
-                res += f"""Are you sure you need this SEARCH/REPLACE block?
-The REPLACE lines are already in {path}!
-
-"""
-        res += (
-            "The SEARCH section must exactly match an existing block of lines including all white"
-            " space, comments, indentation, docstrings, etc\n"
-        )
-        if passed:
-            pblocks = "block" if len(passed) == 1 else "blocks"
-            res += f"""
-# The other {len(passed)} SEARCH/REPLACE {pblocks} were applied successfully.
-Don't re-send them.
-Just reply with fixed versions of the {blocks} above that failed to match.
-"""
-        raise ValueError(res)
-
-
-def prep(content):
-    if content and not content.endswith("\n"):
-        content += "\n"
-    lines = content.splitlines(keepends=True)
-    return content, lines
-
-
-def perfect_or_whitespace(whole_lines, part_lines, replace_lines):
-    # Try for a perfect match
-    res = perfect_replace(whole_lines, part_lines, replace_lines)
-    if res:
-        return res
-
-    # Try being flexible about leading whitespace
-    res = replace_part_with_missing_leading_whitespace(whole_lines, part_lines, replace_lines)
-    if res:
-        return res
-
-
-def perfect_replace(whole_lines, part_lines, replace_lines):
-    part_tup = tuple(part_lines)
-    part_len = len(part_lines)
-
-    for i in range(len(whole_lines) - part_len + 1):
-        whole_tup = tuple(whole_lines[i : i + part_len])
-        if part_tup == whole_tup:
-            res = whole_lines[:i] + replace_lines + whole_lines[i + part_len :]
-            return "".join(res)
-
-
-def replace_most_similar_chunk(whole, part, replace):
-    """Best efforts to find the `part` lines in `whole` and replace them with `replace`"""
-
-    whole, whole_lines = prep(whole)
-    part, part_lines = prep(part)
-    replace, replace_lines = prep(replace)
-
-    res = perfect_or_whitespace(whole_lines, part_lines, replace_lines)
-    if res:
-        return res
-
-    # drop leading empty line, GPT sometimes adds them spuriously (issue #25)
-    if len(part_lines) > 2 and not part_lines[0].strip():
-        skip_blank_line_part_lines = part_lines[1:]
-        res = perfect_or_whitespace(whole_lines, skip_blank_line_part_lines, replace_lines)
-        if res:
-            return res
-
-    # Try to handle when it elides code with ...
-    try:
-        res = try_dotdotdots(whole, part, replace)
-        if res:
-            return res
-    except ValueError:
+    def setup(self, context: ToolContext):
         pass
+        # context.state['edit_history'] = []
 
-    return
-    # Try fuzzy matching
-    res = replace_closest_edit_distance(whole_lines, part, part_lines, replace_lines)
-    if res:
-        return res
+    def cleanup(self, context: ToolContext):
+        pass
+        # context.state['edit_history'] = []
 
+    def documentation(self, format="docstring"):
+        if format == "docstring":
+            return """edit <edit_text>
 
-def try_dotdotdots(whole, part, replace):
-    """
-    See if the edit block has ... lines.
-    If not, return none.
+edit contains *SEARCH/REPLACE block*.
 
-    If yes, try and do a perfect edit with the ... chunks.
-    If there's a mismatch or otherwise imperfect edit, raise ValueError.
+Every *SEARCH/REPLACE block* must use this format:
+1. The file path alone on a line, verbatim. No bold asterisks, no quotes around it, no escaping of characters, etc.
+2. The opening fence and code language, eg: ```python
+3. The start of search block: <<<<<<< SEARCH
+4. A contiguous chunk of lines to search for in the existing source code
+5. The dividing line: =======
+6. The lines to replace into the source code
+7. The end of the replace block: >>>>>>> REPLACE
+8. The closing fence: ```
 
-    If perfect edit succeeds, return the updated whole.
-    """
+Every *SEARCH* section must *EXACTLY MATCH* the existing source code, character for character, including all comments, docstrings, etc.
 
-    dots_re = re.compile(r"(^\s*\.\.\.\n)", re.MULTILINE | re.DOTALL)
+*SEARCH/REPLACE* blocks will replace *all* matching occurrences.
+Include enough lines to make the SEARCH blocks unique.
 
-    part_pieces = re.split(dots_re, part)
-    replace_pieces = re.split(dots_re, replace)
+Include *ALL* the code being searched and replaced!
 
-    if len(part_pieces) != len(replace_pieces):
-        raise ValueError("Unpaired ... in SEARCH/REPLACE block")
+Only create *SEARCH/REPLACE* blocks for files that the user has added to the chat!
 
-    if len(part_pieces) == 1:
-        # no dots in this edit block, just return None
-        return
+To move code within a file, use 2 *SEARCH/REPLACE* blocks: 1 to delete it from its current location, 1 to insert it in the new location.
 
-    # Compare odd strings in part_pieces and replace_pieces
-    all_dots_match = all(part_pieces[i] == replace_pieces[i] for i in range(1, len(part_pieces), 2))
+If you want to put code in a new file, use a *SEARCH/REPLACE block* with:
+- A new file path, including dir name if needed
+- An empty `SEARCH` section
+- The new file's contents in the `REPLACE` section
 
-    if not all_dots_match:
-        raise ValueError("Unmatched ... in SEARCH/REPLACE block")
+Ex. 
 
-    part_pieces = [part_pieces[i] for i in range(0, len(part_pieces), 2)]
-    replace_pieces = [replace_pieces[i] for i in range(0, len(replace_pieces), 2)]
-
-    pairs = zip(part_pieces, replace_pieces)
-    for part, replace in pairs:
-        if not part and not replace:
-            continue
-
-        if not part and replace:
-            if not whole.endswith("\n"):
-                whole += "\n"
-            whole += replace
-            continue
-
-        if whole.count(part) == 0:
-            raise ValueError
-        if whole.count(part) > 1:
-            raise ValueError
-
-        whole = whole.replace(part, replace, 1)
-
-    return whole
-
-
-def replace_part_with_missing_leading_whitespace(whole_lines, part_lines, replace_lines):
-    # GPT often messes up leading whitespace.
-    # It usually does it uniformly across the ORIG and UPD blocks.
-    # Either omitting all leading whitespace, or including only some of it.
-
-    # Outdent everything in part_lines and replace_lines by the max fixed amount possible
-    leading = [len(p) - len(p.lstrip()) for p in part_lines if p.strip()] + [
-        len(p) - len(p.lstrip()) for p in replace_lines if p.strip()
-    ]
-
-    if leading and min(leading):
-        num_leading = min(leading)
-        part_lines = [p[num_leading:] if p.strip() else p for p in part_lines]
-        replace_lines = [p[num_leading:] if p.strip() else p for p in replace_lines]
-
-    # can we find an exact match not including the leading whitespace
-    num_part_lines = len(part_lines)
-
-    for i in range(len(whole_lines) - num_part_lines + 1):
-        add_leading = match_but_for_leading_whitespace(
-            whole_lines[i : i + num_part_lines], part_lines
-        )
-
-        if add_leading is None:
-            continue
-
-        replace_lines = [add_leading + rline if rline.strip() else rline for rline in replace_lines]
-        whole_lines = whole_lines[:i] + replace_lines + whole_lines[i + num_part_lines :]
-        return "".join(whole_lines)
-
-    return None
-
-
-def match_but_for_leading_whitespace(whole_lines, part_lines):
-    num = len(whole_lines)
-
-    # does the non-whitespace all agree?
-    if not all(whole_lines[i].lstrip() == part_lines[i].lstrip() for i in range(num)):
-        return
-
-    # are they all offset the same?
-    add = set(
-        whole_lines[i][: len(whole_lines[i]) - len(part_lines[i])]
-        for i in range(num)
-        if whole_lines[i].strip()
-    )
-
-    if len(add) != 1:
-        return
-
-    return add.pop()
-
-
-def replace_closest_edit_distance(whole_lines, part, part_lines, replace_lines):
-    similarity_thresh = 0.8
-
-    max_similarity = 0
-    most_similar_chunk_start = -1
-    most_similar_chunk_end = -1
-
-    scale = 0.1
-    min_len = math.floor(len(part_lines) * (1 - scale))
-    max_len = math.ceil(len(part_lines) * (1 + scale))
-
-    for length in range(min_len, max_len):
-        for i in range(len(whole_lines) - length + 1):
-            chunk = whole_lines[i : i + length]
-            chunk = "".join(chunk)
-
-            similarity = SequenceMatcher(None, chunk, part).ratio()
-
-            if similarity > max_similarity and similarity:
-                max_similarity = similarity
-                most_similar_chunk_start = i
-                most_similar_chunk_end = i + length
-
-    if max_similarity < similarity_thresh:
-        return
-
-    modified_whole = (
-        whole_lines[:most_similar_chunk_start]
-        + replace_lines
-        + whole_lines[most_similar_chunk_end:]
-    )
-    modified_whole = "".join(modified_whole)
-
-    return modified_whole
-
-
-DEFAULT_FENCE = ("`" * 3, "`" * 3)
-
-
-def strip_quoted_wrapping(res, fname=None, fence=DEFAULT_FENCE):
-    """
-    Given an input string which may have extra "wrapping" around it, remove the wrapping.
-    For example:
-
-    filename.ext
-    ```
-    We just want this content
-    Not the filename and triple quotes
-    ```
-    """
-    if not res:
-        return res
-
-    res = res.splitlines()
-
-    if fname and res[0].strip().endswith(Path(fname).name):
-        res = res[1:]
-
-    if res[0].startswith(fence[0]) and res[-1].startswith(fence[1]):
-        res = res[1:-1]
-
-    res = "\n".join(res)
-    if res and res[-1] != "\n":
-        res += "\n"
-
-    return res
-
-
-def do_replace(fname, content, before_text, after_text, fence=None):
-    before_text = strip_quoted_wrapping(before_text, fname, fence)
-    after_text = strip_quoted_wrapping(after_text, fname, fence)
-    fname = Path(fname)
-
-    # does it want to make a new file?
-    if not fname.exists() and not before_text.strip():
-        fname.touch()
-        content = ""
-
-    if content is None:
-        return
-
-    if not before_text.strip():
-        # append to existing file, or start a new file
-        new_content = content + after_text
-    else:
-        new_content = replace_most_similar_chunk(content, before_text, after_text)
-
-    return new_content
-
-
-HEAD = "<<<<<<< SEARCH"
-DIVIDER = "======="
-UPDATED = ">>>>>>> REPLACE"
-
-separators = "|".join([HEAD, DIVIDER, UPDATED])
-
-split_re = re.compile(r"^((?:" + separators + r")[ ]*\n)", re.MULTILINE | re.DOTALL)
-
-
-missing_filename_err = (
-    "Bad/missing filename. The filename must be alone on the line before the opening fence"
-    " {fence[0]}"
-)
-
-
-def strip_filename(filename, fence):
-    filename = filename.strip()
-
-    if filename == "...":
-        return
-
-    start_fence = fence[0]
-    if filename.startswith(start_fence):
-        return
-
-    filename = filename.rstrip(":")
-    filename = filename.lstrip("#")
-    filename = filename.strip()
-    filename = filename.strip("`")
-    filename = filename.strip("*")
-    filename = filename.replace("\\_", "_")
-
-    return filename
-
-
-def find_original_update_blocks(content, fence=DEFAULT_FENCE):
-    # make sure we end with a newline, otherwise the regex will miss <<UPD on the last line
-    if not content.endswith("\n"):
-        content = content + "\n"
-
-    pieces = re.split(split_re, content)
-
-    pieces.reverse()
-    processed = []
-
-    # Keep using the same filename in cases where GPT produces an edit block
-    # without a filename.
-    current_filename = None
-    try:
-        while pieces:
-            cur = pieces.pop()
-
-            if cur in (DIVIDER, UPDATED):
-                processed.append(cur)
-                raise ValueError(f"Unexpected {cur}")
-
-            if cur.strip() != HEAD:
-                processed.append(cur)
-                continue
-
-            processed.append(cur)  # original_marker
-
-            filename = find_filename(processed[-2].splitlines(), fence)
-            if not filename:
-                if current_filename:
-                    filename = current_filename
-                else:
-                    raise ValueError(missing_filename_err.format(fence=fence))
-
-            current_filename = filename
-
-            original_text = pieces.pop()
-            processed.append(original_text)
-
-            divider_marker = pieces.pop()
-            processed.append(divider_marker)
-            if divider_marker.strip() != DIVIDER:
-                raise ValueError(f"Expected `{DIVIDER}` not {divider_marker.strip()}")
-
-            updated_text = pieces.pop()
-            processed.append(updated_text)
-
-            updated_marker = pieces.pop()
-            processed.append(updated_marker)
-            if updated_marker.strip() != UPDATED:
-                raise ValueError(f"Expected `{UPDATED}` not `{updated_marker.strip()}")
-
-            yield filename, original_text, updated_text
-    except ValueError as e:
-        processed = "".join(processed)
-        err = e.args[0]
-        raise ValueError(f"{processed}\n^^^ {err}")
-    except IndexError:
-        processed = "".join(processed)
-        raise ValueError(f"{processed}\n^^^ Incomplete SEARCH/REPLACE block.")
-    except Exception:
-        processed = "".join(processed)
-        raise ValueError(f"{processed}\n^^^ Error parsing SEARCH/REPLACE block.")
-
-
-def find_filename(lines, fence):
-    """
-    Deepseek Coder v2 has been doing this:
-
-
-     ```python
-    word_count.py
-    ```
-    ```python
-    <<<<<<< SEARCH
-    ...
-
-    This is a more flexible search back for filenames.
-    """
-    # Go back through the 3 preceding lines
-    lines.reverse()
-    lines = lines[:3]
-
-    for line in lines:
-        # If we find a filename, done
-        filename = strip_filename(line, fence)
-        if filename:
-            return filename
-
-        # Only continue as long as we keep seeing fences
-        if not line.startswith(fence[0]):
-            return
-
-
-if __name__ == "__main__":
-    edit = """
-Here's the change:
-
-```text
-foo.txt
-<<<<<<< HEAD
-Two
+mathweb/flask/app.py
+```python
+<<<<<<< SEARCH
+from flask import Flask
 =======
-Tooooo
->>>>>>> updated
+import math
+from flask import Flask
+>>>>>>> REPLACE
 ```
 
-Hope you like it!
+mathweb/flask/app.py
+```python
+<<<<<<< SEARCH
+def factorial(n):
+    "compute factorial"
+
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n-1)
+
+=======
+>>>>>>> REPLACE
+```
+
+mathweb/flask/app.py
+```python
+<<<<<<< SEARCH
+    return str(factorial(n))
+=======
+    return str(math.factorial(n))
+>>>>>>> REPLACE
+```
 """
-    print(list(find_original_update_blocks(edit)))
+        elif format == "manpage":
+            return """NAME
+edit - edit files
 
+SYNOPSIS
+edit [edit_text]
 
-def find_similar_lines(search_lines, content_lines, threshold=0.6):
-    search_lines = search_lines.splitlines()
-    content_lines = content_lines.splitlines()
+DESCRIPTION
+The edit command takes a target [edit_text]. The edit_test is made of *SEARCH/REPLACE block*.
 
-    best_ratio = 0
-    best_match = None
+*SEARCH/REPLACE block*
+Every *SEARCH/REPLACE block* must use this format:
+1. The file path alone on a line, verbatim. No bold asterisks, no quotes around it, no escaping of characters, etc.
+2. The opening fence and code language, eg: ```python
+3. The start of search block: <<<<<<< SEARCH
+4. A contiguous chunk of lines to search for in the existing source code
+5. The dividing line: =======
+6. The lines to replace into the source code
+7. The end of the replace block: >>>>>>> REPLACE
+8. The closing fence: ```
 
-    for i in range(len(content_lines) - len(search_lines) + 1):
-        chunk = content_lines[i : i + len(search_lines)]
-        ratio = SequenceMatcher(None, search_lines, chunk).ratio()
-        if ratio > best_ratio:
-            best_ratio = ratio
-            best_match = chunk
-            best_match_i = i
+Every *SEARCH* section must *EXACTLY MATCH* the existing source code, character for character, including all comments, docstrings, etc.
 
-    if best_ratio < threshold:
+*SEARCH/REPLACE* blocks will replace *all* matching occurrences.
+Include enough lines to make the SEARCH blocks unique.
+
+Include *ALL* the code being searched and replaced!
+
+Only create *SEARCH/REPLACE* blocks for files that the user has added to the chat!
+
+To move code within a file, use 2 *SEARCH/REPLACE* blocks: 1 to delete it from its current location, 1 to insert it in the new location.
+
+If you want to put code in a new file, use a *SEARCH/REPLACE block* with:
+- A new file path, including dir name if needed
+- An empty `SEARCH` section
+- The new file's contents in the `REPLACE` section
+
+EXAMPLES
+
+mathweb/flask/app.py
+```python
+<<<<<<< SEARCH
+from flask import Flask
+=======
+import math
+from flask import Flask
+>>>>>>> REPLACE
+```
+
+mathweb/flask/app.py
+```python
+<<<<<<< SEARCH
+def factorial(n):
+    "compute factorial"
+
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n-1)
+
+=======
+>>>>>>> REPLACE
+```
+
+mathweb/flask/app.py
+```python
+<<<<<<< SEARCH
+    return str(factorial(n))
+=======
+    return str(math.factorial(n))
+>>>>>>> REPLACE
+```
+"""
+
+    def function(self, context: ToolContext, *args, **kwargs):
+        print("raw_command",context.get('raw_command', ''))
+        raw_command = context.get('raw_command', '')
+        edit_content = self._extract_edit_content(raw_command)
+        if not edit_content:
+            return "Error: No edit content provided"
+        print("edit_content",edit_content)
+        edits = list(self.find_original_update_blocks(edit_content))
+        results = self.apply_edits(context, edits)
+
+        return self._format_results(results)
+
+    def _extract_edit_content(self, raw_command: str) -> str:
+        print("checking if found",raw_command)
+        if raw_command.strip().startswith("edit"):
+            print("edit command",raw_command)
+            return raw_command.strip()[5:].strip()
         return ""
 
-    if best_match[0] == search_lines[0] and best_match[-1] == search_lines[-1]:
-        return "\n".join(best_match)
+    def find_original_update_blocks(self, content):
+        HEAD = "<<<<<<< SEARCH"
+        DIVIDER = "======="
+        UPDATED = ">>>>>>> REPLACE"
+        separators = "|".join([HEAD, DIVIDER, UPDATED])
+        split_re = re.compile(r"^((?:" + separators + r")[ ]*\n)", re.MULTILINE | re.DOTALL)
 
-    N = 5
-    best_match_end = min(len(content_lines), best_match_i + len(search_lines) + N)
-    best_match_i = max(0, best_match_i - N)
+        pieces = re.split(split_re, content)
+        pieces.reverse()
+        processed = []
+        current_filename = None
 
-    best = content_lines[best_match_i:best_match_end]
-    return "\n".join(best)
+        try:
+            while pieces:
+                print(pieces)
+                cur = pieces.pop()
+                if cur.strip() != HEAD:
+                    processed.append(cur)
+                    continue
+
+                processed.append(cur)  # original_marker
+                filename = self.find_filename(processed[-2].splitlines())
+                if not filename:
+                    if current_filename:
+                        filename = current_filename
+                    else:
+                        raise ValueError("Missing filename")
+
+                current_filename = filename
+                original_text = pieces.pop()
+                processed.append(original_text)
+                divider_marker = pieces.pop()
+                processed.append(divider_marker)
+                if divider_marker.strip() != DIVIDER:
+                    raise ValueError(f"Expected `{DIVIDER}` not {divider_marker.strip()}")
+
+                updated_text = pieces.pop()
+                processed.append(updated_text)
+                updated_marker = pieces.pop()
+                processed.append(updated_marker)
+                if updated_marker.strip() != UPDATED:
+                    raise ValueError(f"Expected `{UPDATED}` not `{updated_marker.strip()}")
+
+                yield filename, original_text, updated_text
+        except Exception as e:
+            processed = "".join(processed)
+            raise ValueError(f"{processed}\n^^^ Error parsing SEARCH/REPLACE block: {str(e)}")
+
+    def find_filename(self, lines):
+        lines.reverse()
+        lines = lines[:3]
+        for line in lines:
+            filename = line.strip().rstrip(':')
+            if filename and not filename.startswith('```'):
+                return filename
+
+    def apply_edits(self, context: ToolContext, edits):
+        results = []
+        for filename, original, updated in edits:
+            # file_path = Path(context["environment"].get_cwd()) / filename
+            # print("file_path",file_path.as_posix())
+            # if not file_path.exists():
+            #     results.append({'status': 'error', 'message': f"File not found: {filename}"})
+            #     continue
+
+            file_path = make_abs_path(context, filename)
+
+            file_exists = (
+                context["environment"]
+                .execute(f"test -e {file_path} && echo 'exists'")[0]
+                .strip()
+                == "exists"
+            )
+            content = read_file(context, file_path=file_path)
+            new_content = self.replace_most_similar_chunk(content, original, updated)
+            
+            if new_content == content:
+                results.append({'status': 'error', 'message': f"No changes made in {filename}"})
+            else:
+                write_file(context,file_path, new_content)
+                results.append({'status': 'success', 'message': f"Successfully edited {filename}"})
+                # context.state['edit_history'].append({
+                #     'filename': filename,
+                #     'old_content': content,
+                #     'new_content': new_content
+                # })
+
+        return results
+
+    def replace_most_similar_chunk(self, whole, part, replace):
+        whole_lines = whole.splitlines()
+        part_lines = part.splitlines()
+        replace_lines = replace.splitlines()
+
+        res = self.perfect_or_whitespace(whole_lines, part_lines, replace_lines)
+        if res:
+            return "\n".join(res)
+
+        if len(part_lines) > 2 and not part_lines[0].strip():
+            res = self.perfect_or_whitespace(whole_lines, part_lines[1:], replace_lines)
+            if res:
+                return "\n".join(res)
+
+        return self.replace_closest_edit_distance(whole_lines, part, part_lines, replace_lines)
+
+    def perfect_or_whitespace(self, whole_lines, part_lines, replace_lines):
+        res = self.perfect_replace(whole_lines, part_lines, replace_lines)
+        if res:
+            return res
+
+        return self.replace_part_with_missing_leading_whitespace(whole_lines, part_lines, replace_lines)
+
+    def perfect_replace(self, whole_lines, part_lines, replace_lines):
+        part_tup = tuple(part_lines)
+        part_len = len(part_lines)
+
+        for i in range(len(whole_lines) - part_len + 1):
+            whole_tup = tuple(whole_lines[i : i + part_len])
+            if part_tup == whole_tup:
+                return whole_lines[:i] + replace_lines + whole_lines[i + part_len :]
+
+    def replace_part_with_missing_leading_whitespace(self, whole_lines, part_lines, replace_lines):
+        leading = [len(p) - len(p.lstrip()) for p in part_lines if p.strip()] + [
+            len(p) - len(p.lstrip()) for p in replace_lines if p.strip()
+        ]
+
+        if leading and min(leading):
+            num_leading = min(leading)
+            part_lines = [p[num_leading:] if p.strip() else p for p in part_lines]
+            replace_lines = [p[num_leading:] if p.strip() else p for p in replace_lines]
+
+        num_part_lines = len(part_lines)
+
+        for i in range(len(whole_lines) - num_part_lines + 1):
+            add_leading = self.match_but_for_leading_whitespace(
+                whole_lines[i : i + num_part_lines], part_lines
+            )
+
+            if add_leading is not None:
+                replace_lines = [add_leading + rline if rline.strip() else rline for rline in replace_lines]
+                return whole_lines[:i] + replace_lines + whole_lines[i + num_part_lines :]
+
+        return None
+
+    def match_but_for_leading_whitespace(self, whole_lines, part_lines):
+        num = len(whole_lines)
+
+        if not all(whole_lines[i].lstrip() == part_lines[i].lstrip() for i in range(num)):
+            return
+
+        add = set(
+            whole_lines[i][: len(whole_lines[i]) - len(part_lines[i])]
+            for i in range(num)
+            if whole_lines[i].strip()
+        )
+
+        return add.pop() if len(add) == 1 else None
+
+    def replace_closest_edit_distance(self, whole_lines, part, part_lines, replace_lines):
+        similarity_thresh = 0.8
+        max_similarity = 0
+        most_similar_chunk_start = -1
+        most_similar_chunk_end = -1
+
+        scale = 0.1
+        min_len = max(3, int(len(part_lines) * (1 - scale)))
+        max_len = min(len(whole_lines), int(len(part_lines) * (1 + scale)))
+
+        for length in range(min_len, max_len + 1):
+            for i in range(len(whole_lines) - length + 1):
+                chunk = "\n".join(whole_lines[i : i + length])
+                similarity = SequenceMatcher(None, chunk, part).ratio()
+
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    most_similar_chunk_start = i
+                    most_similar_chunk_end = i + length
+
+        if max_similarity < similarity_thresh:
+            return "\n".join(whole_lines)
+
+        return "\n".join(
+            whole_lines[:most_similar_chunk_start]
+            + replace_lines
+            + whole_lines[most_similar_chunk_end:]
+        )
+
+    def _format_results(self, results):
+        output = []
+        for result in results:
+            if result['status'] == 'success':
+                output.append(f"✅ {result['message']}")
+            else:
+                output.append(f"❌ {result['message']}")
+        return "\n".join(output)
+
+# Example usage:
+# edit_tool = EditFileTool()
+# edit_tool.register_pre_hook(lambda ctx: print("Starting edit..."))
+# edit_tool.register_post_hook(lambda ctx, res: print(f"Edit completed: {res}"))

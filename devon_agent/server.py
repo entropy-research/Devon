@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from time import sleep
 from typing import Any, Dict, List, Optional
+from devon_agent.agents.conversational_agent import ConversationalAgent
 from devon_agent.semantic_search.code_graph_manager import CodeGraphManager
 
 import fastapi
@@ -215,7 +216,7 @@ def create_session(
             status_code=400, detail=f"Session with id {session} already exists"
         )
 
-    agent = TaskAgent(name="Devon", temperature=0.0, args=config)
+    agent = ConversationalAgent(name="Devon", temperature=0.0, args=config)
 
     sessions[session] = Session(
         SessionArguments(
