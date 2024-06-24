@@ -31,7 +31,7 @@ class EditBlockTool(Tool):
 
     def documentation(self, format="docstring"):
         if format == "docstring":
-            return """edit_file <edit_text>
+            return """edit <edit_text>
 
 edit contains *SEARCH/REPLACE block*.
 

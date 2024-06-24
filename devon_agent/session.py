@@ -20,17 +20,15 @@ from devon_agent.tools.editortools import (CreateFileTool, DeleteFileTool,
                                            OpenFileTool, ScrollDownTool,
                                            ScrollToLineTool, ScrollUpTool,
                                            save_create_file, save_delete_file)
-from devon_agent.tools.edittools import EditFileTool, save_edit_file
 from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, SearchDirTool
 from devon_agent.tools.filetools import SearchFileTool
-from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, ListDirsRecursiveTool, SearchDirTool
+from devon_agent.tools.filesearchtools import FindFileTool, GetCwdTool, SearchDirTool
 from devon_agent.tools.filetools import SearchFileTool, FileTreeDisplay
-from devon_agent.tools.lifecycle import NoOpTool, SubmitTool
+from devon_agent.tools.lifecycle import NoOpTool
 from devon_agent.tools.shelltool import ShellTool
-from devon_agent.tools.usertools import AskUserTool, RespondUserTool, SetTaskTool
+from devon_agent.tools.usertools import AskUserTool, RespondUserTool
 from devon_agent.tools.utils import get_ignored_files
 from devon_agent.utils import DotDict, Event, decode_path
-from devon_agent.vgit import  get_current_diff, get_last_commit, get_or_create_repo, make_new_branch, safely_revert_to_commit, stash_and_commit_changes, subtract_diffs
 from devon_agent.tools.codenav import CodeGoTo, CodeSearch
 from devon_agent.tools.semantic_search import SemanticSearch
 
