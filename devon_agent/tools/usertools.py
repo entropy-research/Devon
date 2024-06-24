@@ -104,3 +104,54 @@ class SetTaskTool(Tool):
             input="what is my next task?"
         )
         return context["session"].state.task
+    
+
+class RespondUserTool(Tool):
+    @property
+    def name(self):
+        return "RespondUserTool"
+    
+    def setup(self, context: ToolContext):
+        pass
+
+    def cleanup(self, context: ToolContext):
+        pass
+
+    def supported_formats(self):
+        return ["docstring", "manpage"]
+
+
+    def documentation(self, format="docstring"):
+        match format:
+            case "docstring":
+                return self.function.__doc__
+            case "manpage":
+                return """
+                NAME
+                    respond - respond to the user
+
+                SYNOPSIS
+                    respond "Some response here"
+
+                DESCRIPTION
+                    The respond command responds to the user
+
+                RETURN VALUE
+                    The user may respond back to you
+
+                EXAMPLES
+                    To ask the user for their input, run the following command:
+
+                        respond "I did this, what do you think?"
+                """
+            case _:
+                raise ValueError(f"Invalid format: {format}")
+            
+    def function(self, context: ToolContext, response: str, **kwargs):
+        """
+        command_name: respond
+        description: The respond command responds to the user
+        signature: respond "Some response here"
+        example: `respond "I did this, what do you think?"`
+        """
+        return context["environment"].execute(input=response)

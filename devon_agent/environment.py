@@ -109,7 +109,7 @@ class LocalEnvironment:
             )
 
             self.process.stdin.write(input + "\n")
-            self.process.stdin.write('echo "$?"\n')
+            self.process.stdin.write('echo "\n$?"\n')
             self.process.stdin.write("echo 'EOL'\n")
             self.process.stdin.write(f"echo 'EOL' >&2\n")
             self.process.stdin.flush()
