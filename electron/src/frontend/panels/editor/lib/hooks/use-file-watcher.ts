@@ -28,37 +28,38 @@ const useFileWatcher = (initialFiles: File[], dirPath: string) => {
             }
 
             window.api.receive('file-changes', (events: FileEvent[]) => {
-                const updatedFiles = [...files]
-                events.forEach((event: FileEvent) => {
-                    const fileIndex = updatedFiles.findIndex(
-                        file => file.path === event.path
+                setFiles(prevFiles => {
+                    const fileMap = new Map(
+                        prevFiles.map(file => [file.path, file])
                     )
 
-                    if (event.type === 'create' || event.type === 'update') {
-                        const file = {
-                            id: event.path,
-                            name: event.path.split('/').pop() ?? 'unnamed_file',
-                            path: event.path,
-                            language: getLanguageFromFilename(
-                                event.path.split('/').pop()
-                            ),
-                            value: { lines: event.newContent || '' }, // Read new content if available
-                            icon: getIconFromFilename(
-                                event.path.split('/').pop()
-                            ),
+                    events.forEach((event: FileEvent) => {
+                        if (
+                            event.type === 'create' ||
+                            event.type === 'update'
+                        ) {
+                            const file = {
+                                id: event.path,
+                                name:
+                                    event.path.split('/').pop() ??
+                                    'unnamed_file',
+                                path: event.path,
+                                language: getLanguageFromFilename(
+                                    event.path.split('/').pop()
+                                ),
+                                value: { lines: event.newContent || '' }, // Read new content if available
+                                icon: getIconFromFilename(
+                                    event.path.split('/').pop()
+                                ),
+                            }
+                            fileMap.set(event.path, file)
+                        } else if (event.type === 'delete') {
+                            fileMap.delete(event.path)
                         }
+                    })
 
-                        if (fileIndex === -1) {
-                            updatedFiles.push(file)
-                        } else {
-                            updatedFiles[fileIndex] = file
-                        }
-                    } else if (event.type === 'delete' && fileIndex !== -1) {
-                        updatedFiles.splice(fileIndex, 1)
-                    }
+                    return Array.from(fileMap.values())
                 })
-
-                setFiles(updatedFiles)
             })
 
             return () => {
