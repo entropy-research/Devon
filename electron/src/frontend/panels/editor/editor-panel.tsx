@@ -11,6 +11,11 @@ import {
     getIconFromFilename,
 } from '@/lib/programming-language-utils'
 import useFileWatcher from './lib/hooks/use-file-watcher'
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from '@/components/ui/resizable'
 
 const boilerplateFile = {
     id: 'main.py',
@@ -119,24 +124,27 @@ const EditorPanel = ({
                         </button>
                     </div>
                     <div className="flex flex-grow overflow-hidden">
-                        <div className="flex-none w-40 bg-midnight border-r border-outlinecolor">
-                            <FileTree
-                                files={files}
-                                selectedFileId={selectedFileId}
-                                setSelectedFileId={setSelectedFileId}
-                                projectPath={path}
-                            />
-                        </div>
-                        <div className="flex-grow flex flex-col overflow-hidden">
-                            <CodeEditor
-                                files={files}
-                                selectedFileId={selectedFileId}
-                                setSelectedFileId={setSelectedFileId}
-                                isExpandedVariant={isExpandedVariant}
-                                showEditorBorders={showEditorBorders}
-                                path={path}
-                            />
-                        </div>
+                        <ResizablePanelGroup direction="horizontal">
+                            <ResizablePanel defaultSize={20} className="flex-none w-40 bg-midnight border-r border-outlinecolor">
+                                <FileTree
+                                    files={files}
+                                    selectedFileId={selectedFileId}
+                                    setSelectedFileId={setSelectedFileId}
+                                    projectPath={path}
+                                />
+                            </ResizablePanel>
+                            <ResizableHandle />
+                            <ResizablePanel defaultSize={80} className="flex-grow flex flex-col overflow-hidden">
+                                <CodeEditor
+                                    files={files}
+                                    selectedFileId={selectedFileId}
+                                    setSelectedFileId={setSelectedFileId}
+                                    isExpandedVariant={isExpandedVariant}
+                                    showEditorBorders={showEditorBorders}
+                                    path={path}
+                                />
+                            </ResizablePanel>
+                        </ResizablePanelGroup>
                     </div>
                     <div className={`h-[23vh] ${showEditorBorders ? '' : ''}`}>
                         <ShellPanel messages={messages} />
