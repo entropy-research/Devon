@@ -15,7 +15,8 @@
         "start": "electron-forge start",
         "package": "electron-forge package",
         "make": "electron-forge make",
-        "lint": "eslint --ext .ts,.tsx ."
+        "lint": "eslint --ext .ts,.tsx .",
+        "prettier": "npx prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\""
     },
     "contributors": [
         "ObjectJosh",

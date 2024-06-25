@@ -70,11 +70,14 @@ const EditorPanel = ({
                     id: filepath,
                     name: filepath.split('/').pop() ?? 'unnamed_file',
                     path: filepath,
-                    language: getLanguageFromFilename(
-                        filepath.split('/').pop() ?? 'text'
-                    ),
+                    language:
+                        getLanguageFromFilename(
+                            filepath.split('/').pop() ?? ''
+                        ) ?? '',
                     value: state.context.sessionState.editor.files[filepath],
-                    icon: getIconFromFilename(filepath.split('/').pop() ?? 'unnamed_file.txt'),
+                    icon:
+                        getIconFromFilename(filepath.split('/').pop() ?? '') ??
+                        '',
                 })
             )
         } else {
@@ -104,13 +107,16 @@ const EditorPanel = ({
         prevInitialFilesRef.current = initialFiles
     }, [initialFiles])
 
-    const handleFileSelect = useCallback((fileId: string | null) => {
-        setSelectedFileId(fileId)
-        const selectedFile = files.find(file => file.id === fileId)
-        if (selectedFile && !openFiles.some(file => file.id === fileId)) {
-            setOpenFiles(prevOpenFiles => [...prevOpenFiles, selectedFile])
-        }
-    }, [files, openFiles])
+    const handleFileSelect = useCallback(
+        (fileId: string | null) => {
+            setSelectedFileId(fileId)
+            const selectedFile = files.find(file => file.id === fileId)
+            if (selectedFile && !openFiles.some(file => file.id === fileId)) {
+                setOpenFiles(prevOpenFiles => [...prevOpenFiles, selectedFile])
+            }
+        },
+        [files, openFiles]
+    )
 
     return (
         <div

@@ -14,7 +14,7 @@ import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { useBackendUrl } from '@/contexts/backend-url-context'
 import { useAtom } from 'jotai'
 import { selectedCodeSnippetAtom } from '@/panels/editor/components/code-editor'
-import CodeSnippet, { ICodeSnippet, codeSnippetsAtom} from '../ui/code-snippet'
+import CodeSnippet, { ICodeSnippet, codeSnippetsAtom } from '../ui/code-snippet'
 
 const ChatInputField = ({
     isAtBottom,

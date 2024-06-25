@@ -282,8 +282,8 @@ const PathDisplay = ({
                       selectedFileId.replace(getPathBeforeLastSlash(path), '')
                   )
                 : path
-                ? convertPath(path)
-                : ''}
+                  ? convertPath(path)
+                  : ''}
         </p>
     </div>
 )

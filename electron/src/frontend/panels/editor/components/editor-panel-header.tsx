@@ -1,24 +1,29 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { Bot } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Icon } from '@iconify/react';
-import { useToast } from '@/components/ui/use-toast';
+import React, { useState, useCallback, useMemo } from 'react'
+import { Bot } from 'lucide-react'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Icon } from '@iconify/react'
+import { useToast } from '@/components/ui/use-toast'
 
 const EditorPanelHeader = ({ path }: { path: string }) => {
-    const { toast } = useToast();
-    const [vscodeTooltipOpen, setVscodeTooltipOpen] = useState(false);
+    const { toast } = useToast()
+    const [vscodeTooltipOpen, setVscodeTooltipOpen] = useState(false)
 
-    const vscodeProjectLink = useMemo(() => `vscode://file/${path}`, [path]);
+    const vscodeProjectLink = useMemo(() => `vscode://file/${path}`, [path])
 
     const openVSCode = useCallback(() => {
-        window.open(vscodeProjectLink, '_self');
-        setVscodeTooltipOpen(false);
-    }, [vscodeProjectLink]);
+        window.open(vscodeProjectLink, '_self')
+        setVscodeTooltipOpen(false)
+    }, [vscodeProjectLink])
 
     const handleTriggerClick = useCallback(() => {
-        openVSCode();
-        setVscodeTooltipOpen(false);
-    }, [openVSCode]);
+        openVSCode()
+        setVscodeTooltipOpen(false)
+    }, [openVSCode])
 
     return (
         <div className="w-full border-b border-outlinecolor flex justify-center py-1 relative group">
@@ -67,7 +72,7 @@ const EditorPanelHeader = ({ path }: { path: string }) => {
                 </TooltipProvider>
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default React.memo(EditorPanelHeader);
+export default React.memo(EditorPanelHeader)

@@ -78,7 +78,9 @@
     }
     body {
         @apply bg-background text-foreground;
-        font-feature-settings: 'rlig' 1, 'calt' 1;
+        font-feature-settings:
+            'rlig' 1,
+            'calt' 1;
     }
 
     html {
@@ -138,7 +140,9 @@
     .horizontal-scrollbar::-webkit-scrollbar-thumb {
         background-color: transparent;
         border-radius: 4px;
-        transition: background-color 0.3s ease, opacity 0.3s ease;
+        transition:
+            background-color 0.3s ease,
+            opacity 0.3s ease;
         opacity: 0;
     }
 

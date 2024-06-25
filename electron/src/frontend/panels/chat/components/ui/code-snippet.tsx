@@ -40,15 +40,17 @@ const CodeSnippet = ({
                             language={snippet.language}
                             value={snippet.selection}
                             fileName={snippet.fileName}
-                            subtext={snippet.startLineNumber === snippet.endLineNumber ? `(Line ${snippet.startLineNumber})` : `(Lines ${snippet.startLineNumber} to ${snippet.endLineNumber})`}
+                            subtext={
+                                snippet.startLineNumber ===
+                                snippet.endLineNumber
+                                    ? `(Line ${snippet.startLineNumber})`
+                                    : `(Lines ${snippet.startLineNumber} to ${snippet.endLineNumber})`
+                            }
                             onClickHeader={() => onClickHeader(snippet)}
                         />
                     </pre>
                     <button className="z-10 absolute top-1 right-1 text-neutral-500 hover:text-white cursor-pointer p-1 transition-colors duration-300 ease-in-out bg-zinc-800">
-                        <X
-                            onClick={() => onClose(snippet.id)}
-                            size={14}
-                        />
+                        <X onClick={() => onClose(snippet.id)} size={14} />
                     </button>
                 </div>
             ))}

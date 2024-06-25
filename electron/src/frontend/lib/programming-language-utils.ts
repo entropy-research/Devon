@@ -150,7 +150,7 @@ const mappings: Mappings = {
     txt: { language: 'txt', icon: 'vscode-icons:file-type-text' },
     gitignore: { language: 'gitignore', icon: 'vscode-icons:file-type-git' },
     json: { language: 'json', icon: 'vscode-icons:file-type-json' },
-    env: { language: 'dotenv', icon: 'vscode-icons:file-type-dotenv'}
+    env: { language: 'dotenv', icon: 'vscode-icons:file-type-dotenv' },
 }
 
 // Function to get language from filename

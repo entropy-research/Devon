@@ -24,7 +24,13 @@ const ActionItem = ({
         <StyledButton active={active} icon={icon} clickAction={clickAction} />
     )
 
-const DialogWrapper = ({ triggerButton, children }) => (
+const DialogWrapper = ({
+    triggerButton,
+    children,
+}: {
+    triggerButton: JSX.Element
+    children: JSX.Element
+}) => (
     <Dialog>
         {triggerButton}
         {children}
@@ -45,7 +51,9 @@ const StyledButton = ({
     isTrigger ? (
         <DialogTrigger asChild>
             <button
-                className={`w-8 h-8 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${active ? 'bg-gray-100 dark:bg-batman' : ''}`}
+                className={`w-8 h-8 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${
+                    active ? 'bg-gray-100 dark:bg-batman' : ''
+                }`}
             >
                 {icon}
             </button>
@@ -53,7 +61,9 @@ const StyledButton = ({
     ) : (
         <button
             onClick={clickAction}
-            className={`w-8 h-8 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${active ? 'bg-gray-100 dark:bg-batman' : ''}`}
+            className={`w-8 h-8 flex items-center justify-center rounded-md transition duration-200 hover:bg-gray-100 dark:hover:bg-batman ${
+                active ? 'bg-gray-100 dark:bg-batman' : ''
+            }`}
         >
             {icon}
         </button>

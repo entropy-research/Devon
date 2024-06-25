@@ -248,7 +248,9 @@ const IndexItemComponent = ({
                             className="absolute right-2"
                             color="#636363"
                         />
-                    ) : <p>{index.status}</p>}
+                    ) : (
+                        <p>{index.status}</p>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     {index.status === 'error' && (
