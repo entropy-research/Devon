@@ -5,10 +5,12 @@ import requests
 import platform
 
 class FossilVersioning:
-    def __init__(self, project_path, fossil_dir, github_token=None):
+    def __init__(self, project_path, fossil_dir):
         self.project_path = project_path
         self.fossil_dir = fossil_dir
-        self.github_token = github_token
+
+    def revert_to_initial_commit(self):
+        subprocess.run(['fossil', 'update', '0'], cwd=self.project_path, check=True)
 
     def check_fossil_installation(self):
         try:
@@ -61,34 +63,6 @@ class FossilVersioning:
         # This function assumes git is initialized in the project directory
         subprocess.run(['git', 'add', '.'], cwd=self.project_path, check=True)
         subprocess.run(['git', 'commit', '-m', message], cwd=self.project_path, check=True)
-
-    def create_git_pr(self, branch_name, pr_title, pr_body, repo_owner, repo_name):
-        if not self.github_token:
-            raise ValueError("GitHub token is required to create a PR")
-
-        # Create a new branch
-        subprocess.run(['git', 'checkout', '-b', branch_name], cwd=self.project_path, check=True)
-
-        # Push the branch to GitHub
-        subprocess.run(['git', 'push', '-u', 'origin', branch_name], cwd=self.project_path, check=True)
-
-        # Create the PR using GitHub API
-        url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/pulls"
-        headers = {
-            "Authorization": f"token {self.github_token}",
-            "Accept": "application/vnd.github.v3+json"
-        }
-        data = {
-            "title": pr_title,
-            "body": pr_body,
-            "head": branch_name,
-            "base": "main"  # Assuming the main branch is called "main"
-        }
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        
-        pr_data = response.json()
-        print(f"Created PR: {pr_data['html_url']}")
 
 # Example usage:
 # fv = FossilVersioning('/path/to/your/project', github_token='your_github_token')

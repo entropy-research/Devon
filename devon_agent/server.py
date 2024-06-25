@@ -90,7 +90,7 @@ async def lifespan(app: fastapi.FastAPI):
                 k: Session.from_dict(v, lambda: get_user_input(k), persist=True)
                 for (k, v) in data.items()
             }
-            # sessions = data
+            sessions = data
             # for k, v in sessions.items():
                 # v.setup()
                 # background_tasks.add_task(v.run_event_loop)
@@ -195,6 +195,7 @@ def delete_index(index: str):
 @app.get("/sessions")
 def get_sessions():
     # TODO: figure out the right information to send
+    print(sessions.keys())
     return [
         {"name": session_name, "path": session_data.base_path}
         for session_name, session_data in sessions.items()
@@ -220,10 +221,11 @@ def create_session(
 
     sessions[session] = Session(
         SessionArguments(
-            path, user_input=lambda: get_user_input(session), name=session,db_path=app.db_path if app.db_path else "."
+            path, user_input=lambda: get_user_input(session), name=session,db_path=app.db_path if app.db_path else ".",        versioning="fossil"
         ),
         agent,
         app.persist,
+
     )
 
     sessions[session].init_state()
@@ -260,7 +262,7 @@ def start_session(
     session_obj = sessions.get(session)
     session_obj.agent.api_key = api_key
     if session not in running_sessions:
-        session.setup()
+        session_obj.setup()
         background_tasks.add_task(sessions[session].run_event_loop)
         running_sessions.append(session)
 

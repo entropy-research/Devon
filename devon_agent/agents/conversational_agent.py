@@ -7,7 +7,7 @@
 import logging
 import time
 import traceback
-from typing import Tuple
+from typing import TYPE_CHECKING, Tuple
 
 from tenacity import RetryError
 from devon_agent.agents.default.agent import Agent
@@ -15,10 +15,13 @@ from devon_agent.agents.default.anthropic_prompts import anthropic_commands_to_c
 from devon_agent.agents.default.llama3_prompts import llama3_parse_response
 from devon_agent.agents.default.openai_prompts import openai_commands_to_command_docs, openai_last_user_prompt_template_v3, openai_system_prompt_template_v3
 from devon_agent.agents.model import AnthropicModel, ModelArguments, OpenAiModel
-from devon_agent.session import Session
+
 from devon_agent.tools.utils import get_cwd
 from devon_agent.udiff import Hallucination
 from devon_agent.utils import LOGGER_NAME
+
+if TYPE_CHECKING:
+    from devon_agent.session import Session
 
 logger = logging.getLogger(LOGGER_NAME)
 

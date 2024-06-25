@@ -6,11 +6,13 @@ import os
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
+from devon_agent.agents.conversational_agent import ConversationalAgent
 
 
 from devon_agent.agents.default.agent import AgentArguments, TaskAgent
 from devon_agent.environment import LocalEnvironment, UserEnvironment
+from devon_agent.fossil_versioning import FossilVersioning
 from devon_agent.models import _delete_session_util, _save_session_util
 from devon_agent.telemetry import Posthog, SessionStartEvent
 from devon_agent.tool import ToolNotFoundException
@@ -44,6 +46,7 @@ class SessionArguments:
     task: Optional[str] = None
     # config: Optional[Dict[str, Any]] = None
     headless: Optional[bool] = False
+    versioning : Optional[Literal["git", "fossil"]] = None
   
 
 
@@ -225,7 +228,7 @@ class Session:
                 task=data["task"] if "task" in data else None,
                 db_path=data["db_path"] if "db_path" in data else "."
             ),
-            agent=TaskAgent(
+            agent=ConversationalAgent(
                 name=data["agent"]["name"],
                 args=AgentArguments(**data["agent"]["config"]),
                 temperature=data["agent"]["temperature"],
@@ -486,6 +489,8 @@ class Session:
                             )
 
             case "ToolResponse":
+                # self.versioning.commit_all_files("commit")
+                # self.versioning.commit_all_files("commit")
                 new_events.append(
                     {
                         "type": "ModelRequest",
@@ -589,6 +594,21 @@ class Session:
             self.state.task = self.args.headless
         else:
             self.state.task = self.args.task
+
+
+        if self.args.versioning == "fossil":
+            try:
+                self.versioning = FossilVersioning(self.args.path, self.args.db_path)
+                self.versioning.initialize_fossil()
+                self.versioning.commit_all_files()
+            except FileNotFoundError:
+                self.versioning.install_fossil()
+                self.versioning = FossilVersioning(self.args.path, self.args.db_path)
+                self.versioning.initialize_fossil()
+                self.versioning.commit_all_files()
+            except Exception as e:
+                print("Error setting up fossil versioning", e)
+                self.versioning = None
 
         self.status = "paused"
 
