@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import Editor, { Monaco } from '@monaco-editor/react'
-import type { editor } from 'monaco-editor'
+import type { editor, ISelection } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { File } from '@/lib/types'
 import { atom, useAtom } from 'jotai'
@@ -34,6 +34,7 @@ export default function CodeEditor({
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
     const monacoRef = useRef<Monaco | null>(null)
     const [openFiles, setOpenFiles] = useState<File[]>(initialFiles)
+    const fileSelectionsRef = useRef<Record<string, ISelection | null>>({})
 
     const addFileToOpenFiles = useCallback((file: File) => {
         setOpenFiles(prevOpenFiles => {
@@ -43,15 +44,6 @@ export default function CodeEditor({
             return prevOpenFiles
         })
     }, [])
-
-    useEffect(() => {
-        if (selectedFileId) {
-            const selectedFile = files.find(f => f.id === selectedFileId)
-            if (selectedFile) {
-                addFileToOpenFiles(selectedFile)
-            }
-        }
-    }, [selectedFileId, files, addFileToOpenFiles])
 
     const handleFileSelect = useCallback(
         (id: string) => {
@@ -80,24 +72,73 @@ export default function CodeEditor({
                 }
             }
         },
-        [openFiles, selectedFileId]
+        [openFiles, selectedFileId, setSelectedFileId]
     )
 
-    const handleEditorDidMount = (
-        editor: editor.IStandaloneCodeEditor,
-        monaco: Monaco
-    ) => {
-        editorRef.current = editor
-        monacoRef.current = monaco
-        monaco.editor.defineTheme('theme', {
-            base: 'vs-dark',
-            inherit: true,
-            rules: [],
-            colors: {},
-        })
+    const updateSelectionInfo = useCallback(
+        (
+            editor: editor.IStandaloneCodeEditor,
+            monaco: Monaco,
+            selection: ISelection,
+            fileId: string
+        ) => {
+            const range = new monaco.Range(
+                selection.selectionStartLineNumber,
+                selection.selectionStartColumn,
+                selection.positionLineNumber,
+                selection.positionColumn
+            )
+            const lineHeight = editor.getOption(
+                monaco.editor.EditorOption.lineHeight
+            )
+            const scrollTop = editor.getScrollTop()
+            const top =
+                editor.getTopForLineNumber(range.endLineNumber) +
+                lineHeight +
+                50 -
+                scrollTop
+            const tooltipXOffset = 57
+            const left = tooltipXOffset
 
-        monaco.editor.setTheme('theme')
-    }
+            const selectedText = editor.getModel()?.getValueInRange(range)
+            const relativePath = getRelativePath(fileId, path)
+            const fileName = getFileName(fileId)
+            const language =
+                files?.find(f => f.id === fileId)?.language ?? 'text'
+
+            setSelectionInfo({
+                id: `${relativePath}:${selection.selectionStartLineNumber}-${selection.selectionStartLineNumber}`,
+                fullPath: fileId,
+                relativePath,
+                fileName,
+                selection: selectedText ?? '',
+                startLineNumber: selection.selectionStartLineNumber,
+                endLineNumber: selection.positionLineNumber,
+                startColumn: selection.selectionStartColumn,
+                endColumn: selection.positionLineNumber,
+                language,
+            })
+
+            setPopoverPosition({ top, left })
+            setPopoverVisible(true)
+        },
+        [files, path]
+    )
+
+    const handleEditorDidMount = useCallback(
+        (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => {
+            editorRef.current = editor
+            monacoRef.current = monaco
+            monaco.editor.defineTheme('theme', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [],
+                colors: {},
+            })
+            monaco.editor.setTheme('theme')
+        },
+        []
+    )
 
     useEffect(() => {
         if (!editorRef.current || !monacoRef.current) return
@@ -105,65 +146,54 @@ export default function CodeEditor({
         const editor = editorRef.current
         const monaco = monacoRef.current
 
-        const disposable = editor.onDidChangeCursorSelection(e => {
+        const handleSelectionChange = (
+            e: editor.ICursorSelectionChangedEvent
+        ) => {
             const selection = editor.getSelection()
+            console.log(selection)
             if (selectedFileId && selection && !selection.isEmpty()) {
-                const range = new monaco.Range(
-                    selection.startLineNumber,
-                    selection.startColumn,
-                    selection.endLineNumber,
-                    selection.endColumn
-                )
-                const lineHeight = editor.getOption(
-                    monaco.editor.EditorOption.lineHeight
-                )
-                const scrollTop = editor.getScrollTop()
-                const top =
-                    editor.getTopForLineNumber(range.endLineNumber) +
-                    lineHeight +
-                    50 -
-                    scrollTop
-                const tooltipXOffset = 57
-                const left = tooltipXOffset
-
-                const selectedText = editor.getModel()?.getValueInRange(range)
-                const startLineNumber = selection.startLineNumber
-                const endLineNumber = selection.endLineNumber
-                const startColumn = selection.startColumn
-                const endColumn = selection.endColumn
-
-                const relativePath = getRelativePath(selectedFileId, path)
-                const fileName = getFileName(selectedFileId)
-                let language = 'text'
-                if (files) {
-                    language =
-                        files?.find(f => f.id === selectedFileId)?.language ??
-                        'text'
-                }
-                setSelectionInfo({
-                    // id: `${fileName}:${selection.startLineNumber}-${selection.endLineNumber}`,
-                    id: `${relativePath}:${selection.startLineNumber}-${selection.endLineNumber}`,
-                    fullPath: selectedFileId,
-                    relativePath: relativePath,
-                    fileName: fileName,
-                    selection: selectedText ?? '',
-                    startLineNumber,
-                    endLineNumber,
-                    startColumn,
-                    endColumn,
-                    language,
-                })
-
-                setPopoverPosition({ top, left })
+                fileSelectionsRef.current[selectedFileId] = selection
+                updateSelectionInfo(editor, monaco, selection, selectedFileId)
             } else {
                 setPopoverVisible(false)
             }
-        })
+        }
+
+        const disposable = editor.onDidChangeCursorSelection(
+            handleSelectionChange
+        )
+
+        // Restore selection when switching tabs or opening a new file
+        if (selectedFileId) {
+            const storedSelection = fileSelectionsRef.current[selectedFileId]
+            if (storedSelection) {
+                editor.setSelection(storedSelection)
+                updateSelectionInfo(
+                    editor,
+                    monaco,
+                    storedSelection,
+                    selectedFileId
+                )
+            } else {
+                // Clear selection and hide popover when opening a new file
+                setPopoverVisible(false)
+                editor.setSelection(new monaco.Selection(0, 0, 0, 0))
+            }
+        }
 
         return () => {
             disposable.dispose()
         }
-    }, [selectedFileId, path])
+    }, [selectedFileId, updateSelectionInfo])
+
+    useEffect(() => {
+        if (selectedFileId) {
+            const selectedFile = files.find(f => f.id === selectedFileId)
+            if (selectedFile) {
+                addFileToOpenFiles(selectedFile)
+            }
+        }
+    }, [selectedFileId, files, addFileToOpenFiles])
     // Add a mouseup event listener to show the popover
     useEffect(() => {
         const handleMouseUp = () => {
@@ -177,7 +207,7 @@ export default function CodeEditor({
         return () => {
             window.removeEventListener('mouseup', handleMouseUp)
         }
-    }, [])
+    }, [selectedFileId])
 
     const [, setSelectedCodeSnippet] = useAtom<ICodeSnippet | null>(
         selectedCodeSnippetAtom
@@ -187,7 +217,7 @@ export default function CodeEditor({
         if (selectionInfo) {
             setSelectedCodeSnippet(selectionInfo)
         }
-        setPopoverVisible(false)
+        // setPopoverVisible(false)
     }
 
     return (
@@ -282,8 +312,8 @@ const PathDisplay = ({
                       selectedFileId.replace(getPathBeforeLastSlash(path), '')
                   )
                 : path
-                  ? convertPath(path)
-                  : ''}
+                ? convertPath(path)
+                : ''}
         </p>
     </div>
 )

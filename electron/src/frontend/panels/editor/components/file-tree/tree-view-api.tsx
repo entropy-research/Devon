@@ -283,46 +283,43 @@ const Folder = forwardRef<
                 value={value}
                 className="relative overflow-hidden h-full"
             >
-                <TooltipProvider delayDuration={1500}>
+                {/* <TooltipProvider delayDuration={1500}>
                     <Tooltip>
-                        <TooltipTrigger asChild>
-                            <AccordionPrimitive.Trigger
-                                className={cn(
-                                    `flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman`,
-                                    {
-                                        'bg-night': isSelect && isSelectable,
-                                        'cursor-pointer': isSelectable,
-                                        'cursor-not-allowed opacity-50':
-                                            !isSelectable,
-                                    },
-                                    className
-                                )}
-                                disabled={!isSelectable}
-                                onClick={() => handleExpand(value)}
-                            >
-                                {expendedItems?.includes(value)
-                                    ? openIcon ?? (
-                                          <Icon
-                                              icon="vscode-icons:default-folder-opened"
-                                              className="h-4 w-4 mr-2 ml-[2px]"
-                                          />
-                                      )
-                                    : closeIcon ?? (
-                                          <Icon
-                                              icon="vscode-icons:default-folder"
-                                              className="h-4 w-4 mr-2 ml-[2px]"
-                                          />
-                                      )}
-                                <span className="flex-1 truncate text-left">
-                                    {element}
-                                </span>
-                            </AccordionPrimitive.Trigger>
-                        </TooltipTrigger>
+                        <TooltipTrigger asChild> */}
+                <AccordionPrimitive.Trigger
+                    className={cn(
+                        `flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman`,
+                        {
+                            'bg-night': isSelect && isSelectable,
+                            'cursor-pointer': isSelectable,
+                            'cursor-not-allowed opacity-50': !isSelectable,
+                        },
+                        className
+                    )}
+                    disabled={!isSelectable}
+                    onClick={() => handleExpand(value)}
+                >
+                    {expendedItems?.includes(value)
+                        ? openIcon ?? (
+                              <Icon
+                                  icon="vscode-icons:default-folder-opened"
+                                  className="h-4 w-4 mr-2 ml-[2px]"
+                              />
+                          )
+                        : closeIcon ?? (
+                              <Icon
+                                  icon="vscode-icons:default-folder"
+                                  className="h-4 w-4 mr-2 ml-[2px]"
+                              />
+                          )}
+                    <span className="flex-1 truncate text-left">{element}</span>
+                </AccordionPrimitive.Trigger>
+                {/* </TooltipTrigger>
                         <TooltipContent side="right" align="end">
                             <p>{value}</p>
                         </TooltipContent>
                     </Tooltip>
-                </TooltipProvider>
+                </TooltipProvider> */}
 
                 <AccordionPrimitive.Content className="text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down relative overflow-hidden h-full">
                     {element && indicator && (
