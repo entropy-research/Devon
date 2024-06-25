@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
     Paperclip,
     ArrowRight,
@@ -12,6 +12,8 @@ import SelectProjectDirectoryModal from '@/components/modals/select-project-dire
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { useBackendUrl } from '@/contexts/backend-url-context'
+import { useAtom } from 'jotai'
+import { selectedCodeSnippetAtom } from '@/panels/editor/components/code-editor'
 
 const ChatInputField = ({
     isAtBottom,
@@ -33,12 +35,23 @@ const ChatInputField = ({
     const { formRef, onKeyDown } = useEnterSubmit()
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const [input, setInput] = useState('')
+    const [selectedCodeSnippet, setSelectedCodeSnippet] = useAtom<
+        string | null
+    >(selectedCodeSnippetAtom)
+
     // For blocking user with modal
     // const searchParams = useSearchParams()
     const [openProjectModal, setOpenProjectModal] = useState(false)
     const { backendUrl } = useBackendUrl()
 
     const sessionActorRef = SessionMachineContext.useActorRef()
+
+    useEffect(() => {
+        if (selectedCodeSnippet) {
+            setInput(prevInput => prevInput + '\n' + selectedCodeSnippet)
+            setSelectedCodeSnippet(null)
+        }
+    }, [selectedCodeSnippet, setSelectedCodeSnippet])
 
     async function submitUserMessage(value: string) {
         sessionActorRef.send({ type: 'session.sendMessage', message: value })
@@ -115,6 +128,13 @@ const ChatInputField = ({
                                 onChange={e => setInput(e.target.value)}
                                 disabled={loading}
                             />
+                            {selectedCodeSnippet && (
+                                <div className="mt-2 p-2 bg-gray-100 rounded">
+                                    <pre className="text-sm">
+                                        {selectedCodeSnippet}
+                                    </pre>
+                                </div>
+                            )}
                             {/* <button
                                 onClick={toast}
                                 className="absolute left-[0.5rem] top-1/2 -translate-y-1/2 xl:left-[0.75rem] flex h-8 w-8 items-center justify-center rounded-md smooth-hover"

@@ -119,12 +119,12 @@ export const ToolResponseMessage = ({
 }) => {
     const icon = <div className="w-[32px]"></div>
     let [command, response] = content.toString().split('|START_RESPONSE|')
+
     if (command.includes('Running command: edit')) {
         const indexOfFirstNewline = command.indexOf('\n')
         if (indexOfFirstNewline !== -1) {
             command = command.substring(indexOfFirstNewline + 1)
         }
-
         const { filename, language, searchContent, replaceContent } =
             parseFileDiff(command)
 
@@ -146,6 +146,7 @@ export const ToolResponseMessage = ({
                             viewType="unified"
                             diffType={file.type}
                             hunks={file.hunks}
+                            gutterType="none"
                         >
                             {hunks =>
                                 hunks.map(hunk => (

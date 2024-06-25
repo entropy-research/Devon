@@ -3,6 +3,9 @@ import Editor, { Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { File } from '@/lib/types'
+import { atom, useAtom } from 'jotai'
+
+export const selectedCodeSnippetAtom = atom<string | null>(null)
 
 export default function CodeEditor({
     files,
@@ -108,9 +111,16 @@ export default function CodeEditor({
         }
     }, [])
 
+    const [, setSelectedCodeSnippet] = useAtom<string | null>(
+        selectedCodeSnippetAtom
+    )
+
     const handleAddCodeReference = () => {
-        console.log(JSON.stringify(selectionInfo, null, 2))
-        // Add your logic to handle the selected text
+        if (selectionInfo) {
+            const snippetText = `${selectionInfo.path}:${selectionInfo.startLineNumber}-${selectionInfo.endLineNumber}\n${selectionInfo.selection}`
+            setSelectedCodeSnippet(snippetText)
+            console.log('Code snippet added:', snippetText)
+        }
         setPopoverVisible(false)
     }
 
