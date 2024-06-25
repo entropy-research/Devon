@@ -30,6 +30,8 @@ type TreeViewProps = {
 ) &
     TreeViewComponentProps
 
+const ACCORDION_ITEM_HEIGHT = 18
+
 export const TreeView = ({
     files,
     selectedFileId,
@@ -122,8 +124,11 @@ export const TreeView = ({
                             initialSelectedId={initialSelectedId}
                             initialExpendedItems={initialExpendedItems}
                             elements={elements}
-                            style={{ height, width }}
-                            className="h-full overflow-y-auto"
+                            style={{
+                                height: height - ACCORDION_ITEM_HEIGHT,
+                                width,
+                            }}
+                            className="overflow-y-auto"
                             id="tree"
                         >
                             {getVirtualItems().map(element => (
