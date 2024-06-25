@@ -131,9 +131,15 @@ const EditorPanel = ({
                         : ''
                 }`}
             >
-                <div className="flex flex-col flex-grow w-full h-full">
+                <div
+                    // direction="vertical"
+                    className="flex flex-col flex-grow w-full h-full"
+                >
                     <EditorPanelHeader path={path} />
-                    <div className="flex flex-grow overflow-hidden">
+                    <div
+                        // defaultSize={80}
+                        className="flex overflow-hidden h-full"
+                    >
                         <ResizablePanelGroup direction="horizontal">
                             <ResizablePanel
                                 defaultSize={20}
@@ -164,7 +170,12 @@ const EditorPanel = ({
                             </ResizablePanel>
                         </ResizablePanelGroup>
                     </div>
-                    <div className={`h-[23vh] ${showEditorBorders ? '' : ''}`}>
+
+                    {/* <ResizableHandle /> */}
+                    <div
+                        // defaultSize={20}
+                        className={`h-[20vh] ${showEditorBorders ? '' : ''}`}
+                    >
                         <ShellPanel messages={messages} />
                     </div>
                 </div>

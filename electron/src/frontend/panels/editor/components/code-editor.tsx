@@ -146,11 +146,17 @@ export default function CodeEditor({
         const editor = editorRef.current
         const monaco = monacoRef.current
 
+        const handleMouseUp = () => {
+            const selection = editor.getSelection()
+            if (selection && !selection.isEmpty()) {
+                setPopoverVisible(true)
+            }
+        }
+
         const handleSelectionChange = (
             e: editor.ICursorSelectionChangedEvent
         ) => {
             const selection = editor.getSelection()
-            console.log(selection)
             if (selectedFileId && selection && !selection.isEmpty()) {
                 fileSelectionsRef.current[selectedFileId] = selection
                 updateSelectionInfo(editor, monaco, selection, selectedFileId)
@@ -180,11 +186,13 @@ export default function CodeEditor({
                 editor.setSelection(new monaco.Selection(0, 0, 0, 0))
             }
         }
+        window.addEventListener('mouseup', handleMouseUp)
 
         return () => {
             disposable.dispose()
+            window.removeEventListener('mouseup', handleMouseUp)
         }
-    }, [selectedFileId, updateSelectionInfo])
+    }, [selectedFileId, updateSelectionInfo, editorRef.current, monacoRef.current])
 
     useEffect(() => {
         if (selectedFileId) {
@@ -194,20 +202,6 @@ export default function CodeEditor({
             }
         }
     }, [selectedFileId, files, addFileToOpenFiles])
-    // Add a mouseup event listener to show the popover
-    useEffect(() => {
-        const handleMouseUp = () => {
-            const selection = editorRef.current?.getSelection()
-            if (selection && !selection.isEmpty()) {
-                setPopoverVisible(true)
-            }
-        }
-
-        window.addEventListener('mouseup', handleMouseUp)
-        return () => {
-            window.removeEventListener('mouseup', handleMouseUp)
-        }
-    }, [selectedFileId])
 
     const [, setSelectedCodeSnippet] = useAtom<ICodeSnippet | null>(
         selectedCodeSnippetAtom
