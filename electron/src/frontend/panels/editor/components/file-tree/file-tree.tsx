@@ -1,6 +1,8 @@
 import { TreeView } from './tree-view'
 import { File } from '@/lib/types'
 import { TreeViewElement } from './tree-view-api'
+import { getRelativePath } from '@/lib/utils'
+
 export default function FileTree({
     files,
     selectedFileId,
@@ -33,19 +35,9 @@ const buildFileTree = (
     projectPath: string
 ): TreeViewElement[] => {
     const tree: { [key: string]: any } = {}
-    function addTrailingSlash(str: string) {
-        if (!str.endsWith('/')) {
-            return str + '/'
-        }
-        return str
-    }
 
     files.forEach(file => {
-        const relativePath = file.path.replace(
-            addTrailingSlash(projectPath),
-            ''
-        )
-        const parts = relativePath.split('/')
+        const parts = getRelativePath(file.path, projectPath).split('/')
         let current = tree
 
         parts.forEach((part, index) => {

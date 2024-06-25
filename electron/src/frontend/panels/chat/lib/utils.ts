@@ -17,7 +17,7 @@ export function parseFileDiff(input: string): {
     lines.shift()
 
     // Extract language from the first line
-    if (lines && lines[0].startsWith('```')) {
+    if (lines.length > 0 && lines[0].startsWith('```')) {
         language = lines[0].slice(3).trim()
         lines.shift()
     }

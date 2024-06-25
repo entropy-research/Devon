@@ -1,18 +1,13 @@
 import { Bot, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { spinner } from './chat.spinner'
-import { CodeBlock } from '@/components/ui/codeblock'
-import { MemoizedReactMarkdown } from './chat.memoized-react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
-// import { remarkCustomCode } from './remarkCustomCode' // import the custom plugin
-// import { TfiThought } from 'react-icons/tfi'
 import { Icon } from '@iconify/react'
 import { parseDiff, Diff, Hunk } from 'react-diff-view'
 import 'react-diff-view/style/index.css'
 import './diff-view.css'
 import { parseFileDiff } from '../../lib/utils'
 import * as unidiff from 'unidiff'
+import StyledMessage from './styled-message'
 
 // Different types of message bubbles.
 
@@ -128,7 +123,10 @@ export const ToolResponseMessage = ({
         const { filename, language, searchContent, replaceContent } =
             parseFileDiff(command)
 
-        const resultingDiffLines = unidiff.diffLines(searchContent, replaceContent)
+        const resultingDiffLines = unidiff.diffLines(
+            searchContent,
+            replaceContent
+        )
         const unifiedDiff = unidiff.formatLines(resultingDiffLines, {
             aname: 'before',
             bname: 'after',
@@ -160,92 +158,4 @@ export const ToolResponseMessage = ({
         )
     }
     return <StyledMessage content={command} className={className} icon={icon} />
-}
-
-const StyledMessage = ({
-    content,
-    className,
-    icon,
-}: {
-    content: string
-    className?: string
-    icon: React.ReactNode
-}) => {
-    const path = extractPath(content)
-    // const textWithoutPath = path
-    //     ? content.replace(`# ${path}`, '').trim()
-    //     : content
-    const textWithoutPath = content
-
-    return (
-        <div className={cn('group relative flex items-start', className)}>
-            {icon}
-            <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
-                {path && (
-                    <div className="text-sm text-gray-500 mb-2">
-                        <strong>Path:</strong> {path}
-                    </div>
-                )}
-                <MemoizedReactMarkdown
-                    className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
-                    remarkPlugins={[remarkGfm, remarkMath]}
-                    components={{
-                        p({ children }) {
-                            return <p className="mb-2 last:mb-0">{children}</p>
-                        },
-                        code({ node, inline, className, children, ...props }) {
-                            // Extract the path from the code block
-                            const codeContent = String(children).replace(
-                                /\n$/,
-                                ''
-                            )
-                            const path = extractPath(codeContent)
-                            // const textWithoutPath = path
-                            //     ? codeContent.replace(`# ${path}`, '').trim()
-                            //     : codeContent
-                            const textWithoutPath = codeContent
-
-                            if (inline || !className) {
-                                return (
-                                    <code
-                                        className={cn(
-                                            className,
-                                            'bg-black px-[4px] py-[3px] rounded-md text-white text-[0.9rem]'
-                                        )}
-                                        {...props}
-                                    >
-                                        {children}
-                                    </code>
-                                )
-                            }
-
-                            const match = /language-(\w+)/.exec(className || '')
-
-                            return (
-                                <>
-                                    <CodeBlock
-                                        key={Math.random()}
-                                        language={(match && match[1]) || ''}
-                                        value={textWithoutPath}
-                                        path={path}
-                                        {...props}
-                                    />
-                                </>
-                            )
-                        },
-                    }}
-                >
-                    {textWithoutPath}
-                </MemoizedReactMarkdown>
-            </div>
-        </div>
-    )
-}
-
-const extractPath = (content: string) => {
-    const pathMatch = content.match(/^# (\/[^\s]+)/)
-    if (pathMatch) {
-        return pathMatch[1]
-    }
-    return null
 }

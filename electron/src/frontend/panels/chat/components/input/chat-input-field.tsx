@@ -14,6 +14,8 @@ import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { useBackendUrl } from '@/contexts/backend-url-context'
 import { useAtom } from 'jotai'
 import { selectedCodeSnippetAtom } from '@/panels/editor/components/code-editor'
+import CodeSnippetDisplay from '../code-snippet-display'
+import { codeSnippetsAtom, CodeSnippet } from '../code-snippets-atom'
 
 const ChatInputField = ({
     isAtBottom,
@@ -35,9 +37,10 @@ const ChatInputField = ({
     const { formRef, onKeyDown } = useEnterSubmit()
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const [input, setInput] = useState('')
-    const [selectedCodeSnippet, setSelectedCodeSnippet] = useAtom<
-        string | null
-    >(selectedCodeSnippetAtom)
+    const [selectedCodeSnippet, setSelectedCodeSnippet] =
+        useAtom<CodeSnippet | null>(selectedCodeSnippetAtom)
+    const [codeSnippets, setCodeSnippets] = useAtom(codeSnippetsAtom)
+    const prevProjectPath = useRef<string>('')
 
     // For blocking user with modal
     // const searchParams = useSearchParams()
@@ -45,13 +48,43 @@ const ChatInputField = ({
     const { backendUrl } = useBackendUrl()
 
     const sessionActorRef = SessionMachineContext.useActorRef()
+    const projectPath = SessionMachineContext.useSelector(
+        state => state?.context?.sessionState?.path
+    )
+
+    useEffect(() => {
+        if (!prevProjectPath.current) {
+            prevProjectPath.current = projectPath
+        } else if (prevProjectPath.current !== projectPath) {
+            // Clear Jotai snippets
+            setCodeSnippets([])
+            setInput('')
+            prevProjectPath.current = projectPath
+        }
+    }, [projectPath])
+
+    function addSnippetToInputField(snippet: CodeSnippet) {
+        setInput(prevInput => prevInput + ` @${snippet.id} `)
+    }
 
     useEffect(() => {
         if (selectedCodeSnippet) {
-            setInput(prevInput => prevInput + '\n' + selectedCodeSnippet)
-            setSelectedCodeSnippet(null)
+            // Check if it already exists
+            const existingSnippet = codeSnippets.find(
+                snippet => snippet.id === selectedCodeSnippet.id
+            )
+            if (!existingSnippet) {
+                setCodeSnippets(prev => [...prev, selectedCodeSnippet])
+                setInput(
+                    prevInput => prevInput + ` @${selectedCodeSnippet.id} `
+                )
+            }
         }
-    }, [selectedCodeSnippet, setSelectedCodeSnippet])
+    }, [selectedCodeSnippet])
+
+    const handleRemoveSnippet = (id: string) => {
+        setCodeSnippets(prev => prev.filter(snippet => snippet.id !== id))
+    }
 
     async function submitUserMessage(value: string) {
         sessionActorRef.send({ type: 'session.sendMessage', message: value })
@@ -93,6 +126,12 @@ const ChatInputField = ({
                     pauseHandler={handlePause}
                 />
             )}
+
+            <CodeSnippetDisplay
+                snippets={codeSnippets}
+                onClose={handleRemoveSnippet}
+                onClickHeader={addSnippetToInputField}
+            />
             {!viewOnly && (
                 <>
                     <form
@@ -127,14 +166,9 @@ const ChatInputField = ({
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
                                 disabled={loading}
+                                highlightCodeSnippets={true}
+                                codeSnippets={codeSnippets}
                             />
-                            {selectedCodeSnippet && (
-                                <div className="mt-2 p-2 bg-gray-100 rounded">
-                                    <pre className="text-sm">
-                                        {selectedCodeSnippet}
-                                    </pre>
-                                </div>
-                            )}
                             {/* <button
                                 onClick={toast}
                                 className="absolute left-[0.5rem] top-1/2 -translate-y-1/2 xl:left-[0.75rem] flex h-8 w-8 items-center justify-center rounded-md smooth-hover"

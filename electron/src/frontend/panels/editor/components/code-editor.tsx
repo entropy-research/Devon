@@ -4,8 +4,10 @@ import type { editor } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { File } from '@/lib/types'
 import { atom, useAtom } from 'jotai'
+import { CodeSnippet } from '@/panels/chat/components/code-snippets-atom'
+import { getRelativePath, getFileName } from '@/lib/utils'
 
-export const selectedCodeSnippetAtom = atom<string | null>(null)
+export const selectedCodeSnippetAtom = atom<CodeSnippet | null>(null)
 
 export default function CodeEditor({
     files,
@@ -24,35 +26,35 @@ export default function CodeEditor({
 }): JSX.Element {
     const [popoverVisible, setPopoverVisible] = useState(false)
     const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 })
-    const [selectionInfo, setSelectionInfo] = useState<{
-        path: string | null
-        selection: string
-        startLineNumber: number
-        endLineNumber: number
-        startColumn: number
-        endColumn: number
-    } | null>(null)
+    const [selectionInfo, setSelectionInfo] = useState<CodeSnippet | null>(null)
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+    const monacoRef = useRef<Monaco | null>(null)
 
     const handleEditorDidMount = (
         editor: editor.IStandaloneCodeEditor,
         monaco: Monaco
     ) => {
         editorRef.current = editor
+        monacoRef.current = monaco
         monaco.editor.defineTheme('theme', {
             base: 'vs-dark',
             inherit: true,
             rules: [],
-            colors: {
-                // 'editor.background': bgColor,
-            },
+            colors: {},
         })
 
         monaco.editor.setTheme('theme')
+    }
 
-        editor.onDidChangeCursorSelection(e => {
+    useEffect(() => {
+        if (!editorRef.current || !monacoRef.current) return
+
+        const editor = editorRef.current
+        const monaco = monacoRef.current
+
+        const disposable = editor.onDidChangeCursorSelection(e => {
             const selection = editor.getSelection()
-            if (selection && !selection.isEmpty()) {
+            if (selectedFileId && selection && !selection.isEmpty()) {
                 const range = new monaco.Range(
                     selection.startLineNumber,
                     selection.startColumn,
@@ -62,16 +64,14 @@ export default function CodeEditor({
                 const lineHeight = editor.getOption(
                     monaco.editor.EditorOption.lineHeight
                 )
+                const scrollTop = editor.getScrollTop()
                 const top =
                     editor.getTopForLineNumber(range.endLineNumber) +
                     lineHeight +
-                    50
-                // const left = editor.getOffsetForColumn(
-                //     range.startLineNumber,
-                //     range.startColumn
-                // ) + 20
-                const lineNumberColWidth = 57
-                const left = lineNumberColWidth
+                    50 -
+                    scrollTop
+                const tooltipXOffset = 57
+                const left = tooltipXOffset
 
                 const selectedText = editor.getModel()?.getValueInRange(range)
                 const startLineNumber = selection.startLineNumber
@@ -79,23 +79,38 @@ export default function CodeEditor({
                 const startColumn = selection.startColumn
                 const endColumn = selection.endColumn
 
+                const relativePath = getRelativePath(selectedFileId, path)
+                const fileName = getFileName(selectedFileId)
+                let language = 'text'
+                if (files) {
+                    language =
+                        files?.find(f => f.id === selectedFileId)?.language ??
+                        'text'
+                }
                 setSelectionInfo({
-                    path: selectedFileId,
-                    selection: selectedText,
+                    // id: `${fileName}:${selection.startLineNumber}-${selection.endLineNumber}`,
+                    id: `${relativePath}:${selection.startLineNumber}-${selection.endLineNumber}`,
+                    fullPath: selectedFileId,
+                    relativePath: relativePath,
+                    fileName: fileName,
+                    selection: selectedText ?? '',
                     startLineNumber,
                     endLineNumber,
                     startColumn,
                     endColumn,
+                    language,
                 })
 
                 setPopoverPosition({ top, left })
-                // setPopoverVisible(true)
             } else {
                 setPopoverVisible(false)
             }
         })
-    }
 
+        return () => {
+            disposable.dispose()
+        }
+    }, [selectedFileId, path])
     // Add a mouseup event listener to show the popover
     useEffect(() => {
         const handleMouseUp = () => {
@@ -111,15 +126,13 @@ export default function CodeEditor({
         }
     }, [])
 
-    const [, setSelectedCodeSnippet] = useAtom<string | null>(
+    const [, setSelectedCodeSnippet] = useAtom<CodeSnippet | null>(
         selectedCodeSnippetAtom
     )
 
     const handleAddCodeReference = () => {
         if (selectionInfo) {
-            const snippetText = `${selectionInfo.path}:${selectionInfo.startLineNumber}-${selectionInfo.endLineNumber}\n${selectionInfo.selection}`
-            setSelectedCodeSnippet(snippetText)
-            console.log('Code snippet added:', snippetText)
+            setSelectedCodeSnippet(selectionInfo)
         }
         setPopoverVisible(false)
     }
@@ -149,7 +162,7 @@ export default function CodeEditor({
                 {popoverVisible && (
                     <button
                         onClick={handleAddCodeReference}
-                        className="absolute bg-night px-3 py-2 rounded-md shadow border hover:border-primary smooth-hover text-sm hover:bg-night"
+                        className="absolute bg-night px-3 py-2 rounded-md shadow border hover:border-primary smooth-hover text-sm hover:bg-night z-50"
                         style={{
                             top: popoverPosition.top,
                             left: popoverPosition.left,
