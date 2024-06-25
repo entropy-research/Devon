@@ -17,14 +17,9 @@ interface CustomScrollbarProps {
     innerRef?: React.RefObject<HTMLDivElement>
 }
 
-const CustomScrollbar: React.FC<CustomScrollbarProps> = ({
-    children,
-    innerRef,
-}) => {
+const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children, innerRef }) => {
     return (
-        <div ref={innerRef} className="horizontal-scrollbar overflow-x-auto">
-            {children}
-        </div>
+        <div ref={innerRef} className="horizontal-scrollbar overflow-x-auto">{children}</div>
     )
 }
 
@@ -50,12 +45,12 @@ const FileTabs = ({
     const scrollContainerRef = useRef<HTMLDivElement>(null)
     const [hoveredFileId, setHoveredFileId] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (selectedFileId && fileRefs.current.has(selectedFileId)) {
-            const selectedFileElement = fileRefs.current.get(selectedFileId)
+    const scrollIntoView = (fileId: string) => {
+        if (fileId && fileRefs.current.has(fileId)) {
+            const fileElement = fileRefs.current.get(fileId)
             const scrollContainer = scrollContainerRef.current
-            if (selectedFileElement && scrollContainer) {
-                const elementRect = selectedFileElement.getBoundingClientRect()
+            if (fileElement && scrollContainer) {
+                const elementRect = fileElement.getBoundingClientRect()
                 const containerRect = scrollContainer.getBoundingClientRect()
 
                 if (elementRect.left < containerRect.left) {
@@ -69,8 +64,11 @@ const FileTabs = ({
                 }
             }
         }
-    }, [selectedFileId])
+    }
 
+    useEffect(() => {
+        scrollIntoView(selectedFileId)
+    }, [selectedFileId, files])
     const showSelectedTabSkeleton = false
 
     return (

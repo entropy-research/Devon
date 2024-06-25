@@ -1,6 +1,6 @@
 import { Bot, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { spinner } from './chat.spinner'
+import { spinner } from '../ui/loading-spinner'
 import { Icon } from '@iconify/react'
 import { parseDiff, Diff, Hunk } from 'react-diff-view'
 import 'react-diff-view/style/index.css'

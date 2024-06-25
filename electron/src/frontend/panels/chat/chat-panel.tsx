@@ -1,6 +1,6 @@
 import ChatHeader from './components/chat-header'
 import { useScrollAnchor } from '@/panels/chat/lib/hooks/chat.use-scroll-anchor'
-import ChatMessages from './components/messages/chat.messages'
+import ChatMessages from './components/messages/chat-messages'
 import ChatInputField from './components/input/chat-input-field'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Skeleton } from '@/components/ui/skeleton'

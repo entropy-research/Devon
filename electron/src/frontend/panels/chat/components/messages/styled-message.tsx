@@ -1,9 +1,7 @@
 import { cn } from '@/lib/utils'
 import { CodeBlock } from '@/components/ui/codeblock'
-import { MemoizedReactMarkdown } from './chat.memoized-react-markdown'
+import { MemoizedReactMarkdown } from '../ui/memoized-react-markdown'
 import { getLanguageFromFilename } from '@/lib/programming-language-utils'
-import 'react-diff-view/style/index.css'
-import './diff-view.css'
 
 const StyledMessage = ({
     content,
