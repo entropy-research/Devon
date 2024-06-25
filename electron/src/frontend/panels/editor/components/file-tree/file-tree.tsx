@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { TreeView } from './tree-view'
 import { File } from '@/lib/types'
 import { TreeViewElement } from './tree-view-api'
@@ -8,13 +9,17 @@ export default function FileTree({
     selectedFileId,
     setSelectedFileId,
     projectPath,
+    initialLoading,
 }: {
     files: File[]
     selectedFileId: string
     setSelectedFileId: (id: string) => void
     projectPath: string
+    initialLoading: boolean
 }) {
     const fileTree = buildFileTree(files, projectPath)
+
+    useEffect(() => {}, [initialLoading])
 
     return (
         <TreeView
@@ -24,7 +29,7 @@ export default function FileTree({
             elements={fileTree}
             initialSelectedId={selectedFileId ?? undefined}
             indicator
-            loading={!projectPath && files.length === 0}
+            loading={(!projectPath && files.length === 0) || initialLoading}
             projectName={projectPath ? projectPath.split('/').pop() : undefined}
         />
     )

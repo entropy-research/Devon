@@ -81,7 +81,7 @@ const EditorPanel = ({
         }
     })
 
-    const files = useFileWatcher(initialFiles, path)
+    const { files, initialLoading } = useFileWatcher(initialFiles, path)
 
     useEffect(() => {
         const prevInitialFiles = prevInitialFilesRef.current
@@ -134,6 +134,7 @@ const EditorPanel = ({
                                     selectedFileId={selectedFileId}
                                     setSelectedFileId={setSelectedFileId}
                                     projectPath={path}
+                                    initialLoading={initialLoading}
                                 />
                             </ResizablePanel>
                             <ResizableHandle />

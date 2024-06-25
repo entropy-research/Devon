@@ -13,11 +13,19 @@ type FileEvent = {
 
 const useFileWatcher = (initialFiles: File[], dirPath: string) => {
     const [files, setFiles] = useState<File[]>(initialFiles)
+    const [initialLoading, setInitialLoading] = useState(true)
+    const [prevDirPath, setPrevDirPath] = useState<string | null>(null)
 
     useEffect(() => {
         const startWatching = async () => {
             if (!dirPath) {
                 return () => {}
+            }
+            let loading = false
+            if (prevDirPath !== dirPath) {
+                setInitialLoading(true)
+                loading = true
+                setPrevDirPath(dirPath)
             }
 
             const success = await window.api.invoke('watch-dir', dirPath)
@@ -27,6 +35,9 @@ const useFileWatcher = (initialFiles: File[], dirPath: string) => {
             }
 
             const handleFileChanges = (events: FileEvent[]) => {
+                if (initialLoading || loading) {
+                    setInitialLoading(false)
+                }
                 setFiles(prevFiles => {
                     const fileMap = new Map(
                         prevFiles.map(file => [file.path, file])
@@ -83,7 +94,7 @@ const useFileWatcher = (initialFiles: File[], dirPath: string) => {
         }
     }, [dirPath])
 
-    return files
+    return { files, initialLoading }
 }
 
 export default useFileWatcher
