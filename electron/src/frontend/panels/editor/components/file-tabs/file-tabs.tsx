@@ -1,5 +1,5 @@
-import { useRef, useEffect, useLayoutEffect } from 'react'
-import { Maximize, FileDiff } from 'lucide-react'
+import { useRef, useEffect, useState } from 'react'
+import { Maximize, FileDiff, X } from 'lucide-react'
 import ActionItem from './action-item'
 import {
     DialogContent,
@@ -17,9 +17,14 @@ interface CustomScrollbarProps {
     innerRef?: React.RefObject<HTMLDivElement>
 }
 
-const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children, innerRef }) => {
+const CustomScrollbar: React.FC<CustomScrollbarProps> = ({
+    children,
+    innerRef,
+}) => {
     return (
-        <div ref={innerRef} className="horizontal-scrollbar overflow-x-auto">{children}</div>
+        <div ref={innerRef} className="horizontal-scrollbar overflow-x-auto">
+            {children}
+        </div>
     )
 }
 
@@ -28,9 +33,7 @@ const FileTabs = ({
     files,
     selectedFileId,
     setSelectedFileId,
-    // diffEnabled,
-    // setDiffEnabled,
-    // chatId,
+    onCloseTab,
     className,
     isExpandedVariant,
     loading = false,
@@ -38,15 +41,14 @@ const FileTabs = ({
     files: any[]
     selectedFileId: string
     setSelectedFileId: (id: string) => void
-    // diffEnabled: boolean
-    // setDiffEnabled: (value: boolean) => void
-    // chatId: string | null
+    onCloseTab: (id: string) => void
     className?: string
     isExpandedVariant: boolean
     loading?: boolean
 }) => {
     const fileRefs = useRef(new Map<string, HTMLButtonElement>())
     const scrollContainerRef = useRef<HTMLDivElement>(null)
+    const [hoveredFileId, setHoveredFileId] = useState<string | null>(null)
 
     useEffect(() => {
         if (selectedFileId && fileRefs.current.has(selectedFileId)) {
@@ -117,8 +119,10 @@ const FileTabs = ({
                                                     : 'border-r-[1px] border-x-outlinecolor'
                                             } z-10`
                                           : 'border-t-transparent border-r border-b'
-                                  }`}
+                                  } group relative`}
                                   onClick={() => setSelectedFileId(file.id)}
+                                  onMouseEnter={() => setHoveredFileId(file.id)}
+                                  onMouseLeave={() => setHoveredFileId(null)}
                               >
                                   {file.icon && (
                                       <Icon
@@ -126,7 +130,27 @@ const FileTabs = ({
                                           className="h-4 w-4 mr-2"
                                       />
                                   )}
-                                  {file.name}
+                                  <span className="mr-6">{file.name}</span>
+                                  <button
+                                      className={`absolute right-[5px] top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity p-1 rounded-md smooth-hover ${
+                                          file.id === selectedFileId ||
+                                          file.id === hoveredFileId
+                                              ? 'opacity-100'
+                                              : ''
+                                      }`}
+                                      onClick={e => {
+                                          e.stopPropagation()
+                                          onCloseTab(file.id)
+                                      }}
+                                  >
+                                      <X
+                                          className={`h-4 w-4 ${
+                                              file.id === selectedFileId
+                                                  ? 'text-neutral-200'
+                                                  : 'text-neutral-400'
+                                          }`}
+                                      />
+                                  </button>
                               </button>
                           ))}
                 </div>

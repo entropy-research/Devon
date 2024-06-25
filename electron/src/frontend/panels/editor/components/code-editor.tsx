@@ -59,6 +59,18 @@ export default function CodeEditor({
         }
     }, [setSelectedFileId, files, addFileToOpenFiles])
 
+    const handleCloseTab = useCallback((id: string) => {
+        setOpenFiles(prevOpenFiles => prevOpenFiles.filter(file => file.id !== id))
+        if (selectedFileId === id) {
+            const remainingFiles = openFiles.filter(file => file.id !== id)
+            if (remainingFiles.length > 0) {
+                setSelectedFileId(remainingFiles[remainingFiles.length - 1].id)
+            } else {
+                setSelectedFileId(null)
+            }
+        }
+    }, [openFiles, selectedFileId, setSelectedFileId])
+
     const handleEditorDidMount = (
         editor: editor.IStandaloneCodeEditor,
         monaco: Monaco
@@ -173,6 +185,7 @@ export default function CodeEditor({
                     files={openFiles}
                     selectedFileId={selectedFileId ?? null}
                     setSelectedFileId={handleFileSelect}
+                    onCloseTab={handleCloseTab}
                     className={showEditorBorders ? '' : ''}
                     isExpandedVariant={isExpandedVariant}
                     loading={files.length === 0}
