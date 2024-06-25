@@ -14,8 +14,7 @@ import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { useBackendUrl } from '@/contexts/backend-url-context'
 import { useAtom } from 'jotai'
 import { selectedCodeSnippetAtom } from '@/panels/editor/components/code-editor'
-import CodeSnippetDisplay from '../code-snippet-display'
-import { codeSnippetsAtom, CodeSnippet } from '../code-snippets-atom'
+import CodeSnippet, { ICodeSnippet, codeSnippetsAtom} from '../ui/code-snippet'
 
 const ChatInputField = ({
     isAtBottom,
@@ -38,7 +37,7 @@ const ChatInputField = ({
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const [input, setInput] = useState('')
     const [selectedCodeSnippet, setSelectedCodeSnippet] =
-        useAtom<CodeSnippet | null>(selectedCodeSnippetAtom)
+        useAtom<ICodeSnippet | null>(selectedCodeSnippetAtom)
     const [codeSnippets, setCodeSnippets] = useAtom(codeSnippetsAtom)
     const prevProjectPath = useRef<string>('')
 
@@ -63,7 +62,7 @@ const ChatInputField = ({
         }
     }, [projectPath])
 
-    function addSnippetToInputField(snippet: CodeSnippet) {
+    function addSnippetToInputField(snippet: ICodeSnippet) {
         setInput(prevInput => prevInput + ` @${snippet.id} `)
     }
 
@@ -127,7 +126,7 @@ const ChatInputField = ({
                 />
             )}
 
-            <CodeSnippetDisplay
+            <CodeSnippet
                 snippets={codeSnippets}
                 onClose={handleRemoveSnippet}
                 onClickHeader={addSnippetToInputField}

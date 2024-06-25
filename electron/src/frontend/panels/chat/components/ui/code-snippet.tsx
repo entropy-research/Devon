@@ -1,16 +1,31 @@
 import { memo } from 'react'
-import { CodeSnippet } from './code-snippets-atom'
 import { SimpleCodeBlock } from '@/components/ui/codeblock'
 import { X } from 'lucide-react'
+import { atom } from 'jotai'
 
-const CodeSnippetDisplay = ({
+export type ICodeSnippet = {
+    id: string
+    fileName: string
+    fullPath: string
+    relativePath: string
+    selection: string
+    startLineNumber: number
+    endLineNumber: number
+    startColumn: number
+    endColumn: number
+    language: string
+}
+
+export const codeSnippetsAtom = atom<ICodeSnippet[]>([])
+
+const CodeSnippet = ({
     snippets,
     onClose,
     onClickHeader,
 }: {
-    snippets: CodeSnippet[]
+    snippets: ICodeSnippet[]
     onClose: (id: string) => void
-    onClickHeader: (snippet: CodeSnippet) => void
+    onClickHeader: (snippet: ICodeSnippet) => void
 }) => {
     return (
         <div className="flex flex-wrap gap-2 mt-0 pb-3 bg-night">
@@ -49,4 +64,4 @@ const areEqual = (prevProps: any, nextProps: any) => {
     )
 }
 
-export default memo(CodeSnippetDisplay, areEqual)
+export default memo(CodeSnippet, areEqual)

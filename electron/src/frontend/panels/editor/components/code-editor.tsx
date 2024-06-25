@@ -4,10 +4,10 @@ import type { editor } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { File } from '@/lib/types'
 import { atom, useAtom } from 'jotai'
-import { CodeSnippet } from '@/panels/chat/components/code-snippets-atom'
+import { ICodeSnippet } from '@/panels/chat/components/ui/code-snippet'
 import { getRelativePath, getFileName } from '@/lib/utils'
 
-export const selectedCodeSnippetAtom = atom<CodeSnippet | null>(null)
+export const selectedCodeSnippetAtom = atom<ICodeSnippet | null>(null)
 
 export default function CodeEditor({
     files,
@@ -20,7 +20,7 @@ export default function CodeEditor({
 }: {
     files: File[]
     selectedFileId: string | null
-    setSelectedFileId: (id: string) => void
+    setSelectedFileId: (id: string | null) => void
     isExpandedVariant?: boolean
     showEditorBorders: boolean
     path: string
@@ -28,7 +28,9 @@ export default function CodeEditor({
 }): JSX.Element {
     const [popoverVisible, setPopoverVisible] = useState(false)
     const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 })
-    const [selectionInfo, setSelectionInfo] = useState<CodeSnippet | null>(null)
+    const [selectionInfo, setSelectionInfo] = useState<ICodeSnippet | null>(
+        null
+    )
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
     const monacoRef = useRef<Monaco | null>(null)
     const [openFiles, setOpenFiles] = useState<File[]>(initialFiles)
@@ -51,25 +53,35 @@ export default function CodeEditor({
         }
     }, [selectedFileId, files, addFileToOpenFiles])
 
-    const handleFileSelect = useCallback((id: string) => {
-        setSelectedFileId(id)
-        const selectedFile = files.find(f => f.id === id)
-        if (selectedFile) {
-            addFileToOpenFiles(selectedFile)
-        }
-    }, [setSelectedFileId, files, addFileToOpenFiles])
-
-    const handleCloseTab = useCallback((id: string) => {
-        setOpenFiles(prevOpenFiles => prevOpenFiles.filter(file => file.id !== id))
-        if (selectedFileId === id) {
-            const remainingFiles = openFiles.filter(file => file.id !== id)
-            if (remainingFiles.length > 0) {
-                setSelectedFileId(remainingFiles[remainingFiles.length - 1].id)
-            } else {
-                setSelectedFileId(null)
+    const handleFileSelect = useCallback(
+        (id: string) => {
+            setSelectedFileId(id)
+            const selectedFile = files.find(f => f.id === id)
+            if (selectedFile) {
+                addFileToOpenFiles(selectedFile)
             }
-        }
-    }, [openFiles, selectedFileId, setSelectedFileId])
+        },
+        [setSelectedFileId, files, addFileToOpenFiles]
+    )
+
+    const handleCloseTab = useCallback(
+        (id: string) => {
+            setOpenFiles(prevOpenFiles =>
+                prevOpenFiles.filter(file => file.id !== id)
+            )
+            if (selectedFileId === id) {
+                const remainingFiles = openFiles.filter(file => file.id !== id)
+                if (remainingFiles.length > 0) {
+                    setSelectedFileId(
+                        remainingFiles[remainingFiles.length - 1].id
+                    )
+                } else {
+                    setSelectedFileId(null)
+                }
+            }
+        },
+        [openFiles, selectedFileId]
+    )
 
     const handleEditorDidMount = (
         editor: editor.IStandaloneCodeEditor,
@@ -167,7 +179,7 @@ export default function CodeEditor({
         }
     }, [])
 
-    const [, setSelectedCodeSnippet] = useAtom<CodeSnippet | null>(
+    const [, setSelectedCodeSnippet] = useAtom<ICodeSnippet | null>(
         selectedCodeSnippetAtom
     )
 
@@ -183,7 +195,7 @@ export default function CodeEditor({
             <div className="flex-none overflow-x-auto whitespace-nowrap bg-night border-b border-outlinecolor">
                 <FileTabs
                     files={openFiles}
-                    selectedFileId={selectedFileId ?? null}
+                    selectedFileId={selectedFileId}
                     setSelectedFileId={handleFileSelect}
                     onCloseTab={handleCloseTab}
                     className={showEditorBorders ? '' : ''}
@@ -257,7 +269,7 @@ const PathDisplay = ({
     selectedFileId,
 }: {
     path: string
-    selectedFileId: string
+    selectedFileId: string | null
 }) => (
     <div
         className={`px-3 pb-[4px] ${

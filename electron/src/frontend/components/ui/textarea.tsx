@@ -4,14 +4,14 @@ import TextareaAutosize, {
 } from 'react-textarea-autosize'
 
 import { cn } from '@/lib/utils'
-import { CodeSnippet } from '@/panels/chat/components/code-snippets-atom'
+import { ICodeSnippet } from '@/panels/chat/components/ui/code-snippet'
 
 export interface TextareaProps
     extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 
 interface AutoresizeTextareaProps extends TextareaAutosizeProps {
     highlightCodeSnippets?: boolean
-    codeSnippets?: CodeSnippet[]
+    codeSnippets?: ICodeSnippet[]
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(

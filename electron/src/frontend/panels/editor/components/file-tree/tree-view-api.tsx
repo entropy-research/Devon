@@ -57,7 +57,7 @@ type Direction = 'rtl' | 'ltr' | undefined
 
 type TreeViewProps = {
     files: any[]
-    selectedFileId: string
+    selectedFileId: string | null
     setSelectedFileId: (id: string) => void
     initialSelectedId?: string
     indicator?: boolean

@@ -71,14 +71,14 @@ const EditorPanel = ({
                     name: filepath.split('/').pop() ?? 'unnamed_file',
                     path: filepath,
                     language: getLanguageFromFilename(
-                        filepath.split('/').pop()
+                        filepath.split('/').pop() ?? 'text'
                     ),
                     value: state.context.sessionState.editor.files[filepath],
-                    icon: getIconFromFilename(filepath.split('/').pop()),
+                    icon: getIconFromFilename(filepath.split('/').pop() ?? 'unnamed_file.txt'),
                 })
             )
         } else {
-            return []
+            return [] as File[]
         }
     })
 
@@ -104,25 +104,13 @@ const EditorPanel = ({
         prevInitialFilesRef.current = initialFiles
     }, [initialFiles])
 
-    const handleFileSelect = useCallback((fileId: string) => {
+    const handleFileSelect = useCallback((fileId: string | null) => {
         setSelectedFileId(fileId)
         const selectedFile = files.find(file => file.id === fileId)
         if (selectedFile && !openFiles.some(file => file.id === fileId)) {
             setOpenFiles(prevOpenFiles => [...prevOpenFiles, selectedFile])
         }
     }, [files, openFiles])
-
-    const handleCloseTab = useCallback((id: string) => {
-        setOpenFiles(prevOpenFiles => prevOpenFiles.filter(file => file.id !== id))
-        if (selectedFileId === id) {
-            const remainingFiles = openFiles.filter(file => file.id !== id)
-            if (remainingFiles.length > 0) {
-                setSelectedFileId(remainingFiles[remainingFiles.length - 1].id)
-            } else {
-                setSelectedFileId(null)
-            }
-        }
-    }, [openFiles, selectedFileId])
 
     return (
         <div
@@ -166,7 +154,6 @@ const EditorPanel = ({
                                     showEditorBorders={showEditorBorders}
                                     path={path}
                                     initialFiles={openFiles}
-                                    onCloseTab={handleCloseTab}
                                 />
                             </ResizablePanel>
                         </ResizablePanelGroup>

@@ -12,7 +12,7 @@ export default function FileTree({
     initialLoading,
 }: {
     files: File[]
-    selectedFileId: string
+    selectedFileId: string | null
     setSelectedFileId: (id: string) => void
     projectPath: string
     initialLoading: boolean

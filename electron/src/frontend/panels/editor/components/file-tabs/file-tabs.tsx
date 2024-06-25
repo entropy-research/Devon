@@ -17,9 +17,14 @@ interface CustomScrollbarProps {
     innerRef?: React.RefObject<HTMLDivElement>
 }
 
-const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children, innerRef }) => {
+const CustomScrollbar: React.FC<CustomScrollbarProps> = ({
+    children,
+    innerRef,
+}) => {
     return (
-        <div ref={innerRef} className="horizontal-scrollbar overflow-x-auto">{children}</div>
+        <div ref={innerRef} className="horizontal-scrollbar overflow-x-auto">
+            {children}
+        </div>
     )
 }
 
@@ -34,7 +39,7 @@ const FileTabs = ({
     loading = false,
 }: {
     files: any[]
-    selectedFileId: string
+    selectedFileId: string | null
     setSelectedFileId: (id: string) => void
     onCloseTab: (id: string) => void
     className?: string
@@ -67,7 +72,7 @@ const FileTabs = ({
     }
 
     useEffect(() => {
-        scrollIntoView(selectedFileId)
+        if (selectedFileId) scrollIntoView(selectedFileId)
     }, [selectedFileId, files])
     const showSelectedTabSkeleton = false
 

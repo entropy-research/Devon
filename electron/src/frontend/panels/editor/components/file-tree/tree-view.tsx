@@ -13,7 +13,7 @@ type TreeViewProps = {
     initialSelectedId?: string
     elements: TreeViewElement[]
     files: any[]
-    selectedFileId: string
+    selectedFileId: string | null
     setSelectedFileId: (id: string) => void
     indicator?: boolean
     loading?: boolean

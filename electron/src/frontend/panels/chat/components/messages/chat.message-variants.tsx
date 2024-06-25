@@ -2,12 +2,13 @@ import { Bot, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { spinner } from '../ui/loading-spinner'
 import { Icon } from '@iconify/react'
-import { parseDiff, Diff, Hunk } from 'react-diff-view'
+import { parseDiff } from 'react-diff-view'
 import 'react-diff-view/style/index.css'
 import './diff-view.css'
 import { parseFileDiff } from '../../lib/utils'
 import * as unidiff from 'unidiff'
 import StyledMessage from './styled-message'
+import DiffViewer from '../ui/diff-viewer'
 
 // Different types of message bubbles.
 
@@ -137,23 +138,7 @@ export const ToolResponseMessage = ({
 
         return (
             <div className="flex ml-[50px]">
-                {files.map(file => {
-                    return (
-                        <Diff
-                            key={file.oldRevision + '-' + file.newRevision}
-                            viewType="unified"
-                            diffType={file.type}
-                            hunks={file.hunks}
-                            gutterType="none"
-                        >
-                            {hunks =>
-                                hunks.map(hunk => (
-                                    <Hunk key={hunk.content} hunk={hunk} />
-                                ))
-                            }
-                        </Diff>
-                    )
-                })}
+                <DiffViewer files={files} />
             </div>
         )
     }
