@@ -47,6 +47,7 @@ const EditorPanel = ({
     isExpandedVariant?: boolean
 }) => {
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
+    const [openFiles, setOpenFiles] = useState<File[]>([])
     const prevInitialFilesRef = useRef<File[]>([])
 
     const messages = SessionMachineContext.useSelector(state =>
@@ -85,28 +86,31 @@ const EditorPanel = ({
 
     useEffect(() => {
         const prevInitialFiles = prevInitialFilesRef.current
-        // console.log('prev', prevInitialFiles) // For debugging
 
         // Detect new files in initialFiles
         const newFiles = initialFiles.filter(
             file =>
                 !prevInitialFiles.some(prevFile => prevFile.path === file.path)
         )
-        // console.log('new', newFiles)  // For debugging
 
-        if (newFiles.length > 0 && selectedFileId !== newFiles[0].id) {
-            setSelectedFileId(newFiles[0].id)
+        if (newFiles.length > 0) {
+            setOpenFiles(prevOpenFiles => [...prevOpenFiles, ...newFiles])
+            if (selectedFileId === null) {
+                setSelectedFileId(newFiles[0].id)
+            }
         }
 
         // Update the ref for the next comparison
         prevInitialFilesRef.current = initialFiles
     }, [initialFiles])
 
-    if (files && files.length > 0 && !selectedFileId) {
-        setSelectedFileId(files[0].id)
-    } else if (!files || (files.length === 0 && selectedFileId)) {
-        setSelectedFileId(null)
-    }
+    const handleFileSelect = useCallback((fileId: string) => {
+        setSelectedFileId(fileId)
+        const selectedFile = files.find(file => file.id === fileId)
+        if (selectedFile && !openFiles.some(file => file.id === fileId)) {
+            setOpenFiles(prevOpenFiles => [...prevOpenFiles, selectedFile])
+        }
+    }, [files, openFiles])
 
     return (
         <div
@@ -132,7 +136,7 @@ const EditorPanel = ({
                                 <FileTree
                                     files={files}
                                     selectedFileId={selectedFileId}
-                                    setSelectedFileId={setSelectedFileId}
+                                    setSelectedFileId={handleFileSelect}
                                     projectPath={path}
                                     initialLoading={initialLoading}
                                 />
@@ -145,10 +149,11 @@ const EditorPanel = ({
                                 <CodeEditor
                                     files={files}
                                     selectedFileId={selectedFileId}
-                                    setSelectedFileId={setSelectedFileId}
+                                    setSelectedFileId={handleFileSelect}
                                     isExpandedVariant={isExpandedVariant}
                                     showEditorBorders={showEditorBorders}
                                     path={path}
+                                    initialFiles={openFiles}
                                 />
                             </ResizablePanel>
                         </ResizablePanelGroup>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import Editor, { Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
@@ -16,6 +16,7 @@ export default function CodeEditor({
     isExpandedVariant = false,
     showEditorBorders,
     path,
+    initialFiles,
 }: {
     files: File[]
     selectedFileId: string | null
@@ -23,12 +24,40 @@ export default function CodeEditor({
     isExpandedVariant?: boolean
     showEditorBorders: boolean
     path: string
+    initialFiles: File[]
 }): JSX.Element {
     const [popoverVisible, setPopoverVisible] = useState(false)
     const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 })
     const [selectionInfo, setSelectionInfo] = useState<CodeSnippet | null>(null)
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
     const monacoRef = useRef<Monaco | null>(null)
+    const [openFiles, setOpenFiles] = useState<File[]>(initialFiles)
+
+    const addFileToOpenFiles = useCallback((file: File) => {
+        setOpenFiles(prevOpenFiles => {
+            if (!prevOpenFiles.some(f => f.id === file.id)) {
+                return [...prevOpenFiles, file]
+            }
+            return prevOpenFiles
+        })
+    }, [])
+
+    useEffect(() => {
+        if (selectedFileId) {
+            const selectedFile = files.find(f => f.id === selectedFileId)
+            if (selectedFile) {
+                addFileToOpenFiles(selectedFile)
+            }
+        }
+    }, [selectedFileId, files, addFileToOpenFiles])
+
+    const handleFileSelect = useCallback((id: string) => {
+        setSelectedFileId(id)
+        const selectedFile = files.find(f => f.id === id)
+        if (selectedFile) {
+            addFileToOpenFiles(selectedFile)
+        }
+    }, [setSelectedFileId, files, addFileToOpenFiles])
 
     const handleEditorDidMount = (
         editor: editor.IStandaloneCodeEditor,
@@ -141,9 +170,9 @@ export default function CodeEditor({
         <div className="flex flex-col h-full overflow-hidden relative">
             <div className="flex-none overflow-x-auto whitespace-nowrap bg-night border-b border-outlinecolor">
                 <FileTabs
-                    files={files}
+                    files={openFiles}
                     selectedFileId={selectedFileId ?? null}
-                    setSelectedFileId={setSelectedFileId}
+                    setSelectedFileId={handleFileSelect}
                     className={showEditorBorders ? '' : ''}
                     isExpandedVariant={isExpandedVariant}
                     loading={files.length === 0}
