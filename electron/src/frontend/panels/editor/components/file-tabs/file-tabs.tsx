@@ -103,39 +103,43 @@ const FileTabs = ({
                               </button>
                           ))
                         : files.map((file: File, index: number) => (
-                              <button
-                                  key={file.id}
-                                  ref={el => {
-                                      if (el) {
-                                          fileRefs.current.set(file.id, el)
-                                      } else {
-                                          fileRefs.current.delete(file.id)
-                                      }
-                                  }}
-                                  className={`flex justify-center items-center px-4 ${
-                                      file.icon ? 'pr-5' : ''
-                                  } py-[6px] text-sm border-t-[1.5px] ${
-                                      file.id === selectedFileId
-                                          ? `border-t-primary rounded-t-sm bg-night border-b-[1px] border-b-night ${
-                                                index === 0
-                                                    ? 'border-r-[1px] border-r-outlinecolor'
-                                                    : 'border-r-[1px] border-x-outlinecolor'
-                                            } z-10`
-                                          : 'border-t-transparent border-r border-b'
-                                  } group relative`}
-                                  onClick={() => setSelectedFileId(file.id)}
+                              <div
+                                  className="relative"
                                   onMouseEnter={() => setHoveredFileId(file.id)}
                                   onMouseLeave={() => setHoveredFileId(null)}
                               >
-                                  {file.icon && (
-                                      <Icon
-                                          icon={file.icon}
-                                          className="h-4 w-4 mr-2"
-                                      />
-                                  )}
-                                  <span className="mr-6">{file.name}</span>
                                   <button
-                                      className={`absolute right-[5px] top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity p-1 rounded-md smooth-hover ${
+                                      key={file.id}
+                                      ref={el => {
+                                          if (el) {
+                                              fileRefs.current.set(file.id, el)
+                                          } else {
+                                              fileRefs.current.delete(file.id)
+                                          }
+                                      }}
+                                      className={`flex justify-center items-center px-4 ${
+                                          file.icon ? 'pr-5' : ''
+                                      } py-[6px] text-sm border-t-[1.5px] ${
+                                          file.id === selectedFileId
+                                              ? `border-t-primary rounded-t-sm bg-night border-b-[1px] border-b-night ${
+                                                    index === 0
+                                                        ? 'border-r-[1px] border-r-outlinecolor'
+                                                        : 'border-r-[1px] border-x-outlinecolor'
+                                                } z-10`
+                                              : 'border-t-transparent border-r border-b'
+                                      } group relative cursor-pointer w-full text-left`}
+                                      onClick={() => setSelectedFileId(file.id)}
+                                  >
+                                      {file.icon && (
+                                          <Icon
+                                              icon={file.icon}
+                                              className="h-4 w-4 mr-2"
+                                          />
+                                      )}
+                                      <span className="mr-6">{file.name}</span>
+                                  </button>
+                                  <button
+                                      className={`absolute right-[5px] top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity p-1 rounded-md smooth-hover z-10 ${
                                           file.id === selectedFileId ||
                                           file.id === hoveredFileId
                                               ? 'opacity-100'
@@ -145,16 +149,17 @@ const FileTabs = ({
                                           e.stopPropagation()
                                           onCloseTab(file.id)
                                       }}
+                                      aria-label={`Close ${file.name}`}
                                   >
                                       <X
                                           className={`h-4 w-4 ${
                                               file.id === selectedFileId
-                                                  ? 'text-neutral-200'
+                                                  ? 'text-white'
                                                   : 'text-neutral-400'
                                           }`}
                                       />
                                   </button>
-                              </button>
+                              </div>
                           ))}
                 </div>
             </CustomScrollbar>
