@@ -166,11 +166,12 @@ const Tree = forwardRef<HTMLDivElement, TreeViewProps>(
             []
         )
 
-        useEffect(() => {
-            if (initialSelectedId) {
-                expandSpecificTargetedElements(elements, initialSelectedId)
-            }
-        }, [initialSelectedId, elements])
+        // Uncommenting this will make it so the folder has to be open if a selected item is in the dir
+        // useEffect(() => {
+        //     if (initialSelectedId) {
+        //         expandSpecificTargetedElements(elements, initialSelectedId)
+        //     }
+        // }, [initialSelectedId, elements])
 
         const direction = dir === 'rtl' ? 'rtl' : 'ltr'
 

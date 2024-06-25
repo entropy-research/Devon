@@ -44,30 +44,36 @@ const buildFileTree = (
     files.forEach(file => {
         const parts = getRelativePath(file.path, projectPath).split('/')
         let current = tree
+        let currentPath = projectPath
 
         parts.forEach((part, index) => {
+            currentPath = `${currentPath}/${part}`
+            let isLastPart = false
             if (!current[part]) {
+                const isLastPart = index === parts.length - 1
                 current[part] = {
-                    id: file.path,
+                    id: currentPath,
                     name: part,
-                    children: index === parts.length - 1 ? null : {},
-                    icon: index === parts.length - 1 ? file.icon : undefined,
+                    children: isLastPart ? undefined : {},
+                    icon: isLastPart ? file.icon : undefined,
+                    isFolder: !isLastPart,
                 }
             }
-            current = current[part].children || {}
+            if (!isLastPart) {
+                current = current[part].children
+            }
         })
-
-        current.__fileData = file // Store the original file data
     })
 
     const convertToArray = (obj: { [key: string]: any }): TreeViewElement[] => {
         return Object.keys(obj).map(key => {
-            const children = obj[key].children
-                ? convertToArray(obj[key].children)
-                : []
+            const item = obj[key]
+            const children = item.children
+                ? convertToArray(item.children)
+                : undefined
             return {
-                ...obj[key],
-                children: children.length > 0 ? children : undefined,
+                ...item,
+                children,
             }
         })
     }
