@@ -5,6 +5,7 @@ export type File<T = any> = {
     language: string
     value: T
     icon?: string
+    agentHasOpen?: boolean
 }
 
 export type Model = {

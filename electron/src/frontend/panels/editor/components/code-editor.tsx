@@ -224,6 +224,7 @@ export default function CodeEditor({
             <div className="flex-none overflow-x-auto whitespace-nowrap bg-night border-b border-outlinecolor">
                 <FileTabs
                     files={openFiles}
+                    initialFiles={initialFiles}
                     selectedFileId={selectedFileId}
                     setSelectedFileId={handleFileSelect}
                     onCloseTab={handleCloseTab}

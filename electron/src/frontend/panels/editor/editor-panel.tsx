@@ -94,6 +94,7 @@ const EditorPanel = ({
                         icon:
                             getIconFromFilename(filepath.split('/').pop() ?? '') ??
                             '',
+                        agentHasOpen: true,
                     }
                 }
             )

@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from 'react'
-import { Maximize, FileDiff, X } from 'lucide-react'
+import { useRef, useEffect, useState, useMemo } from 'react'
+import { Maximize, FileDiff, X, Bot } from 'lucide-react'
 import ActionItem from './action-item'
 import {
     DialogContent,
@@ -37,6 +37,7 @@ const FileTabs = ({
     className,
     isExpandedVariant,
     loading = false,
+    initialFiles,
 }: {
     files: any[]
     selectedFileId: string | null
@@ -45,6 +46,7 @@ const FileTabs = ({
     className?: string
     isExpandedVariant: boolean
     loading?: boolean
+    initialFiles: File[]
 }) => {
     const fileRefs = useRef(new Map<string, HTMLButtonElement>())
     const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -71,9 +73,25 @@ const FileTabs = ({
         }
     }
 
+    const fileMatchMap = useMemo(() => {
+        const map = new Map<string, File>()
+        initialFiles.forEach(file => {
+            map.set(file.id, file)
+        })
+        return map
+    }, [initialFiles])
+
+    const getFileMatch = useMemo(
+        () => (fileId: string) => {
+            return fileMatchMap.get(fileId)
+        },
+        [fileMatchMap]
+    )
+
     useEffect(() => {
         if (selectedFileId) scrollIntoView(selectedFileId)
     }, [selectedFileId, files])
+
     const showSelectedTabSkeleton = false
 
     return (
@@ -136,7 +154,14 @@ const FileTabs = ({
                                               className="h-4 w-4 mr-2"
                                           />
                                       )}
-                                      <span className="mr-6">{file.name}</span>
+                                      <span className="mr-5 flex items-center">
+                                          {file.name}
+                                          {file.agentHasOpen && 'Yoyooyoy'}
+                                          {getFileMatch(file.id)
+                                              ?.agentHasOpen && (
+                                              <Bot className="h-[16px] w-[16px] text-primary ml-2 -mr-3 -translate-y-[1px]" />
+                                          )}
+                                      </span>
                                   </button>
                                   <button
                                       className={`absolute right-[5px] top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity p-1 rounded-md smooth-hover z-10 ${
