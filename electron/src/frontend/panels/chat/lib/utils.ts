@@ -1,11 +1,11 @@
 export function parseFileDiff(input: string): {
-    filename: string
+    path: string
     language: string
     searchContent: string
     replaceContent: string
 } {
     const lines = input.trim().split('\n')
-    let filename = ''
+    let path = ''
     let language = ''
     let searchContent = ''
     let replaceContent = ''
@@ -13,7 +13,7 @@ export function parseFileDiff(input: string): {
     let inReplace = false
 
     // First line is the file name
-    filename = lines[0].trim()
+    path = lines[0].trim()
     lines.shift()
 
     // Extract language from the first line
@@ -43,7 +43,7 @@ export function parseFileDiff(input: string): {
     }
 
     return {
-        filename,
+        path: path,
         language,
         searchContent: searchContent.trim(),
         replaceContent: replaceContent.trim(),
