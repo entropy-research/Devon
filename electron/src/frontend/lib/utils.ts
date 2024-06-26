@@ -27,3 +27,20 @@ export function getRelativePath(fullPath: string, projectPath: string) {
 export function getFileName(path: string) {
     return removeTrailingSlash(path).split('/').pop() || ''
 }
+
+
+export const parseCommand = (content: string) => {
+    const regex = /Running command: (\S+)\s*([\s\S]*)/
+    const match = content.match(regex)
+
+    if (match) {
+        const [, command, remainingText] = match
+
+        return {
+            command: command.trim(),
+            remainingText: remainingText.trim(),
+        }
+    }
+
+    return null // Return null if no command is found
+}

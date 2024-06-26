@@ -12,7 +12,7 @@ import * as unidiff from 'unidiff'
 import StyledMessage from './styled-message'
 import DiffViewer from '../ui/diff-viewer'
 import { ChevronDown } from 'lucide-react'
-import { getFileName } from '@/lib/utils'
+import { getFileName, parseCommand } from '@/lib/utils'
 
 // Different types of message bubbles.
 
@@ -230,20 +230,4 @@ const ResponseBlock = ({ response }: { response: string }) => {
             </div>
         </div>
     )
-}
-
-const parseCommand = (content: string) => {
-    const regex = /Running command: (\S+)\s*([\s\S]*)/
-    const match = content.match(regex)
-
-    if (match) {
-        const [, command, remainingText] = match
-
-        return {
-            command: command.trim(),
-            remainingText: remainingText.trim(),
-        }
-    }
-
-    return null // Return null if no command is found
 }
