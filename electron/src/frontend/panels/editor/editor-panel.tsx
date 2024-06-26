@@ -131,7 +131,6 @@ const EditorPanel = ({
                     const fileMap = new Map(
                         prevFiles.map(file => [file.path, file])
                     )
-                    console.log(events)
    
                         events.files.forEach(file => {
                             fileMap.set(file, {

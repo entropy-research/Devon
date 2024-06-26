@@ -68,7 +68,6 @@ class EditorFileManager {
             type: string
             path: string
         }) => {
-            console.log("changed file", file)
 
             let changed = false
 
@@ -118,9 +117,7 @@ let editorFileManager = new EditorFileManager()
 ipcMain.handle('editor-add-open-file', async (event, filename) => {
     if (editorFileManager) {
         await editorFileManager.addOpenFile(filename)
-        console.log("added open file", filename)
         const state = editorFileManager.handleEvent([])
-        console.log("state", state)
         event.sender.send('editor-file-changed', state)
     }
 })
@@ -168,7 +165,6 @@ ipcMain.handle('watch-dir', async (event, dirPath) => {
         let state = editorFileManager.handleEvent(initialEvents)
         // Give some time for event listener to establish
         setTimeout(() => {
-            console.log("initial state", state)
             event.sender.send('editor-file-changed', state)
         }, 1000)
 
