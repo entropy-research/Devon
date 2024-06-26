@@ -1,5 +1,5 @@
 import { useState, Suspense, lazy, useEffect } from 'react'
-import { CircleHelp } from 'lucide-react'
+import { CircleHelp, Info } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import DisabledWrapper from '@/components/ui/disabled-wrapper'
 import {
@@ -97,8 +97,8 @@ const OnboardingModal = ({
     return (
         <Suspense fallback={<></>}>
             <Dialog open={true}>
-                <DialogContent hideclose={true.toString()}>
-                    <div className="flex flex-col items-center justify-center my-8 mx-8 max-w-md">
+                <DialogContent hideclose={true.toString()} className="w-[500px]">
+                    <div className="flex flex-col items-center justify-center my-8 mx-8">
                         <h1 className="text-3xl font-bold">
                             Welcome to Devon!
                         </h1>
@@ -113,16 +113,26 @@ const OnboardingModal = ({
                         </DisabledWrapper>
                         <DisabledWrapper disabled={false} className="w-full">
                             <div className="flex flex-col mt-10 w-full">
-                                <div className="flex items-center justify-between mb-4 gap-3">
-                                    <p className="text-lg font-semibold">
-                                        {`Choose your model:`}
-                                    </p>
-                                    <Combobox
-                                        items={comboboxItems}
-                                        itemType="model"
-                                        selectedItem={selectedModel}
-                                        setSelectedItem={setSelectedModel}
-                                    />
+                                <div className="flex flex-col mb-4 ">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <p className="text-lg font-semibold">
+                                            {`Choose your model:`}
+                                        </p>
+                                        <Combobox
+                                            items={comboboxItems}
+                                            itemType="model"
+                                            selectedItem={selectedModel}
+                                            setSelectedItem={setSelectedModel}
+                                        />
+                                    </div>
+                                    {selectedModel.value !==
+                                        'claude-3-5-sonnet' && (
+                                        <span className="text-sm text-green-500 mt-2 flex gap-1 items-center">
+                                            <Info className="w-4 h-4" />
+                                            Note: For best results use Claude
+                                            3.5 Sonnet (it's better at coding!)
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="flex gap-1 items-center mb-4">
