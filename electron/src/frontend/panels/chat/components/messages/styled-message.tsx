@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { CodeBlock } from '@/components/ui/codeblock'
 import { MemoizedReactMarkdown } from '../ui/memoized-react-markdown'
 import { getLanguageFromFilename } from '@/lib/programming-language-utils'
-
+import { getFileName } from '@/lib/utils'
 const StyledMessage = ({
     content,
     className,
@@ -50,7 +50,6 @@ const StyledMessage = ({
 
                             const match = /language-(\w+)/.exec(className || '')
                             const meta = props.meta || ''
-                            // console.log('the path', path)
                             return (
                                 <div className="relative py-5">
                                     {meta && (
@@ -75,14 +74,14 @@ const StyledMessage = ({
                 </MemoizedReactMarkdown>
                 {codeBlocks.map((block, index) => (
                     <div key={index} className="relative py-5">
-                        <div className="text-sm text-gray-500 mb-2">
+                        <pre className="text-md mb-2">
                             <strong>Command:</strong> {block.command}{' '}
-                            {block.filename}
-                        </div>
+                            {block.relativePath}
+                        </pre>
                         <CodeBlock
                             value={block.code}
-                            fileName={block.filename}
-                            language={getLanguageFromFilename(block.filename)}
+                            fileName={block.fileName}
+                            language={getLanguageFromFilename(block.fileName)}
                         />
                     </div>
                 ))}
@@ -108,7 +107,8 @@ const extractCodeBlocks = (content: string) => {
     while ((match = regex.exec(content)) !== null) {
         codeBlocks.push({
             command: match[1],
-            filename: match[2],
+            relativePath: match[2],
+            fileName: getFileName(match[2]),
             code: match[3],
         })
         textWithoutPath = textWithoutPath.replace(match[0], '')

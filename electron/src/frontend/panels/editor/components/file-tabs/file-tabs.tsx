@@ -11,6 +11,12 @@ import { File } from '@/lib/types'
 import { Icon } from '@iconify/react' // https://iconify.design/docs/icon-components/react/
 import { Skeleton } from '@/components/ui/skeleton'
 import React, { ReactNode } from 'react'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface CustomScrollbarProps {
     children: ReactNode
@@ -93,6 +99,7 @@ const FileTabs = ({
     }, [selectedFileId, files])
 
     const showSelectedTabSkeleton = false
+    const showCloseWhenAgentHasOpen = false
 
     return (
         <div
@@ -122,12 +129,12 @@ const FileTabs = ({
                           ))
                         : files.map((file: File, index: number) => (
                               <div
+                                  key={file.id}
                                   className="relative"
                                   onMouseEnter={() => setHoveredFileId(file.id)}
                                   onMouseLeave={() => setHoveredFileId(null)}
                               >
                                   <button
-                                      key={file.id}
                                       ref={el => {
                                           if (el) {
                                               fileRefs.current.set(file.id, el)
@@ -159,31 +166,56 @@ const FileTabs = ({
                                           {file.agentHasOpen}
                                           {getFileMatch(file.id)
                                               ?.agentHasOpen && (
-                                              <Bot className="h-[16px] w-[16px] text-primary ml-2 -mr-3 -translate-y-[1px]" />
+                                              <TooltipProvider
+                                                  delayDuration={100}
+                                              >
+                                                  <Tooltip>
+                                                      <TooltipTrigger asChild>
+                                                          <span className="inline-flex items-center">
+                                                              <Bot
+                                                                  className={`h-[16px] w-[16px] text-primary ${
+                                                                      showCloseWhenAgentHasOpen
+                                                                          ? 'ml-2 -mr-3'
+                                                                          : 'ml-3 -mr-6'
+                                                                  } -translate-y-[1px]`}
+                                                              />
+                                                          </span>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent>
+                                                          {/* Devon made changes to this file */}
+                                                          Devon has this file
+                                                          open
+                                                      </TooltipContent>
+                                                  </Tooltip>
+                                              </TooltipProvider>
                                           )}
                                       </span>
                                   </button>
-                                  <button
-                                      className={`absolute right-[5px] top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity p-1 rounded-md smooth-hover z-10 ${
-                                          file.id === selectedFileId ||
-                                          file.id === hoveredFileId
-                                              ? 'opacity-100'
-                                              : ''
-                                      }`}
-                                      onClick={e => {
-                                          e.stopPropagation()
-                                          onCloseTab(file.id)
-                                      }}
-                                      aria-label={`Close ${file.name}`}
-                                  >
-                                      <X
-                                          className={`h-4 w-4 ${
+                                  {showCloseWhenAgentHasOpen ? (
+                                      <CloseButton
+                                          isSelected={
                                               file.id === selectedFileId
-                                                  ? 'text-white'
-                                                  : 'text-neutral-400'
-                                          }`}
+                                          }
+                                          isHovered={file.id === hoveredFileId}
+                                          onClick={() => onCloseTab(file.id)}
+                                          fileName={file.name}
                                       />
-                                  </button>
+                                  ) : (
+                                      !getFileMatch(file.id) && (
+                                          <CloseButton
+                                              isSelected={
+                                                  file.id === selectedFileId
+                                              }
+                                              isHovered={
+                                                  file.id === hoveredFileId
+                                              }
+                                              onClick={() =>
+                                                  onCloseTab(file.id)
+                                              }
+                                              fileName={file.name}
+                                          />
+                                      )
+                                  )}
                               </div>
                           ))}
                 </div>
@@ -214,6 +246,37 @@ const FileTabs = ({
                 />
             </div> */}
         </div>
+    )
+}
+
+const CloseButton = ({
+    isSelected,
+    isHovered,
+    onClick,
+    fileName,
+}: {
+    isSelected: boolean
+    isHovered: boolean
+    onClick: () => void
+    fileName: string
+}) => {
+    return (
+        <button
+            className={`absolute right-[5px] top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity p-1 rounded-md smooth-hover z-10 ${
+                isSelected || isHovered ? 'opacity-100' : ''
+            }`}
+            onClick={e => {
+                e.stopPropagation()
+                onClick()
+            }}
+            aria-label={`Close ${fileName}`}
+        >
+            <X
+                className={`h-4 w-4 ${
+                    isSelected ? 'text-white' : 'text-neutral-400'
+                }`}
+            />
+        </button>
     )
 }
 

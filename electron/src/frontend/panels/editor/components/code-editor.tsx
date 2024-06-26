@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import Editor, { Monaco } from '@monaco-editor/react'
 import type { editor, Selection } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
@@ -35,6 +35,18 @@ export default function CodeEditor({
     const monacoRef = useRef<Monaco | null>(null)
     const [openFiles, setOpenFiles] = useState<File[]>(initialFiles)
     const fileSelectionsRef = useRef<Record<string, Selection | null>>({})
+    const initialPathRef = useRef<string | null>(null)
+
+    useEffect(() => {
+        // When the path changes, reset states
+        if (initialPathRef.current === null || path !== initialPathRef.current) {
+            setOpenFiles(initialFiles)
+            setSelectedFileId(null)
+            setPopoverVisible(false)
+            setSelectionInfo(null)
+            initialPathRef.current = path
+        }
+    }, [path])
 
     const addFileToOpenFiles = useCallback((file: File) => {
         setOpenFiles(prevOpenFiles => {
@@ -47,12 +59,12 @@ export default function CodeEditor({
 
     useEffect(() => {
         setOpenFiles(prevOpenFiles => {
-            const newFiles = initialFiles.filter(file => 
-                !prevOpenFiles.some(openFile => openFile.id === file.id)
-            );
-            return [...prevOpenFiles, ...newFiles];
-        });
-    }, [initialFiles]);
+            const newFiles = initialFiles.filter(
+                file => !prevOpenFiles.some(openFile => openFile.id === file.id)
+            )
+            return [...prevOpenFiles, ...newFiles]
+        })
+    }, [initialFiles])
 
     const handleFileSelect = useCallback(
         (id: string) => {
