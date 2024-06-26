@@ -14,7 +14,7 @@ import fs from 'fs'
 import './plugins/editor'
 
 const DEBUG_MODE = false
-const DEV_MODE = false
+const DEV_MODE = process.env.DEV_MODE ?? false
 
 function writeToLogFile(logMessage: string) {
     if (!DEBUG_MODE) {

@@ -12,13 +12,12 @@ export function parseFileDiff(input: string): {
     let inSearch = false
     let inReplace = false
 
-    // First line is the file name
-    path = lines[0].trim()
-    lines.shift()
-
-    // Extract language from the first line
     if (lines.length > 0 && lines[0].startsWith('```')) {
         language = lines[0].slice(3).trim()
+        lines.shift()
+    } else {
+        // First line is the file name
+        path = lines[0].trim()
         lines.shift()
     }
 
