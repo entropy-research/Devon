@@ -102,9 +102,13 @@ const ChatInputField = ({
         // checkShouldOpenModal()
     }
 
+    // console.log(sessionActorRef.getSnapshot().value,sessionActorRef.getSnapshot().matches('paused'))
+
     async function handlePause() {
         sessionActorRef.send({ type: 'session.toggle' })
     }
+
+    // console.log("loading ", loading)
 
     return (
         <div
@@ -243,15 +247,19 @@ const InformationBox = ({
     let currentType
     if (loading) {
         currentType = types.loading
+    }
+    else if (paused) {
+        // console.log("type is paused")
+        currentType = types.paused
     } else if (modelLoading) {
         currentType = types.modelLoading
     } else if (userRequested) {
         currentType = types.userRequested
-    } else if (paused) {
-        currentType = types.paused
     } else {
         currentType = types.loading
     }
+
+    // console.log(currentType)
 
     return (
         <div className="bg-fade-bottom-to-top2 py-5 px-1">

@@ -50,7 +50,7 @@ const StyledMessage = ({
 
                             const match = /language-(\w+)/.exec(className || '')
                             const meta = props.meta || ''
-                            console.log('the path', path)
+                            // console.log('the path', path)
                             return (
                                 <div className="relative py-5">
                                     {meta && (

@@ -91,7 +91,7 @@ export default function Chat({
                                 scrollToBottom={scrollToBottom}
                                 viewOnly={viewOnly}
                                 eventContext={eventState}
-                                loading={!state.matches('running')}
+                                loading={!state.can({type: 'session.toggle'})}
                                 sessionId={sessionId}
                             />
                         </div>
