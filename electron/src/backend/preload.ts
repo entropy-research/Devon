@@ -23,7 +23,8 @@ type Channel =
     | 'get-port-response'
     | 'server-error'
     | 'watch-dir' // For editor
-    | 'file-changes' // For editor
+    | 'editor-file-changed' // For editor
+    | 'editor-add-open-file' // For editor
     | 'unsubscribe' // For editor
 
 const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
@@ -39,13 +40,15 @@ const channels: { send: Channel[]; invoke: Channel[]; receive: Channel[] } = {
         'check-has-encrypted-data',
         'spawn-devon-agent',
         'watch-dir',
+        'editor-add-open-file',
     ],
     receive: [
         'file-path-response',
         'server-port',
         'get-port-response',
         'server-error',
-        'file-changes',
+        'editor-file-changed',
+
     ],
 }
 

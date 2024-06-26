@@ -40,6 +40,15 @@ const boilerplateFile2 = {
     },
 }
 
+type FileEvent = {
+    files: string[]
+    openFiles: {
+        path: string
+        content: string
+    }[]
+}
+
+
 const EditorPanel = ({
     isExpandedVariant = false,
 }: {
@@ -47,8 +56,11 @@ const EditorPanel = ({
     isExpandedVariant?: boolean
 }) => {
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
-    const [openFiles, setOpenFiles] = useState<File[]>([])
-    const prevInitialFilesRef = useRef<File[]>([])
+    const [openFiles, setOpenFiles] = useState<File<string>[]>([])
+    const prevInitialFilesRef = useRef<File<string>[]>([])
+    const [initialLoading, setInitialLoading] = useState(true)
+    const [prevDirPath, setPrevDirPath] = useState<string | null>(null)
+    const [files, setFiles] = useState<File<undefined>[]>([])
 
     const messages = SessionMachineContext.useSelector(state =>
         state.context.serverEventContext.messages.filter(
@@ -65,27 +77,108 @@ const EditorPanel = ({
             state.context.sessionState?.editor &&
             state.context.sessionState.editor.files
         ) {
+
+
             return Object.keys(state.context.sessionState.editor.files).map(
-                filepath => ({
-                    id: filepath,
-                    name: filepath.split('/').pop() ?? 'unnamed_file',
-                    path: filepath,
-                    language:
-                        getLanguageFromFilename(
-                            filepath.split('/').pop() ?? ''
-                        ) ?? '',
-                    value: state.context.sessionState.editor.files[filepath],
-                    icon:
-                        getIconFromFilename(filepath.split('/').pop() ?? '') ??
-                        '',
-                })
+                filepath => {
+                    window.api.invoke('editor-add-open-file', filepath)
+                    return {
+                        id: filepath,
+                        name: filepath.split('/').pop() ?? 'unnamed_file',
+                        path: filepath,
+                        language:
+                            getLanguageFromFilename(
+                                filepath.split('/').pop() ?? ''
+                            ) ?? '',
+                        value: state.context.sessionState.editor.files[filepath],
+                        icon:
+                            getIconFromFilename(filepath.split('/').pop() ?? '') ??
+                            '',
+                    }
+                }
             )
         } else {
             return [] as File[]
         }
     })
 
-    const { files, initialLoading } = useFileWatcher(initialFiles, path)
+
+
+    // const { files, initialLoading } = useFileWatcher(initialFiles, path)
+    let dirPath = path
+    useEffect(() => {
+        const startWatching = async () => {
+            if (!dirPath) {
+                return () => { }
+            }
+            let loading = false
+            if (prevDirPath !== dirPath) {
+                setInitialLoading(true)
+                loading = true
+                setPrevDirPath(dirPath)
+            }
+
+            const success = await window.api.invoke('watch-dir', dirPath)
+            if (!success) {
+                console.error('Failed to start watching directory')
+                return () => { }
+            }
+            const handleFileChanges = (events: FileEvent) => {
+                if (initialLoading || loading) {
+                    setInitialLoading(false)
+                }
+                setFiles(prevFiles => {
+                    const fileMap = new Map(
+                        prevFiles.map(file => [file.path, file])
+                    )
+                    console.log(events)
+   
+                        events.files.forEach(file => {
+                            fileMap.set(file, {
+                                id: file,
+                                name: file.split('/').pop() ?? 'unnamed_file',
+                                path: file,
+                                language: getLanguageFromFilename(file.split('/').pop() ?? '') ?? '',
+                                value: undefined,
+                                icon: getIconFromFilename(file.split('/').pop() ?? '') ?? '',
+                            })
+                        })
+                    return Array.from(fileMap.values())
+                })
+
+                setOpenFiles(events.openFiles.map((file) => {
+                    return {
+                        id: file.path,
+                        name: file.path.split('/').pop() ?? 'unnamed_file',
+                        path: file.path,
+                        language: getLanguageFromFilename(file.path.split('/').pop() ?? '') ?? '',
+                        value: file.content,
+                        icon: getIconFromFilename(file.path.split('/').pop() ?? '') ?? '',
+                        }
+                    }))
+            }
+
+            window.api.receive('editor-file-changed', handleFileChanges)
+
+            return () => {
+                window.api.send('unsubscribe')
+                window.api.removeAllListeners('editor-file-changed')
+            }
+        }
+
+        let cleanup: () => void
+
+        startWatching().then(cleanupFn => {
+            cleanup = cleanupFn
+        })
+
+        return () => {
+            if (cleanup) {
+                cleanup()
+            }
+            setFiles([])
+        }
+    }, [dirPath])
 
     useEffect(() => {
         const prevInitialFiles = prevInitialFilesRef.current
@@ -107,12 +200,22 @@ const EditorPanel = ({
         prevInitialFilesRef.current = initialFiles
     }, [initialFiles])
 
+    useEffect(() => {
+        openFiles.forEach(file => {
+            if (!file.value) {
+                window.api.invoke("editor-add-open-file", file.path)
+            }
+        })
+    }, [openFiles])
+
     const handleFileSelect = useCallback(
         (fileId: string | null) => {
             setSelectedFileId(fileId)
-            const selectedFile = files.find(file => file.id === fileId)
+            let selectedFile = files.find(file => file.id === fileId)
+
             if (selectedFile && !openFiles.some(file => file.id === fileId)) {
-                setOpenFiles(prevOpenFiles => [...prevOpenFiles, selectedFile])
+                selectedFile.value = "" 
+                setOpenFiles(prevOpenFiles => [...prevOpenFiles, selectedFile as unknown as File<string>])
             }
         },
         [files, openFiles]
@@ -120,16 +223,14 @@ const EditorPanel = ({
 
     return (
         <div
-            className={`flex flex-col h-full w-full ${
-                showEditorBorders ? 'pb-7' : ''
-            }`}
+            className={`flex flex-col h-full w-full ${showEditorBorders ? 'pb-7' : ''
+                }`}
         >
             <div
-                className={`flex flex-row h-full ${
-                    showEditorBorders
+                className={`flex flex-row h-full ${showEditorBorders
                         ? 'rounded-md border bg-midnight border-outlinecolor pt-0 mr-3 overflow-hidden'
                         : ''
-                }`}
+                    }`}
             >
                 <div
                     // direction="vertical"
@@ -159,7 +260,7 @@ const EditorPanel = ({
                                 className="flex-grow flex flex-col overflow-hidden"
                             >
                                 <CodeEditor
-                                    files={files}
+                                    files={openFiles}
                                     selectedFileId={selectedFileId}
                                     setSelectedFileId={handleFileSelect}
                                     isExpandedVariant={isExpandedVariant}
