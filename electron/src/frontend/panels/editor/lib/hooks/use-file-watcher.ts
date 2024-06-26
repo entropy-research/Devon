@@ -6,13 +6,12 @@ import {
 import { File } from '@/lib/types'
 
 type FileEvent = {
-    type: 'create' | 'update' | 'delete'
-    path: string
-    newContent?: string
+    files : string[]
+    openFiles : string[]
 }
 
 const useFileWatcher = (initialFiles: File[], dirPath: string) => {
-    const [files, setFiles] = useState<File[]>(initialFiles)
+    const [files, setFiles] = useState<File<undefined>[]>(initialFiles)
     const [initialLoading, setInitialLoading] = useState(true)
     const [prevDirPath, setPrevDirPath] = useState<string | null>(null)
 
@@ -33,7 +32,6 @@ const useFileWatcher = (initialFiles: File[], dirPath: string) => {
                 console.error('Failed to start watching directory')
                 return () => {}
             }
-
             const handleFileChanges = (events: FileEvent[]) => {
                 if (initialLoading || loading) {
                     setInitialLoading(false)
@@ -42,41 +40,27 @@ const useFileWatcher = (initialFiles: File[], dirPath: string) => {
                     const fileMap = new Map(
                         prevFiles.map(file => [file.path, file])
                     )
-
                     events.forEach((event: FileEvent) => {
-                        if (
-                            event.type === 'create' ||
-                            event.type === 'update'
-                        ) {
-                            const file = {
-                                id: event.path,
-                                name:
-                                    event.path.split('/').pop() ??
-                                    'unnamed_file',
-                                path: event.path,
-                                language: getLanguageFromFilename(
-                                    event.path.split('/').pop()
-                                ),
-                                value: { lines: event.newContent || '' }, // Read new content if available
-                                icon: getIconFromFilename(
-                                    event.path.split('/').pop()
-                                ),
-                            }
-                            fileMap.set(event.path, file)
-                        } else if (event.type === 'delete') {
-                            fileMap.delete(event.path)
-                        }
+                        event.files.forEach(file => {
+                            fileMap.set(file, {
+                                id: file,
+                                name: file.split('/').pop() ?? 'unnamed_file',
+                                path: file,
+                                language: getLanguageFromFilename(file.split('/').pop() ?? '') ?? '',
+                                value: undefined,
+                                icon: getIconFromFilename(file.split('/').pop() ?? '') ?? '',
+                            })
+                        })
                     })
-
                     return Array.from(fileMap.values())
                 })
             }
 
-            window.api.receive('file-changes', handleFileChanges)
+            window.api.receive('editor-file-changed', handleFileChanges)
 
             return () => {
                 window.api.send('unsubscribe')
-                window.api.removeAllListeners('file-changes')
+                window.api.removeAllListeners('editor-file-changed')
             }
         }
 

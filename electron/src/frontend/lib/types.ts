@@ -1,9 +1,9 @@
-export type File = {
+export type File<T = any> = {
     id: string
     name: string
     path: string
     language: string
-    value: any
+    value: T
     icon?: string
 }
 
