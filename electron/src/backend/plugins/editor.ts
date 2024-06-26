@@ -51,7 +51,7 @@ type Path = string
 
 class EditorFileManager {
     private files: Set<Path>
-    private openFiles: Map<Path, File>
+    public openFiles: Map<Path, File>
 
     constructor() {
         this.files = new Set()
@@ -116,9 +116,13 @@ let editorFileManager = new EditorFileManager()
 
 ipcMain.handle('editor-add-open-file', async (event, filename) => {
     if (editorFileManager) {
+        if (editorFileManager.openFiles.has(filename)) {
+            return
+        }
         await editorFileManager.addOpenFile(filename)
         const state = editorFileManager.handleEvent([])
         event.sender.send('editor-file-changed', state)
+        console.log("editor-add-open-file",state)
     }
 })
 

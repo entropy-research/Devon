@@ -45,6 +45,15 @@ export default function CodeEditor({
         })
     }, [])
 
+    useEffect(() => {
+        setOpenFiles(prevOpenFiles => {
+            const newFiles = initialFiles.filter(file => 
+                !prevOpenFiles.some(openFile => openFile.id === file.id)
+            );
+            return [...prevOpenFiles, ...newFiles];
+        });
+    }, [initialFiles]);
+
     const handleFileSelect = useCallback(
         (id: string) => {
             setSelectedFileId(id)

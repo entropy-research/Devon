@@ -62,21 +62,23 @@ const EditorPanel = ({
     const [prevDirPath, setPrevDirPath] = useState<string | null>(null)
     const [files, setFiles] = useState<File<undefined>[]>([])
 
-    const messages = SessionMachineContext.useSelector(state =>
-        state.context.serverEventContext.messages.filter(
-            message => message.type === 'tool'
-        )
-    )
+    // const messages = SessionMachineContext.useSelector(state =>
+    //     state.context.serverEventContext.messages.filter(
+    //         message => message.type === 'tool'
+    //     )
+    // )
+    const messages = [];
     const path = SessionMachineContext.useSelector(
         state => state.context?.sessionState?.path ?? ''
     )
     const showEditorBorders = true
 
-    const initialFiles: File[] = SessionMachineContext.useSelector(state => {
+    const agentFiles: File[] = SessionMachineContext.useSelector(state => {
         if (
             state.context.sessionState?.editor &&
             state.context.sessionState.editor.files
         ) {
+            // console.log(state.context.sessionState.editor.files)
 
 
             return Object.keys(state.context.sessionState.editor.files).map(
@@ -101,7 +103,23 @@ const EditorPanel = ({
         } else {
             return [] as File[]
         }
+    },(prevState,newState)=> {
+        // Deep equality check for arrays
+        if (prevState.length !== newState.length) {
+            console.log("lengths are different",prevState,newState)
+            return false;
+        }
+        
+        for (let i = 0; i < prevState.length; i++) {
+            if (prevState[i].id !== newState[i].id) {
+                console.log("ids are different")
+                return false;
+            }
+        }
+        // console.log("no differences found")
+        return true;
     })
+    console.log("rerender")
 
 
 
@@ -145,8 +163,10 @@ const EditorPanel = ({
                         })
                     return Array.from(fileMap.values())
                 })
-
+                console.log("files changed")
+                
                 setOpenFiles(events.openFiles.map((file) => {
+                    console.log("file",file)
                     return {
                         id: file.path,
                         name: file.path.split('/').pop() ?? 'unnamed_file',
@@ -184,7 +204,7 @@ const EditorPanel = ({
         const prevInitialFiles = prevInitialFilesRef.current
 
         // Detect new files in initialFiles
-        const newFiles = initialFiles.filter(
+        const newFiles = agentFiles.filter(
             file =>
                 !prevInitialFiles.some(prevFile => prevFile.path === file.path)
         )
@@ -195,10 +215,11 @@ const EditorPanel = ({
                 setSelectedFileId(newFiles[0].id)
             }
         }
+        console.log("use effect here fired",agentFiles)
 
         // Update the ref for the next comparison
-        prevInitialFilesRef.current = initialFiles
-    }, [initialFiles])
+        prevInitialFilesRef.current = agentFiles
+    }, [agentFiles])
 
     useEffect(() => {
         openFiles.forEach(file => {
@@ -206,10 +227,12 @@ const EditorPanel = ({
                 window.api.invoke("editor-add-open-file", file.path)
             }
         })
+        console.log("open files use effect here fired 2")
     }, [openFiles])
 
     const handleFileSelect = useCallback(
         (fileId: string | null) => {
+            console.log("handle file select fired")
             setSelectedFileId(fileId)
             let selectedFile = files.find(file => file.id === fileId)
 
@@ -266,7 +289,7 @@ const EditorPanel = ({
                                     isExpandedVariant={isExpandedVariant}
                                     showEditorBorders={showEditorBorders}
                                     path={path}
-                                    initialFiles={openFiles}
+                                    initialFiles={agentFiles}
                                 />
                             </ResizablePanel>
                         </ResizablePanelGroup>
