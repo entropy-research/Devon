@@ -17,6 +17,7 @@ const IGNORE_PATTERNS = [
     'node_modules',
     '.git',
     '__pycache__',
+    '.*/', // Matches any dot folder (hidden folder)
 ]
 
 const shouldIgnoreFile = (filePath: string): boolean => {
@@ -114,12 +115,14 @@ class EditorFileManager {
 let editorFileManager = new EditorFileManager()
 
 
-ipcMain.handle('editor-add-open-file', async (event, filename) => { 
-    await editorFileManager.addOpenFile(filename)
-    console.log("added open file", filename)
-    let state = editorFileManager.handleEvent([])
-    console.log("state", state)
-    event.sender.send('editor-file-changed', state)
+ipcMain.handle('editor-add-open-file', async (event, filename) => {
+    if (editorFileManager) {
+        await editorFileManager.addOpenFile(filename)
+        console.log("added open file", filename)
+        const state = editorFileManager.handleEvent([])
+        console.log("state", state)
+        event.sender.send('editor-file-changed', state)
+    }
 })
 
 
@@ -134,6 +137,9 @@ ipcMain.handle('watch-dir', async (event, dirPath) => {
         for (const file of files) {
             const filePath = path.join(dir, file.name)
             if (shouldIgnoreFile(filePath)) {
+                continue
+            }
+            if (filePath.startsWith(".")) {
                 continue
             }
 
