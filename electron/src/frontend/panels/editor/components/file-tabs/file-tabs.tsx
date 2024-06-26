@@ -156,7 +156,7 @@ const FileTabs = ({
                                       )}
                                       <span className="mr-5 flex items-center">
                                           {file.name}
-                                          {file.agentHasOpen && 'Yoyooyoy'}
+                                          {file.agentHasOpen}
                                           {getFileMatch(file.id)
                                               ?.agentHasOpen && (
                                               <Bot className="h-[16px] w-[16px] text-primary ml-2 -mr-3 -translate-y-[1px]" />
