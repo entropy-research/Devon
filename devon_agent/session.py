@@ -29,7 +29,7 @@ from devon_agent.tools.filetools import SearchFileTool, FileTreeDisplay
 from devon_agent.tools.lifecycle import NoOpTool
 from devon_agent.tools.shelltool import ShellTool
 from devon_agent.tools.usertools import AskUserTool, RespondUserTool
-from devon_agent.tools.utils import get_ignored_files
+from devon_agent.tools.utils import get_ignored_files, read_file
 from devon_agent.utils import DotDict, Event, decode_path
 from devon_agent.tools.codenav import CodeGoTo, CodeSearch
 
@@ -364,6 +364,14 @@ class Session:
             case "ModelRequest":
                 # TODO: Need some quantized timestep for saving persistence that isn't literally every 0.1s
                 self.persist()
+                if self.state.editor and self.state.editor.files:
+                    for file in self.state.editor.files:
+                        self.state.editor.files[file]["lines"]= read_file({
+                            "environment" : self.default_environment,
+                            "session" : self,
+                            "state" : self.state,
+                        },
+                        file)
                 thought, action, output = self.agent.predict(
                     self.get_last_task(), event["content"], self
                 )
@@ -491,6 +499,9 @@ class Session:
             case "ToolResponse":
                 # self.versioning.commit_all_files("commit")
                 # self.versioning.commit_all_files("commit")
+                # Sync the editor state
+
+                
                 new_events.append(
                     {
                         "type": "ModelRequest",
