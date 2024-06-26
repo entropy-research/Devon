@@ -106,21 +106,16 @@ const EditorPanel = ({
     },(prevState,newState)=> {
         // Deep equality check for arrays
         if (prevState.length !== newState.length) {
-            console.log("lengths are different",prevState,newState)
             return false;
         }
         
         for (let i = 0; i < prevState.length; i++) {
             if (prevState[i].id !== newState[i].id) {
-                console.log("ids are different")
                 return false;
             }
         }
-        // console.log("no differences found")
         return true;
     })
-    console.log("rerender")
-
 
 
     // const { files, initialLoading } = useFileWatcher(initialFiles, path)
@@ -163,10 +158,8 @@ const EditorPanel = ({
                         })
                     return Array.from(fileMap.values())
                 })
-                console.log("files changed")
                 
                 setOpenFiles(events.openFiles.map((file) => {
-                    console.log("file",file)
                     return {
                         id: file.path,
                         name: file.path.split('/').pop() ?? 'unnamed_file',
@@ -215,7 +208,6 @@ const EditorPanel = ({
                 setSelectedFileId(newFiles[0].id)
             }
         }
-        console.log("use effect here fired",agentFiles)
 
         // Update the ref for the next comparison
         prevInitialFilesRef.current = agentFiles
@@ -227,12 +219,10 @@ const EditorPanel = ({
                 window.api.invoke("editor-add-open-file", file.path)
             }
         })
-        console.log("open files use effect here fired 2")
     }, [openFiles])
 
     const handleFileSelect = useCallback(
         (fileId: string | null) => {
-            console.log("handle file select fired")
             setSelectedFileId(fileId)
             let selectedFile = files.find(file => file.id === fileId)
 

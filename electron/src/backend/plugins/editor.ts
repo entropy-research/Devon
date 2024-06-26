@@ -122,7 +122,7 @@ ipcMain.handle('editor-add-open-file', async (event, filename) => {
         await editorFileManager.addOpenFile(filename)
         const state = editorFileManager.handleEvent([])
         event.sender.send('editor-file-changed', state)
-        console.log("editor-add-open-file",state)
+        // console.log("editor-add-open-file",state)
     }
 })
 
