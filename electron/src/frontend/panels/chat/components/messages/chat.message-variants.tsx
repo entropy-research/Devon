@@ -1,5 +1,7 @@
+import { useState, useRef, useEffect } from 'react'
 import { Bot, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import { spinner } from '../ui/loading-spinner'
 import { Icon } from '@iconify/react'
 import { parseDiff } from 'react-diff-view'
@@ -9,6 +11,8 @@ import { parseFileDiff } from '../../lib/utils'
 import * as unidiff from 'unidiff'
 import StyledMessage from './styled-message'
 import DiffViewer from '../ui/diff-viewer'
+import { ChevronDown } from 'lucide-react'
+import { getFileName, parseCommand } from '@/lib/utils'
 
 // Different types of message bubbles.
 
@@ -115,13 +119,17 @@ export const ToolResponseMessage = ({
 }) => {
     const icon = <div className="w-[32px]"></div>
     let [command, response] = content.toString().split('|START_RESPONSE|')
+    const parsedRes = parseCommand(command)
+    if (parsedRes?.command === 'ask_user') {
+        return null
+    }
 
     if (command.includes('Running command: edit')) {
         const indexOfFirstNewline = command.indexOf('\n')
         if (indexOfFirstNewline !== -1) {
             command = command.substring(indexOfFirstNewline + 1)
         }
-        const { filename, language, searchContent, replaceContent } =
+        const { path, language, searchContent, replaceContent } =
             parseFileDiff(command)
 
         const resultingDiffLines = unidiff.diffLines(
@@ -137,10 +145,89 @@ export const ToolResponseMessage = ({
         const files = parseDiff(unifiedDiff)
 
         return (
-            <div className="flex ml-[50px]">
-                <DiffViewer files={files} />
+            <div className="flex ml-[50px] flex-col">
+                {parsedRes &&
+                    parsedRes.command != 'create_file' &&
+                    parsedRes.command && (
+                        <div className="mt-2 w-full mb-1">
+                            <pre className="text-md mb-2 text-gray-400 whitespace-pre-wrap break-words">
+                                <strong>Command:</strong> {parsedRes.command}{' '}
+                                {getFileName(path)}
+                            </pre>
+                        </div>
+                    )}
+                <div className="bg-midnight text-zinc-100 rounded-md overflow-hidden w-full">
+                    <DiffViewer files={files} />
+                </div>
             </div>
         )
     }
-    return <StyledMessage content={command} className={className} icon={icon} />
+    return (
+        <>
+            {parsedRes &&
+            parsedRes.command != 'create_file' &&
+            parsedRes.command ? (
+                <div className="pl-[49px] mt-2 w-full">
+                    <pre className="text-md mb-2 text-gray-400 whitespace-pre-wrap break-words">
+                        <strong>Command:</strong> {parsedRes.command}{' '}
+                        {parsedRes.remainingText}
+                    </pre>
+                </div>
+            ) : (
+                <StyledMessage
+                    content={command}
+                    className={className}
+                    icon={icon}
+                />
+            )}
+
+            {response && <ResponseBlock response={response} />}
+        </>
+    )
+}
+
+const ResponseBlock = ({ response }: { response: string }) => {
+    const [expanded, setExpanded] = useState(false)
+    const [height, setHeight] = useState(0)
+    const contentRef = useRef<HTMLPreElement>(null)
+
+    const toggleExpanded = () => setExpanded(prev => !prev)
+
+    useEffect(() => {
+        if (contentRef.current) {
+            setHeight(expanded ? contentRef.current.scrollHeight : 0)
+        }
+    }, [expanded, response])
+
+    return (
+        <div className="ml-[49px] mt-3">
+            <div className="relative w-full font-sans codeblock bg-zinc-950 rounded-md overflow-hidden">
+                <div
+                    className="flex items-center justify-between w-full pl-3 py-0 pr-1 bg-zinc-800 text-zinc-100 rounded-t-md sticky top-0 hover:cursor-pointer"
+                    onClick={toggleExpanded}
+                >
+                    <div className="flex py-2 items-center text-gray-300">
+                        <ChevronDown
+                            className={cn(
+                                'h-5 w-5 transition-transform duration-200 ease-in-out mr-[3px]',
+                                expanded ? '' : '-rotate-90'
+                            )}
+                        />
+                        <pre className="text-md flex">Response:</pre>
+                    </div>
+                </div>
+                <div
+                    style={{ height: `${height}px` }}
+                    className="transition-[height] duration-300 ease-in-out overflow-auto bg-midnight"
+                >
+                    <pre
+                        ref={contentRef}
+                        className="text-zinc-100 p-5 text-sm w-full rounded-b-md"
+                    >
+                        {response}
+                    </pre>
+                </div>
+            </div>
+        </div>
+    )
 }

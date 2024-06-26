@@ -62,12 +62,11 @@ const EditorPanel = ({
     const [prevDirPath, setPrevDirPath] = useState<string | null>(null)
     const [files, setFiles] = useState<File<undefined>[]>([])
 
-    // const messages = SessionMachineContext.useSelector(state =>
-    //     state.context.serverEventContext.messages.filter(
-    //         message => message.type === 'tool'
-    //     )
-    // )
-    const messages = [];
+    const messages = SessionMachineContext.useSelector(state =>
+        state.context.serverEventContext.messages.filter(
+            message => message.type === 'tool'
+        )
+    )
     const path = SessionMachineContext.useSelector(
         state => state.context?.sessionState?.path ?? ''
     )
@@ -290,7 +289,7 @@ const EditorPanel = ({
                         // defaultSize={20}
                         className={`h-[20vh] ${showEditorBorders ? '' : ''}`}
                     >
-                        <ShellPanel messages={messages} />
+                        <ShellPanel messages={messages} path={path} />
                     </div>
                 </div>
             </div>

@@ -2,20 +2,68 @@ import { Terminal as XtermTerminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
 import { useEffect, useRef, useState } from 'react'
 import type { Message } from '@/lib/types'
+import { parseCommand } from '@/lib/utils'
 
 /**
  * The terminal's content is set by write messages. To avoid complicated state logic,
  * we keep the terminal persistently open as a child of <App /> and hidden when not in use.
  */
 
+// TODO don't hardcode
+const ignoreCommands = [
+    'ask_user',
+    'create_file',
+    'open_file',
+    'scroll_up',
+    'scroll_down',
+    'scroll_to_line',
+    'search_file',
+    'edit_file',
+    'edit',
+    'search_dir',
+    'find_file',
+    'get_cwd',
+    'no_op',
+    'submit',
+    'delete_file',
+    'code_search',
+    'code_goto',
+    'file_tree_display',
+    'close_file',
+    'exit',
+    'extract_signature_and_docstring',
+    'find_class',
+    'find_function',
+    'list_dirs_recursive',
+    'parse_command',
+    'real_write_diff',
+]
+
 export default function ShellPanel({
     messages,
+    path,
 }: {
     messages: Message[]
+    path: string
 }): JSX.Element {
     const terminalRef = useRef<HTMLDivElement>(null)
     const terminalInstanceRef = useRef<XtermTerminal | null>(null)
     const [renderedMessages, setRenderedMessages] = useState<Message[]>([])
+    const initialPathRef = useRef<string | null>(null)
+
+    useEffect(() => {
+        // When the path changes, reset states
+        if (
+            initialPathRef.current === null ||
+            path !== initialPathRef.current
+        ) {
+            setRenderedMessages([])
+            if (terminalInstanceRef.current) {
+                terminalInstanceRef.current.clear()
+            }
+            initialPathRef.current = path
+        }
+    }, [path])
 
     useEffect(() => {
         async function addOn() {
@@ -59,36 +107,34 @@ export default function ShellPanel({
         }
     }, [])
 
+    function removeBeforeRunningCommand(input: string): string {
+        const regex = /.*Running Command:\s*/i
+        return input.replace(regex, '')
+    }
+
     useEffect(() => {
         const terminal = terminalInstanceRef.current
         if (terminal) {
-            const messagesToRender = messages.filter(
-                message => !renderedMessages.includes(message)
-            )
+            const messagesToRender = messages.filter(message => {
+                if (renderedMessages.includes(message)) return
+                let [command, response] = message.text.split('|START_RESPONSE|')
+                const parsedRes = parseCommand(command)
+
+                if (parsedRes && ignoreCommands.includes(parsedRes?.command)) {
+                    return
+                }
+                if (!parsedRes) {
+                    return
+                }
+                return message
+            })
             // terminal.clear() // Clear the existing content
             messagesToRender.forEach((message, idx) => {
                 let [command, response] = message.text.split('|START_RESPONSE|')
-                let commandMsgs = command.trim().split('\n')
+                let commandMsgs = removeBeforeRunningCommand(
+                    command.trim()
+                ).split('\n')
                 commandMsgs.forEach((line, index) => {
-                    if (index === 0) {
-                        const firstLineItems = line.trim().split(' ')
-                        let end: string | undefined = undefined
-
-                        // Check if the last item in the first line is "<<<"
-                        if (
-                            firstLineItems[firstLineItems.length - 1] === '<<<'
-                        ) {
-                            end = firstLineItems.pop() // Remove the "<<<"
-                        }
-
-                        // Construct the command string
-                        line = firstLineItems.join(' ')
-                        if (end) {
-                            terminal.writeln(line)
-                            terminal.writeln(end)
-                            return
-                        }
-                    }
                     terminal.writeln(line)
                 })
                 if (response) {
@@ -96,6 +142,7 @@ export default function ShellPanel({
                     responseMsgs.forEach(line => {
                         terminal.writeln(line)
                     })
+                    terminal.write('> ')
                 }
                 setRenderedMessages(prevMessages => [...prevMessages, message])
             })

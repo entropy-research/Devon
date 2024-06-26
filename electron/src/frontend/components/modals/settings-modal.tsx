@@ -9,7 +9,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import { CircleHelp, Settings } from 'lucide-react'
+import { CircleHelp, Settings, Info } from 'lucide-react'
 import SafeStoragePopoverContent from '@/components/modals/safe-storage-popover-content'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Model } from '@/lib/types'
@@ -203,14 +203,14 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
             </Card>
             <Card className="bg-midnight">
                 <CardContent>
-                    <div className="flex flex-col mt-5 w-full">
-                        <div className="flex items-center justify-between mb-4 gap-3">
+                    <div className="flex flex-col mt-5 w-full mb-4">
+                        <div className="flex items-center justify-between">
                             <p className="text-lg font-semibold">
                                 {selectedModel.id !== originalModelName
                                     ? `Set new model: `
                                     : `Current model:`}
                             </p>
-                            <div className="flex gap-3">
+                            <div className="flex flex-col">
                                 <Combobox
                                     items={comboboxItems}
                                     itemType="model"
@@ -219,6 +219,12 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                                 />
                             </div>
                         </div>
+                        {selectedModel.value !== 'claude-3-5-sonnet' && (
+                            <span className="text-sm text-green-500 mt-2 flex gap-1 items-center">
+                                <Info className="w-4 h-4"/>
+                                Note: For best results use Claude 3.5 Sonnet (it's better at coding!)
+                            </span>
+                        )}
                     </div>
                     <div className="flex justify-between w-full">
                         <div className="flex gap-1 items-center mb-4">
