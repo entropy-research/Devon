@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import Editor, { Monaco } from '@monaco-editor/react'
-import type { editor, ISelection } from 'monaco-editor'
+import type { editor, Selection } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { File } from '@/lib/types'
 import { atom, useAtom } from 'jotai'
@@ -34,7 +34,7 @@ export default function CodeEditor({
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
     const monacoRef = useRef<Monaco | null>(null)
     const [openFiles, setOpenFiles] = useState<File[]>(initialFiles)
-    const fileSelectionsRef = useRef<Record<string, ISelection | null>>({})
+    const fileSelectionsRef = useRef<Record<string, Selection | null>>({})
 
     const addFileToOpenFiles = useCallback((file: File) => {
         setOpenFiles(prevOpenFiles => {
@@ -79,14 +79,14 @@ export default function CodeEditor({
         (
             editor: editor.IStandaloneCodeEditor,
             monaco: Monaco,
-            selection: ISelection,
+            selection: Selection,
             fileId: string
         ) => {
             const range = new monaco.Range(
-                selection.selectionStartLineNumber,
-                selection.selectionStartColumn,
-                selection.positionLineNumber,
-                selection.positionColumn
+                selection.startLineNumber,
+                selection.startColumn,
+                selection.endLineNumber,
+                selection.endColumn
             )
             const lineHeight = editor.getOption(
                 monaco.editor.EditorOption.lineHeight
@@ -107,15 +107,15 @@ export default function CodeEditor({
                 files?.find(f => f.id === fileId)?.language ?? 'text'
 
             setSelectionInfo({
-                id: `${relativePath}:${selection.selectionStartLineNumber}-${selection.selectionStartLineNumber}`,
+                id: `${relativePath}:${selection.startLineNumber}-${selection.endLineNumber}`,
                 fullPath: fileId,
                 relativePath,
                 fileName,
                 selection: selectedText ?? '',
-                startLineNumber: selection.selectionStartLineNumber,
-                endLineNumber: selection.positionLineNumber,
-                startColumn: selection.selectionStartColumn,
-                endColumn: selection.positionLineNumber,
+                startLineNumber: selection.startLineNumber,
+                endLineNumber: selection.endLineNumber,
+                startColumn: selection.startColumn,
+                endColumn: selection.endColumn,
                 language,
             })
 
@@ -192,7 +192,12 @@ export default function CodeEditor({
             disposable.dispose()
             window.removeEventListener('mouseup', handleMouseUp)
         }
-    }, [selectedFileId, updateSelectionInfo, editorRef.current, monacoRef.current])
+    }, [
+        selectedFileId,
+        updateSelectionInfo,
+        editorRef.current,
+        monacoRef.current,
+    ])
 
     useEffect(() => {
         if (selectedFileId) {
