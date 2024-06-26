@@ -6,7 +6,7 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Dict, List, Optional
 from devon_agent.agents.conversational_agent import ConversationalAgent
-from devon_agent.semantic_search.code_graph_manager import CodeGraphManager
+# from devon_agent.semantic_search.code_graph_manager import CodeGraphManager
 
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
@@ -120,77 +120,77 @@ def read_root():
     return {"content": "Hello from Devon!"}
 
 
-@app.get("/indexes")
-def get_indexes():
-    client = chromadb.PersistentClient(path=os.path.join(app.db_path, "vectorDB"))
+# @app.get("/indexes")
+# def get_indexes():
+#     client = chromadb.PersistentClient(path=os.path.join(app.db_path, "vectorDB"))
     
-    # Get completed indexes from ChromaDB
-    completed_indexes = [
-        decode_path(collection.name)
-        for collection in client.list_collections()
-    ]
+#     # Get completed indexes from ChromaDB
+#     completed_indexes = [
+#         decode_path(collection.name)
+#         for collection in client.list_collections()
+#     ]
     
-    # Decode the keys from index_tasks
-    in_progress_indexes = [unquote(key).replace("%2F", "/") for key in index_tasks.keys()]
+#     # Decode the keys from index_tasks
+#     in_progress_indexes = [unquote(key).replace("%2F", "/") for key in index_tasks.keys()]
     
-    # Combine completed indexes with in-progress indexes
-    all_indexes = set(completed_indexes + in_progress_indexes)
+#     # Combine completed indexes with in-progress indexes
+#     all_indexes = set(completed_indexes + in_progress_indexes)
     
-    # Create a list of dictionaries with index information
-    index_info = []
-    for index in all_indexes:
-        # For in-progress tasks, we need to re-encode the path to check in index_tasks
-        encoded_index = index.replace("/", "%2F")
-        status = index_tasks.get(encoded_index, "done")  # If not in index_tasks, it's completed
-        index_info.append({
-            "path": index,
-            "status": status
-        })
+#     # Create a list of dictionaries with index information
+#     index_info = []
+#     for index in all_indexes:
+#         # For in-progress tasks, we need to re-encode the path to check in index_tasks
+#         encoded_index = index.replace("/", "%2F")
+#         status = index_tasks.get(encoded_index, "done")  # If not in index_tasks, it's completed
+#         index_info.append({
+#             "path": index,
+#             "status": status
+#         })
     
-    return index_info
+#     return index_info
 
-index_tasks = {}
+# index_tasks = {}
 
-@app.post("/indexes/{index}")
-def create_index(index: str,background_tasks: fastapi.BackgroundTasks):
+# @app.post("/indexes/{index}")
+# def create_index(index: str,background_tasks: fastapi.BackgroundTasks):
 
-    def register_task(task,**kwargs):
-        index_tasks[index] = "running"
-        task(**kwargs)
-        print("task complete")
-        index_tasks[index] = "done"
+#     def register_task(task,**kwargs):
+#         index_tasks[index] = "running"
+#         task(**kwargs)
+#         print("task complete")
+#         index_tasks[index] = "done"
 
-    vectorDB_path = os.path.join(app.db_path, "vectorDB")
-    graph_path = os.path.join(app.db_path, "graph/graph.pickle")
-    collection_name = encode_path(index.replace("%2F", "/"))
-    print(collection_name)
-    manager = CodeGraphManager(graph_path, vectorDB_path, collection_name,os.environ.get("OPENAI_API_KEY"),index.replace("%2F", "/"))
-    background_tasks.add_task(register_task,manager.create_graph)
+#     vectorDB_path = os.path.join(app.db_path, "vectorDB")
+#     graph_path = os.path.join(app.db_path, "graph/graph.pickle")
+#     collection_name = encode_path(index.replace("%2F", "/"))
+#     print(collection_name)
+#     manager = CodeGraphManager(graph_path, vectorDB_path, collection_name,os.environ.get("OPENAI_API_KEY"),index.replace("%2F", "/"))
+#     background_tasks.add_task(register_task,manager.create_graph)
 
-@app.get("/indexes/{index}/status")
-def get_index_status(index: str,background_tasks: fastapi.BackgroundTasks):
-    print(index_tasks,index, index in index_tasks, list(index_tasks.keys())[0])
-    if index not in index_tasks:
-        print("pending")
-        return "pending"
-    else:
-        print(index_tasks[index])
-        return index_tasks[index]
+# @app.get("/indexes/{index}/status")
+# def get_index_status(index: str,background_tasks: fastapi.BackgroundTasks):
+#     print(index_tasks,index, index in index_tasks, list(index_tasks.keys())[0])
+#     if index not in index_tasks:
+#         print("pending")
+#         return "pending"
+#     else:
+#         print(index_tasks[index])
+#         return index_tasks[index]
 
 
 
-@app.delete("/indexes/{index}")
-def delete_index(index: str):
-    vectorDB_path = os.path.join(app.db_path, "vectorDB")
-    graph_path = os.path.join(app.db_path, "graph/graph.pickle")
-    collection_name = encode_path(index.replace("%2F", "/"))
-    manager = CodeGraphManager(graph_path, vectorDB_path, collection_name,os.environ.get("OPENAI_API_KEY"),index.replace("%2F", "/"))
-    try:
-        manager.delete_collection(collection_name)
-    except Exception as e:
-        print(e)
-        return "error"
-    return "done"
+# @app.delete("/indexes/{index}")
+# def delete_index(index: str):
+#     vectorDB_path = os.path.join(app.db_path, "vectorDB")
+#     graph_path = os.path.join(app.db_path, "graph/graph.pickle")
+#     collection_name = encode_path(index.replace("%2F", "/"))
+#     manager = CodeGraphManager(graph_path, vectorDB_path, collection_name,os.environ.get("OPENAI_API_KEY"),index.replace("%2F", "/"))
+#     try:
+#         manager.delete_collection(collection_name)
+#     except Exception as e:
+#         print(e)
+#         return "error"
+#     return "done"
 
 @app.get("/sessions")
 def get_sessions():

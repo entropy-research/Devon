@@ -13,7 +13,7 @@ from tenacity import RetryError
 from devon_agent.agents.default.agent import Agent
 from devon_agent.agents.default.anthropic_prompts import anthropic_commands_to_command_docs, anthropic_history_to_bash_history, anthropic_last_user_prompt_template_v3, anthropic_system_prompt_template_v3, conversational_agent_last_user_prompt_template_v3, conversational_agent_system_prompt_template_v3
 from devon_agent.agents.default.llama3_prompts import llama3_parse_response
-from devon_agent.agents.default.openai_prompts import openai_commands_to_command_docs, openai_last_user_prompt_template_v3, openai_system_prompt_template_v3
+from devon_agent.agents.default.openai_prompts import openai_commands_to_command_docs, openai_conversation_agent_last_user_prompt_template, openai_conversation_agent_system_prompt_template, openai_last_user_prompt_template_v3, openai_system_prompt_template_v3
 from devon_agent.agents.model import AnthropicModel, ModelArguments, OpenAiModel
 
 from devon_agent.tools.utils import get_cwd
@@ -121,7 +121,7 @@ class ConversationalAgent(Agent):
         command_docs = (
             "Custom Commands Documentation:\n"
             + openai_commands_to_command_docs(
-                list(session.generate_command_docs().values())
+                list(session.generate_command_docs("docstring").values())
             )
             + "\n"
         )
@@ -131,8 +131,8 @@ class ConversationalAgent(Agent):
             for entry in self.chat_history
             if entry["role"] == "user" or entry["role"] == "assistant"
         ]
-        system_prompt = openai_system_prompt_template_v3(command_docs)
-        last_user_prompt = openai_last_user_prompt_template_v3(
+        system_prompt = openai_conversation_agent_system_prompt_template(command_docs)
+        last_user_prompt = openai_conversation_agent_last_user_prompt_template(
             task,
             editor,
             get_cwd(
