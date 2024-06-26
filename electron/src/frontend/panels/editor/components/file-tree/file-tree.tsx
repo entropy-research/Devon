@@ -45,12 +45,12 @@ const buildFileTree = (
         const parts = getRelativePath(file.path, projectPath).split('/')
         let current = tree
         let currentPath = projectPath
-
         parts.forEach((part, index) => {
             currentPath = `${currentPath}/${part}`
-            let isLastPart = false
+            const isLastPart = index === parts.length - 1
+
             if (!current[part]) {
-                const isLastPart = index === parts.length - 1
+                // This part doesn't exist in the tree yet, so we create it
                 current[part] = {
                     id: currentPath,
                     name: part,
@@ -58,9 +58,19 @@ const buildFileTree = (
                     icon: isLastPart ? file.icon : undefined,
                     isFolder: !isLastPart,
                 }
+            } else if (isLastPart) {
+                // This is a file and the node already exists, update it
+                current[part].icon = file.icon
+                current[part].isFolder = false
+                current[part].children = undefined
+            } else if (!current[part].children) {
+                // This is a folder that was previously added as a file, convert it to a folder
+                current[part].children = {}
+                current[part].isFolder = true
             }
+
             if (!isLastPart) {
-                current = current[part].children
+                current = current[part].children!
             }
         })
     })
