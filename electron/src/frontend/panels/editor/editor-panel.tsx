@@ -289,7 +289,7 @@ const EditorPanel = ({
                         // defaultSize={20}
                         className={`h-[20vh] ${showEditorBorders ? '' : ''}`}
                     >
-                        <ShellPanel messages={messages} />
+                        <ShellPanel messages={messages} path={path} />
                     </div>
                 </div>
             </div>

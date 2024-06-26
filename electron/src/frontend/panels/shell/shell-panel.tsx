@@ -41,12 +41,29 @@ const ignoreCommands = [
 
 export default function ShellPanel({
     messages,
+    path,
 }: {
     messages: Message[]
+    path: string
 }): JSX.Element {
     const terminalRef = useRef<HTMLDivElement>(null)
     const terminalInstanceRef = useRef<XtermTerminal | null>(null)
     const [renderedMessages, setRenderedMessages] = useState<Message[]>([])
+    const initialPathRef = useRef<string | null>(null)
+
+    useEffect(() => {
+        // When the path changes, reset states
+        if (
+            initialPathRef.current === null ||
+            path !== initialPathRef.current
+        ) {
+            setRenderedMessages([])
+            if (terminalInstanceRef.current) {
+                terminalInstanceRef.current.clear()
+            }
+            initialPathRef.current = path
+        }
+    }, [path])
 
     useEffect(() => {
         async function addOn() {
