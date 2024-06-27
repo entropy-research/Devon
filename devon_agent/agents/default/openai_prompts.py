@@ -198,6 +198,7 @@ def openai_conversation_agent_last_user_prompt_template(user_message, editor, cw
   You can use any bash commands or the special interface to help you.
   Edit all the files you need to and run any checks or tests that you want. 
   When you're satisfied with all of the changes you've made, you can submit your changes to the code base by simply running the submit command.
+  The user may reference specific snippets or files with @<filename><lineno:lineno>.
   Note however that you cannot use any interactive session commands (e.g. python, vim) in this environment, but you can write scripts and run them. E.g. you can write a python script and then run it with `python <script_name>.py`.
   You only have access to files in {root_dir}
 

@@ -1,11 +1,8 @@
 import { Terminal as XtermTerminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Message } from '@/lib/types'
-import { parseCommand } from '@/lib/utils'
+import { useEffect, useRef } from 'react'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { shallowEqual } from '@xstate/react'
-import { computeNewLineNumber } from 'react-diff-view'
 
 /**
  * The terminal's content is set by write messages. To avoid complicated state logic,

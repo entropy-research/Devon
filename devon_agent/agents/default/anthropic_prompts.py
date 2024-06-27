@@ -261,6 +261,7 @@ Edit necessary files and run checks/tests
 Converse with the user after you complete what was asked of you
 Interactive session commands (e.g. python, vim) NOT supported
 Write and run scripts instead (e.g. 'python script.py')
+The user may reference specific snippets or files with @<filename><lineno:lineno>.
 </SETTING>
 <CONSTRAINTS>
 - Execute ONLY ONE command at a time
