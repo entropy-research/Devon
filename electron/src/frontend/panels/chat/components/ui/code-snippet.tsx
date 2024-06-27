@@ -3,17 +3,21 @@ import { SimpleCodeBlock } from '@/components/ui/codeblock'
 import { X } from 'lucide-react'
 import { atom } from 'jotai'
 
+export type SnippetId = `${string}:${number}-${number}`;
+export type FileId = `${string}`;
+
 export type ICodeSnippet = {
-    id: string
+    id: SnippetId | FileId
     fileName: string
     fullPath: string
     relativePath: string
+    language: string
     selection: string
     startLineNumber: number
     endLineNumber: number
     startColumn: number
     endColumn: number
-    language: string
+    isEntireFile?: boolean
 }
 
 export const codeSnippetsAtom = atom<ICodeSnippet[]>([])
@@ -41,8 +45,10 @@ const CodeSnippet = ({
                             value={snippet.selection}
                             fileName={snippet.fileName}
                             subtext={
-                                snippet.startLineNumber ===
-                                snippet.endLineNumber
+                                snippet.isEntireFile
+                                    ? ''
+                                    : snippet.startLineNumber ===
+                                      snippet.endLineNumber
                                     ? `(Line ${snippet.startLineNumber})`
                                     : `(Lines ${snippet.startLineNumber} to ${snippet.endLineNumber})`
                             }

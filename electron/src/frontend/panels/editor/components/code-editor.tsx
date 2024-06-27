@@ -4,7 +4,11 @@ import type { editor, Selection } from 'monaco-editor'
 import FileTabs from '@/panels/editor/components/file-tabs/file-tabs'
 import { File } from '@/lib/types'
 import { atom, useAtom } from 'jotai'
-import { ICodeSnippet } from '@/panels/chat/components/ui/code-snippet'
+import {
+    ICodeSnippet,
+    SnippetId,
+    FileId,
+} from '@/panels/chat/components/ui/code-snippet'
 import { getRelativePath, getFileName } from '@/lib/utils'
 
 export const selectedCodeSnippetAtom = atom<ICodeSnippet | null>(null)
@@ -31,15 +35,21 @@ export default function CodeEditor({
     const [selectionInfo, setSelectionInfo] = useState<ICodeSnippet | null>(
         null
     )
+    const [isEntireFileSelected, setIsEntireFileSelected] = useState(false)
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
     const monacoRef = useRef<Monaco | null>(null)
     const [openFiles, setOpenFiles] = useState<File[]>(initialFiles)
     const fileSelectionsRef = useRef<Record<string, Selection | null>>({})
     const initialPathRef = useRef<string | null>(null)
+    const [, setSelectedCodeSnippet] = useAtom<ICodeSnippet | null>(
+        selectedCodeSnippetAtom
+    )
 
     useEffect(() => {
-        // When the path changes, reset states
-        if (initialPathRef.current === null || path !== initialPathRef.current) {
+        if (
+            initialPathRef.current === null ||
+            path !== initialPathRef.current
+        ) {
             setOpenFiles(initialFiles)
             setSelectedFileId(null)
             setPopoverVisible(false)
@@ -96,6 +106,24 @@ export default function CodeEditor({
         [openFiles, selectedFileId, setSelectedFileId]
     )
 
+    const isSelectionVisible = useCallback(
+        (editor: editor.IStandaloneCodeEditor, selection: Selection) => {
+            const scrollTop = editor.getScrollTop()
+            const scrollBottom = scrollTop + editor.getLayoutInfo().height
+            const selectionTop = editor.getTopForLineNumber(
+                selection.startLineNumber
+            )
+            const selectionBottom =
+                editor.getTopForLineNumber(selection.endLineNumber) +
+                editor.getOption(
+                    monacoRef.current!.editor.EditorOption.lineHeight
+                )
+
+            return selectionTop >= scrollTop && selectionBottom <= scrollBottom
+        },
+        []
+    )
+
     const updateSelectionInfo = useCallback(
         (
             editor: editor.IStandaloneCodeEditor,
@@ -103,6 +131,17 @@ export default function CodeEditor({
             selection: Selection,
             fileId: string
         ) => {
+            const model = editor.getModel()
+            const isAllSelected =
+                model &&
+                selection.equalsRange({
+                    startLineNumber: 1,
+                    startColumn: 1,
+                    endLineNumber: model.getLineCount(),
+                    endColumn: model.getLineMaxColumn(model.getLineCount()),
+                })
+
+            setIsEntireFileSelected(Boolean(isAllSelected))
             const range = new monaco.Range(
                 selection.startLineNumber,
                 selection.startColumn,
@@ -113,11 +152,21 @@ export default function CodeEditor({
                 monaco.editor.EditorOption.lineHeight
             )
             const scrollTop = editor.getScrollTop()
-            const top =
+            const scrollBottom = scrollTop + editor.getLayoutInfo().height
+
+            const toolTipYOffset = 50
+            let top =
                 editor.getTopForLineNumber(range.endLineNumber) +
-                lineHeight +
-                50 -
-                scrollTop
+                lineHeight -
+                scrollTop +
+                toolTipYOffset
+
+            if (top < 0) {
+                top = 0
+            } else if (top > editor.getLayoutInfo().height - lineHeight) {
+                top = editor.getLayoutInfo().height - lineHeight
+            }
+
             const tooltipXOffset = 57
             const left = tooltipXOffset
 
@@ -127,8 +176,10 @@ export default function CodeEditor({
             const language =
                 files?.find(f => f.id === fileId)?.language ?? 'text'
 
+            const id: SnippetId = `${relativePath}:${selection.startLineNumber}-${selection.endLineNumber}`
+
             setSelectionInfo({
-                id: `${relativePath}:${selection.startLineNumber}-${selection.endLineNumber}`,
+                id,
                 fullPath: fileId,
                 relativePath,
                 fileName,
@@ -160,6 +211,70 @@ export default function CodeEditor({
         },
         []
     )
+
+    useEffect(() => {
+        if (!editorRef.current || !monacoRef.current) return
+
+        const editor = editorRef.current
+        const monaco = monacoRef.current
+
+        const handleSelectionChange = (
+            e: editor.ICursorSelectionChangedEvent
+        ) => {
+            const selection = editor.getSelection()
+            if (
+                selectedFileId &&
+                selection &&
+                !selection.isEmpty() &&
+                isSelectionVisible(editor, selection)
+            ) {
+                fileSelectionsRef.current[selectedFileId] = selection
+                updateSelectionInfo(editor, monaco, selection, selectedFileId)
+            } else {
+                setPopoverVisible(false)
+            }
+        }
+
+        const handleScroll = () => {
+            const selection = editor.getSelection()
+            if (selectedFileId && selection && !selection.isEmpty()) {
+                if (isSelectionVisible(editor, selection)) {
+                    updateSelectionInfo(
+                        editor,
+                        monaco,
+                        selection,
+                        selectedFileId
+                    )
+                }
+            }
+        }
+
+        const selectionDisposable = editor.onDidChangeCursorSelection(
+            handleSelectionChange
+        )
+        const scrollDisposable = editor.onDidScrollChange(handleScroll)
+
+        if (selectedFileId) {
+            const storedSelection = fileSelectionsRef.current[selectedFileId]
+            if (storedSelection) {
+                editor.setSelection(storedSelection)
+                updateSelectionInfo(
+                    editor,
+                    monaco,
+                    storedSelection,
+                    selectedFileId
+                )
+            } else {
+                setPopoverVisible(false)
+                editor.setSelection(new monaco.Selection(0, 0, 0, 0))
+            }
+        }
+
+        return () => {
+            selectionDisposable.dispose()
+            scrollDisposable.dispose()
+        }
+    }, [selectedFileId, updateSelectionInfo, isSelectionVisible])
 
     useEffect(() => {
         if (!editorRef.current || !monacoRef.current) return
@@ -229,13 +344,18 @@ export default function CodeEditor({
         }
     }, [selectedFileId, files, addFileToOpenFiles])
 
-    const [, setSelectedCodeSnippet] = useAtom<ICodeSnippet | null>(
-        selectedCodeSnippetAtom
-    )
-
     const handleAddCodeReference = () => {
         if (selectionInfo) {
-            setSelectedCodeSnippet(selectionInfo)
+            if (isEntireFileSelected) {
+                const id: FileId = selectionInfo.fileName
+                setSelectedCodeSnippet({
+                    ...selectionInfo,
+                    id,
+                    isEntireFile: true,
+                })
+            } else {
+                setSelectedCodeSnippet(selectionInfo)
+            }
         }
         // setPopoverVisible(false)
     }
@@ -273,7 +393,9 @@ export default function CodeEditor({
                             left: popoverPosition.left,
                         }}
                     >
-                        Mention snippet in chat
+                        {isEntireFileSelected
+                            ? 'Mention file in chat'
+                            : 'Mention snippet in chat'}
                     </button>
                 )}
             </div>
