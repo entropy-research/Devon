@@ -152,7 +152,11 @@ const FileTabs = ({
                                                         : 'border-r-[1px] border-x-outlinecolor'
                                                 } z-10`
                                               : 'border-t-transparent border-r border-b'
-                                      } group relative cursor-pointer w-full text-left`}
+                                      } group relative cursor-pointer w-full text-left ${
+                                          file.id === selectedFileId
+                                              ? ''
+                                              : 'smooth-hover-2'
+                                      }`}
                                       onClick={() => setSelectedFileId(file.id)}
                                   >
                                       {file.icon && (
@@ -161,7 +165,13 @@ const FileTabs = ({
                                               className="h-4 w-4 mr-2"
                                           />
                                       )}
-                                      <span className="mr-5 flex items-center">
+                                      <span
+                                          className={`mr-5 flex items-center ${
+                                              file.id === selectedFileId
+                                                  ? 'opacity-100'
+                                                  : 'opacity-70'
+                                          }`}
+                                      >
                                           {file.name}
                                           {file.agentHasOpen}
                                           {getFileMatch(file.id)

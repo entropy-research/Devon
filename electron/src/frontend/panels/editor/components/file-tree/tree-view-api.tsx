@@ -289,7 +289,7 @@ const Folder = forwardRef<
                         <TooltipTrigger asChild> */}
                 <AccordionPrimitive.Trigger
                     className={cn(
-                        `flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman`,
+                        `flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman toned-text-color`,
                         {
                             'bg-night': isSelect && isSelectable,
                             'cursor-pointer': isSelectable,
@@ -386,7 +386,7 @@ const File = forwardRef<
                                 disabled={!isSelectable}
                                 aria-label="File"
                                 className={cn(
-                                    'flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman',
+                                    'flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman toned-text-color',
                                     {
                                         'bg-night': isSelected && isSelectable,
                                     },

@@ -22,7 +22,7 @@ export function UserMessage({ children }: { children: React.ReactNode }) {
             <div className="flex size-[33px] shrink-0 select-none items-center justify-center rounded-md border bg-background shadow-sm">
                 <User />
             </div>
-            <div className="ml-4 flex-1 space-y-2 overflow-hidden pl-2">
+            <div className="ml-4 flex-1 space-y-2 overflow-hidden pl-2 chat-text-relaxed">
                 {children}
             </div>
         </div>
@@ -214,13 +214,14 @@ const ResponseBlock = ({ response }: { response: string }) => {
                     onClick={toggleExpanded}
                 >
                     <div className="flex py-2 items-center text-gray-300">
+                        
+                        <pre className="text-sm flex">Response</pre>
                         <ChevronDown
                             className={cn(
-                                'h-5 w-5 transition-transform duration-200 ease-in-out mr-[3px]',
+                                'h-[15px] w-[15px] transition-transform duration-200 ease-in-out mr-[3px]',
                                 expanded ? '' : '-rotate-90'
                             )}
                         />
-                        <pre className="text-md flex">Response:</pre>
                     </div>
                 </div>
                 <div
