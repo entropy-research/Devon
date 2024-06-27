@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import TextareaAutosize, {
     TextareaAutosizeProps,
 } from 'react-textarea-autosize'
@@ -20,11 +20,9 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     }
 )
 Textarea.displayName = 'Textarea'
+const REGEX = /(@\S+)/g
 
-const AutoresizeTextarea = React.forwardRef<
-    HTMLTextAreaElement,
-    AutoresizeTextareaProps
->(
+const AutoresizeTextarea = React.forwardRef(
     (
         {
             className,
@@ -34,18 +32,21 @@ const AutoresizeTextarea = React.forwardRef<
         },
         ref
     ) => {
-        const highlightedValue = React.useMemo(() => {
-            if (!highlightCodeSnippets) return props.value
+        const [value, setValue] = useState(props.value || '')
 
-            return String(props.value).replace(/(@\S+)/g, (match, id) => {
-                const exists = codeSnippets.some(
-                    snippet => snippet.id === id.slice(1)
-                )
-                return exists
-                    ? `<span class="text-blue-500">${match}</span>`
-                    : match
-            })
-        }, [highlightCodeSnippets, codeSnippets, props.value])
+        useEffect(() => {
+            if (props.value !== undefined) {
+                setValue(props.value)
+            }
+        }, [props.value])
+
+        const handleChange = e => {
+            const newValue = e.target.value
+            setValue(newValue)
+            if (props.onChange) {
+                props.onChange(e)
+            }
+        }
 
         const sharedStyles = `
             resize-none
@@ -65,6 +66,7 @@ const AutoresizeTextarea = React.forwardRef<
         return (
             <div className="relative w-full">
                 <TextareaAutosize
+                    ref={ref}
                     className={cn(
                         sharedStyles,
                         `
@@ -82,15 +84,20 @@ const AutoresizeTextarea = React.forwardRef<
                         w-full
                         disabled:cursor-not-allowed
                         disabled:opacity-50
-                        ${highlightCodeSnippets ? 'caret-current' : ''}
+                        ${
+                            highlightCodeSnippets
+                                ? 'caret-current text-transparent'
+                                : ''
+                        }
                         `,
                         className
                     )}
-                    ref={ref}
+                    value={value}
+                    onChange={handleChange}
                     maxRows={20}
                     {...props}
                 />
-                {highlightCodeSnippets && (
+                {/* {highlightCodeSnippets && (
                     <div
                         className={cn(
                             sharedStyles,
@@ -104,16 +111,34 @@ const AutoresizeTextarea = React.forwardRef<
                             `,
                             className
                         )}
-                        dangerouslySetInnerHTML={{
-                            __html: highlightedValue as string,
-                        }}
-                    />
-                )}
+                    >
+                        {value.split(REGEX).map((word, i) => {
+                            if (word.match(REGEX) !== null) {
+                                const exists = codeSnippets.some(
+                                    snippet => snippet.id === word.slice(1)
+                                )
+                                return (
+                                    <span
+                                        key={i}
+                                        className={
+                                            exists ? 'text-blue-500' : ''
+                                        }
+                                    >
+                                        {word}
+                                    </span>
+                                )
+                            } else {
+                                return <span key={i}>{word}</span>
+                            }
+                        })}
+                    </div>
+                )} */}
             </div>
         )
     }
 )
-AutoresizeTextarea.displayName = 'TextareaResize'
+
+AutoresizeTextarea.displayName = 'AutoresizeTextarea'
 
 const PlannerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     ({ className, ...props }, ref) => {
