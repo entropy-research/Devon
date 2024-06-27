@@ -1,4 +1,4 @@
-import { useMemo, useRef, forwardRef } from 'react'
+import { useMemo, useRef, forwardRef, useEffect, useState } from 'react'
 import TextareaAutosize, {
     TextareaAutosizeProps,
 } from 'react-textarea-autosize'
@@ -27,6 +27,7 @@ const HighlightKeywordInputField = forwardRef<
         },
         ref
     ) => {
+        const [textareaHeight, setTextareaHeight] = useState('auto');
         const sharedStyles = `
         w-full
         rounded-xl
@@ -35,7 +36,23 @@ const HighlightKeywordInputField = forwardRef<
         py-3
         leading-8
         text-md
-    `
+        max-h-[500px]
+`
+        const overlayRef = useRef<HTMLDivElement>(null)
+        const combinedRef = useRef<HTMLTextAreaElement | null>(null)
+        const setRefs = (element: HTMLTextAreaElement | null) => {
+            combinedRef.current = element
+            if (typeof ref === 'function') {
+                ref(element)
+            } else if (ref) {
+                ;(
+                    ref as React.MutableRefObject<HTMLTextAreaElement | null>
+                ).current = element
+            }
+            if (innerRef) {
+                innerRef.current = element
+            }
+        }
 
         const highlightedValue = useMemo(() => {
             if (!props.value) return null
@@ -59,13 +76,40 @@ const HighlightKeywordInputField = forwardRef<
             })
         }, [props.value, codeSnippets])
 
+        const syncScroll = () => {
+            if (combinedRef.current && overlayRef.current) {
+                overlayRef.current.scrollTop = combinedRef.current.scrollTop
+            }
+        }
+
+        useEffect(() => {
+            const updateHeight = () => {
+                if (combinedRef.current) {
+                    const newHeight = `${combinedRef.current.scrollHeight}px`;
+                    setTextareaHeight(newHeight);
+                }
+            };
+
+            updateHeight();
+            window.addEventListener('resize', updateHeight);
+
+            return () => window.removeEventListener('resize', updateHeight);
+        }, [props.value]);
+
         return (
             <div className="relative w-full flex">
                 <TextareaAutosize
-                    ref={innerRef || ref}
+                    ref={setRefs}
                     value={props.value}
-                    onChange={props.onChange}
+                    onChange={(e) => {
+                        props.onChange?.(e);
+                        if (combinedRef.current) {
+                            setTextareaHeight(`${combinedRef.current.scrollHeight}px`);
+                        }
+                    }}
+                    onScroll={syncScroll}
                     placeholder={placeholder}
+                    style={{ height: textareaHeight }}
                     className={cn(
                         sharedStyles,
                         `
@@ -86,23 +130,27 @@ const HighlightKeywordInputField = forwardRef<
                     ring-offset-background
                     disabled:cursor-not-allowed
                     disabled:opacity-50
+                    overflow-y-auto
                 `
                     )}
                     {...props}
                 />
                 <div
+                    ref={overlayRef}
+                    style={{ height: textareaHeight }}
                     className={cn(
                         sharedStyles,
                         `
                     absolute
                     top-0
                     left-0
-                    h-full
+                    right-0
                     pointer-events-none
                     overflow-hidden
                     whitespace-pre-wrap
                     break-words
                     text-white
+                    overflow-y-auto
                 `
                     )}
                 >
