@@ -156,8 +156,15 @@ export const ToolResponseMessage = ({
                             </pre>
                         </div>
                     )}
-                <div className="bg-midnight text-zinc-100 rounded-md overflow-hidden w-full">
-                    <DiffViewer files={files} />
+                <div className="relative w-full font-sans codeblock bg-zinc-950 rounded-md overflow-hidden">
+                    <div className="flex items-center justify-between w-full pl-3 py-0 pr-1 bg-zinc-800 text-zinc-100 rounded-t-md sticky top-0 hover:cursor-pointer">
+                        <div className="flex py-2 items-center text-gray-300 px-1">
+                            <pre className="text-sm flex">diff</pre>
+                        </div>
+                    </div>
+                    <div className="bg-midnight text-zinc-100 overflow-hidden w-full">
+                        <DiffViewer files={files} />
+                    </div>
                 </div>
             </div>
         )
