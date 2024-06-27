@@ -32,7 +32,7 @@ export default function Chat({
         state => state.context.serverEventContext
     )
 
-    let messages = eventState.messages
+    let messages = eventState.messages.slice(2)
 
     if (!state.matches('running')) {
         status = 'Initializing...'
@@ -68,13 +68,10 @@ export default function Chat({
                         !state.matches('paused') ? (
                             <LoadingSkeleton />
                         ) : (
-                            messages &&
-                            messages.length > 0 && (
-                                <ChatMessages
-                                    messages={messages}
-                                    spinning={eventState.modelLoading}
-                                />
-                            )
+                            <ChatMessages
+                                messages={messages}
+                                spinning={eventState.modelLoading}
+                            />
                         )}
                         <div className="h-px w-full" ref={visibilityRef}></div>
                         {/* </div> */}
@@ -91,7 +88,7 @@ export default function Chat({
                                 scrollToBottom={scrollToBottom}
                                 viewOnly={viewOnly}
                                 eventContext={eventState}
-                                loading={!state.can({type: 'session.toggle'})}
+                                loading={!state.can({ type: 'session.toggle' })}
                                 sessionId={sessionId}
                             />
                         </div>
@@ -108,14 +105,14 @@ export default function Chat({
 const LoadingSkeleton = () => {
     return (
         <>
-            <div className="flex flex-col flex-2 relative h-full overflow-y-auto mx-8 mt-8 mr-10">
+            <div className="flex flex-col flex-2 relative h-full overflow-y-auto mx-6 mt-8 mr-10">
                 <div className="flex-1">
                     <div className="mb-8">
                         <div className="flex gap-5">
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
-                                <Skeleton className="w-2/3 h-[12px] rounded-[4px] bg-[#333333]" />
+                                <Skeleton className="w-2/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-60" />
                             </div>
                         </div>
                     </div>
@@ -124,7 +121,7 @@ const LoadingSkeleton = () => {
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
-                                <Skeleton className="w-1/3 h-[12px] rounded-[4px] bg-[#333333]" />
+                                <Skeleton className="w-1/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-60" />
                             </div>
                         </div>
                     </div>
@@ -133,7 +130,7 @@ const LoadingSkeleton = () => {
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
-                                <Skeleton className="w-4/5 h-[12px] rounded-[4px] bg-[#333333]" />
+                                <Skeleton className="w-4/5 h-[12px] rounded-[4px] bg-skeleton bg-opacity-60" />
                             </div>
                         </div>
                     </div>

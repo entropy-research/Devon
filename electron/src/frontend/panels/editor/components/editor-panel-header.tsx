@@ -38,7 +38,7 @@ const EditorPanelHeader = ({ path }: { path: string }) => {
                         title: 'Hey! ~ Devon waves at you ~ 👋',
                     })
                 }
-                className="group smooth-hover bg-night px-[100px] border border-outlinecolor rounded-md my-1 flex gap-[5px] items-center"
+                className="group smooth-hover bg-editor-night px-[100px] border border-outlinecolor rounded-md my-1 flex gap-[5px] items-center"
             >
                 <Bot
                     size={12}

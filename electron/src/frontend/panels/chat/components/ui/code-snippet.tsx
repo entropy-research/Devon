@@ -49,7 +49,7 @@ const CodeSnippet = ({
                             onClickHeader={() => onClickHeader(snippet)}
                         />
                     </pre>
-                    <button className="z-10 absolute top-1 right-1 text-neutral-500 hover:text-white cursor-pointer p-1 transition-colors duration-300 ease-in-out bg-zinc-800">
+                    <button className="z-10 absolute top-1 right-1 text-neutral-500 hover:text-white cursor-pointer p-1 transition-colors duration-300 ease-in-out bg-code-header">
                         <X onClick={() => onClose(snippet.id)} size={14} />
                     </button>
                 </div>

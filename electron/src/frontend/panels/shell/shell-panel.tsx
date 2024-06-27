@@ -150,7 +150,7 @@ export default function ShellPanel({
     }, [messages, renderedMessages])
 
     return (
-        <div className="h-full flex flex-col bg-midnight">
+        <div className="h-full flex flex-col bg-midnight toned-text-color leading-relaxed">
             <div
                 id="terminal-wrapper"
                 className="flex-grow flex bg-midnight w-full px-3 pr-[1px] pt-4 overflow-hidden border-t border-outlinecolor"

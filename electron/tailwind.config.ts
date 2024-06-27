@@ -17,9 +17,12 @@ const config: Config = {
         extend: {
             colors: {
                 day: '#f2f2f2', // 'white' bg
-                night: '#1e1e1e', // 'black' bg
+                night: '#16161c', // 'black' bg #2b2b2b #1e1e1e #16161c
+                'editor-night': '#1e1e1e',
+                'code-header': '#1e1e21',
                 midnight: '#111111', // 'black' bg
                 batman: '#2c2c2c',
+                skeleton: '#262630', // #3a3a3a
                 outline: {
                     day: '#f2f2f2',
                     night: '#484848',

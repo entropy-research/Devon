@@ -291,7 +291,7 @@ const Folder = forwardRef<
                     className={cn(
                         `flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman toned-text-color`,
                         {
-                            'bg-night': isSelect && isSelectable,
+                            'bg-editor-night': isSelect && isSelectable,
                             'cursor-pointer': isSelectable,
                             'cursor-not-allowed opacity-50': !isSelectable,
                         },
@@ -388,7 +388,7 @@ const File = forwardRef<
                                 className={cn(
                                     'flex items-center cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 duration-200 ease-in-out w-full rounded-xs py-1 px-2 hover:bg-batman toned-text-color',
                                     {
-                                        'bg-night': isSelected && isSelectable,
+                                        'bg-editor-night': isSelected && isSelectable,
                                     },
                                     isSelectable
                                         ? 'cursor-pointer'

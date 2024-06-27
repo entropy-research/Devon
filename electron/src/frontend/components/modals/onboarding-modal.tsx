@@ -113,7 +113,7 @@ const OnboardingModal = ({
                         </DisabledWrapper>
                         <DisabledWrapper disabled={false} className="w-full">
                             <div className="flex flex-col mt-10 w-full">
-                                <div className="flex flex-col mb-4 ">
+                                <div className="flex flex-col mb-5">
                                     <div className="flex items-center justify-between gap-3">
                                         <p className="text-lg font-semibold">
                                             {`Choose your model:`}
@@ -136,7 +136,7 @@ const OnboardingModal = ({
                                 </div>
 
                                 <div className="flex gap-1 items-center mb-4">
-                                    <p className="text-xl font-bold">
+                                    <p className="text-lg font-bold">
                                         {`${selectedModel.company} API Key`}
                                     </p>
                                     <Popover>

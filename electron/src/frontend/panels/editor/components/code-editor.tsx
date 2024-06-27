@@ -324,7 +324,7 @@ const PathDisplay = ({
 }) => (
     <div
         className={`px-3 pb-[4px] ${
-            selectedFileId ? 'bg-night -mt-[2px]' : 'pt-[3px]'
+            selectedFileId ? 'bg-editor-night -mt-[2px]' : 'pt-[3px]'
         }`}
     >
         <p className="text-xs text-neutral-500">

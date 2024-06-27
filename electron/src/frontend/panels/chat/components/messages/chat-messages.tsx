@@ -12,18 +12,20 @@ export interface ChatMessages {
 }
 
 const ChatMessages = ({ messages, spinning }: ChatMessages) => {
-    return messages?.length ? (
-        <div className="relative px-6 mt-5">
-            {messages.map((message, index) => (
-                <DisplayedChatMessage
-                    key={message.id ?? index}
-                    message={message}
-                />
-            ))}
+    return (
+        <div className="relative px-6 mt-8">
+            {messages && messages.length ? (
+                <>
+                    {messages.map((message, index) => (
+                        <DisplayedChatMessage
+                            key={message.id ?? index}
+                            message={message}
+                        />
+                    ))}
+                </>
+            ) : null}
             {spinning && <SpinnerMessage />}
         </div>
-    ) : (
-        <></>
     )
 }
 

@@ -118,7 +118,7 @@ const CodeBlock: FC<CodeBlockProps> = memo(
 
         return (
             <div className="relative w-full font-sans codeblock bg-zinc-950 rounded-md overflow-auto">
-                <div className="flex items-center justify-between w-full pl-3 py-0 pr-1 bg-zinc-800 text-zinc-100 rounded-t-md">
+                <div className="flex items-center justify-between w-full pl-3 py-0 pr-1 bg-code-header text-zinc-100 rounded-t-md">
                     <div className="flex items-center">
                         {fileName ? (
                             <Icon
@@ -143,7 +143,7 @@ const CodeBlock: FC<CodeBlockProps> = memo(
                     <div className="flex items-center space-x-1">
                         {/* <Button
                         variant="ghost"
-                        className="hover:bg-zinc-800 focus-visible:ring-1 focus-visible:ring-slate-700 focus-visible:ring-offset-0"
+                        className="hover:bg-code-header focus-visible:ring-1 focus-visible:ring-slate-700 focus-visible:ring-offset-0"
                         onClick={downloadAsFile}
                         size="icon"
                     >
@@ -153,7 +153,7 @@ const CodeBlock: FC<CodeBlockProps> = memo(
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="smooth-hover text-xs hover:bg-zinc-800 focus-visible:ring-1 focus-visible:ring-slate-700 focus-visible:ring-offset-0"
+                            className="smooth-hover text-xs hover:bg-code-header focus-visible:ring-1 focus-visible:ring-slate-700 focus-visible:ring-offset-0"
                             onClick={onCopy}
                         >
                             {isCopied ? (
@@ -220,7 +220,7 @@ const SimpleCodeBlock: FC<SimpleCodeBlockProps> = memo(
         return (
             <div className="relative w-full font-sans codeblock bg-zinc-950 rounded-md overflow-hidden border-[1px] border-outlinecolor">
                 <div
-                    className="flex items-center justify-between w-full pl-3 py-0 pr-1 bg-zinc-800 text-zinc-100 rounded-t-md sticky top-0 z-10 hover:cursor-pointer"
+                    className="flex items-center justify-between w-full pl-3 py-0 pr-1 bg-code-header text-zinc-100 rounded-t-md sticky top-0 z-10 hover:cursor-pointer"
                     onClick={onClickHeader}
                 >
                     <div className="flex py-2">

@@ -38,7 +38,7 @@ const StyledMessage = ({
                                 return (
                                     <code
                                         className={cn(
-                                            'bg-black px-[4px] py-[3px] rounded-md text-white text-[0.9rem]',
+                                            'bg-black px-[6px] py-[3px] rounded-md text-primary text-opacity-90 text-[0.9rem]',
                                             className
                                         )}
                                         {...props}

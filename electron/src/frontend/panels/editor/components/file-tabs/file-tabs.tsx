@@ -146,7 +146,7 @@ const FileTabs = ({
                                           file.icon ? 'pr-5' : ''
                                       } py-[6px] text-sm border-t-[1.5px] ${
                                           file.id === selectedFileId
-                                              ? `border-t-primary rounded-t-sm bg-night border-b-[1px] border-b-night ${
+                                              ? `border-t-primary rounded-t-sm bg-editor-night border-b-[1px] border-b-night ${
                                                     index === 0
                                                         ? 'border-r-[1px] border-r-outlinecolor'
                                                         : 'border-r-[1px] border-x-outlinecolor'
