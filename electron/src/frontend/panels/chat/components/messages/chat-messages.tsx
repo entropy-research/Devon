@@ -74,16 +74,7 @@ const DisplayedChatMessage = ({ message }) => {
                     ></ToolResponseMessage>
                 ) : message.type === 'user' ? (
                     <UserMessage>{message.text}</UserMessage>
-                ) : message.type === 'task' ? (
-                    <div className="px-4 rounded-md border py-2">
-                        <ChatTypeWrapper
-                            type="Task"
-                            className="text-gray-400 flex italic"
-                        >
-                            {message.text}
-                        </ChatTypeWrapper>
-                    </div>
-                ) : (
+                ) :  (
                     // <ChatTypeWrapper type="(Type not found)">
                     //     {message.content}
                     // </ChatTypeWrapper>
@@ -104,14 +95,14 @@ const ChatTypeWrapper = ({
     className?: string
 }) => {
     let pref: JSX.Element = <></>
-    if (type === 'Task') {
-        pref = (
-            <span className="font-bold mr-2 flex gap-2 items-center not-italic">
-                <NotebookPen size={16} />
-                Task:
-            </span>
-        )
-    }
+    // if (type === 'Task') {
+    //     pref = (
+    //         <span className="font-bold mr-2 flex gap-2 items-center not-italic">
+    //             <NotebookPen size={16} />
+    //             Task:
+    //         </span>
+    //     )
+    // }
     return (
         <p className={className}>
             {pref}

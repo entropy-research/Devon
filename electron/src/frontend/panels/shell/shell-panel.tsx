@@ -1,8 +1,10 @@
 import { Terminal as XtermTerminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Message } from '@/lib/types'
 import { parseCommand } from '@/lib/utils'
+import { SessionMachineContext } from '@/contexts/session-machine-context'
+import { shallowEqual } from '@xstate/react'
 
 /**
  * The terminal's content is set by write messages. To avoid complicated state logic,
@@ -39,25 +41,35 @@ const ignoreCommands = [
     'real_write_diff',
 ]
 
+type ShellCommand = {
+    command: string
+    response: string
+}
+
 export default function ShellPanel({
-    messages,
     path,
 }: {
-    messages: Message[]
+    // messages: Message[]
     path: string
 }): JSX.Element {
     const terminalRef = useRef<HTMLDivElement>(null)
     const terminalInstanceRef = useRef<XtermTerminal | null>(null)
-    const [renderedMessages, setRenderedMessages] = useState<Message[]>([])
+    // const [renderedMessages, setRenderedMessages] = useState<ShellCommand[]>([])
+    let renderedMessages: ShellCommand[] = []
     const initialPathRef = useRef<string | null>(null)
-
+    const messages = SessionMachineContext.useSelector(state =>
+        state.context.serverEventContext.messages.filter(
+            message => message.type === 'tool'
+        ),
+        shallowEqual
+    )
     useEffect(() => {
         // When the path changes, reset states
         if (
             initialPathRef.current === null ||
             path !== initialPathRef.current
         ) {
-            setRenderedMessages([])
+            renderedMessages = []
             if (terminalInstanceRef.current) {
                 terminalInstanceRef.current.clear()
             }
@@ -115,9 +127,9 @@ export default function ShellPanel({
     useEffect(() => {
         const terminal = terminalInstanceRef.current
         if (terminal) {
-            const messagesToRender = messages.filter(message => {
-                if (renderedMessages.includes(message)) return
-                let [command, response] = message.text.split('|START_RESPONSE|')
+            const messagesToRender: ShellCommand[] = messages.filter((message: Message) => {
+
+                const [command, response] = message.text.split('|START_RESPONSE|')
                 const parsedRes = parseCommand(command)
 
                 if (parsedRes && ignoreCommands.includes(parsedRes?.command)) {
@@ -126,11 +138,22 @@ export default function ShellPanel({
                 if (!parsedRes) {
                     return
                 }
-                return message
+                return {
+                    command: command,
+                    response: response,
+                }
+            }).map((message: Message) => {
+                const [command, response] = message.text.split('|START_RESPONSE|')
+                return {
+                    command: command,
+                    response: response,
+                }
+            }).filter((message: ShellCommand) => {
+                return !renderedMessages.includes(message)
             })
             // terminal.clear() // Clear the existing content
             messagesToRender.forEach((message, idx) => {
-                let [command, response] = message.text.split('|START_RESPONSE|')
+                const {command, response} = message
                 let commandMsgs = removeBeforeRunningCommand(
                     command.trim()
                 ).split('\n')
@@ -144,7 +167,7 @@ export default function ShellPanel({
                     })
                     terminal.write('> ')
                 }
-                setRenderedMessages(prevMessages => [...prevMessages, message])
+                renderedMessages.push({ command, response })
             })
         }
     }, [messages, renderedMessages])
