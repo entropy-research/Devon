@@ -41,6 +41,8 @@ type ServerEvent = {
         | 'Error'
         | 'UserResponse'
         | 'GitEvent'
+        | 'ShellRequest'
+        | 'ShellResponse'
     content: any
     identifier: string | null
 }
@@ -88,6 +90,24 @@ export const eventHandlingLogic = fromTransition(
                     messages: [
                         ...state.messages,
                         { text: content.thought, type: 'thought' } as Message,
+                    ],
+                }
+            }
+            case 'ShellRequest': {
+                return {
+                    ...state,
+                    messages: [
+                        ...state.messages,
+                        { text: event.content, type: 'shellCommand' } as Message,
+                    ],
+                }
+            }
+            case 'ShellResponse': {
+                return {
+                    ...state,
+                    messages: [
+                        ...state.messages,
+                        { text: event.content, type: 'shellResponse' } as Message,
                     ],
                 }
             }

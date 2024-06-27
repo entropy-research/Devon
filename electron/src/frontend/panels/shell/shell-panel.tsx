@@ -5,41 +5,13 @@ import type { Message } from '@/lib/types'
 import { parseCommand } from '@/lib/utils'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { shallowEqual } from '@xstate/react'
+import { computeNewLineNumber } from 'react-diff-view'
 
 /**
  * The terminal's content is set by write messages. To avoid complicated state logic,
  * we keep the terminal persistently open as a child of <App /> and hidden when not in use.
  */
 
-// TODO don't hardcode
-const ignoreCommands = [
-    'ask_user',
-    'create_file',
-    'open_file',
-    'scroll_up',
-    'scroll_down',
-    'scroll_to_line',
-    'search_file',
-    'edit_file',
-    'edit',
-    'search_dir',
-    'find_file',
-    'get_cwd',
-    'no_op',
-    'submit',
-    'delete_file',
-    'code_search',
-    'code_goto',
-    'file_tree_display',
-    'close_file',
-    'exit',
-    'extract_signature_and_docstring',
-    'find_class',
-    'find_function',
-    'list_dirs_recursive',
-    'parse_command',
-    'real_write_diff',
-]
 
 type ShellCommand = {
     command: string
@@ -59,7 +31,7 @@ export default function ShellPanel({
     const initialPathRef = useRef<string | null>(null)
     const messages = SessionMachineContext.useSelector(state =>
         state.context.serverEventContext.messages.filter(
-            message => message.type === 'tool'
+            message => message.type === 'shellCommand' || message.type === 'shellResponse'
         ),
         shallowEqual
     )
@@ -127,33 +99,24 @@ export default function ShellPanel({
     useEffect(() => {
         const terminal = terminalInstanceRef.current
         if (terminal) {
-            const messagesToRender: ShellCommand[] = messages.filter((message: Message) => {
-
-                const [command, response] = message.text.split('|START_RESPONSE|')
-                const parsedRes = parseCommand(command)
-
-                if (parsedRes && ignoreCommands.includes(parsedRes?.command)) {
-                    return
+            const messagesToRender = messages.reduce((acc, message) => {
+                if (message.type === 'shellCommand') {
+                    acc.push({ command: message.text, response: '' });
+                } else if (acc.length > 0) {
+                    acc[acc.length - 1].response += message.text;
                 }
-                if (!parsedRes) {
-                    return
-                }
-                return {
-                    command: command,
-                    response: response,
-                }
-            }).map((message: Message) => {
-                const [command, response] = message.text.split('|START_RESPONSE|')
-                return {
-                    command: command,
-                    response: response,
-                }
-            }).filter((message: ShellCommand) => {
-                return !renderedMessages.includes(message)
-            })
+                return acc;
+            }, [] as ShellCommand[])
+            console.log(messagesToRender, renderedMessages)
+            terminal.clear()
             // terminal.clear() // Clear the existing content
             messagesToRender.forEach((message, idx) => {
+                console.log(message)
                 const {command, response} = message
+                // console.log("pusing", command, response)
+                renderedMessages.push({ command, response })
+                // console.log("after push",renderedMessages)
+
                 let commandMsgs = removeBeforeRunningCommand(
                     command.trim()
                 ).split('\n')
@@ -167,10 +130,9 @@ export default function ShellPanel({
                     })
                     terminal.write('> ')
                 }
-                renderedMessages.push({ command, response })
             })
         }
-    }, [messages, renderedMessages])
+    }, [messages])
 
     return (
         <div className="h-full flex flex-col bg-midnight toned-text-color leading-relaxed">

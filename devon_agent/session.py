@@ -454,6 +454,14 @@ class Session:
                                 raise e
 
                             try:
+
+                                new_events.append({
+                                    "type": "ShellRequest",
+                                    "content": event["content"]["raw_command"],
+                                    "producer": self.default_environment.name,
+                                    "consumer": event["producer"],
+                                })
+
                                 response = self.default_environment.default_tool(
                                     {
                                         "state": self.state,
@@ -464,6 +472,13 @@ class Session:
                                     event["content"]["toolname"],
                                     event["content"]["args"],
                                 )
+                                
+                                new_events.append({
+                                    "type": "ShellResponse",
+                                    "content": response,
+                                    "producer": self.default_environment.name,
+                                    "consumer": event["producer"],
+                                })
 
                                 new_events.append(
                                     {

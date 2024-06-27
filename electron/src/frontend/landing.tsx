@@ -44,7 +44,7 @@ export default function Landing({
         state => state,
         (a, b) => a.value === b.value
     )
-    // console.log(state.value)
+    console.log(state.value)
 
     function afterOnboard(
         apiKey: string,
