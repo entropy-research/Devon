@@ -819,7 +819,7 @@ export const newSessionMachine = setup({
                                     context.serverEventContext.userRequest,
                             })
                         },
-                        log('sending message'),
+                        log('Sending message'),
                     ],
                 },
                 'session.toggle': {

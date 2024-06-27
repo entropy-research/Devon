@@ -6,7 +6,7 @@ import {
     Axis3DIcon,
     CirclePlay,
 } from 'lucide-react'
-import { AutoresizeTextarea } from '@/components/ui/textarea'
+import HighlightKeywordInputField from '@/components/ui/highlight-keyword-input-field'
 import { useEnterSubmit } from '@/panels/chat/lib/hooks/chat.use-enter-submit'
 import SelectProjectDirectoryModal from '@/components/modals/select-project-directory-modal'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
@@ -63,7 +63,16 @@ const ChatInputField = ({
     }, [projectPath])
 
     function addSnippetToInputField(snippet: ICodeSnippet) {
-        setInput(prevInput => prevInput + ` @${snippet.id} `)
+        const textarea = inputRef.current
+        if (textarea && typeof textarea.selectionStart === 'number') {
+            const { selectionStart, selectionEnd } = textarea
+            const newInput =
+                input.slice(0, selectionStart) +
+                ` @${snippet.id} ` +
+                input.slice(selectionEnd)
+            setInput(newInput)
+            textarea.focus()
+        }
     }
 
     useEffect(() => {
@@ -74,9 +83,20 @@ const ChatInputField = ({
             )
             if (!existingSnippet) {
                 setCodeSnippets(prev => [...prev, selectedCodeSnippet])
-                setInput(
-                    prevInput => prevInput + ` @${selectedCodeSnippet.id} `
-                )
+                const textarea = inputRef.current
+                if (textarea && typeof textarea.selectionStart === 'number') {
+                    const { selectionStart, selectionEnd } = textarea
+                    const newInput =
+                        input.slice(0, selectionStart) +
+                        ` @${selectedCodeSnippet.id} ` +
+                        input.slice(selectionEnd)
+                    setInput(newInput)
+                    textarea.focus()
+                } else {
+                    setInput(
+                        prevInput => prevInput + ` @${selectedCodeSnippet.id} `
+                    )
+                }
             }
         }
     }, [selectedCodeSnippet])
@@ -159,17 +179,15 @@ const ChatInputField = ({
                         }}
                     >
                         <div className="relative">
-                            <AutoresizeTextarea
-                                ref={inputRef}
+                            <HighlightKeywordInputField
+                                innerRef={inputRef}
                                 placeholder="Send a message to Devon ..."
                                 onFocus={handleFocus}
                                 onBlur={() => setFocused(false)}
-                                rows={1}
                                 onKeyDown={onKeyDown}
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
                                 disabled={loading}
-                                highlightCodeSnippets={true}
                                 codeSnippets={codeSnippets}
                             />
                             {/* <button
@@ -247,8 +265,7 @@ const InformationBox = ({
     let currentType
     if (loading) {
         currentType = types.loading
-    }
-    else if (paused) {
+    } else if (paused) {
         // console.log("type is paused")
         currentType = types.paused
     } else if (modelLoading) {
