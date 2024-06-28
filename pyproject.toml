@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "devon-agent"
-version = "0.1.16"
+version = "0.1.19"
 description = ""
 authors = ["killind-dev <61808204+killind-dev@users.noreply.github.com>","mihir1003 <mihir1003@gmail.com>"]
 readme = "README.md"
@@ -40,8 +40,6 @@ dspy-ai = {version = "^2.4.9", optional = true}
 aiosqlite = "^0.20.0"
 greenlet = "^3.0.3"
 
-
-chromadb = "0.5.0"
 
 llama-index = "^0.10.45"
 python-dotenv = "^1.0.1"

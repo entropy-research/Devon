@@ -1,7 +1,7 @@
 import anyio
 import uuid
 import networkx as nx
-import chromadb
+# import chromadb
 import asyncio
 import tiktoken
 from devon_agent.semantic_search.graph_construction.core.graph_builder import GraphConstructor

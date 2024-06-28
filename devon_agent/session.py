@@ -34,7 +34,7 @@ from devon_agent.utils import DotDict, Event, decode_path
 from devon_agent.tools.codenav import CodeGoTo, CodeSearch
 
 
-import chromadb
+# import chromadb
 
 @dataclass(frozen=False)
 class SessionArguments:
@@ -127,7 +127,7 @@ class Session:
 
         self.status = "paused"
 
-        self.client = chromadb.PersistentClient(path=os.path.join(args.db_path, "vectorDB"))
+        # self.client = chromadb.PersistentClient(path=os.path.join(args.db_path, "vectorDB"))
 
         self.db_path = args.db_path
 

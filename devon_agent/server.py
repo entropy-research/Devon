@@ -19,7 +19,7 @@ from devon_agent.agents.default.agent import AgentArguments, TaskAgent
 from devon_agent.models import (SingletonEngine, init_db, load_data,
                                 set_db_engine)
 from devon_agent.session import Session, SessionArguments
-import chromadb
+# import chromadb
 
 from devon_agent.utils import decode_path, encode_path
 from urllib.parse import unquote

@@ -2,7 +2,7 @@ from devon_agent.agents.default.agent import TaskAgent
 from devon_agent.semantic_search.code_graph_manager import CodeGraphManager
 from devon_agent.tool import Tool, ToolContext
 from devon_agent.agents.model import AnthropicModel, ModelArguments, OpenAiModel
-import chromadb.utils.embedding_functions as embedding_functions
+# import chromadb.utils.embedding_functions as embedding_functions
 import os
 
 from devon_agent.utils import encode_path
