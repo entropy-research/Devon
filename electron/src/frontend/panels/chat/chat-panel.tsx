@@ -5,6 +5,7 @@ import ChatMessages from './components/messages/chat-messages'
 import ChatInputField from './components/input/chat-input-field'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Skeleton } from '@/components/ui/skeleton'
+import type { Message } from '@/lib/types'
 
 export default function Chat({
     sessionId,
@@ -36,7 +37,8 @@ export default function Chat({
         .getSnapshot()
         .matches('paused')
 
-    let messages = eventState.messages.slice(2)
+    let messages: Message[] = eventState.messages.slice(2)
+
     const previousMessagesLengthRef = useRef(messages.length)
 
     if (

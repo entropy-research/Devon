@@ -6,8 +6,9 @@ import {
     SpinnerMessage,
 } from '@/panels/chat/components/messages/chat.message-variants'
 import { NotebookPen } from 'lucide-react'
+import type { Message } from '@/lib/types'
 export interface ChatMessages {
-    messages: any[]
+    messages: Message[]
     spinning: boolean
     paused: boolean
 }
@@ -19,7 +20,7 @@ const ChatMessages = ({ messages, spinning, paused }: ChatMessages) => {
                 <>
                     {messages.map((message, index) => (
                         <DisplayedChatMessage
-                            key={message.id ?? index}
+                            key={`${index}-${message.type}`}
                             index={index}
                             message={message}
                         />
@@ -61,7 +62,7 @@ const DisplayedChatMessage = ({
     message,
     index,
 }: {
-    message: any
+    message: Message
     index: number
 }) => {
     return (
@@ -100,7 +101,7 @@ const ChatTypeWrapper = ({
     className,
 }: {
     type: string
-    children: any
+    children: string | JSX.Element
     className?: string
 }) => {
     let pref: JSX.Element = <></>
