@@ -1,7 +1,7 @@
 {
     "name": "devon-ui",
-    "productName": "Devon (Alpha)",
-    "version": "0.0.16",
+    "productName": "Devon(Alpha)",
+    "version": "0.0.17",
     "description": "Electron Application for running Devon",
     "main": ".vite/build/main.js",
     "bin": {
