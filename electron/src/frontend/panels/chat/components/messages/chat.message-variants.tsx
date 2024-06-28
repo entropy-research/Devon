@@ -11,7 +11,7 @@ import { parseFileDiff } from '../../lib/utils'
 import * as unidiff from 'unidiff'
 import StyledMessage from './styled-message'
 import DiffViewer from '../ui/diff-viewer'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, CircleAlert, Ban } from 'lucide-react'
 import { getFileName, parseCommand } from '@/lib/utils'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 import DotsSpinner from '@/components/ui/dots-spinner/dots-spinner'
@@ -206,29 +206,79 @@ export const ToolResponseMessage = ({
 export const RateLimitWarning = ({ className }: { className?: string }) => {
     const icon = (
         <div className="scale-x-[-1] translate-x-1 flex size-[32px] shrink-0 select-none items-center justify-center rounded-md text-primary-foreground shadow-sm">
-                {/* <TfiThought size={28} /> */}
-                <Icon
-                    icon="mdi:"
-                    className="w-[30px] h-[30px] transform -scale-x-100"
-                />
+            {/* <TfiThought size={28} /> */}
+            <Icon
+                icon="mdi:"
+                className="w-[30px] h-[30px] transform -scale-x-100"
+            />
         </div>
     )
-    return <StyledMessage content={"Rate Limit reached, retrying in 1 minute."} className={className} icon={icon} />
+    return (
+        <StyledMessage
+            content={'Rate Limit reached, retrying in 1 minute.'}
+            className={className}
+            icon={icon}
+        />
+    )
 }
 
-export const ErrorMessage = ({ content, className }: { content: string, className?: string }) => {
-    const icon = (
-        <div className="scale-x-[-1] translate-x-1 flex size-[32px] shrink-0 select-none items-center justify-center rounded-md text-primary-foreground shadow-sm">
-                {/* <TfiThought size={28} /> */}
-                <Icon
-                    icon="mdi:"
-                    className="w-[30px] h-[30px] transform -scale-x-100"
-                />
+export const ErrorMessage = ({
+    content,
+    className,
+}: {
+    content: string
+    className?: string
+}) => {
+    const [expanded, setExpanded] = useState(true)
+    const [height, setHeight] = useState(0)
+    const contentRef = useRef<HTMLPreElement>(null)
+
+    const toggleExpanded = () => setExpanded(prev => !prev)
+
+    useEffect(() => {
+        if (contentRef.current) {
+            setHeight(expanded ? contentRef.current.scrollHeight : 0)
+        }
+    }, [expanded, content])
+
+    return (
+        <div className="ml-[49px] mt-3 overflow-auto">
+            <div className="relative w-full font-sans codeblock bg-zinc-950 rounded-md overflow-hidden">
+                <div
+                    className="flex items-center justify-between w-full pl-3 py-0 pr-1 bg-code-header text-zinc-100 rounded-t-md sticky top-0 hover:cursor-pointer"
+                    onClick={toggleExpanded}
+                >
+                    <div className="flex py-2 items-center text-red-400 px-[1px] gap-[3px]">
+                        {/* <CircleAlert
+                            className={cn(
+                                'h-[13px] w-[13px] transition-transform duration-200 ease-in-out mr-[3px]'
+                            )}
+                        /> */}
+                        <Ban
+                            className={cn(
+                                'h-[12px] w-[12px] transition-transform duration-200 ease-in-out mr-[3px] ml-[2px]'
+                            )}
+                        />
+                        <pre className="text-sm flex">Error</pre>
+                    </div>
+                </div>
+                <div
+                    style={{ height: `${height}px` }}
+                    className="transition-[height] duration-300 ease-in-out overflow-auto bg-midnight"
+                >
+                    <div className="duration-300 ease-in-out overflow-y-auto bg-midnight w-full max-h-[300px]">
+                        <pre
+                            ref={contentRef}
+                            className="text-zinc-100 p-5 text-sm w-full rounded-b-md whitespace-pre-wrap break-words"
+                        >
+                            {content}
+                        </pre>
+                    </div>
+                </div>
+            </div>
         </div>
     )
-    return <StyledMessage content={content} className={className} icon={icon} />
 }
-
 
 const ResponseBlock = ({ response }: { response: string }) => {
     const [expanded, setExpanded] = useState(false)

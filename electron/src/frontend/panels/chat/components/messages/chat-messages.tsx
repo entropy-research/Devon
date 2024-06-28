@@ -80,7 +80,7 @@ const DisplayedChatMessage = ({
                         {message.text}
                     </ChatTypeWrapper>
                 ) : message.type === 'rateLimit' ? (
-                    <RateLimitWarning></RateLimitWarning>
+                    <RateLimitWarning className="text-gray-400"></RateLimitWarning>
                 ) : message.type === 'tool' ? (
                     <ToolResponseMessage
                         className="text-gray-400"

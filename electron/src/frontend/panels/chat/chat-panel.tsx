@@ -48,8 +48,6 @@ export default function Chat({
         scrollToBottom()
     }
 
-    console.log(eventState.modelLoading)
-
     if (!state.matches('running')) {
         status = 'Initializing...'
     } else if (eventState.modelLoading) {
