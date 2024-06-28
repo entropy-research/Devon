@@ -20,6 +20,7 @@ const ChatMessages = ({ messages, spinning, paused }: ChatMessages) => {
                     {messages.map((message, index) => (
                         <DisplayedChatMessage
                             key={message.id ?? index}
+                            index={index}
                             message={message}
                         />
                     ))}
@@ -56,7 +57,13 @@ Task
 - Next: ModelResponse
 
  */
-const DisplayedChatMessage = ({ message }) => {
+const DisplayedChatMessage = ({
+    message,
+    index,
+}: {
+    message: any
+    index: number
+}) => {
     return (
         message.type && (
             <div className="mb-8">
@@ -72,6 +79,7 @@ const DisplayedChatMessage = ({ message }) => {
                     <ToolResponseMessage
                         className="text-gray-400"
                         content={message.text}
+                        index={index}
                     ></ToolResponseMessage>
                 ) : message.type === 'user' ? (
                     <UserMessage>{message.text}</UserMessage>

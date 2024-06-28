@@ -116,15 +116,22 @@ export const ThoughtMessage = ({
 export const ToolResponseMessage = ({
     content,
     className,
+    index,
 }: {
     content: string
     className?: string
+    index: number
 }) => {
     const icon = <div className="w-[32px]"></div>
     let [command, response] = content.toString().split('|START_RESPONSE|')
     const parsedRes = parseCommand(command)
     if (parsedRes?.command === 'ask_user') {
         return null
+    } else if (parsedRes?.command === 'no_op') {
+        if (index === 0) {
+            return null
+        }
+        return <ThoughtMessage content={'Let me cook...'} />
     }
 
     if (command.includes('Running command: edit')) {

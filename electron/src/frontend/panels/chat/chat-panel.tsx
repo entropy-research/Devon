@@ -125,7 +125,7 @@ const LoadingSkeleton = () => {
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
-                                <Skeleton className="w-2/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-60" />
+                                <Skeleton className="w-2/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-80" />
                             </div>
                         </div>
                     </div>
@@ -134,7 +134,7 @@ const LoadingSkeleton = () => {
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
-                                <Skeleton className="w-1/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-60" />
+                                <Skeleton className="w-1/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-80" />
                             </div>
                         </div>
                     </div>
@@ -143,7 +143,7 @@ const LoadingSkeleton = () => {
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
-                                <Skeleton className="w-4/5 h-[12px] rounded-[4px] bg-skeleton bg-opacity-60" />
+                                <Skeleton className="w-4/5 h-[12px] rounded-[4px] bg-skeleton bg-opacity-80" />
                             </div>
                         </div>
                     </div>
