@@ -102,8 +102,8 @@ export const TreeView = ({
                                         key={index}
                                         className="mb-3 flex gap-3 px-[12px] items-center"
                                     >
-                                        <Skeleton className="w-4 h-4 rounded-[3px] bg-night" />
-                                        <Skeleton className="w-full h-3 rounded-[3px] flex-1 bg-night" />
+                                        <Skeleton className="w-4 h-4 rounded-[3px] bg-editor-night" />
+                                        <Skeleton className="w-full h-3 rounded-[3px] flex-1 bg-editor-night" />
                                     </div>
                                 ))}
                             </div>
