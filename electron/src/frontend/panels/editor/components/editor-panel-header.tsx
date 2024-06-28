@@ -9,7 +9,13 @@ import {
 import { Icon } from '@iconify/react'
 import { useToast } from '@/components/ui/use-toast'
 
-const EditorPanelHeader = ({ path }: { path: string }) => {
+const EditorPanelHeader = ({
+    path,
+    initialLoading,
+}: {
+    path: string
+    initialLoading: boolean
+}) => {
     const { toast } = useToast()
     const [vscodeTooltipOpen, setVscodeTooltipOpen] = useState(false)
 
@@ -48,29 +54,31 @@ const EditorPanelHeader = ({ path }: { path: string }) => {
                     Devon
                 </p>
             </button>
-            <div className="absolute right-2 mt-1 group">
-                <TooltipProvider>
-                    <Tooltip
-                        open={vscodeTooltipOpen}
-                        onOpenChange={setVscodeTooltipOpen}
-                    >
-                        <TooltipTrigger asChild>
-                            <a onClick={handleTriggerClick}>
-                                <Icon
-                                    icon="vscode-icons:file-type-vscode"
-                                    className="h-[16px] w-[16px] opacity-0 transition-opacity duration-300 group-hover:opacity-90 hover:cursor-pointer"
-                                />
-                            </a>
-                        </TooltipTrigger>
-                        <TooltipContent
-                            className="hover:cursor-pointer hover:border-primary smooth-hover"
-                            onClick={openVSCode}
+            {!initialLoading && (
+                <div className="absolute right-2 mt-1 group">
+                    <TooltipProvider>
+                        <Tooltip
+                            open={vscodeTooltipOpen}
+                            onOpenChange={setVscodeTooltipOpen}
                         >
-                            <p>Open in VSCode</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            </div>
+                            <TooltipTrigger asChild>
+                                <a onClick={handleTriggerClick}>
+                                    <Icon
+                                        icon="vscode-icons:file-type-vscode"
+                                        className="h-[16px] w-[16px] opacity-0 transition-opacity duration-300 group-hover:opacity-90 hover:cursor-pointer"
+                                    />
+                                </a>
+                            </TooltipTrigger>
+                            <TooltipContent
+                                className="hover:cursor-pointer hover:border-primary smooth-hover"
+                                onClick={openVSCode}
+                            >
+                                <p>Open in VSCode</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+            )}
         </div>
     )
 }

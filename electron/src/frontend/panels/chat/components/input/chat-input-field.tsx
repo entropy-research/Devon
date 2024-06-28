@@ -175,7 +175,10 @@ const ChatInputField = ({
 
                             const res = await submitUserMessage(value)
 
-                            scrollToBottom()
+                            // Let loading message render first
+                            setTimeout(() => {
+                                scrollToBottom()
+                            }, 500)
                         }}
                     >
                         <div className="relative">

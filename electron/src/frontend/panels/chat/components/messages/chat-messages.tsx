@@ -8,25 +8,28 @@ import {
     ErrorMessage,
 } from '@/panels/chat/components/messages/chat.message-variants'
 import { NotebookPen } from 'lucide-react'
+import type { Message } from '@/lib/types'
 export interface ChatMessages {
-    messages: any[]
+    messages: Message[]
     spinning: boolean
+    paused: boolean
 }
 
-const ChatMessages = ({ messages, spinning }: ChatMessages) => {
+const ChatMessages = ({ messages, spinning, paused }: ChatMessages) => {
     return (
         <div className="relative px-6 mt-8">
             {messages && messages.length ? (
                 <>
                     {messages.map((message, index) => (
                         <DisplayedChatMessage
-                            key={message.id ?? index}
+                            key={`${index}-${message.type}`}
+                            index={index}
                             message={message}
                         />
                     ))}
                 </>
             ) : null}
-            {spinning && <SpinnerMessage />}
+            {spinning && <SpinnerMessage paused={paused} />}
         </div>
     )
 }
@@ -57,8 +60,14 @@ Task
 - Next: ModelResponse
 
  */
-const DisplayedChatMessage = ({ message }) => {
-    console.log(message)
+
+const DisplayedChatMessage = ({
+    message,
+    index,
+}: {
+    message: Message
+    index: number
+}) => {
     return (
         message.type && (
             <div className="mb-8">
@@ -76,6 +85,7 @@ const DisplayedChatMessage = ({ message }) => {
                     <ToolResponseMessage
                         className="text-gray-400"
                         content={message.text}
+                        index={index}
                     ></ToolResponseMessage>
                 ) : message.type === 'user' ? (
                     <UserMessage>{message.text}</UserMessage>
@@ -98,7 +108,7 @@ const ChatTypeWrapper = ({
     className,
 }: {
     type: string
-    children: any
+    children: string | JSX.Element
     className?: string
 }) => {
     let pref: JSX.Element = <></>

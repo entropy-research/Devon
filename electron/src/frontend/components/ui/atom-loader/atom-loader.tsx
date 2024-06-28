@@ -2,11 +2,12 @@ import React from 'react'
 import './atom.css' // Import the CSS file for the keyframes
 
 interface AtomLoaderProps {
-    size?: 'sm' | 'lg'
+    size?: 'sm' | 'lg' | 'xs'
+    speed?: 'slow' | 'fast'
 }
 
-const AtomLoader: React.FC<AtomLoaderProps> = ({ size = 'sm' }) => {
-    const sizePx = size === 'lg' ? 50 : 30
+const AtomLoader: React.FC<AtomLoaderProps> = ({ size = 'sm', speed = 'slow' }) => {
+    const sizePx = size === 'lg' ? 50 : size === 'sm' ? 30 : 25
     const blurSize = sizePx / 3
 
     return (
@@ -19,7 +20,7 @@ const AtomLoader: React.FC<AtomLoaderProps> = ({ size = 'sm' }) => {
                 }}
             ></div>
             <div
-                className="loader"
+                className={`loader ${speed === 'slow' ? 'animate-[l2_9s_infinite_linear]' : 'animate-[l2_3s_infinite_linear]'}`}
                 style={{ width: sizePx, height: sizePx / 2 }}
             ></div>
         </div>

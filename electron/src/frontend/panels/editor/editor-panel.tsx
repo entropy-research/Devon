@@ -244,7 +244,7 @@ const EditorPanel = ({
                     // direction="vertical"
                     className="flex flex-col flex-grow w-full h-full"
                 >
-                    <EditorPanelHeader path={path} />
+                    <EditorPanelHeader path={path} initialLoading={initialLoading}/>
                     <div
                         // defaultSize={80}
                         className="flex overflow-hidden h-full"

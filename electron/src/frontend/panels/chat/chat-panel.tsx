@@ -1,9 +1,11 @@
+import { useRef } from 'react'
 import ChatHeader from './components/chat-header'
 import { useScrollAnchor } from '@/panels/chat/lib/hooks/chat.use-scroll-anchor'
 import ChatMessages from './components/messages/chat-messages'
 import ChatInputField from './components/input/chat-input-field'
 import { SessionMachineContext } from '@/contexts/session-machine-context'
 import { Skeleton } from '@/components/ui/skeleton'
+import type { Message } from '@/lib/types'
 
 export default function Chat({
     sessionId,
@@ -31,8 +33,20 @@ export default function Chat({
     const eventState = SessionMachineContext.useSelector(
         state => state.context.serverEventContext
     )
+    const isPaused = SessionMachineContext.useActorRef()
+        .getSnapshot()
+        .matches('paused')
 
-    let messages = eventState.messages.slice(2)
+    let messages: Message[] = eventState.messages.slice(2)
+
+    const previousMessagesLengthRef = useRef(messages.length)
+
+    if (
+        previousMessagesLengthRef.current &&
+        messages.length > previousMessagesLengthRef.current
+    ) {
+        scrollToBottom()
+    }
 
     console.log(eventState.modelLoading)
 
@@ -73,6 +87,7 @@ export default function Chat({
                             <ChatMessages
                                 messages={messages}
                                 spinning={eventState.modelLoading}
+                                paused={isPaused}
                             />
                         )}
                         <div className="h-px w-full" ref={visibilityRef}></div>
@@ -114,7 +129,7 @@ const LoadingSkeleton = () => {
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
-                                <Skeleton className="w-2/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-60" />
+                                <Skeleton className="w-2/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-80" />
                             </div>
                         </div>
                     </div>
@@ -123,7 +138,7 @@ const LoadingSkeleton = () => {
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
-                                <Skeleton className="w-1/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-60" />
+                                <Skeleton className="w-1/3 h-[12px] rounded-[4px] bg-skeleton bg-opacity-80" />
                             </div>
                         </div>
                     </div>
@@ -132,7 +147,7 @@ const LoadingSkeleton = () => {
                             <Skeleton className="w-[32px] h-[32px]" />
                             <div className="w-full flex flex-col justify-between">
                                 <Skeleton className="w-full h-[12px] rounded-[4px]" />
-                                <Skeleton className="w-4/5 h-[12px] rounded-[4px] bg-skeleton bg-opacity-60" />
+                                <Skeleton className="w-4/5 h-[12px] rounded-[4px] bg-skeleton bg-opacity-80" />
                             </div>
                         </div>
                     </div>
