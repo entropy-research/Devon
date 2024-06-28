@@ -11,7 +11,7 @@ import { parseFileDiff } from '../../lib/utils'
 import * as unidiff from 'unidiff'
 import StyledMessage from './styled-message'
 import DiffViewer from '../ui/diff-viewer'
-import { ChevronDown, CircleAlert, Ban } from 'lucide-react'
+import { ChevronDown, CircleAlert, Ban, Info } from 'lucide-react'
 import { getFileName, parseCommand } from '@/lib/utils'
 import AtomLoader from '@/components/ui/atom-loader/atom-loader'
 import DotsSpinner from '@/components/ui/dots-spinner/dots-spinner'
@@ -82,15 +82,29 @@ export function SpinnerMessage({ paused = false }: { paused?: boolean }) {
 export const BotMessage = ({
     content,
     className,
+    pretext,
 }: {
     content: string
     className?: string
+    pretext?: JSX.Element
 }) => {
     const icon = (
         <div className="flex size-[32px] shrink-0 select-none items-center justify-center rounded-md border bg-primary text-primary-foreground shadow-sm">
             <Bot />
         </div>
     )
+    if (pretext) {
+        return (
+            <div className={cn('group relative flex items-start', className)}>
+                {icon}
+                <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 flex">
+                    {pretext}
+                    {content}
+                </div>
+            </div>
+        )
+    }
+
     return <StyledMessage content={content} className={className} icon={icon} />
 }
 
@@ -204,21 +218,22 @@ export const ToolResponseMessage = ({
 }
 
 export const RateLimitWarning = ({ className }: { className?: string }) => {
-    const icon = (
-        <div className="scale-x-[-1] translate-x-1 flex size-[32px] shrink-0 select-none items-center justify-center rounded-md text-primary-foreground shadow-sm">
-            {/* <TfiThought size={28} /> */}
-            <Icon
-                icon="mdi:"
-                className="w-[30px] h-[30px] transform -scale-x-100"
-            />
-        </div>
-    )
+    // return (
+    //     <div className="ml-[49px] mt-3 overflow-auto text-gray-400">
+    //         <pre className="text-sm mb-2 whitespace-pre-wrap break-words">
+    //             <strong>Rate limit reached:</strong> Automatically retrying in 1
+    //             minute...
+    //         </pre>
+    //     </div>
+    // )
     return (
-        <StyledMessage
-            content={'Rate Limit reached, retrying in 1 minute.'}
-            className={className}
-            icon={icon}
-        />
+        <div className="ml-[49px] mt-3 overflow-auto !text-gray-400 flex items-center gap-[6px] chat-text-relaxed">
+            <Info size={18} />
+            <p className="text-md">
+                <span>Rate limit reached:</span> Automatically retrying in 1
+                minute...
+            </p>
+        </div>
     )
 }
 
