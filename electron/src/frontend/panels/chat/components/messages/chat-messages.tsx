@@ -4,6 +4,8 @@ import {
     ToolResponseMessage,
     ThoughtMessage,
     SpinnerMessage,
+    RateLimitWarning,
+    ErrorMessage,
 } from '@/panels/chat/components/messages/chat.message-variants'
 import { NotebookPen } from 'lucide-react'
 export interface ChatMessages {
@@ -56,6 +58,7 @@ Task
 
  */
 const DisplayedChatMessage = ({ message }) => {
+    console.log(message)
     return (
         message.type && (
             <div className="mb-8">
@@ -67,6 +70,8 @@ const DisplayedChatMessage = ({ message }) => {
                     <ChatTypeWrapper type="Command">
                         {message.text}
                     </ChatTypeWrapper>
+                ) : message.type === 'rateLimit' ? (
+                    <RateLimitWarning></RateLimitWarning>
                 ) : message.type === 'tool' ? (
                     <ToolResponseMessage
                         className="text-gray-400"
@@ -74,7 +79,9 @@ const DisplayedChatMessage = ({ message }) => {
                     ></ToolResponseMessage>
                 ) : message.type === 'user' ? (
                     <UserMessage>{message.text}</UserMessage>
-                ) :  (
+                ) : message.type === 'error' ? (
+                    <ErrorMessage content={message.text}></ErrorMessage>
+                ) : (
                     // <ChatTypeWrapper type="(Type not found)">
                     //     {message.content}
                     // </ChatTypeWrapper>

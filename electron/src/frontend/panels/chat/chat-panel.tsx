@@ -34,6 +34,8 @@ export default function Chat({
 
     let messages = eventState.messages.slice(2)
 
+    console.log(eventState.modelLoading)
+
     if (!state.matches('running')) {
         status = 'Initializing...'
     } else if (eventState.modelLoading) {

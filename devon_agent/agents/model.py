@@ -69,7 +69,6 @@ class AnthropicModel:
             self.api_key = os.getenv("ANTHROPIC_API_KEY")
 
     def query(self, messages: list[dict[str, str]], system_message: str = "") -> str:
-        print(self.api_key)
         model_completion = completion(
             messages=[{"role": "system", "content": system_message}] + messages,
             max_tokens=self.model_metadata["max_tokens"],
@@ -78,6 +77,7 @@ class AnthropicModel:
             stop=["</COMMAND>"],
             api_key=self.api_key,
         )
+
 
         response = model_completion.choices[0].message.content.rstrip("</COMMAND>")
         return response + "</COMMAND>"
@@ -193,20 +193,3 @@ class OllamaModel:
         response = model_completion.choices[0].message.content.rstrip("</command>")
         return response + "</command>"
 
-
-if __name__ == "__main__":
-    from outlines import models, generate
-    from outlines.models.openai import OpenAIConfig
-    from openai import OpenAI
-
-
-    json_grammar = outlines.grammars.json
-
-    client = OpenAI()
-    config = OpenAIConfig("gpt-4o")
-    litellm.drop_params=True
-    client.chat.completions.create = litellm.acompletion
-    model = models.openai(client, config)
-    generator = generate.cfg(model, json_grammar)
-    answer = generator("What is 2+2?")
-    print(answer)

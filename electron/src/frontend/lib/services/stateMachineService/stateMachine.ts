@@ -43,6 +43,7 @@ type ServerEvent = {
         | 'GitEvent'
         | 'ShellRequest'
         | 'ShellResponse'
+        | 'RateLimit'
     content: any
     identifier: string | null
 }
@@ -61,6 +62,7 @@ type ServerEventContext = {
 
 export const eventHandlingLogic = fromTransition(
     (state: ServerEventContext, event: ServerEvent) => {
+        console.log(state.messages)
         switch (event.type) {
             case 'session.reset': {
                 return {
@@ -168,6 +170,16 @@ export const eventHandlingLogic = fromTransition(
                     ],
                 }
             }
+            case 'RateLimit': {
+                return {
+                    ...state,
+                    messages: [
+                        ...state.messages,
+                        { text: event.content, type: 'rateLimit' } as Message,
+                    ],
+                    modelLoading: false,
+                }
+            }
             case 'Error': {
                 console.error(event.content)
                 return {
@@ -176,6 +188,7 @@ export const eventHandlingLogic = fromTransition(
                         ...state.messages,
                         { text: event.content, type: 'error' } as Message,
                     ],
+                    modelLoading: false,
                 }
             }
             case 'GitEvent': {
@@ -239,8 +252,8 @@ export const eventSourceActor = fromCallback<
     { host: string; name: string }
 >(({ input, receive, sendBack }) => {
     let eventStream: EventSource | null = null
-
     const eventHandler = ({ data }: { data: any }) => {
+        console.log('event', data)
         sendBack({ type: 'serverEvent', payload: JSON.parse(data) })
     }
 
@@ -249,6 +262,7 @@ export const eventSourceActor = fromCallback<
             eventStream = new EventSource(
                 `${input.host}/sessions/${input.name}/events/stream`
             )
+
             eventStream.addEventListener('message', eventHandler)
         }
         if (event.type === 'reset') {

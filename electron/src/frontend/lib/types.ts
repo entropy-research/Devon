@@ -17,5 +17,5 @@ export type Model = {
 
 export type Message = {
     text: string
-    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error' | 'shellCommand' | 'shellResponse'
+    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error' | 'shellCommand' | 'shellResponse' | 'rateLimit'
 }

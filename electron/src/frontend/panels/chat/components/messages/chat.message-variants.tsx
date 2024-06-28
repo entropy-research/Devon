@@ -193,6 +193,33 @@ export const ToolResponseMessage = ({
     )
 }
 
+export const RateLimitWarning = ({ className }: { className?: string }) => {
+    const icon = (
+        <div className="scale-x-[-1] translate-x-1 flex size-[32px] shrink-0 select-none items-center justify-center rounded-md text-primary-foreground shadow-sm">
+                {/* <TfiThought size={28} /> */}
+                <Icon
+                    icon="mdi:"
+                    className="w-[30px] h-[30px] transform -scale-x-100"
+                />
+        </div>
+    )
+    return <StyledMessage content={"Rate Limit reached, retrying in 1 minute."} className={className} icon={icon} />
+}
+
+export const ErrorMessage = ({ content, className }: { content: string, className?: string }) => {
+    const icon = (
+        <div className="scale-x-[-1] translate-x-1 flex size-[32px] shrink-0 select-none items-center justify-center rounded-md text-primary-foreground shadow-sm">
+                {/* <TfiThought size={28} /> */}
+                <Icon
+                    icon="mdi:"
+                    className="w-[30px] h-[30px] transform -scale-x-100"
+                />
+        </div>
+    )
+    return <StyledMessage content={content} className={className} icon={icon} />
+}
+
+
 const ResponseBlock = ({ response }: { response: string }) => {
     const [expanded, setExpanded] = useState(false)
     const [height, setHeight] = useState(0)

@@ -193,6 +193,15 @@ class UserEnvironment:
             }
         )
         response = self.user_func()
+        if response == "terminate":
+            self.session.event_log.append(
+                {
+                    "type": "Stop",
+                    "content": response,
+                    "producer": self.name,
+                    "consumer": "tool",
+                }
+            )
         self.session.event_log.append(
             {
                 "type": "UserResponse",
