@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import ChatHeader from './components/chat-header'
 import { useScrollAnchor } from '@/panels/chat/lib/hooks/chat.use-scroll-anchor'
 import ChatMessages from './components/messages/chat-messages'
@@ -31,8 +32,19 @@ export default function Chat({
     const eventState = SessionMachineContext.useSelector(
         state => state.context.serverEventContext
     )
+    const isPaused = SessionMachineContext.useActorRef()
+        .getSnapshot()
+        .matches('paused')
 
     let messages = eventState.messages.slice(2)
+    const previousMessagesLengthRef = useRef(messages.length)
+
+    if (
+        previousMessagesLengthRef.current &&
+        messages.length > previousMessagesLengthRef.current
+    ) {
+        scrollToBottom()
+    }
 
     if (!state.matches('running')) {
         status = 'Initializing...'
@@ -71,6 +83,7 @@ export default function Chat({
                             <ChatMessages
                                 messages={messages}
                                 spinning={eventState.modelLoading}
+                                paused={isPaused}
                             />
                         )}
                         <div className="h-px w-full" ref={visibilityRef}></div>

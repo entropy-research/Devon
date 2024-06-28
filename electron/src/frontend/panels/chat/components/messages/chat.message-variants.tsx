@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Bot, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import * as AccordionPrimitive from '@radix-ui/react-accordion'
-import { spinner } from '../ui/loading-spinner'
+import Spinner from '../ui/loading-spinner'
 import { Icon } from '@iconify/react'
 import { parseDiff } from 'react-diff-view'
 import 'react-diff-view/style/index.css'
@@ -13,7 +13,8 @@ import StyledMessage from './styled-message'
 import DiffViewer from '../ui/diff-viewer'
 import { ChevronDown } from 'lucide-react'
 import { getFileName, parseCommand } from '@/lib/utils'
-
+import AtomLoader from '@/components/ui/atom-loader/atom-loader'
+import DotsSpinner from '@/components/ui/dots-spinner/dots-spinner'
 // Different types of message bubbles.
 
 export function UserMessage({ children }: { children: React.ReactNode }) {
@@ -63,14 +64,16 @@ export function SystemMessage({ children }: { children: React.ReactNode }) {
     )
 }
 
-export function SpinnerMessage() {
+export function SpinnerMessage({ paused = false }: { paused?: boolean }) {
     return (
         <div className="group relative flex items-start">
             <div className="flex size-[32px] shrink-0 select-none items-center justify-center rounded-md border bg-primary text-primary-foreground shadow-sm">
                 <Bot />
             </div>
-            <div className="ml-4 h-[32px] flex flex-row items-center flex-1 space-y-2 overflow-hidden px-1">
-                {spinner}
+            <div className="ml-5 h-[32px] flex flex-row items-center flex-1 space-y-2 overflow-hidden px-1">
+                {/* <Spinner paused={paused} /> */}
+                {/* <AtomLoader speed="fast" size="xs" /> */}
+                {!paused && <DotsSpinner size={8} paused={paused} />}
             </div>
         </div>
     )

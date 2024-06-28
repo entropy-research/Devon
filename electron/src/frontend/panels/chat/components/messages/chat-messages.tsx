@@ -9,9 +9,10 @@ import { NotebookPen } from 'lucide-react'
 export interface ChatMessages {
     messages: any[]
     spinning: boolean
+    paused: boolean
 }
 
-const ChatMessages = ({ messages, spinning }: ChatMessages) => {
+const ChatMessages = ({ messages, spinning, paused }: ChatMessages) => {
     return (
         <div className="relative px-6 mt-8">
             {messages && messages.length ? (
@@ -24,7 +25,7 @@ const ChatMessages = ({ messages, spinning }: ChatMessages) => {
                     ))}
                 </>
             ) : null}
-            {spinning && <SpinnerMessage />}
+            {spinning && <SpinnerMessage paused={paused} />}
         </div>
     )
 }
@@ -74,7 +75,7 @@ const DisplayedChatMessage = ({ message }) => {
                     ></ToolResponseMessage>
                 ) : message.type === 'user' ? (
                     <UserMessage>{message.text}</UserMessage>
-                ) :  (
+                ) : (
                     // <ChatTypeWrapper type="(Type not found)">
                     //     {message.content}
                     // </ChatTypeWrapper>

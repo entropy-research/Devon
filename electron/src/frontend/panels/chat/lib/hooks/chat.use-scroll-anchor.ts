@@ -14,16 +14,10 @@ export const useScrollAnchor = () => {
         //         block: 'center',
         //         behavior: 'smooth',
         //     })
-        // }
-        // if (scrollRef.current) {
-        //     scrollRef.current.scrollTo({
-        //         top: scrollRef.current.scrollHeight,
-        //         behavior: 'smooth',
-        //     })
-        // }
         if (scrollRef.current) {
+            const offset = 100
             scrollRef.current.scrollTo({
-                top: scrollRef.current.scrollHeight,
+                top: scrollRef.current.scrollHeight + offset,
                 behavior: 'smooth',
             })
         }

@@ -4,7 +4,7 @@
     box-sizing: border-box;
     border-radius: 50%;
     display: grid;
-    animation: l2 9s infinite linear;
+    /* animation: l2 9s infinite linear; */
     border-color: rgba(118, 86, 232, 0.5);
 }
 
