@@ -35,14 +35,7 @@ https://github.com/entropy-research/Devon/assets/61808204/f3197a56-3d6d-479f-bc0
 
 ## Installation commands
 
-To install, simply run:
-
-```bash
-curl -sSL https://raw.githubusercontent.com/entropy-research/Devon/main/install.sh | bash
-```
-
-
-*Or to install using `pipx` + `npm`:*
+To install using `pipx` + `npm`:
 
 ```bash
 # For the backend
