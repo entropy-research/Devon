@@ -267,6 +267,8 @@ The user may reference specific snippets or files with @<filename><lineno:lineno
 - Execute ONLY ONE command at a time
 - Wait for feedback after each command
 - Locating classes and functions is more efficient than locating files 
+- Always make sure the changes you will do wont break any other part of the codebase.
+- Always make sure the functions you want to use exists in that particular file. Navigate the codebase to understand it before making a change.
 - 'no_op' command available to allow for more thinking time 
 </CONSTRAINTS>
 <TESTING_TIPS>

@@ -253,8 +253,8 @@ class FileTreeTool:
 
 
 # Example usage:
-# codebase = FileTreeTool('/Users/arnav/Desktop/django/')
-# print(codebase.get_large_tree("/Users/arnav/Desktop/django/", 500, 15)[1])
+codebase = FileTreeTool('/Users/arnav/Desktop/django/')
+print(codebase.get_large_tree("/Users/arnav/Desktop/django/", 500, 15)[1])
 
 # # codebase = FileTreeTool('/Users/arnav/Desktop/django/django')
 # # print(codebase.get_current_tree("/Users/arnav/Desktop/django/django"))

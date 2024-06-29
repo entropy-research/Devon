@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from devon_agent.semantic_search.graph_construction.utils import format_nodes, tree_parser
 from pathlib import Path
 
 import tree_sitter_languages
@@ -8,6 +7,7 @@ from llama_index.core.schema import BaseNode, Document, NodeRelationship
 from llama_index.core.text_splitter import CodeSplitter
 from llama_index.packs.code_hierarchy import CodeHierarchyNodeParser
 
+from blar_graph.graph_construction.utils import format_nodes, tree_parser
 
 
 class BaseParser(ABC):
@@ -44,7 +44,6 @@ class BaseParser(ABC):
 
         # Bug related to llama-index it's safer to remove non-ascii characters. Could be removed in the future
         documents[0].text = tree_parser.remove_non_ascii(documents[0].text)
-
         code = CodeHierarchyNodeParser(
             language=self.language,
             chunk_min_characters=3,

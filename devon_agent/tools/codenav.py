@@ -119,8 +119,8 @@ class CodeGoTo(Tool):
 
     DESCRIPTION
             The code_goto command navigates to the specified symbol's definition or reference within the project files by using ast tree
-            and returns a lists all positions of the symbol in the rest of the codebase. To find reference, use it on a definition. To find definition, use it on reference.
-            This is not a simple sting matching
+            and returns a lists all positions of the symbol in the rest of the codebase. Use it to find where a particular function / class is being used or being defined at. Dont use text search such as code_search for this purpose.
+            This is not a simple string matching.
 
     OPTIONS
             FILE_PATH

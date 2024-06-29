@@ -3,8 +3,6 @@ import os
 import tree_sitter_languages
 from devon_agent.semantic_search.graph_construction.core.base_parser import BaseParser
 
-
-
 class PythonParser(BaseParser):
     def __init__(self):
         super().__init__("python", "*")
