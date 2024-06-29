@@ -37,7 +37,14 @@ export default function Chat({
         .getSnapshot()
         .matches('paused')
 
-    let messages: Message[] = eventState.messages.slice(2)
+    let messages: Message[] = eventState.messages
+    if (
+        eventState.messages.length > 1 &&
+        eventState.messages[0].type === 'task' &&
+        eventState.messages[1].type === 'thought'
+    ) {
+        messages = messages.slice(2)
+    }
 
     const previousMessagesLengthRef = useRef(messages.length)
 
