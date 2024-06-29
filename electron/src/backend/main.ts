@@ -50,7 +50,7 @@ const spawnAppWindow = async () => {
             //   agent_path = path.join(process.resourcesPath, "devon_agent")
             // }
             // fs.chmodSync(agent_path, '755');
-
+            console.log(db_path)
             serverProcess = spawn(
                 'devon_agent',
                 [

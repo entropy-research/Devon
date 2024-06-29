@@ -8,6 +8,7 @@ import logging
 import time
 import traceback
 from typing import TYPE_CHECKING, Tuple
+import litellm
 
 from tenacity import RetryError
 from devon_agent.agents.default.agent import Agent
@@ -186,8 +187,34 @@ class ConversationalAgent(Agent):
             messages, system_prompt = prompts[self.args.prompt_type](
                 task, editor, session
             )
+            output = None
+            while not output:
+                try:
+                    output = self.current_model.query(messages, system_message=system_prompt)
+                except litellm.RateLimitError:
+                    session.event_log.append(
+                        {
+                            "type": "RateLimit",
+                            "content": observation,
+                            "producer": self.name,
+                            "consumer": "none",
+                        }
+                    )
+                    return "error", "error", "error"
+                except Exception as e:
+                    session.event_log.append(
+                        {
+                            "type": "Error",
+                            "content": str(e),
+                            "producer": self.name,
+                            "consumer": "none",
+                        }
+                    )
+                    return "error", "error", "error"
+                 
+                
 
-            output = self.current_model.query(messages, system_message=system_prompt)
+                
 
             thought = None
             action = None

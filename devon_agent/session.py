@@ -309,6 +309,7 @@ class Session:
             # self.telemetry_client.capture(telemetry_event)
 
             if event["type"] == "Stop" and event["content"]["type"] != "submit":
+                print("hopefully here")
                 self.status = "terminated"
                 break
             elif event["type"] == "Stop" and event["content"]["type"] == "submit":
@@ -384,6 +385,8 @@ class Session:
                             "consumer": event["producer"],
                         }
                     )
+                elif action == "error":
+                    pass
                 else:
                     new_events.append(
                         {
@@ -395,6 +398,21 @@ class Session:
                             "consumer": event["producer"],
                         }
                     )
+
+            case "RateLimit":
+                for i in range(60):
+                    if self.status == "terminating":
+                        break
+                    time.sleep(1)
+                new_events.append(
+                    {
+                        "type": "ModelRequest",
+                        "content": event["content"],
+                        "producer": self.agent.name,
+                        "consumer": event["producer"],
+                    }
+                )
+
 
             case "ToolRequest":
                 tool_name, args = event["content"]["toolname"], event["content"]["args"]
