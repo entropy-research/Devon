@@ -346,8 +346,9 @@ export default function CodeEditor({
 
     const handleAddCodeReference = () => {
         if (selectionInfo) {
-            if (isEntireFileSelected) {
-                const id: FileId = selectionInfo.fileName
+            if (isEntireFileSelected && selectedFileId) {
+                const relativePath = getRelativePath(selectedFileId, path)
+                const id: FileId = relativePath
                 setSelectedCodeSnippet({
                     ...selectionInfo,
                     id,
