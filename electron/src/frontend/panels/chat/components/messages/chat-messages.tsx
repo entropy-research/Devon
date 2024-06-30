@@ -90,7 +90,7 @@ const DisplayedChatMessage = ({
                 ) : message.type === 'user' ? (
                     <UserMessage>{message.text}</UserMessage>
                 ) : message.type === 'error' ? (
-                    <ErrorMessage content={message.text}></ErrorMessage>
+                    <ErrorMessage className={index === 1 ? '' : 'ml-[49px]'} content={message.text}></ErrorMessage>
                 ) : (
                     // <ChatTypeWrapper type="(Type not found)">
                     //     {message.content}
