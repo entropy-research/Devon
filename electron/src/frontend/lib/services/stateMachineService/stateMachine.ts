@@ -62,6 +62,7 @@ type ServerEventContext = {
 
 export const eventHandlingLogic = fromTransition(
     (state: ServerEventContext, event: ServerEvent) => {
+        console.log(state.messages)
         switch (event.type) {
             case 'session.reset': {
                 return {
@@ -99,10 +100,7 @@ export const eventHandlingLogic = fromTransition(
                     ...state,
                     messages: [
                         ...state.messages,
-                        {
-                            text: event.content,
-                            type: 'shellCommand',
-                        } as Message,
+                        { text: event.content, type: 'shellCommand' } as Message,
                     ],
                 }
             }
@@ -111,10 +109,7 @@ export const eventHandlingLogic = fromTransition(
                     ...state,
                     messages: [
                         ...state.messages,
-                        {
-                            text: event.content,
-                            type: 'shellResponse',
-                        } as Message,
+                        { text: event.content, type: 'shellResponse' } as Message,
                     ],
                 }
             }
@@ -258,6 +253,7 @@ export const eventSourceActor = fromCallback<
 >(({ input, receive, sendBack }) => {
     let eventStream: EventSource | null = null
     const eventHandler = ({ data }: { data: any }) => {
+        console.log('event', data)
         sendBack({ type: 'serverEvent', payload: JSON.parse(data) })
     }
 
