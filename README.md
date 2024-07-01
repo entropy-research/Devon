@@ -75,6 +75,12 @@ pipx install devon_agent
 # For the tui
 npm install -g devon-tui
 ```
+> [!NOTE]
+> If you already have devon-tui installed, update it by running:
+```bash
+npm uninstall -g devon-tui
+npm install -g devon-tui
+```
 
 ### Run
 
