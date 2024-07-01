@@ -161,7 +161,7 @@ devon-tui --help
 
 ### Current goals
 - Multi-model support
-  - [x] Claude 3 Opus
+  - [x] Claude 3.5 Sonnet
   - [x] GPT4-o
   - [x] Groq llama3-70b
   - [x] Ollama deepseek-6.7b
