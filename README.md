@@ -30,7 +30,7 @@ https://github.com/entropy-research/Devon/assets/61808204/f3197a56-3d6d-479f-bc0
 3. API Key <samp>(just one is required)</samp>
    - [**Anthropic**](https://console.anthropic.com/settings/keys)
     - [**OpenAI**](https://platform.openai.com/api-keys)
-    - [**Groq**](https://console.groq.com/keys) (not released in package yet, run locally)
+
 > We're currently working on supporting Windows! (Let us know if you can help)
 
 ## Installation commands
@@ -38,25 +38,17 @@ https://github.com/entropy-research/Devon/assets/61808204/f3197a56-3d6d-479f-bc0
 To install using `pipx` + `npm`:
 
 ```bash
-# For the backend
+# Step 1: For the backend
 pipx install devon_agent
 
-# For the terminal ui
-npm install -g devon-tui
-
-# And for the main UI
+# Step 2: For the main UI (install and run)
 npx devon-ui
 ```
 
-If you already have devon_agent or devon-tui installed, update it by running:
+If you already have devon_agent installed, update it by running:
 ```bash
-npm uninstall -g devon-tui
-npm install -g devon-tui
-
 pipx install --force devon_agent
 ```
-
-This installs the Python backend, and the cli command to run the tool
 
 ### Thats it! Happy building :)
 
@@ -70,7 +62,21 @@ npx devon-ui
 
 It's that simple.
 
-For the terminal ui:
+# Terminal UI
+> If you'd like to use the terminal interface, follow these steps:
+### Install
+1. Make sure you have the backend installed
+```bash
+# For the backend
+pipx install devon_agent
+```
+2. Install the tui
+```bash
+# For the tui
+npm install -g devon-tui
+```
+
+### Run
 
 1. Navigate to your project folder and open the terminal.
 2. Set your Anthropic API or OpenAI API key as an environment variable:
@@ -148,7 +154,7 @@ devon-tui --help
 - Test writing
 - Bug fixing
 - Architecture exploration
-- Local Model Support
+- Local model support
 
 ### Limitations
 - Minimal functionality for non-Python languages
@@ -181,16 +187,23 @@ devon-tui --help
 
 ### Past milestones
 
-- [x] **June 14, 2024** - Launch Electron UI v0.0.13
-- [x] **June 1, 2024** - Devon V2 Beta Electron UI
-- [x] **May 19, 2024** - GPT4o support + better interface support v0.1.7
-- [x] **May 10, 2024** - Complete interactive agent v0.1.0
+- [x] **June 28, 2024** - File and code referencing, improve steerability, Claude Sonnet support [v0.0.16](https://x.com/realmcore_/status/1806770333451685942?s=46&t=vmh-a24cg2kpziooU0KxGw)
+- [x] **June 14, 2024** - Launch Electron UI [v0.0.13](https://x.com/realmcore_/status/1801776780245929999?s=46&t=vmh-a24cg2kpziooU0KxGw)
+- [x] **June 1, 2024** - [Devon V2](https://x.com/realmcore_/status/1797122891068355010?s=46&t=vmh-a24cg2kpziooU0KxGw) Beta Electron UI
+- [x] **May 19, 2024** - GPT4o support + better interface support [v0.1.7](https://x.com/realmcore_/status/1792246200172953701?s=46&t=vmh-a24cg2kpziooU0KxGw)
+- [x] **May 12, 2024** - Complete interactive agent [v0.1.0](https://x.com/realmcore_/status/1789706405680910724?s=46&t=vmh-a24cg2kpziooU0KxGw)
 - [x] **May 10, 2024** - Add steerability features
 - [x] **May 8, 2024** - Beat AutoCodeRover on SWE-Bench Lite
 - [x] **Mid April, 2024** - Add repo level code search tooling
 - [x] **April 2, 2024** - Begin development of v0.1.0 interactive agent
 - [x] **March 17, 2024** - Launch non-interactive agent v0.0.1
 
+> [!NOTE]
+> If you already have the tui installed, run a clean reinstall:
+```bash
+npm uninstall -g devon-tui
+npm install -g devon-tui
+```
 
 ## Current development priorities
 
@@ -201,8 +214,9 @@ devon-tui --help
     - a) Reduce end user cost and
     - b) Reduce end user latency
 3. Electron app
+    - Save and load in project overviews for agent context
+    - Revert & "step back" timeline interface
     - Better code diff view
-    - Timeline interface
     - Send user file events/changes to Devon
 
 
