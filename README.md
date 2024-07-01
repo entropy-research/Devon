@@ -45,10 +45,9 @@ pipx install devon_agent
 npx devon-ui
 ```
 
-If you already have devon_agent installed, update it by running:
-```bash
-pipx install --force devon_agent
-```
+
+> If you already have devon_agent installed, update it by running:
+> ```pipx install --force devon_agent```
 
 ### Thats it! Happy building :)
 
