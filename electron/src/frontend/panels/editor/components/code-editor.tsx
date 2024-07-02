@@ -53,6 +53,7 @@ export default function CodeEditor({
             setOpenFiles(initialFiles)
             setSelectedFileId(null)
             setPopoverVisible(false)
+            console.log('popober not visible')
             setSelectionInfo(null)
             initialPathRef.current = path
         }
@@ -277,63 +278,69 @@ export default function CodeEditor({
     }, [selectedFileId, updateSelectionInfo, isSelectionVisible])
 
     useEffect(() => {
-        if (!editorRef.current || !monacoRef.current) return
-
-        const editor = editorRef.current
-        const monaco = monacoRef.current
-
-        const handleMouseUp = () => {
-            const selection = editor.getSelection()
-            if (selection && !selection.isEmpty()) {
-                setPopoverVisible(true)
+        const attachListeners = () => {
+            if (!editorRef.current || !monacoRef.current) return;
+            
+            const editor = editorRef.current;
+            const monaco = monacoRef.current;
+    
+            const handleMouseUp = () => {
+                const selection = editor.getSelection();
+                if (selection && !selection.isEmpty()) {
+                    setPopoverVisible(true);
+                }
+            };
+    
+            const handleSelectionChange = (e: editor.ICursorSelectionChangedEvent) => {
+                const selection = editor.getSelection();
+                if (selectedFileId && selection && !selection.isEmpty()) {
+                    fileSelectionsRef.current[selectedFileId] = selection;
+                    updateSelectionInfo(editor, monaco, selection, selectedFileId);
+                } else {
+                    setPopoverVisible(false);
+                }
+            };
+    
+            const disposable = editor.onDidChangeCursorSelection(handleSelectionChange);
+    
+            // Restore selection when switching tabs or opening a new file
+            if (selectedFileId) {
+                const storedSelection = fileSelectionsRef.current[selectedFileId];
+                if (storedSelection) {
+                    editor.setSelection(storedSelection);
+                    updateSelectionInfo(editor, monaco, storedSelection, selectedFileId);
+                } else {
+                    // Clear selection and hide popover when opening a new file
+                    setPopoverVisible(false);
+                    editor.setSelection(new monaco.Selection(0, 0, 0, 0));
+                }
             }
-        }
-
-        const handleSelectionChange = (
-            e: editor.ICursorSelectionChangedEvent
-        ) => {
-            const selection = editor.getSelection()
-            if (selectedFileId && selection && !selection.isEmpty()) {
-                fileSelectionsRef.current[selectedFileId] = selection
-                updateSelectionInfo(editor, monaco, selection, selectedFileId)
-            } else {
-                setPopoverVisible(false)
+    
+            window.addEventListener('mouseup', handleMouseUp);
+    
+            return () => {
+                disposable.dispose();
+                window.removeEventListener('mouseup', handleMouseUp);
+            };
+        };
+    
+        // Initial attempt to attach listeners
+        let cleanup = attachListeners();
+    
+        // If editor is not available, set up an interval to check periodically
+        const checkInterval = setInterval(() => {
+            if (editorRef.current && monacoRef.current) {
+                clearInterval(checkInterval);
+                if (cleanup) cleanup();
+                cleanup = attachListeners();
             }
-        }
-
-        const disposable = editor.onDidChangeCursorSelection(
-            handleSelectionChange
-        )
-
-        // Restore selection when switching tabs or opening a new file
-        if (selectedFileId) {
-            const storedSelection = fileSelectionsRef.current[selectedFileId]
-            if (storedSelection) {
-                editor.setSelection(storedSelection)
-                updateSelectionInfo(
-                    editor,
-                    monaco,
-                    storedSelection,
-                    selectedFileId
-                )
-            } else {
-                // Clear selection and hide popover when opening a new file
-                setPopoverVisible(false)
-                editor.setSelection(new monaco.Selection(0, 0, 0, 0))
-            }
-        }
-        window.addEventListener('mouseup', handleMouseUp)
-
+        }, 100); // Check every 100ms
+    
         return () => {
-            disposable.dispose()
-            window.removeEventListener('mouseup', handleMouseUp)
-        }
-    }, [
-        selectedFileId,
-        updateSelectionInfo,
-        editorRef.current,
-        monacoRef.current,
-    ])
+            clearInterval(checkInterval);
+            if (cleanup) cleanup();
+        };
+    }, [selectedFileId, updateSelectionInfo]);
 
     useEffect(() => {
         if (selectedFileId) {
