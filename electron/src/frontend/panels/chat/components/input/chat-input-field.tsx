@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
     Paperclip,
     ArrowRight,
@@ -16,184 +16,190 @@ import { useAtom } from 'jotai'
 import { selectedCodeSnippetAtom } from '@/panels/editor/components/code-editor'
 import CodeSnippet, { ICodeSnippet, codeSnippetsAtom } from '../ui/code-snippet'
 
-const ChatInputField = ({
-    isAtBottom,
-    scrollToBottom,
-    viewOnly,
-    eventContext,
-    loading,
-    sessionId,
-}: {
-    isAtBottom: boolean
-    scrollToBottom: () => void
-    viewOnly: boolean
-    eventContext: any
-    loading: boolean
-    sessionId: string
-}) => {
-    const [focused, setFocused] = useState(false)
-    // const [paused, setPaused] = useState(false)
-    const { formRef, onKeyDown } = useEnterSubmit()
-    const inputRef = useRef<HTMLTextAreaElement>(null)
-    const [input, setInput] = useState('')
-    const [selectedCodeSnippet, setSelectedCodeSnippet] =
-        useAtom<ICodeSnippet | null>(selectedCodeSnippetAtom)
-    const [codeSnippets, setCodeSnippets] = useAtom(codeSnippetsAtom)
-    const prevProjectPath = useRef<string>('')
+const ChatInputField = React.memo(
+    ({
+        isAtBottom,
+        scrollToBottom,
+        viewOnly,
+        eventContext,
+        loading,
+        sessionId,
+    }: {
+        isAtBottom: boolean
+        scrollToBottom: () => void
+        viewOnly: boolean
+        eventContext: any
+        loading: boolean
+        sessionId: string
+    }) => {
+        const [focused, setFocused] = useState(false)
+        const { formRef, onKeyDown } = useEnterSubmit()
+        const inputRef = useRef<HTMLTextAreaElement>(null)
+        const [input, setInput] = useState('')
+        const [selectedCodeSnippet, setSelectedCodeSnippet] =
+            useAtom<ICodeSnippet | null>(selectedCodeSnippetAtom)
+        const [codeSnippets, setCodeSnippets] = useAtom(codeSnippetsAtom)
+        const prevProjectPath = useRef<string>('')
 
-    // For blocking user with modal
-    // const searchParams = useSearchParams()
-    const [openProjectModal, setOpenProjectModal] = useState(false)
-    const { backendUrl } = useBackendUrl()
+        const [openProjectModal, setOpenProjectModal] = useState(false)
+        const { backendUrl } = useBackendUrl()
 
-    const sessionActorRef = SessionMachineContext.useActorRef()
-    const projectPath = SessionMachineContext.useSelector(
-        state => state?.context?.sessionState?.path
-    )
+        const sessionActorRef = SessionMachineContext.useActorRef()
+        const projectPath = SessionMachineContext.useSelector(
+            state => state?.context?.sessionState?.path
+        )
 
-    useEffect(() => {
-        if (!prevProjectPath.current) {
-            prevProjectPath.current = projectPath
-        } else if (prevProjectPath.current !== projectPath) {
-            // Clear Jotai snippets
-            setCodeSnippets([])
-            setInput('')
-            prevProjectPath.current = projectPath
-        }
-    }, [projectPath])
+        useEffect(() => {
+            if (!prevProjectPath.current) {
+                prevProjectPath.current = projectPath
+            } else if (prevProjectPath.current !== projectPath) {
+                // Clear Jotai snippets
+                setCodeSnippets([])
+                setInput('')
+                prevProjectPath.current = projectPath
+            }
+        }, [projectPath, setCodeSnippets])
 
-    function addSnippetToInputField(snippet: ICodeSnippet) {
-        const textarea = inputRef.current
-        if (textarea && typeof textarea.selectionStart === 'number') {
-            const { selectionStart, selectionEnd } = textarea
-            const newInput =
-                input.slice(0, selectionStart) +
-                ` @${snippet.id} ` +
-                input.slice(selectionEnd)
-            setInput(newInput)
-            textarea.focus()
-        }
-    }
-
-    useEffect(() => {
-        if (selectedCodeSnippet) {
-            // Check if it already exists
-            const existingSnippet = codeSnippets.find(
-                snippet => snippet.id === selectedCodeSnippet.id
-            )
-            if (!existingSnippet) {
-                setCodeSnippets(prev => [...prev, selectedCodeSnippet])
+        const addSnippetToInputField = useCallback(
+            (snippet: ICodeSnippet) => {
                 const textarea = inputRef.current
                 if (textarea && typeof textarea.selectionStart === 'number') {
                     const { selectionStart, selectionEnd } = textarea
                     const newInput =
                         input.slice(0, selectionStart) +
-                        ` @${selectedCodeSnippet.id} ` +
+                        ` @${snippet.id} ` +
                         input.slice(selectionEnd)
                     setInput(newInput)
                     textarea.focus()
-                } else {
-                    setInput(
-                        prevInput => prevInput + ` @${selectedCodeSnippet.id} `
-                    )
+                }
+            },
+            [input]
+        )
+
+        useEffect(() => {
+            if (selectedCodeSnippet) {
+                // Check if it already exists
+                const existingSnippet = codeSnippets.find(
+                    snippet => snippet.id === selectedCodeSnippet.id
+                )
+                if (!existingSnippet) {
+                    setCodeSnippets(prev => [...prev, selectedCodeSnippet])
+                    const textarea = inputRef.current
+                    if (
+                        textarea &&
+                        typeof textarea.selectionStart === 'number'
+                    ) {
+                        const { selectionStart, selectionEnd } = textarea
+                        const newInput =
+                            input.slice(0, selectionStart) +
+                            ` @${selectedCodeSnippet.id} ` +
+                            input.slice(selectionEnd)
+                        setInput(newInput)
+                        textarea.focus()
+                    } else {
+                        setInput(
+                            prevInput =>
+                                prevInput + ` @${selectedCodeSnippet.id} `
+                        )
+                    }
                 }
             }
-        }
-    }, [selectedCodeSnippet])
+        }, [selectedCodeSnippet, codeSnippets, input])
 
-    const handleRemoveSnippet = (id: string) => {
-        setCodeSnippets(prev => prev.filter(snippet => snippet.id !== id))
-    }
+        const handleRemoveSnippet = useCallback((id: string) => {
+            setCodeSnippets(prev => prev.filter(snippet => snippet.id !== id))
+        }, [])
 
-    async function submitUserMessage(value: string) {
-        sessionActorRef.send({ type: 'session.sendMessage', message: value })
-    }
+        const submitUserMessage = useCallback(
+            async (value: string) => {
+                sessionActorRef.send({
+                    type: 'session.sendMessage',
+                    message: value,
+                })
+            },
+            [sessionActorRef]
+        )
 
-    // function checkShouldOpenModal() {
-    //     const chatId = searchParams.get('chat')
-    //     // If it's a new chat, open the project modal
-    //     if (chatId && chatId === 'New') {
-    //         setOpenProjectModal(true)
-    //     }
-    // }
+        const handleFocus = useCallback(() => {
+            setFocused(true)
+        }, [])
 
-    function handleFocus() {
-        setFocused(true)
-        // checkShouldOpenModal()
-    }
+        const handlePause = useCallback(async () => {
+            sessionActorRef.send({ type: 'session.toggle' })
+        }, [sessionActorRef])
 
-    // console.log(sessionActorRef.getSnapshot().value,sessionActorRef.getSnapshot().matches('paused'))
-
-    async function handlePause() {
-        sessionActorRef.send({ type: 'session.toggle' })
-    }
-
-    // console.log("loading ", loading)
-
-    return (
-        <div
-            className={`w-full relative grid align-middle px-5 ${
-                !viewOnly ? 'pb-7 mt-8' : ''
-            }`}
-        >
-            {(loading ||
-                eventContext.modelLoading ||
-                eventContext.userRequest ||
-                sessionActorRef.getSnapshot().matches('paused') ||
-                sessionActorRef.getSnapshot().matches('running')) && (
-                <InformationBox
-                    modelLoading={eventContext.modelLoading}
-                    userRequested={eventContext.userRequest}
-                    loading={loading}
-                    paused={sessionActorRef.getSnapshot().matches('paused')}
-                    pauseHandler={handlePause}
+        const memoizedCodeSnippets = useMemo(
+            () => (
+                <CodeSnippet
+                    snippets={codeSnippets}
+                    onClose={handleRemoveSnippet}
+                    onClickHeader={addSnippetToInputField}
                 />
-            )}
+            ),
+            [codeSnippets, handleRemoveSnippet, addSnippetToInputField]
+        )
 
-            <CodeSnippet
-                snippets={codeSnippets}
-                onClose={handleRemoveSnippet}
-                onClickHeader={addSnippetToInputField}
-            />
-            {!viewOnly && (
-                <>
-                    <form
-                        ref={formRef}
-                        onSubmit={async (e: any) => {
-                            e.preventDefault()
+        return (
+            <div
+                className={`w-full relative grid align-middle px-5 ${
+                    !viewOnly ? 'pb-7 mt-8' : ''
+                }`}
+            >
+                {(loading ||
+                    eventContext.modelLoading ||
+                    eventContext.userRequest ||
+                    sessionActorRef.getSnapshot().matches('paused') ||
+                    sessionActorRef.getSnapshot().matches('running')) && (
+                    <InformationBox
+                        modelLoading={eventContext.modelLoading}
+                        userRequested={eventContext.userRequest}
+                        loading={loading}
+                        paused={sessionActorRef.getSnapshot().matches('paused')}
+                        pauseHandler={handlePause}
+                    />
+                )}
 
-                            // checkShouldOpenModal()
+                {memoizedCodeSnippets}
+                {!viewOnly && (
+                    <>
+                        <form
+                            ref={formRef}
+                            onSubmit={useCallback(
+                                async (e: React.FormEvent<HTMLFormElement>) => {
+                                    e.preventDefault()
 
-                            // Blur focus on mobile
-                            if (window.innerWidth < 600) {
-                                e.target['message']?.blur()
-                            }
+                                    // Blur focus on mobile
+                                    if (window.innerWidth < 600) {
+                                        ;(e.target as HTMLFormElement)[
+                                            'message'
+                                        ]?.blur()
+                                    }
 
-                            const value = input.trim()
-                            setInput('')
-                            if (!value) return
+                                    const value = input.trim()
+                                    setInput('')
+                                    if (!value) return
 
-                            const res = await submitUserMessage(value)
+                                    await submitUserMessage(value)
 
-                            // Let loading message render first
-                            setTimeout(() => {
-                                scrollToBottom()
-                            }, 500)
-                        }}
-                    >
-                        <div className="relative">
-                            <HighlightKeywordInputField
-                                innerRef={inputRef}
-                                placeholder="Send a message to Devon ..."
-                                onFocus={handleFocus}
-                                onBlur={() => setFocused(false)}
-                                onKeyDown={onKeyDown}
-                                value={input}
-                                onChange={e => setInput(e.target.value)}
-                                disabled={loading}
-                                codeSnippets={codeSnippets}
-                            />
-                            {/* <button
+                                    // Let loading message render first
+                                    setTimeout(scrollToBottom, 500)
+                                },
+                                [input, submitUserMessage, scrollToBottom]
+                            )}
+                        >
+                            <div className="relative">
+                                <HighlightKeywordInputField
+                                    innerRef={inputRef}
+                                    placeholder="Send a message to Devon ..."
+                                    onFocus={handleFocus}
+                                    onBlur={() => setFocused(false)}
+                                    onKeyDown={onKeyDown}
+                                    value={input}
+                                    onChange={e => setInput(e.target.value)}
+                                    disabled={loading}
+                                    codeSnippets={codeSnippets}
+                                />
+                                {/* <button
                                 onClick={toast}
                                 className="absolute left-[0.5rem] top-1/2 -translate-y-1/2 xl:left-[0.75rem] flex h-8 w-8 items-center justify-center rounded-md smooth-hover"
                             >
@@ -201,28 +207,29 @@ const ChatInputField = ({
                                     className={`h-4 w-4 ${focused ? 'text-primary' : ''}`}
                                 />
                             </button> */}
-                            <button
-                                className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 xl:right-4"
-                                type="submit"
-                            >
-                                <ArrowRight
-                                    className={`h-4 w-4 ${
-                                        focused ? 'text-primary' : ''
-                                    }`}
-                                />
-                            </button>
-                        </div>
-                    </form>
-                    {/* <SelectProjectDirectoryModal
+                                <button
+                                    className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 xl:right-4"
+                                    type="submit"
+                                >
+                                    <ArrowRight
+                                        className={`h-4 w-4 ${
+                                            focused ? 'text-primary' : ''
+                                        }`}
+                                    />
+                                </button>
+                            </div>
+                        </form>
+                        {/* <SelectProjectDirectoryModal
                         openProjectModal={openProjectModal}
                         setOpenProjectModal={setOpenProjectModal}
                         backendUrl={backendUrl}
                     /> */}
-                </>
-            )}
-        </div>
-    )
-}
+                    </>
+                )}
+            </div>
+        )
+    }
+)
 
 const InformationBox = ({
     modelLoading,

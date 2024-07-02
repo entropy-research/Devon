@@ -53,7 +53,6 @@ export default function CodeEditor({
             setOpenFiles(initialFiles)
             setSelectedFileId(null)
             setPopoverVisible(false)
-            console.log('popober not visible')
             setSelectionInfo(null)
             initialPathRef.current = path
         }
