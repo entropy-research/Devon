@@ -27,7 +27,7 @@ const DialogContent = lazy(() =>
     }))
 )
 
-type ExtendedComboboxItem = ComboboxItem & { company: string }
+type ExtendedComboboxItem = ComboboxItem & { company: string, apiKeyUrl?: string }
 
 const comboboxItems: ExtendedComboboxItem[] = models
     .filter(model => !model.comingSoon)
@@ -35,6 +35,7 @@ const comboboxItems: ExtendedComboboxItem[] = models
         value: model.id,
         label: model.name,
         company: model.company,
+        apiKeyUrl: model.apiKeyUrl,
     }))
 
 const OnboardingModal = ({
@@ -55,6 +56,7 @@ const OnboardingModal = ({
     const [selectedModel, setSelectedModel] = useState(comboboxItems[0])
     const { addApiKey, getApiKey, setUseModelName } = useSafeStorage()
     const [isKeySaved, setIsKeySaved] = useState(false)
+    const [hasClickedQuestion, setHasClickedQuestion] = useState(false)
 
     useEffect(() => {
         const fetchApiKey = async () => {
@@ -97,7 +99,10 @@ const OnboardingModal = ({
     return (
         <Suspense fallback={<></>}>
             <Dialog open={true}>
-                <DialogContent hideclose={true.toString()} className="w-[500px]">
+                <DialogContent
+                    hideclose={true.toString()}
+                    className="w-[500px]"
+                >
                     <div className="flex flex-col items-center justify-center my-8 mx-8">
                         <h1 className="text-3xl font-bold">
                             Welcome to Devon!
@@ -140,7 +145,8 @@ const OnboardingModal = ({
                                         {`${selectedModel.company} API Key`}
                                     </p>
                                     <Popover>
-                                        <PopoverTrigger className="ml-[2px]">
+                                        <PopoverTrigger className="ml-[2px]"
+                                        onClick={() => setHasClickedQuestion(true)}>
                                             <CircleHelp size={14} />
                                         </PopoverTrigger>
                                         {isKeySaved ? (
@@ -154,6 +160,15 @@ const OnboardingModal = ({
                                             <SafeStoragePopoverContent />
                                         )}
                                     </Popover>
+                                    {hasClickedQuestion && !apiKey && (
+                                        <a
+                                            className="text-primary hover:underline self-end ml-auto cursor-pointer"
+                                            href={selectedModel?.apiKeyUrl}
+                                            target="_blank"
+                                        >
+                                            Looking for an API key?
+                                        </a>
+                                    )}
                                 </div>
                                 <Input
                                     className="w-full"

@@ -5,11 +5,13 @@ export const models: Model[] = [
         id: 'claude-3-5-sonnet',
         name: 'Claude 3.5 Sonnet',
         company: 'Anthropic',
+        apiKeyUrl: 'https://console.anthropic.com/settings/keys',
     },
     {
         id: 'gpt4-o',
         name: 'GPT4-o',
         company: 'OpenAI',
+        apiKeyUrl: 'https://platform.openai.com/api-keys',
     },
     // {
     //     id: 'llama-3-70b',

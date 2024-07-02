@@ -68,6 +68,7 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
         loading: true,
         value: null,
     })
+    const [hasClickedQuestion, setHasClickedQuestion] = useState(false)
 
     const clearStorageAndResetSession = () => {
         deleteData()
@@ -227,16 +228,25 @@ const General = ({ setOpen }: { setOpen: (val: boolean) => void }) => {
                         )}
                     </div>
                     <div className="flex justify-between w-full">
-                        <div className="flex gap-1 items-center mb-4">
+                        <div className="flex gap-1 items-center mb-4 w-full">
                             <p className="text-xl font-bold">
                                 {`${selectedModel.company} API Key`}
                             </p>
                             <Popover>
-                                <PopoverTrigger className="ml-[2px]">
+                                <PopoverTrigger className="ml-[2px]" onClick={() => setHasClickedQuestion(true)}>
                                     <CircleHelp size={14} />
                                 </PopoverTrigger>
                                 <SafeStoragePopoverContent />
                             </Popover>
+                            {hasClickedQuestion && (
+                                        <a
+                                            className="text-primary hover:underline self-end ml-auto cursor-pointer"
+                                            href={selectedModel?.apiKeyUrl}
+                                            target="_blank"
+                                        >
+                                            Looking for an API key?
+                                        </a>
+                                    )}
                         </div>
                         {selectedModel.id !== originalModelName &&
                             modelHasSavedApiKey && (

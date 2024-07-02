@@ -13,9 +13,20 @@ export type Model = {
     name: string
     company: string
     comingSoon?: boolean
+    apiKeyUrl?: string
 }
 
 export type Message = {
     text: string
-    type: 'user' | 'agent' | 'command' | 'tool' | 'task' | 'thought' | 'error' | 'shellCommand' | 'shellResponse' | 'rateLimit'
+    type:
+        | 'user'
+        | 'agent'
+        | 'command'
+        | 'tool'
+        | 'task'
+        | 'thought'
+        | 'error'
+        | 'shellCommand'
+        | 'shellResponse'
+        | 'rateLimit'
 }
